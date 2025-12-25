@@ -110,8 +110,8 @@ python create_epic.py --project PROJ --summary "Epic" --description "Details" --
 python create_epic.py --project PROJ --summary "Epic" --assignee self --priority High
 ```
 
-**Integration Points (Future Work - jira-issue skill):**
-- [ ] Update `create_issue.py` to add `--epic` flag for creating issues in epic
+**Integration Points (completed in Integration 1):**
+- [x] Update `create_issue.py` to add `--epic` flag for creating issues in epic
 
 **Commits:**
 1. `test(jira-agile): add failing tests for create_epic`
@@ -289,8 +289,8 @@ python create_subtask.py --parent PROJ-101 --summary "Task" --estimate 4h
 - [x] Inherits project from parent
 - [x] Supports all standard issue fields
 
-**Integration Points (Future Work - jira-issue skill):**
-- [ ] Update `get_issue.py` to show subtasks
+**Integration Points (completed in Integration 1):**
+- [x] Update `get_issue.py` to show subtasks
 
 **Commits:**
 1. `test(jira-agile): add failing tests for create_subtask`
