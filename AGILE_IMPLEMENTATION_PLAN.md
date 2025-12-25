@@ -176,7 +176,7 @@ python add_to_epic.py --remove --issues PROJ-101  # Remove from epic
 
 ---
 
-### Feature 1.3: Get Epic Details & Progress
+### Feature 1.3: Get Epic Details & Progress ✅ COMPLETED
 
 **Script:** `get_epic.py`
 
@@ -232,11 +232,11 @@ Children:
 ```
 
 **Acceptance Criteria:**
-- [ ] All 7 tests pass
-- [ ] Shows epic metadata
-- [ ] Lists child issues
-- [ ] Calculates progress percentage
-- [ ] Sums story points if available
+- [x] All 7 tests pass
+- [x] Shows epic metadata
+- [x] Lists child issues
+- [x] Calculates progress percentage
+- [x] Sums story points if available
 
 **Commits:**
 1. `test(jira-agile): add failing tests for get_epic`
