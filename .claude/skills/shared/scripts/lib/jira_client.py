@@ -1101,3 +1101,213 @@ class JiraClient:
         return self.get('/rest/api/3/user/search',
                        params=params,
                        operation="search users")
+
+    # ========== Time Tracking / Worklog API Methods ==========
+
+    def add_worklog(self, issue_key: str, time_spent: str,
+                    started: Optional[str] = None,
+                    comment: Optional[Dict[str, Any]] = None,
+                    adjust_estimate: str = 'auto',
+                    new_estimate: Optional[str] = None,
+                    reduce_by: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Add a worklog to an issue.
+
+        Args:
+            issue_key: Issue key (e.g., 'PROJ-123')
+            time_spent: Time spent in JIRA format (e.g., '2h', '1d 4h')
+            started: When work started (ISO format, e.g., '2025-01-15T09:00:00.000+0000')
+            comment: Optional comment in ADF format
+            adjust_estimate: How to adjust remaining estimate:
+                           'auto' (default), 'leave', 'new', 'manual'
+            new_estimate: New remaining estimate (when adjust_estimate='new')
+            reduce_by: Amount to reduce estimate (when adjust_estimate='manual')
+
+        Returns:
+            Created worklog object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        payload = {
+            'timeSpent': time_spent
+        }
+        if started:
+            payload['started'] = started
+        if comment:
+            payload['comment'] = comment
+
+        params = {'adjustEstimate': adjust_estimate}
+        if new_estimate and adjust_estimate == 'new':
+            params['newEstimate'] = new_estimate
+        if reduce_by and adjust_estimate == 'manual':
+            params['reduceBy'] = reduce_by
+
+        endpoint = f'/rest/api/3/issue/{issue_key}/worklog'
+        url = f"{self.base_url}{endpoint}"
+        response = self.session.post(url, json=payload, params=params,
+                                     timeout=self.timeout)
+        handle_jira_error(response, f"add worklog to {issue_key}")
+        return response.json()
+
+    def get_worklogs(self, issue_key: str, start_at: int = 0,
+                     max_results: int = 5000) -> Dict[str, Any]:
+        """
+        Get all worklogs for an issue.
+
+        Args:
+            issue_key: Issue key (e.g., 'PROJ-123')
+            start_at: Starting index for pagination
+            max_results: Maximum number of worklogs to return
+
+        Returns:
+            Worklogs response with 'worklogs', 'total', 'startAt', 'maxResults'
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {
+            'startAt': start_at,
+            'maxResults': max_results
+        }
+        return self.get(f'/rest/api/3/issue/{issue_key}/worklog',
+                       params=params,
+                       operation=f"get worklogs for {issue_key}")
+
+    def get_worklog(self, issue_key: str, worklog_id: str) -> Dict[str, Any]:
+        """
+        Get a specific worklog.
+
+        Args:
+            issue_key: Issue key (e.g., 'PROJ-123')
+            worklog_id: Worklog ID
+
+        Returns:
+            Worklog object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(f'/rest/api/3/issue/{issue_key}/worklog/{worklog_id}',
+                       operation=f"get worklog {worklog_id}")
+
+    def update_worklog(self, issue_key: str, worklog_id: str,
+                       time_spent: Optional[str] = None,
+                       started: Optional[str] = None,
+                       comment: Optional[Dict[str, Any]] = None,
+                       adjust_estimate: str = 'auto',
+                       new_estimate: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Update an existing worklog.
+
+        Args:
+            issue_key: Issue key (e.g., 'PROJ-123')
+            worklog_id: Worklog ID
+            time_spent: New time spent (optional)
+            started: New start time (optional)
+            comment: New comment in ADF format (optional)
+            adjust_estimate: How to adjust remaining estimate
+            new_estimate: New remaining estimate (when adjust_estimate='new')
+
+        Returns:
+            Updated worklog object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        payload = {}
+        if time_spent:
+            payload['timeSpent'] = time_spent
+        if started:
+            payload['started'] = started
+        if comment:
+            payload['comment'] = comment
+
+        params = {'adjustEstimate': adjust_estimate}
+        if new_estimate and adjust_estimate == 'new':
+            params['newEstimate'] = new_estimate
+
+        endpoint = f'/rest/api/3/issue/{issue_key}/worklog/{worklog_id}'
+        url = f"{self.base_url}{endpoint}"
+        response = self.session.put(url, json=payload, params=params,
+                                    timeout=self.timeout)
+        handle_jira_error(response, f"update worklog {worklog_id}")
+        return response.json()
+
+    def delete_worklog(self, issue_key: str, worklog_id: str,
+                       adjust_estimate: str = 'auto',
+                       new_estimate: Optional[str] = None,
+                       increase_by: Optional[str] = None) -> None:
+        """
+        Delete a worklog.
+
+        Args:
+            issue_key: Issue key (e.g., 'PROJ-123')
+            worklog_id: Worklog ID
+            adjust_estimate: How to adjust remaining estimate:
+                           'auto' (default), 'leave', 'new', 'manual'
+            new_estimate: New remaining estimate (when adjust_estimate='new')
+            increase_by: Amount to increase estimate (when adjust_estimate='manual')
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {'adjustEstimate': adjust_estimate}
+        if new_estimate and adjust_estimate == 'new':
+            params['newEstimate'] = new_estimate
+        if increase_by and adjust_estimate == 'manual':
+            params['increaseBy'] = increase_by
+
+        endpoint = f'/rest/api/3/issue/{issue_key}/worklog/{worklog_id}'
+        url = f"{self.base_url}{endpoint}"
+        response = self.session.delete(url, params=params, timeout=self.timeout)
+        handle_jira_error(response, f"delete worklog {worklog_id}")
+
+    def get_time_tracking(self, issue_key: str) -> Dict[str, Any]:
+        """
+        Get time tracking info for an issue.
+
+        Args:
+            issue_key: Issue key (e.g., 'PROJ-123')
+
+        Returns:
+            Time tracking data with originalEstimate, remainingEstimate,
+            timeSpent and their *Seconds equivalents
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        issue = self.get(f'/rest/api/3/issue/{issue_key}',
+                        params={'fields': 'timetracking'},
+                        operation=f"get time tracking for {issue_key}")
+        return issue.get('fields', {}).get('timetracking', {})
+
+    def set_time_tracking(self, issue_key: str,
+                          original_estimate: Optional[str] = None,
+                          remaining_estimate: Optional[str] = None) -> None:
+        """
+        Set time tracking estimates on an issue.
+
+        Note: Due to JIRA bug JRACLOUD-67539, updating only remainingEstimate
+        may overwrite originalEstimate. Always set both together when possible.
+
+        Args:
+            issue_key: Issue key (e.g., 'PROJ-123')
+            original_estimate: Original estimate (e.g., '2d', '16h')
+            remaining_estimate: Remaining estimate (e.g., '1d 4h')
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        timetracking = {}
+        if original_estimate is not None:
+            timetracking['originalEstimate'] = original_estimate
+        if remaining_estimate is not None:
+            timetracking['remainingEstimate'] = remaining_estimate
+
+        if not timetracking:
+            return
+
+        self.put(f'/rest/api/3/issue/{issue_key}',
+                data={'fields': {'timetracking': timetracking}},
+                operation=f"set time tracking for {issue_key}")
