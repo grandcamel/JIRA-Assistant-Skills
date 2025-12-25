@@ -971,31 +971,192 @@ git commit -m "docs(jira-agile): complete Phase 1 - Epic Management"
 
 ---
 
-## Next Steps
+## Phase 5: Live Environment Testing & Field Management (Unplanned)
 
-1. **Start with setup:**
-   ```bash
-   cd .claude/skills
-   mkdir -p jira-agile/tests jira-agile/scripts jira-agile/references
-   pip install pytest pytest-cov responses
-   ```
+This phase was discovered during live environment testing when scripts failed due to missing infrastructure.
 
-2. **Create initial structure:**
-   - `jira-agile/SKILL.md` (template)
-   - `jira-agile/tests/conftest.py` (fixtures)
-   - `jira-agile/tests/__init__.py`
+### Discovery 5.1: Runtime Issues ✅ COMPLETED
 
-3. **Begin Phase 1:**
-   - Start with `tests/test_create_epic.py`
-   - Write 7 failing tests
-   - Commit
-   - Implement `scripts/create_epic.py`
-   - Run tests until all pass
-   - Commit
+**Problem:** Scripts failed when tested against live JIRA environment.
+
+**Issues Found & Fixed:**
+- [x] **Path Bug:** All 12 jira-agile scripts had incorrect shared library path
+  - Changed `parent.parent.parent.parent` to `parent.parent.parent`
+  - Caused `ModuleNotFoundError: No module named 'config_manager'`
+
+- [x] **Missing Client Methods:** JiraClient lacked Agile API methods
+  - Added 10 new methods to `jira_client.py`:
+    - `get_sprint`, `get_sprint_issues`
+    - `create_sprint`, `update_sprint`
+    - `move_issues_to_sprint` (with rank parameter)
+    - `get_board_backlog`, `get_board`, `get_all_boards`
+    - `get_board_sprints`, `rank_issues`
+
+- [x] **Double-wrapped Fields:** `estimate_issue.py` wrapped fields incorrectly
+  - Removed extra `{'fields': ...}` wrapper
+
+- [x] **Hardcoded Issue Type:** `create_subtask.py` used `'Sub-task'`
+  - Now dynamically looks up subtask type from JIRA instance
+  - Works with both "Sub-task" and "Subtask" naming
+
+- [x] **Missing Search Fields:** `get_epic.py` didn't specify fields
+  - Added required fields to `search_issues` call
+  - Fixed `KeyError` when calculating progress
+
+- [x] **Test Fixture Updates:** Updated `conftest.py` with issue type mock
+
+**Commits:**
+1. `fix(jira-agile,shared): add Agile API methods and fix runtime issues` ✅
 
 ---
 
-**Plan Version:** 1.0
+### Discovery 5.2: Project Type Limitations ✅ COMPLETED
+
+**Problem:** TES project (team-managed) doesn't support Agile custom fields via API.
+
+**Key Learnings:**
+- **Team-managed (next-gen) projects:**
+  - Limited API support for field configuration
+  - Agile fields must be enabled via project settings UI
+  - Cannot add custom fields to screens via API
+
+- **Company-managed (classic) projects:**
+  - Full API support for field configuration
+  - Custom fields can be added to screens
+  - Agile templates include Sprint, Story Points, Epic Link
+
+**Solution:** Created company-managed AGILE project for testing.
+
+---
+
+### Feature 5.1: jira-fields Skill ✅ COMPLETED
+
+**New Skill:** `.claude/skills/jira-fields/`
+
+**Purpose:** Manage custom fields and Agile configuration in JIRA projects.
+
+**Scripts Implemented:**
+
+| Script | Purpose |
+|--------|---------|
+| `list_fields.py` | List custom fields with filtering |
+| `check_project_fields.py` | Check field availability, detect project type |
+| `configure_agile_fields.py` | Add Agile fields to project screens |
+| `create_field.py` | Create new custom fields |
+
+**Test Cases:**
+```python
+# list_fields.py
+def test_list_all_custom_fields()
+def test_filter_by_pattern()
+def test_agile_only_filter()
+
+# check_project_fields.py
+def test_detect_team_managed_project()
+def test_detect_company_managed_project()
+def test_check_agile_field_availability()
+
+# configure_agile_fields.py
+def test_add_fields_to_screen()
+def test_dry_run_mode()
+def test_team_managed_validation()
+
+# create_field.py
+def test_create_number_field()
+def test_create_select_field()
+def test_invalid_field_type()
+```
+
+**CLI Examples:**
+```bash
+# List Agile fields
+python list_fields.py --agile
+
+# Check project configuration
+python check_project_fields.py PROJ --check-agile
+
+# Configure Agile fields (company-managed only)
+python configure_agile_fields.py PROJ --dry-run
+
+# Create custom field
+python create_field.py --name "Story Points" --type number
+```
+
+**Commits:**
+1. `feat(jira-fields): add custom field management skill` ✅
+
+---
+
+### Feature 5.2: Test Environment Setup ✅ COMPLETED
+
+**Created AGILE Project:**
+- **Key:** AGILE
+- **Type:** Company-managed (classic)
+- **Template:** Scrum (`gh-scrum-template`)
+- **Board ID:** 2
+- **Available Fields:** Sprint, Story Points, Epic Link
+
+**Configured:**
+- [x] Story Points field added to screens
+- [x] Epic Link field added to screens
+- [x] Sprint created (ID: 2, "Sprint 1")
+- [x] Test issues created (AGILE-1, AGILE-2)
+
+**Live Testing Results:**
+```
+✅ create_sprint.py - Sprint 1 created
+✅ create_issue.py - AGILE-1 story created
+✅ estimate_issue.py - Story points set to 5
+✅ move_to_sprint.py - Issue moved to sprint
+✅ create_epic.py - AGILE-2 epic created
+✅ add_to_epic.py - Issue linked to epic
+✅ get_sprint.py - Sprint progress shown
+✅ get_epic.py - Epic with children shown
+```
+
+---
+
+### Phase 5 Completion ✅ COMPLETED
+
+- [x] **Phase 5 Summary:**
+  - [x] 10 Agile API methods added to JiraClient
+  - [x] 5 bug fixes in jira-agile scripts
+  - [x] New jira-fields skill (4 scripts)
+  - [x] AGILE test project created and configured
+  - [x] All 100 jira-agile tests passing
+  - [x] Live environment testing successful
+  - **Commits:** 2 commits ✅
+
+---
+
+## Final Summary
+
+### Scripts by Skill
+
+| Skill | Scripts | Tests |
+|-------|---------|-------|
+| jira-agile | 12 | 100 |
+| jira-fields | 4 | (manual testing) |
+| **Total** | **16** | **100** |
+
+### Key Metrics
+
+- **Total Tests:** 100 passing
+- **New API Methods:** 10 (Agile API support)
+- **Bug Fixes:** 5 runtime issues resolved
+- **Projects Configured:** 1 (AGILE - company-managed Scrum)
+
+### Lessons Learned
+
+1. **Unit tests don't catch path issues** - Live testing essential
+2. **JIRA has two project types** - Team-managed vs Company-managed
+3. **Agile API is separate** - `/rest/agile/1.0/` not `/rest/api/3/`
+4. **Custom fields vary by instance** - Don't hardcode field IDs
+5. **Issue type names vary** - "Sub-task" vs "Subtask"
+
+---
+
+**Plan Version:** 1.1
 **Created:** 2025-01-15
-**Last Updated:** 2025-01-24
-**Status:** ✅ COMPLETE - All phases implemented with 100 tests passing
+**Last Updated:** 2025-12-25
+**Status:** ✅ COMPLETE - All phases including live testing complete
