@@ -95,6 +95,7 @@ def sample_version():
         'released': False,
         'startDate': '2025-01-01',
         'releaseDate': '2025-03-01',
+        'project': 'PROJ',
         'projectId': 10000,
         'self': 'https://test.atlassian.net/rest/api/3/version/10000'
     }
