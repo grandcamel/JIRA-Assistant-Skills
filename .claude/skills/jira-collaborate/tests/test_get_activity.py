@@ -24,8 +24,8 @@ class TestGetActivity:
 
         result = get_activity('PROJ-123', profile=None)
 
-        assert result['total'] == 3
-        assert len(result['values']) == 3
+        assert result['total'] == 5
+        assert len(result['values']) == 5
         mock_jira_client.get_changelog.assert_called_once()
 
     @patch('get_activity.get_jira_client')
@@ -52,12 +52,12 @@ class TestGetActivity:
 
         parsed = parse_changelog(sample_changelog)
 
-        # First change is status change
+        # First change is status change (In Progress → Done)
         status_change = parsed[0]
         assert status_change['type'] == 'status'
         assert status_change['field'] == 'status'
-        assert status_change['from'] == 'To Do'
-        assert status_change['to'] == 'In Progress'
+        assert status_change['from'] == 'In Progress'
+        assert status_change['to'] == 'Done'
 
     @patch('get_activity.get_jira_client')
     def test_parse_assignee_change(self, mock_get_client, mock_jira_client, sample_changelog):
@@ -69,12 +69,12 @@ class TestGetActivity:
 
         parsed = parse_changelog(sample_changelog)
 
-        # Second change is assignee change
-        assignee_change = parsed[1]
+        # Third change is assignee change (None → Alice Smith)
+        assignee_change = parsed[2]
         assert assignee_change['type'] == 'assignee'
         assert assignee_change['field'] == 'assignee'
-        assert assignee_change['from'] == 'Alice Smith'
-        assert assignee_change['to'] == 'Bob Jones'
+        assert assignee_change['from'] == ''
+        assert assignee_change['to'] == 'Alice Smith'
 
     @patch('get_activity.get_jira_client')
     def test_parse_priority_change(self, mock_get_client, mock_jira_client, sample_changelog):
@@ -86,8 +86,8 @@ class TestGetActivity:
 
         parsed = parse_changelog(sample_changelog)
 
-        # Third change is priority change
-        priority_change = parsed[2]
+        # Last change is priority change (Medium → High)
+        priority_change = parsed[5]
         assert priority_change['type'] == 'priority'
         assert priority_change['field'] == 'priority'
         assert priority_change['from'] == 'Medium'
@@ -104,9 +104,9 @@ class TestGetActivity:
         result = get_activity('PROJ-123', profile=None)
         parsed = parse_changelog(result)
 
-        # Filter only status changes
+        # Filter only status changes (there are 2 in the fixture)
         status_changes = [c for c in parsed if c['type'] == 'status']
-        assert len(status_changes) == 1
+        assert len(status_changes) == 2
         assert status_changes[0]['field'] == 'status'
 
     @patch('get_activity.get_jira_client')
@@ -122,7 +122,7 @@ class TestGetActivity:
 
         captured = capsys.readouterr()
         assert 'status' in captured.out
-        assert 'To Do' in captured.out
+        assert 'Done' in captured.out
         assert 'In Progress' in captured.out
 
     @patch('get_activity.get_jira_client')
@@ -137,7 +137,7 @@ class TestGetActivity:
         parsed = parse_changelog(sample_changelog)
         json_output = json.dumps(parsed, indent=2)
 
-        # Should be valid JSON
+        # Should be valid JSON with 6 individual changes
         parsed_json = json.loads(json_output)
-        assert len(parsed_json) == 3
+        assert len(parsed_json) == 6
         assert parsed_json[0]['field'] == 'status'
