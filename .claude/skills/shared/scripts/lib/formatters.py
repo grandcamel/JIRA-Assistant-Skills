@@ -20,6 +20,10 @@ except ImportError:
     print("Warning: 'tabulate' not installed. Table formatting will be basic.", file=sys.stderr)
 
 
+EPIC_LINK_FIELD = 'customfield_10014'
+STORY_POINTS_FIELD = 'customfield_10016'
+
+
 def format_issue(issue: Dict[str, Any], detailed: bool = False) -> str:
     """
     Format a JIRA issue for display.
@@ -50,6 +54,34 @@ def format_issue(issue: Dict[str, Any], detailed: bool = False) -> str:
     output.append(f"Priority: {priority}")
     output.append(f"Assignee: {assignee}")
 
+    # Agile fields
+    epic_link = fields.get(EPIC_LINK_FIELD)
+    if epic_link:
+        output.append(f"Epic:     {epic_link}")
+
+    story_points = fields.get(STORY_POINTS_FIELD)
+    if story_points is not None:
+        output.append(f"Points:   {story_points}")
+
+    # Sprint info (from customfield or sprint field)
+    sprint = fields.get('sprint')
+    if sprint:
+        if isinstance(sprint, dict):
+            sprint_name = sprint.get('name', str(sprint))
+        elif isinstance(sprint, list) and sprint:
+            sprint_name = sprint[0].get('name', str(sprint[0])) if isinstance(sprint[0], dict) else str(sprint[0])
+        else:
+            sprint_name = str(sprint)
+        output.append(f"Sprint:   {sprint_name}")
+
+    # Parent (for subtasks)
+    parent = fields.get('parent')
+    if parent:
+        parent_key = parent.get('key', '')
+        parent_summary = parent.get('fields', {}).get('summary', '')
+        if parent_key:
+            output.append(f"Parent:   {parent_key} - {parent_summary}")
+
     if detailed:
         output.append(f"Reporter: {reporter}")
         output.append(f"Created:  {created}")
@@ -75,6 +107,16 @@ def format_issue(issue: Dict[str, Any], detailed: bool = False) -> str:
         if components:
             comp_names = [c.get('name', '') for c in components]
             output.append(f"Components: {', '.join(comp_names)}")
+
+        # Subtasks
+        subtasks = fields.get('subtasks', [])
+        if subtasks:
+            output.append(f"\nSubtasks ({len(subtasks)}):")
+            for st in subtasks:
+                st_key = st.get('key', '')
+                st_summary = st.get('fields', {}).get('summary', '')
+                st_status = st.get('fields', {}).get('status', {}).get('name', '')
+                output.append(f"  [{st_status}] {st_key} - {st_summary}")
 
     return '\n'.join(output)
 
@@ -319,12 +361,13 @@ def format_comments(comments: List[Dict[str, Any]], limit: Optional[int] = None)
     return '\n'.join(output)
 
 
-def format_search_results(issues: List[Dict[str, Any]]) -> str:
+def format_search_results(issues: List[Dict[str, Any]], show_agile: bool = False) -> str:
     """
     Format search results as a table.
 
     Args:
         issues: List of issue objects from JIRA API
+        show_agile: If True, include epic and story points columns
 
     Returns:
         Formatted table string
@@ -335,15 +378,28 @@ def format_search_results(issues: List[Dict[str, Any]]) -> str:
     data = []
     for issue in issues:
         fields = issue.get('fields', {})
-        data.append({
+        row = {
             'Key': issue.get('key', ''),
             'Type': fields.get('issuetype', {}).get('name', ''),
             'Status': fields.get('status', {}).get('name', ''),
             'Priority': fields.get('priority', {}).get('name', '') if fields.get('priority') else '',
-            'Summary': fields.get('summary', '')[:60]
-        })
+            'Summary': fields.get('summary', '')[:50]
+        }
 
-    return format_table(data, columns=['Key', 'Type', 'Status', 'Priority', 'Summary'])
+        if show_agile:
+            epic = fields.get(EPIC_LINK_FIELD, '')
+            points = fields.get(STORY_POINTS_FIELD, '')
+            row['Epic'] = epic if epic else ''
+            row['Pts'] = str(points) if points else ''
+
+        data.append(row)
+
+    if show_agile:
+        columns = ['Key', 'Type', 'Status', 'Pts', 'Epic', 'Summary']
+    else:
+        columns = ['Key', 'Type', 'Status', 'Priority', 'Summary']
+
+    return format_table(data, columns=columns)
 
 
 def print_success(message: str) -> None:

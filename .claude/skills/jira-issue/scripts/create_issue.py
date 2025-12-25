@@ -6,6 +6,7 @@ Usage:
     python create_issue.py --project PROJ --type Bug --summary "Issue summary"
     python create_issue.py --project PROJ --type Task --summary "Task" --description "Details" --priority High
     python create_issue.py --template bug --project PROJ --summary "Bug title"
+    python create_issue.py --project PROJ --type Story --summary "Story" --epic PROJ-100 --story-points 5
 """
 
 import sys
@@ -18,9 +19,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts
 
 from config_manager import get_jira_client
 from error_handler import print_error, JiraError
-from validators import validate_project_key
+from validators import validate_project_key, validate_issue_key
 from formatters import format_issue, print_success
 from adf_helper import markdown_to_adf, text_to_adf
+
+EPIC_LINK_FIELD = 'customfield_10014'
+STORY_POINTS_FIELD = 'customfield_10016'
 
 
 def load_template(template_name: str) -> dict:
@@ -39,7 +43,9 @@ def create_issue(project: str, issue_type: str, summary: str,
                 description: str = None, priority: str = None,
                 assignee: str = None, labels: list = None,
                 components: list = None, template: str = None,
-                custom_fields: dict = None, profile: str = None) -> dict:
+                custom_fields: dict = None, profile: str = None,
+                epic: str = None, sprint: int = None,
+                story_points: float = None) -> dict:
     """
     Create a new JIRA issue.
 
@@ -55,6 +61,9 @@ def create_issue(project: str, issue_type: str, summary: str,
         template: Template name to use as base
         custom_fields: Additional custom fields
         profile: JIRA profile to use
+        epic: Epic key to link this issue to
+        sprint: Sprint ID to add this issue to
+        story_points: Story point estimate
 
     Returns:
         Created issue data
@@ -103,8 +112,22 @@ def create_issue(project: str, issue_type: str, summary: str,
     if custom_fields:
         fields.update(custom_fields)
 
+    # Agile fields
+    if epic:
+        epic = validate_issue_key(epic)
+        fields[EPIC_LINK_FIELD] = epic
+
+    if story_points is not None:
+        fields[STORY_POINTS_FIELD] = story_points
+
     client = get_jira_client(profile)
     result = client.create_issue(fields)
+
+    # Add to sprint after creation (sprint assignment requires issue to exist)
+    if sprint:
+        issue_key = result.get('key')
+        client.move_issues_to_sprint(sprint, [issue_key])
+
     client.close()
 
     return result
@@ -137,6 +160,14 @@ def main():
                        help='Use a predefined template')
     parser.add_argument('--custom-fields',
                        help='Custom fields as JSON string')
+    parser.add_argument('--epic', '-e',
+                       help='Epic key to link this issue to (e.g., PROJ-100)')
+    parser.add_argument('--sprint',
+                       type=int,
+                       help='Sprint ID to add this issue to')
+    parser.add_argument('--story-points', '--points',
+                       type=float,
+                       help='Story point estimate')
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
     parser.add_argument('--output', '-o',
@@ -162,7 +193,10 @@ def main():
             components=components,
             template=args.template,
             custom_fields=custom_fields,
-            profile=args.profile
+            profile=args.profile,
+            epic=args.epic,
+            sprint=args.sprint,
+            story_points=args.story_points
         )
 
         issue_key = result.get('key')

@@ -20,9 +20,13 @@ from error_handler import print_error, JiraError
 from validators import validate_jql
 from formatters import format_search_results, format_json, print_info
 
+EPIC_LINK_FIELD = 'customfield_10014'
+STORY_POINTS_FIELD = 'customfield_10016'
+
 
 def search_issues(jql: str, fields: list = None, max_results: int = 50,
-                 start_at: int = 0, profile: str = None) -> dict:
+                 start_at: int = 0, profile: str = None,
+                 include_agile: bool = False) -> dict:
     """
     Search for issues using JQL.
 
@@ -32,6 +36,7 @@ def search_issues(jql: str, fields: list = None, max_results: int = 50,
         max_results: Maximum results per page
         start_at: Starting index for pagination
         profile: JIRA profile to use
+        include_agile: If True, include epic link and story points fields
 
     Returns:
         Search results dictionary
@@ -40,6 +45,8 @@ def search_issues(jql: str, fields: list = None, max_results: int = 50,
 
     if fields is None:
         fields = ['key', 'summary', 'status', 'priority', 'issuetype', 'assignee']
+        if include_agile:
+            fields.extend([EPIC_LINK_FIELD, STORY_POINTS_FIELD, 'sprint'])
 
     client = get_jira_client(profile)
     results = client.search_issues(jql, fields=fields, max_results=max_results, start_at=start_at)
@@ -70,6 +77,9 @@ def main():
                        choices=['text', 'json'],
                        default='text',
                        help='Output format (default: text)')
+    parser.add_argument('--show-agile', '-a',
+                       action='store_true',
+                       help='Show Agile fields (epic, story points) in results')
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
@@ -83,7 +93,8 @@ def main():
             fields=fields,
             max_results=args.max_results,
             start_at=args.start_at,
-            profile=args.profile
+            profile=args.profile,
+            include_agile=args.show_agile
         )
 
         issues = results.get('issues', [])
@@ -95,7 +106,7 @@ def main():
             print_info(f"Found {total} issue(s)")
             if issues:
                 print()
-                print(format_search_results(issues))
+                print(format_search_results(issues, show_agile=args.show_agile))
 
                 if total > len(issues):
                     remaining = total - args.start_at - len(issues)
