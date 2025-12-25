@@ -299,19 +299,26 @@ class TestUserSearch:
     """Tests for user search operations."""
 
     def test_search_users(self, jira_client):
-        """Test searching for users."""
-        # Search for something that should exist
-        current_user = jira_client.get('/rest/api/3/myself', operation='get myself')
-        email = current_user.get('emailAddress', '')
+        """Test searching for users.
 
-        if email:
-            # Search by email domain
-            domain = email.split('@')[-1]
-            results = jira_client.search_users(domain)
+        Note: JIRA's user search works best with display name or first name,
+        not email domain. Using the first word of display name for reliable results.
+        """
+        # Get current user info
+        current_user = jira_client.get('/rest/api/3/myself', operation='get myself')
+        display_name = current_user.get('displayName', '')
+
+        if display_name:
+            # Search by first name (first word of display name)
+            first_name = display_name.split()[0]
+            results = jira_client.search_users(first_name)
 
             assert isinstance(results, list)
             # Should find at least current user
             assert len(results) >= 1
+            # Verify current user is in results
+            account_ids = [u.get('accountId') for u in results]
+            assert current_user.get('accountId') in account_ids
 
     def test_get_current_user(self, jira_client):
         """Test getting current user info."""
