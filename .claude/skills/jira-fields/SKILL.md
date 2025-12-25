@@ -8,7 +8,6 @@ Use this skill when you need to:
 - **List available custom fields** in a JIRA instance
 - **Check Agile field availability** for a specific project
 - **Create custom fields** (requires admin permissions)
-- **Add fields to screens** for issue creation/editing
 - **Configure projects for Agile** workflows (Story Points, Epic Link, Sprint)
 - **Diagnose field configuration issues** when fields aren't visible
 
@@ -22,8 +21,8 @@ Use this skill when you need to:
 
 ### Field Management (Admin)
 - Create new custom fields
-- Add fields to project screens
 - Configure field contexts for projects
+- Note: Screen configuration requires JIRA admin UI
 
 ### Project Type Detection
 - Detect if a project is team-managed (next-gen) or company-managed (classic)
@@ -84,16 +83,6 @@ python create_field.py --name "Epic Link" --type select
 
 # Create with description
 python create_field.py --name "Effort" --type number --description "Effort in hours"
-```
-
-### add_to_screen.py
-Add a field to a screen.
-```bash
-# Add field to screen
-python add_to_screen.py --screen 1 --field customfield_10016
-
-# Add to specific tab
-python add_to_screen.py --screen 1 --tab 10000 --field customfield_10016
 ```
 
 ## Important Notes

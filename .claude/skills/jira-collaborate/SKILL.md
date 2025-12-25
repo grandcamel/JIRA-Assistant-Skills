@@ -63,7 +63,6 @@ This skill provides collaboration and communication operations:
 
 ### Attachments
 - `upload_attachment.py` - Upload file to issue
-- `download_attachment.py` - Download attachment
 
 ### Watchers & Custom Fields
 - `manage_watchers.py` - Add/remove watchers
@@ -91,7 +90,7 @@ python get_activity.py PROJ-123 --filter status --format json
 
 # Attachments
 python upload_attachment.py PROJ-123 --file screenshot.png
-python download_attachment.py PROJ-123 --attachment-id 10001 --output downloaded.png
+# Note: Attachment download available via JIRA UI or API
 
 # Watchers
 python manage_watchers.py PROJ-123 --add user@example.com
