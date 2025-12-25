@@ -58,6 +58,9 @@ pytest .claude/skills/shared/tests/live_integration/test_collaboration.py --prof
 
 # Project lifecycle tests only
 pytest .claude/skills/shared/tests/live_integration/test_project_lifecycle.py --profile development -v
+
+# Time tracking tests only
+pytest .claude/skills/shared/tests/live_integration/test_time_tracking.py --profile development -v
 ```
 
 ### Cleanup Utility
@@ -88,6 +91,7 @@ live_integration/
 ├── test_relationships.py       # Issue link tests
 ├── test_collaboration.py       # Comments, attachments, watchers
 ├── test_project_lifecycle.py   # Project creation/deletion tests
+├── test_time_tracking.py       # Worklogs, estimates, time tracking
 ├── cleanup.py                  # Standalone cleanup utility
 └── README.md                   # This file
 ```
