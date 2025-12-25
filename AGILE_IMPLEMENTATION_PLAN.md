@@ -789,9 +789,10 @@ By Assignee:
   - [x] `get_issue.py`: Show subtasks if issue is parent
   - **Commit:** `feat(jira-issue): integrate Agile fields (epic, sprint, story points)` ✅
 
-- [ ] **Integration 2:** Update jira-lifecycle scripts (deferred)
-  - [ ] `transition_issue.py`: Option to move to sprint on transition
-  - **Note:** Deferred for future enhancement
+- [x] **Integration 2:** Update jira-lifecycle scripts ✅
+  - [x] `transition_issue.py`: Add `--sprint` flag to move issue to sprint on transition
+  - [x] Add 14 unit tests for transition_issue.py (5 name matching, 5 transition, 4 sprint)
+  - **Commit:** `feat(jira-lifecycle): add sprint integration to transition_issue.py` ✅
 
 - [x] **Integration 3:** Update jira-search scripts ✅
   - [x] Update search output to show sprint and epic columns (`--show-agile`)
@@ -849,7 +850,7 @@ By Assignee:
 ### Completion Criteria
 
 **Tests:**
-- [x] 73+ unit tests passing → **100 tests passing** ✅
+- [x] 73+ unit tests passing → **114 tests passing** ✅ (100 jira-agile + 14 jira-lifecycle)
 - [x] 2+ integration tests passing → **4 integration tests** ✅
 - [x] Coverage: 47% (core functions well-tested, CLI not covered)
 
@@ -878,7 +879,7 @@ By Assignee:
 - [x] Phase 2: Sprints (4/4 scripts, 32 tests) ✅
 - [x] Phase 3: Backlog (2/2 scripts, 14 tests) ✅
 - [x] Phase 4: Story Points (2/2 scripts, 14 tests) ✅
-- [x] Integration (2/3 updates - jira-lifecycle deferred) ✅
+- [x] Integration (3/3 updates - all complete) ✅
 - [x] Documentation (3/3 docs) ✅
 - [x] Quality (3/3 tasks) ✅
 
@@ -1136,15 +1137,17 @@ python create_field.py --name "Story Points" --type number
 | Skill | Scripts | Tests |
 |-------|---------|-------|
 | jira-agile | 12 | 100 |
+| jira-lifecycle | 5 | 14 |
 | jira-fields | 4 | (manual testing) |
-| **Total** | **16** | **100** |
+| **Total** | **21** | **114** |
 
 ### Key Metrics
 
-- **Total Tests:** 100 passing
+- **Total Tests:** 114 passing (100 jira-agile + 14 jira-lifecycle)
 - **New API Methods:** 10 (Agile API support)
 - **Bug Fixes:** 5 runtime issues resolved
 - **Projects Configured:** 1 (AGILE - company-managed Scrum)
+- **Integrations:** 3/3 complete (jira-issue, jira-lifecycle, jira-search)
 
 ### Lessons Learned
 

@@ -6,6 +6,7 @@ Usage:
     python transition_issue.py PROJ-123 --name "In Progress"
     python transition_issue.py PROJ-123 --id 31
     python transition_issue.py PROJ-123 --name "Done" --resolution "Fixed"
+    python transition_issue.py PROJ-123 --name "In Progress" --sprint 42
 """
 
 import sys
@@ -65,7 +66,7 @@ def find_transition_by_name(transitions: list, name: str) -> dict:
 def transition_issue(issue_key: str, transition_id: str = None,
                     transition_name: str = None, resolution: str = None,
                     comment: str = None, fields: dict = None,
-                    profile: str = None) -> None:
+                    sprint_id: int = None, profile: str = None) -> None:
     """
     Transition an issue to a new status.
 
@@ -76,6 +77,7 @@ def transition_issue(issue_key: str, transition_id: str = None,
         resolution: Resolution to set (for Done transitions)
         comment: Comment to add
         fields: Additional fields to set
+        sprint_id: Sprint ID to move issue to after transition
         profile: JIRA profile to use
     """
     issue_key = validate_issue_key(issue_key)
@@ -112,6 +114,11 @@ def transition_issue(issue_key: str, transition_id: str = None,
         transition_fields['comment'] = text_to_adf(comment)
 
     client.transition_issue(issue_key, transition_id, fields=transition_fields if transition_fields else None)
+
+    # Move to sprint if specified
+    if sprint_id:
+        client.move_issues_to_sprint(sprint_id, [issue_key])
+
     client.close()
 
 
@@ -134,6 +141,8 @@ def main():
                        help='Resolution (for Done transitions): Fixed, Won\'t Fix, Duplicate, etc.')
     parser.add_argument('--comment', '-c',
                        help='Comment to add during transition')
+    parser.add_argument('--sprint', '-s', type=int,
+                       help='Sprint ID to move issue to after transition')
     parser.add_argument('--fields',
                        help='Additional fields as JSON string')
     parser.add_argument('--profile',
@@ -151,11 +160,15 @@ def main():
             resolution=args.resolution,
             comment=args.comment,
             fields=fields,
+            sprint_id=args.sprint,
             profile=args.profile
         )
 
         target = args.name or f"transition {args.id}"
-        print_success(f"Transitioned {args.issue_key} to {target}")
+        msg = f"Transitioned {args.issue_key} to {target}"
+        if args.sprint:
+            msg += f" and moved to sprint {args.sprint}"
+        print_success(msg)
 
     except JiraError as e:
         print_error(e)

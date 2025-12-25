@@ -26,6 +26,7 @@ This skill provides workflow management operations:
    - Set fields during transition (resolution, comment, etc.)
    - Handle transition-specific required fields
    - Support for custom workflows
+   - Optional sprint assignment during transition
 
 3. **Assign Issues**: Assign or reassign issues
    - Assign to specific users
@@ -58,6 +59,9 @@ python get_transitions.py PROJ-123
 
 # Transition to In Progress
 python transition_issue.py PROJ-123 --name "In Progress"
+
+# Transition and move to sprint in one operation
+python transition_issue.py PROJ-123 --name "In Progress" --sprint 42
 
 # Transition by ID
 python transition_issue.py PROJ-123 --id 31
@@ -98,3 +102,4 @@ Requires JIRA credentials via environment variables or settings files.
 - **jira-issue**: For creating and updating issues
 - **jira-search**: For finding issues to transition
 - **jira-collaborate**: For adding comments during transitions
+- **jira-agile**: For sprint management and Agile workflows
