@@ -115,7 +115,13 @@ def create_sprint(board_id: int, name: str,
 
     try:
         # Use Agile API to create sprint
-        result = client.create_sprint(sprint_data)
+        result = client.create_sprint(
+            board_id=board_id,
+            name=name,
+            goal=sprint_data.get('goal'),
+            start_date=sprint_data.get('startDate'),
+            end_date=sprint_data.get('endDate')
+        )
         return result
 
     finally:

@@ -48,9 +48,9 @@ class TestCreateSprint:
 
         # Verify API call
         mock_jira_client.create_sprint.assert_called_once()
-        call_args = mock_jira_client.create_sprint.call_args[0][0]
-        assert call_args['originBoardId'] == 123
-        assert call_args['name'] == "Sprint 42"
+        call_kwargs = mock_jira_client.create_sprint.call_args[1]
+        assert call_kwargs['board_id'] == 123
+        assert call_kwargs['name'] == "Sprint 42"
 
     def test_create_sprint_with_dates(self, mock_jira_client, sample_sprint_response):
         """Test setting start and end dates."""
@@ -72,11 +72,11 @@ class TestCreateSprint:
         assert result is not None
 
         # Verify dates were passed
-        call_args = mock_jira_client.create_sprint.call_args[0][0]
-        assert 'startDate' in call_args
-        assert 'endDate' in call_args
-        assert '2025-01-20' in call_args['startDate']
-        assert '2025-02-03' in call_args['endDate']
+        call_kwargs = mock_jira_client.create_sprint.call_args[1]
+        assert call_kwargs.get('start_date') is not None
+        assert call_kwargs.get('end_date') is not None
+        assert '2025-01-20' in call_kwargs['start_date']
+        assert '2025-02-03' in call_kwargs['end_date']
 
     def test_create_sprint_with_goal(self, mock_jira_client, sample_sprint_response):
         """Test setting sprint goal."""
@@ -97,8 +97,8 @@ class TestCreateSprint:
         assert result is not None
 
         # Verify goal was set
-        call_args = mock_jira_client.create_sprint.call_args[0][0]
-        assert call_args['goal'] == "Launch MVP"
+        call_kwargs = mock_jira_client.create_sprint.call_args[1]
+        assert call_kwargs['goal'] == "Launch MVP"
 
     def test_create_sprint_invalid_board(self, mock_jira_client):
         """Test error when board doesn't exist."""
@@ -159,8 +159,8 @@ class TestCreateSprint:
         assert result is not None
 
         # Verify date was properly formatted for API
-        call_args = mock_jira_client.create_sprint.call_args[0][0]
-        assert 'startDate' in call_args
+        call_kwargs = mock_jira_client.create_sprint.call_args[1]
+        assert call_kwargs.get('start_date') is not None
 
 
 @pytest.mark.agile

@@ -558,18 +558,25 @@ class JiraClient:
                         data=data,
                         operation=f"update sprint {sprint_id}")
 
-    def move_issues_to_sprint(self, sprint_id: int, issue_keys: list) -> None:
+    def move_issues_to_sprint(self, sprint_id: int, issue_keys: list,
+                               rank: Optional[str] = None) -> None:
         """
         Move issues to a sprint.
 
         Args:
             sprint_id: Sprint ID
             issue_keys: List of issue keys to move
+            rank: Optional rank position ('top', 'bottom', or None)
 
         Raises:
             JiraError or subclass on failure
         """
         data = {'issues': issue_keys}
+        if rank == 'top':
+            data['rankBeforeIssue'] = None  # Will be first
+        elif rank == 'bottom':
+            data['rankAfterIssue'] = None  # Will be last
+
         self.post(f'/rest/agile/1.0/sprint/{sprint_id}/issue',
                  data=data,
                  operation=f"move issues to sprint {sprint_id}")
