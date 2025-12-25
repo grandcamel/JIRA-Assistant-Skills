@@ -158,6 +158,79 @@ def main():
 
 **Bulk operations**: Always include `--dry-run` flag and confirmation prompts before modifying multiple issues.
 
+## Git Commit Guidelines
+
+This project follows the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification for all commit messages.
+
+### Commit Message Format
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Commit Types
+
+- **feat**: New feature or functionality
+- **fix**: Bug fix
+- **docs**: Documentation changes only
+- **style**: Code style changes (formatting, missing semicolons, etc.) with no logic changes
+- **refactor**: Code changes that neither fix bugs nor add features
+- **perf**: Performance improvements
+- **test**: Adding or updating tests
+- **build**: Changes to build system or dependencies
+- **ci**: Changes to CI configuration files and scripts
+- **chore**: Other changes that don't modify src or test files
+
+### Scopes
+
+Use scopes to identify which part of the codebase changed. Suggested scopes for this project:
+
+- **jira-issue**: Changes to the jira-issue skill
+- **jira-lifecycle**: Changes to the jira-lifecycle skill
+- **jira-search**: Changes to the jira-search skill
+- **jira-collaborate**: Changes to the jira-collaborate skill
+- **shared**: Changes to shared library code
+- **config**: Configuration changes
+- **docs**: Documentation updates (CLAUDE.md, README.md, etc.)
+
+Multiple scopes can be specified with commas: `feat(jira-issue,shared): add retry logic`
+
+### Breaking Changes
+
+Breaking changes MUST be indicated by:
+1. Adding `!` after the type/scope: `feat(shared)!: change config format`
+2. Including a `BREAKING CHANGE:` footer with description
+
+### Examples
+
+```bash
+# New feature in jira-issue skill
+feat(jira-issue): add support for creating subtasks
+
+# Bug fix with scope
+fix(shared): correct retry backoff calculation
+
+# Documentation update
+docs: add troubleshooting guide for authentication
+
+# Breaking change
+feat(config)!: migrate to YAML configuration format
+
+BREAKING CHANGE: settings.json is now settings.yaml and uses YAML syntax
+```
+
+### Body and Footer Guidelines
+
+- Use the body to explain what and why, not how
+- Reference JIRA tickets in footers: `Refs: PROJ-123`
+- Use `BREAKING CHANGE:` footer for detailed breaking change descriptions
+- Separate body from description with blank line
+- Wrap body at 72 characters
+
 ## Key Constraints
 
 - **Python 3.8+**: Minimum version for type hints and pathlib
