@@ -101,11 +101,19 @@ python get_blockers.py PROJ-123 --output tree
 
 # Bulk link
 python bulk_link.py --issues PROJ-1,PROJ-2,PROJ-3 --blocks PROJ-100
-python bulk_link.py --jql "project=PROJ AND fixVersion=1.0" --relates-to PROJ-RELEASE
+python bulk_link.py --jql "project=PROJ AND fixVersion=1.0" --relates-to PROJ-500
+python bulk_link.py --issues PROJ-1,PROJ-2 --blocks PROJ-100 --dry-run
+python bulk_link.py --issues PROJ-1,PROJ-2 --blocks PROJ-100 --skip-existing
 
 # Clone issue
 python clone_issue.py PROJ-123
 python clone_issue.py PROJ-123 --include-subtasks --include-links
+python clone_issue.py PROJ-123 --to-project OTHER
+python clone_issue.py PROJ-123 --summary "Clone: Custom title" --no-link
+
+# Export dependency graphs
+python get_dependencies.py PROJ-123 --output mermaid
+python get_dependencies.py PROJ-123 --output dot > deps.dot
 ```
 
 ## Link Types
