@@ -2,11 +2,26 @@
 Live Integration Tests: Time Tracking
 
 Tests for worklog operations, time estimates, and time tracking against a real JIRA instance.
+
+Note: Worklog comments require ADF format. These tests omit comments for simplicity,
+as the API accepts worklogs without comments.
 """
 
 import pytest
 import uuid
 from datetime import datetime, timedelta
+
+
+def make_adf_comment(text: str) -> dict:
+    """Create an ADF-formatted comment."""
+    return {
+        'type': 'doc',
+        'version': 1,
+        'content': [{
+            'type': 'paragraph',
+            'content': [{'type': 'text', 'text': text}]
+        }]
+    }
 
 
 class TestWorklogs:
@@ -16,13 +31,25 @@ class TestWorklogs:
         """Test adding a worklog entry."""
         result = jira_client.add_worklog(
             test_issue['key'],
-            time_spent='1h',
-            comment='Test worklog entry'
+            time_spent='1h'
         )
 
         assert 'id' in result
         assert result['timeSpent'] == '1h'
         assert result['timeSpentSeconds'] == 3600
+
+    def test_add_worklog_with_comment(self, jira_client, test_issue):
+        """Test adding a worklog with an ADF comment."""
+        comment = make_adf_comment(f'Test worklog {uuid.uuid4().hex[:8]}')
+        result = jira_client.add_worklog(
+            test_issue['key'],
+            time_spent='30m',
+            comment=comment
+        )
+
+        assert 'id' in result
+        assert result['timeSpent'] == '30m'
+        assert 'comment' in result
 
     def test_add_worklog_with_date(self, jira_client, test_issue):
         """Test adding a worklog with a specific started date."""
@@ -33,8 +60,7 @@ class TestWorklogs:
         result = jira_client.add_worklog(
             test_issue['key'],
             time_spent='2h',
-            started=started,
-            comment='Backlogged work entry'
+            started=started
         )
 
         assert 'id' in result
@@ -54,8 +80,7 @@ class TestWorklogs:
         for time_spent, expected_seconds in test_cases:
             result = jira_client.add_worklog(
                 test_issue['key'],
-                time_spent=time_spent,
-                comment=f'Test {time_spent}'
+                time_spent=time_spent
             )
 
             assert result['timeSpentSeconds'] == expected_seconds, f"Failed for {time_spent}"
@@ -65,8 +90,7 @@ class TestWorklogs:
         # Add a worklog first
         jira_client.add_worklog(
             test_issue['key'],
-            time_spent='1h',
-            comment=f'Worklog for get test {uuid.uuid4().hex[:8]}'
+            time_spent='1h'
         )
 
         # Get worklogs
@@ -81,8 +105,7 @@ class TestWorklogs:
         # Add a worklog
         created = jira_client.add_worklog(
             test_issue['key'],
-            time_spent='45m',
-            comment=f'Specific worklog {uuid.uuid4().hex[:8]}'
+            time_spent='45m'
         )
         worklog_id = created['id']
 
@@ -97,8 +120,7 @@ class TestWorklogs:
         # Create worklog
         created = jira_client.add_worklog(
             test_issue['key'],
-            time_spent='1h',
-            comment='Original comment'
+            time_spent='1h'
         )
         worklog_id = created['id']
 
@@ -106,8 +128,7 @@ class TestWorklogs:
         updated = jira_client.update_worklog(
             test_issue['key'],
             worklog_id,
-            time_spent='2h',
-            comment='Updated comment'
+            time_spent='2h'
         )
 
         assert updated['timeSpent'] == '2h'
@@ -118,8 +139,7 @@ class TestWorklogs:
         # Create worklog
         created = jira_client.add_worklog(
             test_issue['key'],
-            time_spent='30m',
-            comment=f'Worklog to delete {uuid.uuid4().hex[:8]}'
+            time_spent='30m'
         )
         worklog_id = created['id']
 
@@ -139,44 +159,60 @@ class TestTimeEstimates:
         """Test setting original time estimate."""
         jira_client.set_time_tracking(
             test_issue['key'],
-            original_estimate='8h'
+            original_estimate='4h'
         )
 
         # Verify
         tt = jira_client.get_time_tracking(test_issue['key'])
-        assert tt.get('originalEstimate') == '8h'
+        assert tt.get('originalEstimate') == '4h'
+        assert tt.get('originalEstimateSeconds') == 14400
+
+    def test_set_original_estimate_days(self, jira_client, test_issue):
+        """Test setting original time estimate in days."""
+        # JIRA normalizes 8h to 1d (1 working day = 8 hours)
+        jira_client.set_time_tracking(
+            test_issue['key'],
+            original_estimate='1d'
+        )
+
+        tt = jira_client.get_time_tracking(test_issue['key'])
+        # Should be 1d = 8 hours = 28800 seconds
         assert tt.get('originalEstimateSeconds') == 28800
+        # Display format may be '1d' or '8h' depending on settings
+        assert tt.get('originalEstimate') in ['1d', '8h']
 
     def test_set_remaining_estimate(self, jira_client, test_issue):
         """Test setting remaining time estimate."""
         # First set original
         jira_client.set_time_tracking(
             test_issue['key'],
-            original_estimate='8h'
+            original_estimate='4h'
         )
 
         # Then set remaining
         jira_client.set_time_tracking(
             test_issue['key'],
-            remaining_estimate='4h'
+            remaining_estimate='2h'
         )
 
         # Verify
         tt = jira_client.get_time_tracking(test_issue['key'])
-        assert tt.get('remainingEstimate') == '4h'
-        assert tt.get('remainingEstimateSeconds') == 14400
+        assert tt.get('remainingEstimate') == '2h'
+        assert tt.get('remainingEstimateSeconds') == 7200
 
     def test_set_both_estimates(self, jira_client, test_issue):
         """Test setting both original and remaining estimates."""
         jira_client.set_time_tracking(
             test_issue['key'],
-            original_estimate='16h',
-            remaining_estimate='12h'
+            original_estimate='2d',
+            remaining_estimate='1d'
         )
 
         tt = jira_client.get_time_tracking(test_issue['key'])
-        assert tt.get('originalEstimate') == '16h' or tt.get('originalEstimate') == '2d'
-        assert tt.get('remainingEstimate') == '12h' or tt.get('remainingEstimate') == '1d 4h'
+        # 2d = 16h = 57600 seconds
+        assert tt.get('originalEstimateSeconds') == 57600
+        # 1d = 8h = 28800 seconds
+        assert tt.get('remainingEstimateSeconds') == 28800
 
     def test_estimate_formats(self, jira_client, test_issue):
         """Test various estimate formats."""
@@ -204,29 +240,28 @@ class TestTimeTrackingWorkflow:
         # Step 1: Set initial estimate
         jira_client.set_time_tracking(
             test_issue['key'],
-            original_estimate='8h'
+            original_estimate='4h'
         )
 
         # Step 2: Log some work
         jira_client.add_worklog(
             test_issue['key'],
-            time_spent='2h',
-            comment='Initial work'
+            time_spent='1h'
         )
 
         # Step 3: Verify time tracking reflects logged time
         tt = jira_client.get_time_tracking(test_issue['key'])
-        assert tt.get('timeSpent') == '2h'
-        assert tt.get('timeSpentSeconds') == 7200
-        # Remaining should be auto-adjusted (8h - 2h = 6h)
-        assert tt.get('remainingEstimateSeconds') == 21600
+        assert tt.get('timeSpent') == '1h'
+        assert tt.get('timeSpentSeconds') == 3600
+        # Remaining should be auto-adjusted (4h - 1h = 3h)
+        assert tt.get('remainingEstimateSeconds') == 10800
 
     def test_multiple_worklogs_accumulate(self, jira_client, test_issue):
         """Test that multiple worklogs accumulate correctly."""
         # Log multiple entries
-        jira_client.add_worklog(test_issue['key'], time_spent='1h', comment='Entry 1')
-        jira_client.add_worklog(test_issue['key'], time_spent='2h', comment='Entry 2')
-        jira_client.add_worklog(test_issue['key'], time_spent='30m', comment='Entry 3')
+        jira_client.add_worklog(test_issue['key'], time_spent='1h')
+        jira_client.add_worklog(test_issue['key'], time_spent='2h')
+        jira_client.add_worklog(test_issue['key'], time_spent='30m')
 
         # Verify total (1h + 2h + 30m = 3h 30m = 12600 seconds)
         tt = jira_client.get_time_tracking(test_issue['key'])
@@ -240,8 +275,7 @@ class TestTimeTrackingWorkflow:
         # Log work with auto-adjust (default behavior)
         jira_client.add_worklog(
             test_issue['key'],
-            time_spent='1h',
-            comment='Work that auto-adjusts remaining'
+            time_spent='1h'
         )
 
         tt = jira_client.get_time_tracking(test_issue['key'])
@@ -251,20 +285,36 @@ class TestTimeTrackingWorkflow:
     def test_worklog_with_new_remaining(self, jira_client, test_issue):
         """Test logging work with explicit new remaining estimate."""
         # Set original estimate
-        jira_client.set_time_tracking(test_issue['key'], original_estimate='8h')
+        jira_client.set_time_tracking(test_issue['key'], original_estimate='4h')
 
         # Log work with explicit remaining
         jira_client.add_worklog(
             test_issue['key'],
-            time_spent='2h',
-            comment='Work with explicit remaining',
+            time_spent='1h',
             adjust_estimate='new',
-            new_estimate='4h'
+            new_estimate='2h'
         )
 
         tt = jira_client.get_time_tracking(test_issue['key'])
-        assert tt.get('timeSpentSeconds') == 7200  # 2h logged
-        assert tt.get('remainingEstimateSeconds') == 14400  # 4h remaining (explicit)
+        assert tt.get('timeSpentSeconds') == 3600  # 1h logged
+        assert tt.get('remainingEstimateSeconds') == 7200  # 2h remaining (explicit)
+
+    def test_worklog_leave_estimate(self, jira_client, test_issue):
+        """Test logging work without adjusting estimate."""
+        # Set original estimate
+        jira_client.set_time_tracking(test_issue['key'], original_estimate='4h')
+
+        # Log work with 'leave' - don't adjust remaining
+        jira_client.add_worklog(
+            test_issue['key'],
+            time_spent='1h',
+            adjust_estimate='leave'
+        )
+
+        tt = jira_client.get_time_tracking(test_issue['key'])
+        assert tt.get('timeSpentSeconds') == 3600  # 1h logged
+        # Remaining should still be 4h (not adjusted)
+        assert tt.get('remainingEstimateSeconds') == 14400
 
 
 class TestTimeTrackingEdgeCases:
@@ -283,8 +333,7 @@ class TestTimeTrackingEdgeCases:
         for i in range(5):
             jira_client.add_worklog(
                 test_issue['key'],
-                time_spent='15m',
-                comment=f'Pagination test entry {i+1}'
+                time_spent='15m'
             )
 
         # Get first page
@@ -305,8 +354,7 @@ class TestTimeTrackingEdgeCases:
         # Create worklog
         created = jira_client.add_worklog(
             test_issue['key'],
-            time_spent='1h',
-            comment='Original'
+            time_spent='1h'
         )
         worklog_id = created['id']
         original_started = created['started']
@@ -321,3 +369,22 @@ class TestTimeTrackingEdgeCases:
         # Started date should be preserved
         assert updated['started'] == original_started
         assert updated['timeSpent'] == '2h'
+
+    def test_update_worklog_with_comment(self, jira_client, test_issue):
+        """Test updating a worklog with a new comment."""
+        # Create worklog without comment
+        created = jira_client.add_worklog(
+            test_issue['key'],
+            time_spent='1h'
+        )
+        worklog_id = created['id']
+
+        # Update with comment
+        comment = make_adf_comment('Added comment on update')
+        updated = jira_client.update_worklog(
+            test_issue['key'],
+            worklog_id,
+            comment=comment
+        )
+
+        assert 'comment' in updated
