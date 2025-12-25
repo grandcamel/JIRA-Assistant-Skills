@@ -53,3 +53,8 @@ htmlcov/
 # Temporary files
 *.tmp
 *.temp
+
+# Claude Flow runtime artifacts (from accidental init)
+.claude-flow/
+.swarm/
+claude-flow
