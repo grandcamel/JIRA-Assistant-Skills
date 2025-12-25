@@ -53,3 +53,7 @@ htmlcov/
 # Temporary files
 *.tmp
 *.temp
+.claude-flow/metrics/agent-metrics.json
+.claude-flow/metrics/performance.json
+.claude-flow/metrics/task-metrics.json
+.swarm/memory.db
