@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+"""
+Manage watchers on a JIRA issue.
+
+Usage:
+    python manage_watchers.py PROJ-123 --add user@example.com
+    python manage_watchers.py PROJ-123 --remove user@example.com
+    python manage_watchers.py PROJ-123 --list
+"""
+
+import sys
+import argparse
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
+
+from config_manager import get_jira_client
+from error_handler import print_error, JiraError, ValidationError
+from validators import validate_issue_key
+from formatters import print_success, format_table
+
+
+def list_watchers(issue_key: str, profile: str = None) -> list:
+    """List watchers on an issue."""
+    issue_key = validate_issue_key(issue_key)
+    client = get_jira_client(profile)
+    result = client.get(f'/rest/api/3/issue/{issue_key}/watchers',
+                       operation=f"get watchers for {issue_key}")
+    client.close()
+    return result.get('watchers', [])
+
+
+def add_watcher(issue_key: str, user: str, profile: str = None) -> None:
+    """Add a watcher to an issue."""
+    issue_key = validate_issue_key(issue_key)
+    client = get_jira_client(profile)
+
+    if '@' in user:
+        user_response = client.get(f'/rest/api/3/user/search?query={user}',
+                                   operation="search for user")
+        if not user_response:
+            raise ValidationError(f"User not found: {user}")
+        account_id = user_response[0]['accountId']
+    else:
+        account_id = user
+
+    client.post(f'/rest/api/3/issue/{issue_key}/watchers',
+               data=f'"{account_id}"',
+               operation=f"add watcher to {issue_key}")
+    client.close()
+
+
+def remove_watcher(issue_key: str, user: str, profile: str = None) -> None:
+    """Remove a watcher from an issue."""
+    issue_key = validate_issue_key(issue_key)
+    client = get_jira_client(profile)
+
+    if '@' in user:
+        user_response = client.get(f'/rest/api/3/user/search?query={user}',
+                                   operation="search for user")
+        if not user_response:
+            raise ValidationError(f"User not found: {user}")
+        account_id = user_response[0]['accountId']
+    else:
+        account_id = user
+
+    client.delete(f'/rest/api/3/issue/{issue_key}/watchers?accountId={account_id}',
+                 operation=f"remove watcher from {issue_key}")
+    client.close()
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Manage watchers on a JIRA issue',
+        epilog='Example: python manage_watchers.py PROJ-123 --add user@example.com'
+    )
+
+    parser.add_argument('issue_key',
+                       help='Issue key (e.g., PROJ-123)')
+
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--add',
+                      help='Add watcher (account ID or email)')
+    group.add_argument('--remove',
+                      help='Remove watcher (account ID or email)')
+    group.add_argument('--list', '-l',
+                      action='store_true',
+                      help='List current watchers')
+
+    parser.add_argument('--profile',
+                       help='JIRA profile to use (default: from config)')
+
+    args = parser.parse_args()
+
+    try:
+        if args.list:
+            watchers = list_watchers(args.issue_key, profile=args.profile)
+            if not watchers:
+                print(f"No watchers on {args.issue_key}")
+            else:
+                data = [
+                    {
+                        'Name': w.get('displayName', ''),
+                        'Email': w.get('emailAddress', '')
+                    }
+                    for w in watchers
+                ]
+                print(format_table(data))
+
+        elif args.add:
+            add_watcher(args.issue_key, args.add, profile=args.profile)
+            print_success(f"Added {args.add} as watcher to {args.issue_key}")
+
+        elif args.remove:
+            remove_watcher(args.issue_key, args.remove, profile=args.profile)
+            print_success(f"Removed {args.remove} as watcher from {args.issue_key}")
+
+    except JiraError as e:
+        print_error(e)
+        sys.exit(1)
+    except Exception as e:
+        print_error(e, debug=True)
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

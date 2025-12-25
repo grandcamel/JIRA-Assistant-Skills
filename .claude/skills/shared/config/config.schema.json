@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "JIRA Assistant Skills Configuration",
+  "description": "Configuration schema for JIRA Assistant Skills",
+  "type": "object",
+  "properties": {
+    "jira": {
+      "type": "object",
+      "properties": {
+        "default_profile": {
+          "type": "string",
+          "description": "Default profile to use if not specified"
+        },
+        "profiles": {
+          "type": "object",
+          "description": "JIRA instance profiles",
+          "patternProperties": {
+            "^[a-zA-Z0-9_-]+$": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "format": "uri",
+                  "pattern": "^https://",
+                  "description": "JIRA instance URL (must use HTTPS)"
+                },
+                "project_keys": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Z][A-Z0-9]*$"
+                  },
+                  "description": "List of project keys available in this instance"
+                },
+                "default_project": {
+                  "type": "string",
+                  "pattern": "^[A-Z][A-Z0-9]*$",
+                  "description": "Default project key for this profile"
+                },
+                "use_service_management": {
+                  "type": "boolean",
+                  "description": "Whether this instance uses JIRA Service Management"
+                }
+              },
+              "required": ["url"]
+            }
+          }
+        },
+        "credentials": {
+          "type": "object",
+          "description": "Credentials per profile (should only be in settings.local.json)",
+          "patternProperties": {
+            "^[a-zA-Z0-9_-]+$": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "description": "Email for JIRA authentication"
+                },
+                "api_token": {
+                  "type": "string",
+                  "description": "JIRA API token (AVOID storing in files, use environment variables instead)"
+                }
+              }
+            }
+          }
+        },
+        "api": {
+          "type": "object",
+          "description": "API client configuration",
+          "properties": {
+            "version": {
+              "type": "string",
+              "enum": ["2", "3"],
+              "default": "3",
+              "description": "JIRA REST API version"
+            },
+            "timeout": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 300,
+              "default": 30,
+              "description": "Request timeout in seconds"
+            },
+            "max_retries": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10,
+              "default": 3,
+              "description": "Maximum number of retry attempts"
+            },
+            "retry_backoff": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10,
+              "default": 2.0,
+              "description": "Exponential backoff factor for retries"
+            }
+          }
+        }
+      },
+      "required": ["profiles"]
+    }
+  },
+  "required": ["jira"]
+}

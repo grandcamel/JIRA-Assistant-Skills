@@ -1,0 +1,31 @@
+{
+  "jira": {
+    "default_profile": "production",
+    "profiles": {
+      "production": {
+        "url": "https://your-company.atlassian.net",
+        "project_keys": ["PROD", "OPS"],
+        "default_project": "PROD",
+        "use_service_management": false
+      },
+      "development": {
+        "url": "https://your-company-dev.atlassian.net",
+        "project_keys": ["DEV", "TEST"],
+        "default_project": "DEV",
+        "use_service_management": true
+      },
+      "staging": {
+        "url": "https://your-company-staging.atlassian.net",
+        "project_keys": ["STAGE"],
+        "default_project": "STAGE",
+        "use_service_management": false
+      }
+    },
+    "api": {
+      "version": "3",
+      "timeout": 30,
+      "max_retries": 3,
+      "retry_backoff": 2.0
+    }
+  }
+}

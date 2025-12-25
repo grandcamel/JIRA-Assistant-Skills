@@ -1,0 +1,16 @@
+{
+  "jira": {
+    "default_profile": "development",
+    "credentials": {
+      "production": {
+        "email": "your-email@company.com"
+      },
+      "development": {
+        "email": "your-email@company.com"
+      },
+      "staging": {
+        "email": "your-email@company.com"
+      }
+    }
+  }
+}

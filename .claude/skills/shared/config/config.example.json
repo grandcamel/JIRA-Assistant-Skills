@@ -1,0 +1,33 @@
+{
+  "jira": {
+    "default_profile": "production",
+    "profiles": {
+      "production": {
+        "url": "https://company.atlassian.net",
+        "project_keys": ["PROD", "OPS", "INFRA"],
+        "default_project": "PROD",
+        "use_service_management": false
+      },
+      "development": {
+        "url": "https://company-dev.atlassian.net",
+        "project_keys": ["DEV", "TEST"],
+        "default_project": "DEV",
+        "use_service_management": true
+      }
+    },
+    "credentials": {
+      "production": {
+        "email": "user@company.com"
+      },
+      "development": {
+        "email": "user@company.com"
+      }
+    },
+    "api": {
+      "version": "3",
+      "timeout": 30,
+      "max_retries": 3,
+      "retry_backoff": 2.0
+    }
+  }
+}

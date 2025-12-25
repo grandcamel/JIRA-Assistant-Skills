@@ -1,0 +1,50 @@
+{
+  "my_open_issues": {
+    "name": "My Open Issues",
+    "jql": "assignee = currentUser() AND status != Done ORDER BY priority DESC, created ASC"
+  },
+  "my_recent": {
+    "name": "My Recent Issues",
+    "jql": "assignee = currentUser() ORDER BY updated DESC"
+  },
+  "open_bugs": {
+    "name": "Open Bugs",
+    "jql": "type = Bug AND status in (Open, 'In Progress') ORDER BY priority DESC"
+  },
+  "unassigned": {
+    "name": "Unassigned Issues",
+    "jql": "project = {PROJECT} AND assignee is EMPTY AND status != Done ORDER BY priority DESC"
+  },
+  "created_this_week": {
+    "name": "Created This Week",
+    "jql": "project = {PROJECT} AND created >= startOfWeek() ORDER BY created DESC"
+  },
+  "updated_today": {
+    "name": "Updated Today",
+    "jql": "project = {PROJECT} AND updated >= startOfDay() ORDER BY updated DESC"
+  },
+  "overdue": {
+    "name": "Overdue Issues",
+    "jql": "duedate < now() AND status != Done ORDER BY duedate ASC"
+  },
+  "high_priority_open": {
+    "name": "High Priority Open",
+    "jql": "priority in (Highest, High) AND status not in (Done, Closed) ORDER BY priority DESC"
+  },
+  "resolved_not_closed": {
+    "name": "Resolved But Not Closed",
+    "jql": "status = Resolved AND resolution is not EMPTY ORDER BY resolved DESC"
+  },
+  "watching": {
+    "name": "Issues I'm Watching",
+    "jql": "watcher = currentUser() ORDER BY updated DESC"
+  },
+  "recent_comments": {
+    "name": "Recently Commented",
+    "jql": "project = {PROJECT} AND comment ~ currentUser() ORDER BY updated DESC"
+  },
+  "blocked": {
+    "name": "Blocked Issues",
+    "jql": "labels = blocked OR status = Blocked ORDER BY priority DESC"
+  }
+}
