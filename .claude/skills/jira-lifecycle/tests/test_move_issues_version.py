@@ -34,10 +34,9 @@ class TestMoveIssuesVersion:
         assert mock_jira_client.update_issue.call_count == 2
 
     @patch('move_issues_version.get_jira_client')
-    def test_move_issues_by_version_name(self, mock_get_client, mock_jira_client, sample_versions_list, sample_issue_list):
+    def test_move_issues_by_version_name(self, mock_get_client, mock_jira_client, sample_issue_list):
         """Test moving issues from one version to another."""
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_versions.return_value = sample_versions_list
         mock_jira_client.search_issues.return_value = sample_issue_list
         mock_jira_client.update_issue.return_value = None
 
@@ -50,8 +49,9 @@ class TestMoveIssuesVersion:
             profile=None
         )
 
-        assert result['moved'] >= 0
-        mock_jira_client.get_versions.assert_called_once()
+        # Should have moved the issues found by JQL
+        assert result['moved'] == 2
+        assert mock_jira_client.update_issue.call_count == 2
 
     @patch('move_issues_version.get_jira_client')
     def test_move_specific_issues(self, mock_get_client, mock_jira_client):
