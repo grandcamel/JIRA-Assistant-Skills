@@ -83,7 +83,13 @@ def create_issue(project: str, issue_type: str, summary: str,
         fields['priority'] = {'name': priority}
 
     if assignee:
-        if '@' in assignee:
+        if assignee.lower() == 'self':
+            # Will resolve to current user's account ID
+            client = get_jira_client(profile)
+            account_id = client.get_current_user_id()
+            fields['assignee'] = {'accountId': account_id}
+            client.close()
+        elif '@' in assignee:
             fields['assignee'] = {'emailAddress': assignee}
         else:
             fields['assignee'] = {'accountId': assignee}
@@ -121,7 +127,7 @@ def main():
     parser.add_argument('--priority',
                        help='Priority (Highest, High, Medium, Low, Lowest)')
     parser.add_argument('--assignee', '-a',
-                       help='Assignee (account ID or email)')
+                       help='Assignee (account ID, email, or "self")')
     parser.add_argument('--labels', '-l',
                        help='Comma-separated labels')
     parser.add_argument('--components', '-c',

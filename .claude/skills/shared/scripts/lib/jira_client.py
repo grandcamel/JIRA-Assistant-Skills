@@ -382,6 +382,19 @@ class JiraClient:
         self.post(f'/rest/api/3/issue/{issue_key}/transitions', data=data,
                  operation=f"transition issue {issue_key}")
 
+    def get_current_user_id(self) -> str:
+        """
+        Get the account ID of the current authenticated user.
+
+        Returns:
+            Account ID string
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        current_user = self.get('/rest/api/3/myself', operation='get current user')
+        return current_user.get('accountId')
+
     def assign_issue(self, issue_key: str, account_id: Optional[str] = None) -> None:
         """
         Assign an issue to a user.
@@ -395,8 +408,7 @@ class JiraClient:
         """
         if account_id == "-1":
             # Get current user's account ID
-            current_user = self.get('/rest/api/3/myself', operation='get current user')
-            account_id = current_user.get('accountId')
+            account_id = self.get_current_user_id()
             data = {"accountId": account_id}
         elif account_id is None:
             data = None

@@ -64,6 +64,12 @@ def update_issue(issue_key: str, summary: str = None, description: str = None,
     if assignee is not None:
         if assignee.lower() == 'none' or assignee.lower() == 'unassigned':
             fields['assignee'] = None
+        elif assignee.lower() == 'self':
+            # Will resolve to current user's account ID
+            client = get_jira_client(profile)
+            account_id = client.get_current_user_id()
+            fields['assignee'] = {'accountId': account_id}
+            client.close()
         elif '@' in assignee:
             fields['assignee'] = {'emailAddress': assignee}
         else:
@@ -101,7 +107,7 @@ def main():
     parser.add_argument('--priority',
                        help='New priority (Highest, High, Medium, Low, Lowest)')
     parser.add_argument('--assignee', '-a',
-                       help='New assignee (account ID, email, or "none")')
+                       help='New assignee (account ID, email, "self", or "none")')
     parser.add_argument('--labels', '-l',
                        help='Comma-separated labels (replaces existing)')
     parser.add_argument('--components', '-c',

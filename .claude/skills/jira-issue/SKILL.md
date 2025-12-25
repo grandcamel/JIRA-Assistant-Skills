@@ -56,11 +56,17 @@ Pre-configured templates for common issue types:
 # Create a bug
 python create_issue.py --project PROJ --type Bug --summary "Login fails on mobile" --priority High
 
+# Create an issue assigned to yourself
+python create_issue.py --project PROJ --type Task --summary "Review PR" --assignee self
+
 # Get issue details
 python get_issue.py PROJ-123
 
-# Update issue priority
-python update_issue.py PROJ-123 --priority Critical --labels "urgent,security"
+# Update issue priority and assignee
+python update_issue.py PROJ-123 --priority Critical --assignee self
+
+# Unassign an issue
+python update_issue.py PROJ-123 --assignee none
 
 # Delete an issue
 python delete_issue.py PROJ-456
