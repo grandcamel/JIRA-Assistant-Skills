@@ -10,8 +10,15 @@ from unittest.mock import Mock, MagicMock
 import sys
 from pathlib import Path
 
-# Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'shared' / 'scripts' / 'lib'))
+# Add shared lib to path so imports work in tests
+shared_lib_path = str(Path(__file__).parent.parent.parent.parent / 'shared' / 'scripts' / 'lib')
+if shared_lib_path not in sys.path:
+    sys.path.insert(0, shared_lib_path)
+
+# Add scripts to path for importing
+scripts_path = str(Path(__file__).parent.parent / 'scripts')
+if scripts_path not in sys.path:
+    sys.path.insert(0, scripts_path)
 
 
 @pytest.fixture

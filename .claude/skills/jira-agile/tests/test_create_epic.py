@@ -5,14 +5,23 @@ Following TDD: These tests are written FIRST and should FAIL initially.
 Implementation comes after tests are defined.
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 import sys
 from pathlib import Path
 
-# Add scripts to path for importing
-scripts_path = Path(__file__).parent.parent / 'scripts'
+# Add paths BEFORE any other imports
+# Test file is at: .claude/skills/jira-agile/tests/test_create_epic.py
+# Shared lib is at: .claude/skills/shared/scripts/lib
+test_dir = Path(__file__).parent  # tests
+jira_agile_dir = test_dir.parent  # jira-agile
+skills_dir = jira_agile_dir.parent  # skills
+shared_lib_path = skills_dir / 'shared' / 'scripts' / 'lib'
+scripts_path = jira_agile_dir / 'scripts'
+
+sys.path.insert(0, str(shared_lib_path))
 sys.path.insert(0, str(scripts_path))
+
+import pytest
+from unittest.mock import Mock, patch, MagicMock
 
 
 @pytest.mark.agile
@@ -25,14 +34,13 @@ class TestCreateEpic:
         # Arrange
         mock_jira_client.create_issue.return_value = sample_epic_response
 
-        # Import will fail initially - that's expected for TDD
         from create_epic import create_epic
 
         # Act
         result = create_epic(
             project="PROJ",
             summary="Mobile App MVP",
-            profile=None
+            client=mock_jira_client
         )
 
         # Assert
@@ -57,7 +65,7 @@ class TestCreateEpic:
             project="PROJ",
             summary="Mobile App MVP",
             description="## Overview\nBuild mobile app with **React Native**",
-            profile=None
+            client=mock_jira_client
         )
 
         # Assert
@@ -79,7 +87,7 @@ class TestCreateEpic:
             project="PROJ",
             summary="Mobile App MVP",
             epic_name="MVP",
-            profile=None
+            client=mock_jira_client
         )
 
         # Assert
@@ -100,7 +108,7 @@ class TestCreateEpic:
             project="PROJ",
             summary="Mobile App MVP",
             color="blue",
-            profile=None
+            client=mock_jira_client
         )
 
         # Assert
@@ -112,8 +120,7 @@ class TestCreateEpic:
 
     def test_create_epic_invalid_color(self):
         """Test validation of epic color."""
-        from create_epic import create_epic
-        from error_handler import ValidationError
+        from create_epic import create_epic, ValidationError
 
         # Act & Assert
         with pytest.raises(ValidationError) as exc_info:
@@ -128,8 +135,7 @@ class TestCreateEpic:
 
     def test_create_epic_missing_project(self):
         """Test error handling for missing required field."""
-        from create_epic import create_epic
-        from error_handler import ValidationError
+        from create_epic import create_epic, ValidationError
 
         # Act & Assert
         with pytest.raises(ValidationError) as exc_info:
@@ -158,7 +164,7 @@ class TestCreateEpic:
             create_epic(
                 project="PROJ",
                 summary="Mobile App MVP",
-                profile=None
+                client=mock_jira_client
             )
 
         assert exc_info.value.status_code == 400
