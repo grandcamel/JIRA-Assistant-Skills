@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+"""
+List JSM organizations.
+
+Usage:
+    python list_organizations.py
+    python list_organizations.py --output json
+    python list_organizations.py --start 0 --limit 25
+"""
+
+import sys
+import os
+import argparse
+import json
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
+
+from config_manager import get_jira_client
+from error_handler import print_error, JiraError
+
+
+def list_organizations_func(start: int = 0, limit: int = 50,
+                             profile: str = None) -> dict:
+    """
+    List all organizations.
+
+    Args:
+        start: Starting index for pagination
+        limit: Maximum results per page
+        profile: JIRA profile to use
+
+    Returns:
+        Organizations data
+    """
+    with get_jira_client(profile) as client:
+        return client.get_organizations(start=start, limit=limit)
+
+
+def main():
+    """Main entry point."""
+    parser = argparse.ArgumentParser(
+        description='List JSM organizations',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  List all organizations:
+    %(prog)s
+
+  JSON output:
+    %(prog)s --output json
+
+  Pagination:
+    %(prog)s --start 0 --limit 25
+        """
+    )
+
+    parser.add_argument('--start', type=int, default=0,
+                        help='Starting index for pagination (default: 0)')
+    parser.add_argument('--limit', type=int, default=50,
+                        help='Maximum results per page (default: 50)')
+    parser.add_argument('--output', choices=['text', 'json', 'csv'], default='text',
+                        help='Output format (default: text)')
+    parser.add_argument('--count', action='store_true',
+                        help='Show only count')
+    parser.add_argument('--profile',
+                        help='JIRA profile to use from config')
+
+    args = parser.parse_args()
+
+    try:
+        data = list_organizations_func(
+            start=args.start,
+            limit=args.limit,
+            profile=args.profile
+        )
+
+        organizations = data.get('values', [])
+
+        if args.count:
+            print(len(organizations))
+            return 0
+
+        if args.output == 'json':
+            print(json.dumps(organizations, indent=2))
+        elif args.output == 'csv':
+            print("ID,Name")
+            for org in organizations:
+                print(f"{org.get('id')},{org.get('name')}")
+        else:
+            if not organizations:
+                print("No organizations found.")
+                return 0
+
+            print("Organizations:\n")
+            print(f"{'ID':<10} {'Name'}")
+            print("-" * 60)
+            for org in organizations:
+                print(f"{org.get('id'):<10} {org.get('name')}")
+
+            print(f"\nTotal: {len(organizations)} organization(s)")
+
+        return 0
+
+    except JiraError as e:
+        print_error(f"Failed to list organizations: {e}")
+        return 1
+    except Exception as e:
+        print_error(f"Unexpected error: {e}")
+        return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

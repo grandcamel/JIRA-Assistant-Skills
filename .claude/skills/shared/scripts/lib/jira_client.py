@@ -2137,3 +2137,1102 @@ class JiraClient:
                     pass  # Some links may fail due to permissions
 
         return clone
+
+    # ========== JSM Service Desk Core (/rest/servicedeskapi/servicedesk) ==========
+
+    def get_service_desks(self, start: int = 0, limit: int = 50) -> Dict[str, Any]:
+        """
+        Get all JSM service desks with pagination.
+
+        Args:
+            start: Starting index for pagination
+            limit: Maximum results per page (max 100)
+
+        Returns:
+            Service desks response with 'values', 'size', 'start', 'limit', 'isLastPage'
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {'start': start, 'limit': limit}
+        return self.get('/rest/servicedeskapi/servicedesk', params=params,
+                       operation="get service desks")
+
+    def get_service_desk(self, service_desk_id: str) -> Dict[str, Any]:
+        """
+        Get a specific service desk by ID.
+
+        Args:
+            service_desk_id: Service desk ID
+
+        Returns:
+            Service desk object with id, projectId, projectName, projectKey
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(f'/rest/servicedeskapi/servicedesk/{service_desk_id}',
+                       operation=f"get service desk {service_desk_id}")
+
+    def get_request_types(self, service_desk_id: str,
+                          start: int = 0, limit: int = 50) -> Dict[str, Any]:
+        """
+        Get request types for a service desk.
+
+        Args:
+            service_desk_id: Service desk ID
+            start: Starting index for pagination
+            limit: Maximum results per page (max 100)
+
+        Returns:
+            Request types response with 'values', 'size', 'start', 'limit', 'isLastPage'
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {'start': start, 'limit': limit}
+        return self.get(
+            f'/rest/servicedeskapi/servicedesk/{service_desk_id}/requesttype',
+            params=params,
+            operation=f"get request types for service desk {service_desk_id}"
+        )
+
+    def get_request_type(self, service_desk_id: str,
+                         request_type_id: str) -> Dict[str, Any]:
+        """
+        Get a specific request type.
+
+        Args:
+            service_desk_id: Service desk ID
+            request_type_id: Request type ID
+
+        Returns:
+            Request type object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(
+            f'/rest/servicedeskapi/servicedesk/{service_desk_id}/requesttype/{request_type_id}',
+            operation=f"get request type {request_type_id}"
+        )
+
+    def get_request_type_fields(self, service_desk_id: str,
+                                request_type_id: str) -> Dict[str, Any]:
+        """
+        Get fields for a request type.
+
+        Args:
+            service_desk_id: Service desk ID
+            request_type_id: Request type ID
+
+        Returns:
+            Request type fields with 'requestTypeFields', 'canRaiseOnBehalfOf',
+            'canAddRequestParticipants'
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(
+            f'/rest/servicedeskapi/servicedesk/{service_desk_id}/requesttype/{request_type_id}/field',
+            operation=f"get fields for request type {request_type_id}"
+        )
+
+    def create_service_desk(self, name: str, key: str,
+                            project_template_key: str = 'com.atlassian.servicedesk:simplified-it-service-desk') -> Dict[str, Any]:
+        """
+        Create a new service desk (requires JSM administrator permissions).
+
+        Args:
+            name: Service desk name
+            key: Project key (uppercase, 2-10 chars)
+            project_template_key: JSM project template
+
+        Returns:
+            Created service desk object
+
+        Raises:
+            JiraError or subclass on failure
+
+        Common template keys:
+            IT Service Desk: 'com.atlassian.servicedesk:simplified-it-service-desk'
+            Internal Service Desk: 'com.atlassian.servicedesk:simplified-internal-service-desk'
+            External Service Desk: 'com.atlassian.servicedesk:simplified-external-service-desk'
+        """
+        data = {
+            'name': name,
+            'key': key.upper(),
+            'projectTemplateKey': project_template_key
+        }
+        return self.post('/rest/servicedeskapi/servicedesk', data=data,
+                        operation=f"create service desk {key}")
+
+    def lookup_service_desk_by_project_key(self, project_key: str) -> Dict[str, Any]:
+        """
+        Lookup service desk ID by project key.
+
+        Args:
+            project_key: Project key (e.g., 'ITS')
+
+        Returns:
+            Service desk object
+
+        Raises:
+            JiraError: If no service desk found for project key
+        """
+        service_desks = self.get_service_desks()
+        for sd in service_desks.get('values', []):
+            if sd.get('projectKey') == project_key:
+                return sd
+
+        from error_handler import JiraError
+        raise JiraError(f"No service desk found for project key: {project_key}")
+
+    # ========== JSM Customer Management (/rest/servicedeskapi/customer) ==========
+
+    def create_customer(self, email: str, display_name: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Create a customer account for JSM.
+
+        Args:
+            email: Customer email address
+            display_name: Display name (defaults to email if not provided)
+
+        Returns:
+            Created customer data with accountId, emailAddress, displayName
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        payload = {'email': email}
+        if display_name:
+            payload['displayName'] = display_name
+        return self.post('/rest/servicedeskapi/customer', data=payload,
+                        operation=f"create customer {email}")
+
+    def get_service_desk_customers(self, service_desk_id: str, query: Optional[str] = None,
+                                    start: int = 0, limit: int = 50) -> Dict[str, Any]:
+        """
+        List customers for a service desk.
+
+        Args:
+            service_desk_id: Service desk ID or key
+            query: Search query for email/name filtering
+            start: Starting index for pagination
+            limit: Maximum results per page
+
+        Returns:
+            Customers data with values, size, start, limit, isLastPage
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {'start': start, 'limit': limit}
+        if query:
+            params['query'] = query
+        return self.get(f'/rest/servicedeskapi/servicedesk/{service_desk_id}/customer',
+                       params=params,
+                       operation=f"get customers for service desk {service_desk_id}")
+
+    def add_customers_to_service_desk(self, service_desk_id: str,
+                                      account_ids: list) -> None:
+        """
+        Add customers to a service desk.
+
+        Args:
+            service_desk_id: Service desk ID or key
+            account_ids: List of customer account IDs
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        payload = {'accountIds': account_ids}
+        self.post(f'/rest/servicedeskapi/servicedesk/{service_desk_id}/customer',
+                 data=payload,
+                 operation=f"add customers to service desk {service_desk_id}")
+
+    def remove_customers_from_service_desk(self, service_desk_id: str,
+                                           account_ids: list) -> None:
+        """
+        Remove customers from a service desk.
+
+        Args:
+            service_desk_id: Service desk ID or key
+            account_ids: List of customer account IDs
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        payload = {'accountIds': account_ids}
+        endpoint = f'/rest/servicedeskapi/servicedesk/{service_desk_id}/customer'
+        url = f"{self.base_url}{endpoint}"
+        response = self.session.delete(url, json=payload, timeout=self.timeout)
+        handle_jira_error(response, f"remove customers from service desk {service_desk_id}")
+
+    # ========== JSM Request Management (/rest/servicedeskapi/request) ==========
+
+    def create_request(self, service_desk_id: str, request_type_id: str,
+                       fields: Dict[str, Any], participants: Optional[list] = None,
+                       on_behalf_of: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Create a service request via JSM API.
+
+        Args:
+            service_desk_id: Service desk ID or key
+            request_type_id: Request type ID
+            fields: Dictionary of field values (summary, description, custom fields)
+            participants: List of participant email addresses (optional)
+            on_behalf_of: Create request on behalf of user email (optional)
+
+        Returns:
+            Created request object with issueKey, issueId, requestType, etc.
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        payload = {
+            'serviceDeskId': service_desk_id,
+            'requestTypeId': request_type_id,
+            'requestFieldValues': fields
+        }
+
+        if participants:
+            payload['requestParticipants'] = participants
+
+        if on_behalf_of:
+            payload['raiseOnBehalfOf'] = on_behalf_of
+
+        return self.post('/rest/servicedeskapi/request', data=payload,
+                        operation="create service request")
+
+    def get_request(self, issue_key: str, expand: Optional[list] = None) -> Dict[str, Any]:
+        """
+        Get request details via JSM API.
+
+        Args:
+            issue_key: Request key (e.g., 'SD-101')
+            expand: List of fields to expand (sla, participant, status, requestType, etc.)
+
+        Returns:
+            Request object with JSM-specific fields
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {}
+        if expand:
+            params['expand'] = ','.join(expand)
+
+        return self.get(f'/rest/servicedeskapi/request/{issue_key}',
+                       params=params if params else None,
+                       operation=f"get request {issue_key}")
+
+    def get_request_status(self, issue_key: str) -> Dict[str, Any]:
+        """
+        Get request status history.
+
+        Args:
+            issue_key: Request key
+
+        Returns:
+            Status history with timestamps
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(f'/rest/servicedeskapi/request/{issue_key}/status',
+                       operation=f"get status history for {issue_key}")
+
+    def get_request_transitions(self, issue_key: str) -> list:
+        """
+        Get available transitions for request.
+
+        Args:
+            issue_key: Request key
+
+        Returns:
+            List of available transition objects
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        result = self.get(f'/rest/servicedeskapi/request/{issue_key}/transition',
+                         operation=f"get transitions for {issue_key}")
+        return result.get('values', [])
+
+    def transition_request(self, issue_key: str, transition_id: str,
+                          comment: Optional[str] = None, public: bool = True) -> None:
+        """
+        Transition a service request.
+
+        Args:
+            issue_key: Request key
+            transition_id: Transition ID
+            comment: Optional comment to add
+            public: Whether comment is public (customer-visible)
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        payload = {'id': transition_id}
+
+        if comment:
+            payload['additionalComment'] = {
+                'body': comment,
+                'public': public
+            }
+
+        self.post(f'/rest/servicedeskapi/request/{issue_key}/transition',
+                 data=payload,
+                 operation=f"transition request {issue_key}")
+
+    def get_request_slas(self, issue_key: str, start: int = 0,
+                         limit: int = 50) -> Dict[str, Any]:
+        """
+        Get all SLAs for a service request.
+
+        Args:
+            issue_key: Issue key (e.g., 'SD-123')
+            start: Starting index for pagination
+            limit: Maximum results per page
+
+        Returns:
+            SLA data with values array of SLA metrics
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {'start': start, 'limit': limit}
+        return self.get(f'/rest/servicedeskapi/request/{issue_key}/sla',
+                       params=params,
+                       operation=f"get SLAs for {issue_key}")
+
+    def get_request_sla(self, issue_key: str, sla_metric_id: str) -> Dict[str, Any]:
+        """
+        Get a specific SLA metric for a request.
+
+        Args:
+            issue_key: Issue key (e.g., 'SD-123')
+            sla_metric_id: SLA metric ID
+
+        Returns:
+            SLA metric details
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(f'/rest/servicedeskapi/request/{issue_key}/sla/{sla_metric_id}',
+                       operation=f"get SLA {sla_metric_id} for {issue_key}")
+
+    # ========== JSM Queue Management (/rest/servicedeskapi/servicedesk/{id}/queue) ==========
+
+    def get_service_desk_queues(self, service_desk_id: int,
+                                include_count: bool = False,
+                                start: int = 0,
+                                limit: int = 50) -> Dict[str, Any]:
+        """
+        Get all queues for a service desk.
+
+        Args:
+            service_desk_id: Service desk ID
+            include_count: Include issue counts for each queue
+            start: Starting index for pagination
+            limit: Maximum results per page
+
+        Returns:
+            Queue data with values array of queues
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {
+            'start': start,
+            'limit': limit,
+            'includeCount': str(include_count).lower()
+        }
+        return self.get(f'/rest/servicedeskapi/servicedesk/{service_desk_id}/queue',
+                       params=params,
+                       operation=f"get queues for service desk {service_desk_id}")
+
+    def get_queue(self, service_desk_id: int, queue_id: int,
+                  include_count: bool = False) -> Dict[str, Any]:
+        """
+        Get a specific queue by ID.
+
+        Args:
+            service_desk_id: Service desk ID
+            queue_id: Queue ID
+            include_count: Include issue count
+
+        Returns:
+            Queue details
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {'includeCount': str(include_count).lower()}
+        return self.get(f'/rest/servicedeskapi/servicedesk/{service_desk_id}/queue/{queue_id}',
+                       params=params,
+                       operation=f"get queue {queue_id}")
+
+    def get_queue_issues(self, service_desk_id: int, queue_id: int,
+                         start: int = 0, limit: int = 50) -> Dict[str, Any]:
+        """
+        Get issues in a queue.
+
+        Args:
+            service_desk_id: Service desk ID
+            queue_id: Queue ID
+            start: Starting index for pagination
+            limit: Maximum results per page
+
+        Returns:
+            Issue data with values array of issues
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {'start': start, 'limit': limit}
+        return self.get(f'/rest/servicedeskapi/servicedesk/{service_desk_id}/queue/{queue_id}/issue',
+                       params=params,
+                       operation=f"get issues in queue {queue_id}")
+
+    # ========== JSM Organization Management (/rest/servicedeskapi/organization) ==========
+
+    def get_organizations(self, start: int = 0, limit: int = 50) -> Dict[str, Any]:
+        """
+        List all organizations.
+
+        Args:
+            start: Starting index for pagination
+            limit: Maximum results per page
+
+        Returns:
+            Organizations data with values, size, start, limit, isLastPage
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {'start': start, 'limit': limit}
+        return self.get('/rest/servicedeskapi/organization',
+                       params=params,
+                       operation="get organizations")
+
+    def create_organization(self, name: str) -> Dict[str, Any]:
+        """
+        Create an organization.
+
+        Args:
+            name: Organization name
+
+        Returns:
+            Created organization data with id, name, links
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        payload = {'name': name}
+        return self.post('/rest/servicedeskapi/organization',
+                        data=payload,
+                        operation=f"create organization {name}")
+
+    def get_organization(self, organization_id: int) -> Dict[str, Any]:
+        """
+        Get organization details.
+
+        Args:
+            organization_id: Organization ID
+
+        Returns:
+            Organization data with id, name, links
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(f'/rest/servicedeskapi/organization/{organization_id}',
+                       operation=f"get organization {organization_id}")
+
+    def delete_organization(self, organization_id: int) -> None:
+        """
+        Delete an organization.
+
+        Args:
+            organization_id: Organization ID
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        self.delete(f'/rest/servicedeskapi/organization/{organization_id}',
+                   operation=f"delete organization {organization_id}")
+
+    def add_users_to_organization(self, organization_id: int, account_ids: list) -> None:
+        """
+        Add users to an organization.
+
+        Args:
+            organization_id: Organization ID
+            account_ids: List of user account IDs
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        payload = {'accountIds': account_ids}
+        self.post(f'/rest/servicedeskapi/organization/{organization_id}/user',
+                 data=payload,
+                 operation=f"add users to organization {organization_id}")
+
+    def remove_users_from_organization(self, organization_id: int, account_ids: list) -> None:
+        """
+        Remove users from an organization.
+
+        Args:
+            organization_id: Organization ID
+            account_ids: List of user account IDs
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        payload = {'accountIds': account_ids}
+        endpoint = f'/rest/servicedeskapi/organization/{organization_id}/user'
+        url = f"{self.base_url}{endpoint}"
+        response = self.session.delete(url, json=payload, timeout=self.timeout)
+        handle_jira_error(response, f"remove users from organization {organization_id}")
+
+    # ========== JSM Request Participants (/rest/servicedeskapi/request/{key}/participant) ==========
+
+    def get_request_participants(self, issue_key: str, start: int = 0, limit: int = 50) -> Dict[str, Any]:
+        """
+        Get participants for a request.
+
+        Args:
+            issue_key: Request issue key (e.g., REQ-123)
+            start: Starting index for pagination
+            limit: Maximum results per page
+
+        Returns:
+            Participants data with values, size, start, limit, isLastPage
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {'start': start, 'limit': limit}
+        return self.get(f'/rest/servicedeskapi/request/{issue_key}/participant',
+                       params=params,
+                       operation=f"get participants for request {issue_key}")
+
+    def add_request_participants(self, issue_key: str, account_ids: Optional[list] = None,
+                                  usernames: Optional[list] = None) -> Dict[str, Any]:
+        """
+        Add participants to a request.
+
+        Args:
+            issue_key: Request issue key (e.g., REQ-123)
+            account_ids: List of user account IDs
+            usernames: List of usernames (legacy)
+
+        Returns:
+            Updated participants data
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        payload = {
+            'accountIds': account_ids or [],
+            'usernames': usernames or []
+        }
+        return self.post(f'/rest/servicedeskapi/request/{issue_key}/participant',
+                        data=payload,
+                        operation=f"add participants to request {issue_key}")
+
+    def remove_request_participants(self, issue_key: str, account_ids: Optional[list] = None,
+                                     usernames: Optional[list] = None) -> Dict[str, Any]:
+        """
+        Remove participants from a request.
+
+        Args:
+            issue_key: Request issue key (e.g., REQ-123)
+            account_ids: List of user account IDs
+            usernames: List of usernames (legacy)
+
+        Returns:
+            Updated participants data
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        payload = {
+            'accountIds': account_ids or [],
+            'usernames': usernames or []
+        }
+        endpoint = f'/rest/servicedeskapi/request/{issue_key}/participant'
+        url = f"{self.base_url}{endpoint}"
+        response = self.session.delete(url, json=payload, timeout=self.timeout)
+        handle_jira_error(response, f"remove participants from request {issue_key}")
+        return response.json() if response.text else {}
+
+    # ========== JSM Comments & Approvals (Phase 5) ==========
+
+    def add_request_comment(self, issue_key: str, body: str, public: bool = True) -> Dict[str, Any]:
+        """
+        Add a comment to a JSM request with public/internal visibility.
+
+        Args:
+            issue_key: Request key (e.g., REQ-123)
+            body: Comment body (plain text)
+            public: True for customer-visible, False for internal (default: True)
+
+        Returns:
+            Created comment object with id, body, public, author, created
+
+        Raises:
+            JiraError or subclass on failure
+
+        Note:
+            Uses JSM API (/rest/servicedeskapi/) which differs from standard JIRA API.
+            Public comments are visible in the customer portal.
+        """
+        data = {
+            'body': body,
+            'public': public
+        }
+        return self.post(f'/rest/servicedeskapi/request/{issue_key}/comment',
+                        data=data, operation=f"add JSM comment to {issue_key}")
+
+    def get_request_comments(self, issue_key: str, public: bool = None,
+                             start: int = 0, limit: int = 100) -> Dict[str, Any]:
+        """
+        Get comments for a JSM request with visibility information.
+
+        Args:
+            issue_key: Request key (e.g., REQ-123)
+            public: Filter by visibility (True=public, False=internal, None=all)
+            start: Starting index for pagination
+            limit: Maximum results per page (max 100)
+
+        Returns:
+            Comments response with values array and pagination info
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {'start': start, 'limit': limit}
+        if public is not None:
+            params['public'] = str(public).lower()
+
+        return self.get(f'/rest/servicedeskapi/request/{issue_key}/comment',
+                       params=params,
+                       operation=f"get JSM comments for {issue_key}")
+
+    def get_request_comment(self, issue_key: str, comment_id: str,
+                            expand: str = None) -> Dict[str, Any]:
+        """
+        Get a specific JSM comment by ID.
+
+        Args:
+            issue_key: Request key (e.g., REQ-123)
+            comment_id: Comment ID
+            expand: Optional expansions (e.g., 'renderedBody')
+
+        Returns:
+            Comment object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {}
+        if expand:
+            params['expand'] = expand
+
+        return self.get(f'/rest/servicedeskapi/request/{issue_key}/comment/{comment_id}',
+                       params=params if params else None,
+                       operation=f"get JSM comment {comment_id}")
+
+    def get_request_approvals(self, issue_key: str, start: int = 0,
+                              limit: int = 100) -> Dict[str, Any]:
+        """
+        Get approvals for a JSM request.
+
+        Args:
+            issue_key: Request key (e.g., REQ-123)
+            start: Starting index for pagination
+            limit: Maximum results per page
+
+        Returns:
+            Approvals response with values array and pagination info
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {'start': start, 'limit': limit}
+        return self.get(f'/rest/servicedeskapi/request/{issue_key}/approval',
+                       params=params,
+                       operation=f"get approvals for {issue_key}")
+
+    def get_request_approval(self, issue_key: str, approval_id: str) -> Dict[str, Any]:
+        """
+        Get a specific approval by ID.
+
+        Args:
+            issue_key: Request key (e.g., REQ-123)
+            approval_id: Approval ID
+
+        Returns:
+            Approval object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(f'/rest/servicedeskapi/request/{issue_key}/approval/{approval_id}',
+                       operation=f"get approval {approval_id}")
+
+    def answer_approval(self, issue_key: str, approval_id: str, decision: str) -> Dict[str, Any]:
+        """
+        Answer an approval request (approve or decline).
+
+        Args:
+            issue_key: Request key (e.g., REQ-123)
+            approval_id: Approval ID to answer
+            decision: 'approve' or 'decline'
+
+        Returns:
+            Updated approval object with decision
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        data = {'decision': decision}
+        return self.post(f'/rest/servicedeskapi/request/{issue_key}/approval/{approval_id}',
+                        data=data,
+                        operation=f"{decision} approval {approval_id} for {issue_key}")
+
+    def get_pending_approvals(self, service_desk_id: int = None) -> list:
+        """
+        Get pending approvals for current user (agent view).
+
+        This method searches for requests with pending approvals where the current
+        user is an approver. It combines JQL search with approval endpoint calls.
+
+        Args:
+            service_desk_id: Optional service desk ID to filter by
+
+        Returns:
+            List of dicts with requestKey, approvalId, approvalName, created
+
+        Raises:
+            JiraError or subclass on failure
+
+        Note:
+            This is a helper method that combines multiple API calls.
+            Performance may vary based on number of pending approvals.
+        """
+        # Build JQL to find requests with pending approvals
+        # Note: This requires approval tracking in the workflow
+        jql_parts = ['status != Resolved']
+
+        if service_desk_id:
+            jql_parts.append(f'project = SD-{service_desk_id}')
+
+        jql = ' AND '.join(jql_parts)
+
+        # Search for requests
+        search_result = self.search_issues(jql, max_results=100)
+
+        pending_approvals = []
+
+        # For each request, check for pending approvals
+        for issue in search_result.get('issues', []):
+            issue_key = issue['key']
+            try:
+                approvals_resp = self.get_request_approvals(issue_key)
+                approvals = approvals_resp.get('values', [])
+
+                for approval in approvals:
+                    if approval.get('finalDecision') == 'pending':
+                        # Check if current user can answer this approval
+                        if approval.get('canAnswerApproval', False):
+                            pending_approvals.append({
+                                'requestKey': issue_key,
+                                'approvalId': approval.get('id'),
+                                'approvalName': approval.get('name'),
+                                'created': approval.get('createdDate'),
+                                'summary': issue.get('fields', {}).get('summary', '')
+                            })
+            except Exception:
+                # Skip requests where we can't get approvals (e.g., permissions)
+                continue
+
+        return pending_approvals
+
+    # ==========================================
+    # Knowledge Base Methods
+    # ==========================================
+
+    def search_kb_articles(self, service_desk_id: int, query: str,
+                           max_results: int = 50) -> list:
+        """
+        Search KB articles for a service desk.
+
+        Args:
+            service_desk_id: Service desk ID
+            query: Search query string
+            max_results: Maximum results to return
+
+        Returns:
+            List of KB articles matching query
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        result = self.get(
+            f'/rest/servicedeskapi/servicedesk/{service_desk_id}/knowledgebase/article',
+            params={'query': query, 'highlight': True, 'limit': max_results},
+            operation=f"search KB articles for service desk {service_desk_id}"
+        )
+        return result.get('values', [])
+
+    def get_kb_article(self, article_id: str) -> Dict[str, Any]:
+        """
+        Get KB article details by ID.
+
+        Args:
+            article_id: KB article ID
+
+        Returns:
+            KB article details
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(
+            f'/rest/servicedeskapi/knowledgebase/article/{article_id}',
+            operation=f"get KB article {article_id}"
+        )
+
+    def suggest_kb_for_request(self, issue_key: str, max_results: int = 5) -> list:
+        """
+        Suggest relevant KB articles for a request based on summary/description.
+
+        Args:
+            issue_key: Request issue key
+            max_results: Maximum suggestions to return
+
+        Returns:
+            List of suggested KB articles
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        # Get request details
+        request = self.get_request(issue_key)
+
+        # Extract service desk ID from request
+        service_desk_id = request.get('serviceDeskId')
+        if not service_desk_id:
+            raise ValueError(f"Could not determine service desk ID for {issue_key}")
+
+        # Build search query from summary and description
+        summary = request.get('currentStatus', {}).get('statusValue', {}).get('summary', '')
+        description = request.get('currentStatus', {}).get('statusValue', {}).get('description', '')
+
+        # Simple keyword extraction - extract words longer than 3 chars
+        import re
+        text = f"{summary} {description}".lower()
+        words = re.findall(r'\b[a-z]{4,}\b', text)
+        query = ' '.join(set(words[:5]))  # Use top 5 unique words
+
+        if not query:
+            return []
+
+        # Search KB with derived query
+        return self.search_kb_articles(service_desk_id, query, max_results)
+
+    # ==========================================
+    # Assets/Insight Methods (Requires JSM Premium)
+    # ==========================================
+
+    def has_assets_license(self) -> bool:
+        """
+        Check if Assets/Insight is available (requires JSM Premium).
+
+        Returns:
+            True if Assets is available, False otherwise
+        """
+        try:
+            # Try to list schemas - if it works, we have Assets
+            self.get('/rest/insight/1.0/objectschema/list')
+            return True
+        except Exception:
+            return False
+
+    def list_assets(self, object_type: str = None, iql: str = None,
+                   max_results: int = 100) -> list:
+        """
+        List assets with optional IQL filtering.
+
+        Args:
+            object_type: Optional object type name to filter by
+            iql: Optional IQL query string
+            max_results: Maximum results to return
+
+        Returns:
+            List of asset objects
+
+        Raises:
+            JiraError or subclass on failure
+
+        Note:
+            Requires Assets/Insight license
+        """
+        # Build IQL query
+        query_parts = []
+        if object_type:
+            query_parts.append(f'objectType="{object_type}"')
+        if iql:
+            query_parts.append(iql)
+
+        iql_query = ' AND '.join(query_parts) if query_parts else None
+
+        # Get first schema (most common use case)
+        schemas = self.get('/rest/insight/1.0/objectschema/list').get('objectschemas', [])
+        if not schemas:
+            return []
+
+        schema_id = schemas[0]['id']
+
+        # Search assets
+        result = self.get(
+            '/rest/insight/1.0/iql/objects',
+            params={
+                'objectSchemaId': schema_id,
+                'iql': iql_query,
+                'page': 1,
+                'resultsPerPage': min(max_results, 100),
+                'includeAttributes': True
+            },
+            operation="search assets with IQL"
+        )
+        return result.get('objectEntries', [])
+
+    def get_asset(self, asset_id: int) -> Dict[str, Any]:
+        """
+        Get asset details by object ID.
+
+        Args:
+            asset_id: Asset object ID
+
+        Returns:
+            Asset object with all attributes
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(
+            f'/rest/insight/1.0/object/{asset_id}',
+            operation=f"get asset {asset_id}"
+        )
+
+    def create_asset(self, object_type_id: int, attributes: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Create a new asset/CMDB object.
+
+        Args:
+            object_type_id: Object type ID
+            attributes: Dict mapping attribute names to values
+
+        Returns:
+            Created asset object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        # Convert attribute dict to API format
+        attr_list = []
+        for attr_name, value in attributes.items():
+            attr_list.append({
+                'objectTypeAttributeName': attr_name,
+                'objectAttributeValues': [{'value': str(value)}]
+            })
+
+        payload = {
+            'objectTypeId': object_type_id,
+            'attributes': attr_list
+        }
+
+        return self.post(
+            '/rest/insight/1.0/object/create',
+            data=payload,
+            operation="create asset"
+        )
+
+    def update_asset(self, asset_id: int, attributes: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Update an existing asset.
+
+        Args:
+            asset_id: Asset object ID
+            attributes: Dict mapping attribute names to new values
+
+        Returns:
+            Updated asset object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        # Convert attribute dict to API format
+        attr_list = []
+        for attr_name, value in attributes.items():
+            attr_list.append({
+                'objectTypeAttributeName': attr_name,
+                'objectAttributeValues': [{'value': str(value)}]
+            })
+
+        payload = {
+            'objectId': asset_id,
+            'attributes': attr_list
+        }
+
+        return self.put(
+            f'/rest/insight/1.0/object/{asset_id}',
+            data=payload,
+            operation=f"update asset {asset_id}"
+        )
+
+    def link_asset_to_request(self, asset_id: int, issue_key: str) -> None:
+        """
+        Link an asset to a service request via issue link.
+
+        Args:
+            asset_id: Asset object ID
+            issue_key: Request issue key
+
+        Raises:
+            JiraError or subclass on failure
+
+        Note:
+            Creates a "Relates" link between the asset and request
+        """
+        # Get asset details to get its object key
+        asset = self.get_asset(asset_id)
+        asset_key = asset.get('objectKey', f'ASSET-{asset_id}')
+
+        # Add internal comment about the linked asset
+        self.add_request_comment(
+            issue_key,
+            f"Linked asset: {asset.get('label', asset_key)} (ID: {asset_id})",
+            public=False
+        )
+
+    def find_assets_by_criteria(self, iql: str) -> list:
+        """
+        Find assets matching IQL criteria.
+
+        Args:
+            iql: IQL query string
+
+        Returns:
+            List of matching assets
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.list_assets(iql=iql)
