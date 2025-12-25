@@ -121,7 +121,7 @@ python create_epic.py --project PROJ --summary "Epic" --assignee self --priority
 
 ---
 
-### Feature 1.2: Add Issues to Epic
+### Feature 1.2: Add Issues to Epic ✅ COMPLETED
 
 **Script:** `add_to_epic.py`
 
@@ -164,11 +164,11 @@ python add_to_epic.py --remove --issues PROJ-101  # Remove from epic
 ```
 
 **Acceptance Criteria:**
-- [ ] All 7 tests pass
-- [ ] Supports single and bulk operations
-- [ ] Dry-run mode
-- [ ] Can add by issue keys or JQL query
-- [ ] Progress indicator for bulk ops
+- [x] All 7 tests pass
+- [x] Supports single and bulk operations
+- [x] Dry-run mode
+- [x] Can add by issue keys or JQL query
+- [x] Progress indicator for bulk ops
 
 **Commits:**
 1. `test(jira-agile): add failing tests for add_to_epic`
