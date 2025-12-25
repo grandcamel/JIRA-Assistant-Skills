@@ -143,7 +143,7 @@ class TestAddToEpic:
         # Assert - should track failure, not raise
         assert result['added'] == 0
         assert result['failed'] == 1
-        assert 'PROJ-999' in result['failures'][0]
+        assert result['failures'][0]['issue'] == 'PROJ-999'
 
     def test_add_to_epic_not_epic_type(self, mock_jira_client, sample_issue_response):
         """Test error when target is not an Epic issue type."""
