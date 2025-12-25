@@ -547,7 +547,7 @@ Issues:
 
 ## Phase 3: Backlog Management
 
-### Feature 3.1: Rank Issues
+### Feature 3.1: Rank Issues ✅ COMPLETED
 
 **Script:** `rank_issue.py`
 
@@ -587,18 +587,18 @@ python rank_issue.py PROJ-1,PROJ-2,PROJ-3 --before PROJ-10
 ```
 
 **Acceptance Criteria:**
-- [ ] All 6 tests pass
-- [ ] Supports before/after positioning
-- [ ] Top/bottom shortcuts
-- [ ] Bulk ranking
+- [x] All 6 tests pass
+- [x] Supports before/after positioning
+- [x] Top/bottom shortcuts
+- [x] Bulk ranking
 
 **Commits:**
-1. `test(jira-agile): add failing tests for rank_issue`
-2. `feat(jira-agile): implement rank_issue.py (6/6 tests passing)`
+1. `test(jira-agile): add failing tests for rank_issue` ✅
+2. `feat(jira-agile): implement rank_issue.py (6/6 tests passing)` ✅
 
 ---
 
-### Feature 3.2: Get Backlog
+### Feature 3.2: Get Backlog ✅ COMPLETED
 
 **Script:** `get_backlog.py`
 
@@ -634,25 +634,25 @@ python get_backlog.py --board 123 --max-results 50
 ```
 
 **Acceptance Criteria:**
-- [ ] All 5 tests pass
-- [ ] Shows backlog in rank order
-- [ ] Supports filtering
-- [ ] Optional epic grouping
+- [x] All 5 tests pass
+- [x] Shows backlog in rank order
+- [x] Supports filtering
+- [x] Optional epic grouping
 
 **Commits:**
-1. `test(jira-agile): add failing tests for get_backlog`
-2. `feat(jira-agile): implement get_backlog.py (5/5 tests passing)`
+1. `test(jira-agile): add failing tests for get_backlog` ✅
+2. `feat(jira-agile): implement get_backlog.py (5/5 tests passing)` ✅
 
 ---
 
-### Phase 3 Completion
+### Phase 3 Completion ✅ COMPLETED
 
-- [ ] **Phase 3 Summary:**
-  - [ ] 2 scripts implemented (rank_issue, get_backlog)
-  - [ ] 11 tests passing (63 total)
-  - [ ] Coverage ≥ 85% for backlog-related code
-  - [ ] SKILL.md updated with backlog examples
-  - **Commit:** `docs(jira-agile): complete Phase 3 - Backlog Management`
+- [x] **Phase 3 Summary:**
+  - [x] 2 scripts implemented (rank_issue, get_backlog)
+  - [x] 11 tests passing (79 total with Phase 1 & 2)
+  - [x] Coverage ≥ 85% for backlog-related code
+  - [x] SKILL.md updated with backlog examples
+  - **Commit:** `docs(jira-agile): complete Phase 3 - Backlog Management` ✅
 
 ---
 

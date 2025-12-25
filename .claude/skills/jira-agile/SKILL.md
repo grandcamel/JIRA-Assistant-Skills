@@ -9,6 +9,10 @@ Use this skill when you need to:
 - Link issues to epics for hierarchical planning
 - Create subtasks under parent issues
 - Track epic progress and story point completion
+- Create and manage sprints on Scrum boards
+- Move issues between sprints and backlog
+- Prioritize and rank backlog issues
+- View and filter board backlogs
 - Organize work using Agile/Scrum methodologies
 
 ## What this skill does
@@ -74,6 +78,21 @@ This skill provides comprehensive Agile/Scrum workflow operations:
 - Story points tracking
 - Days remaining countdown
 
+### 4. Backlog Management
+
+**Rank Issues**: Reorder backlog priority:
+- Rank before or after specific issues
+- Move to top or bottom of backlog
+- Bulk ranking operations
+- Validates position parameters
+
+**Get Backlog**: View board backlog:
+- Retrieve all backlog issues
+- JQL filter support
+- Pagination for large backlogs
+- Group by epic option
+- Rank order preserved
+
 ## Available scripts
 
 ### Epic Management
@@ -89,6 +108,10 @@ This skill provides comprehensive Agile/Scrum workflow operations:
 - `manage_sprint.py` - Start, close, and update sprints
 - `move_to_sprint.py` - Move issues to sprints or backlog
 - `get_sprint.py` - Retrieve sprint details with progress tracking
+
+### Backlog Management
+- `rank_issue.py` - Reorder issues in backlog (before/after/top/bottom)
+- `get_backlog.py` - Retrieve board backlog with filtering and epic grouping
 
 ## Usage Examples
 
@@ -271,6 +294,63 @@ Issues:
   [Done] PROJ-101 - User auth (5 pts)
   [In Progress] PROJ-102 - Dashboard (8 pts)
   [To Do] PROJ-103 - Settings (3 pts)
+  ...
+```
+
+### Ranking Issues in Backlog
+
+```bash
+# Rank issue before another
+python rank_issue.py PROJ-1 --before PROJ-2
+
+# Rank issue after another
+python rank_issue.py PROJ-1 --after PROJ-3
+
+# Move issue to top of backlog
+python rank_issue.py PROJ-1 --top
+
+# Move issue to bottom of backlog
+python rank_issue.py PROJ-1 --bottom
+
+# Bulk rank multiple issues
+python rank_issue.py PROJ-1,PROJ-2,PROJ-3 --before PROJ-10
+```
+
+### Viewing Backlog
+
+```bash
+# Get full backlog for a board
+python get_backlog.py --board 123
+
+# Filter backlog by JQL
+python get_backlog.py --board 123 --filter "priority=High"
+
+# Group backlog by epic
+python get_backlog.py --board 123 --group-by epic
+
+# Limit results
+python get_backlog.py --board 123 --max-results 50
+
+# Export as JSON
+python get_backlog.py --board 123 --output json
+```
+
+Example output:
+```
+Backlog: 25/100 issues
+
+[No Epic] (5 issues)
+  PROJ-201 - Bug fix for login
+  PROJ-202 - Update dependencies
+  ...
+
+[PROJ-100] (8 issues)
+  PROJ-101 - User authentication (5 pts)
+  PROJ-102 - Dashboard layout (8 pts)
+  ...
+
+[PROJ-150] (12 issues)
+  PROJ-151 - API endpoints (3 pts)
   ...
 ```
 
