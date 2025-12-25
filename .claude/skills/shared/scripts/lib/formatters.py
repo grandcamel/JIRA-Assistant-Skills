@@ -10,7 +10,7 @@ import csv
 import sys
 from typing import Dict, Any, List, Optional
 from io import StringIO
-from .adf_helper import adf_to_text
+from adf_helper import adf_to_text
 
 try:
     from tabulate import tabulate
