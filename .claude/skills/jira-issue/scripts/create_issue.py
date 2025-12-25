@@ -9,6 +9,7 @@ Usage:
     python create_issue.py --project PROJ --type Story --summary "Story" --epic PROJ-100 --story-points 5
     python create_issue.py --project PROJ --type Task --summary "Task" --blocks PROJ-123
     python create_issue.py --project PROJ --type Task --summary "Task" --relates-to PROJ-456
+    python create_issue.py --project PROJ --type Task --summary "Task" --estimate "2d"
 """
 
 import sys
@@ -48,7 +49,8 @@ def create_issue(project: str, issue_type: str, summary: str,
                 custom_fields: dict = None, profile: str = None,
                 epic: str = None, sprint: int = None,
                 story_points: float = None,
-                blocks: list = None, relates_to: list = None) -> dict:
+                blocks: list = None, relates_to: list = None,
+                estimate: str = None) -> dict:
     """
     Create a new JIRA issue.
 
@@ -69,6 +71,7 @@ def create_issue(project: str, issue_type: str, summary: str,
         story_points: Story point estimate
         blocks: List of issue keys this issue blocks
         relates_to: List of issue keys this issue relates to
+        estimate: Original time estimate (e.g., '2d', '4h')
 
     Returns:
         Created issue data
@@ -124,6 +127,10 @@ def create_issue(project: str, issue_type: str, summary: str,
 
     if story_points is not None:
         fields[STORY_POINTS_FIELD] = story_points
+
+    # Time tracking
+    if estimate:
+        fields['timetracking'] = {'originalEstimate': estimate}
 
     client = get_jira_client(profile)
     result = client.create_issue(fields)
@@ -200,6 +207,8 @@ def main():
                        help='Comma-separated issue keys this issue blocks')
     parser.add_argument('--relates-to',
                        help='Comma-separated issue keys this issue relates to')
+    parser.add_argument('--estimate',
+                       help='Original time estimate (e.g., 2d, 4h, 1w)')
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
     parser.add_argument('--output', '-o',
@@ -232,7 +241,8 @@ def main():
             sprint=args.sprint,
             story_points=args.story_points,
             blocks=blocks,
-            relates_to=relates_to
+            relates_to=relates_to,
+            estimate=args.estimate
         )
 
         issue_key = result.get('key')

@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Claude Code Skills project providing JIRA automation through six modular skills:
+This is a Claude Code Skills project providing JIRA automation through seven modular skills:
 - **jira-issue**: Core CRUD operations on issues
 - **jira-lifecycle**: Workflow/transition management
 - **jira-search**: JQL queries and bulk operations
 - **jira-collaborate**: Comments, attachments, watchers
 - **jira-agile**: Agile/Scrum workflows (epics, sprints, backlog, story points)
 - **jira-relationships**: Issue linking, dependencies, blocker chains, cloning
+- **jira-time**: Time tracking, worklogs, estimates, and time reports
 
 Each skill is designed for autonomous discovery and use by Claude Code.
 
@@ -26,6 +27,7 @@ All skills depend on a shared library at `.claude/skills/shared/scripts/lib/` co
 - **validators.py**: Input validation (issue keys must match `^[A-Z][A-Z0-9]*-[0-9]+$`, URLs must be HTTPS)
 - **formatters.py**: Output formatting (tables via tabulate, JSON, CSV export)
 - **adf_helper.py**: Markdown to Atlassian Document Format conversion
+- **time_utils.py**: Time parsing (parse_time_string), formatting (format_seconds), and relative date handling
 
 **Import pattern**: All scripts use `sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))` to access shared modules.
 
@@ -174,6 +176,12 @@ def main():
 - Blocker chains: Traverse recursively with visited set to detect cycles
 - Integration: `create_issue.py --blocks`, `get_issue.py --show-links`, `jql_search.py --show-links`
 
+**Time tracking**: Use the Worklog API (`/rest/api/3/issue/{key}/worklog`) for time management:
+- Time format: JIRA accepts human-readable formats like '2h', '1d 4h', '30m', '1w'
+- Estimate adjustment: Use `adjustEstimate` parameter (auto, leave, new, manual)
+- Known bug JRACLOUD-67539: Always set both originalEstimate and remainingEstimate together
+- Integration: `create_issue.py --estimate`, `get_issue.py --show-time`, `jql_search.py --show-time`
+
 ## Git Commit Guidelines
 
 This project follows the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification for all commit messages.
@@ -209,6 +217,9 @@ Use scopes to identify which part of the codebase changed. Suggested scopes for 
 - **jira-lifecycle**: Changes to the jira-lifecycle skill
 - **jira-search**: Changes to the jira-search skill
 - **jira-collaborate**: Changes to the jira-collaborate skill
+- **jira-agile**: Changes to the jira-agile skill
+- **jira-relationships**: Changes to the jira-relationships skill
+- **jira-time**: Changes to the jira-time skill
 - **shared**: Changes to shared library code
 - **config**: Configuration changes
 - **docs**: Documentation updates (CLAUDE.md, README.md, etc.)

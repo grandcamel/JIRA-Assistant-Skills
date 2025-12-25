@@ -379,7 +379,7 @@ def format_comments(comments: List[Dict[str, Any]], limit: Optional[int] = None)
 
 
 def format_search_results(issues: List[Dict[str, Any]], show_agile: bool = False,
-                          show_links: bool = False) -> str:
+                          show_links: bool = False, show_time: bool = False) -> str:
     """
     Format search results as a table.
 
@@ -387,6 +387,7 @@ def format_search_results(issues: List[Dict[str, Any]], show_agile: bool = False
         issues: List of issue objects from JIRA API
         show_agile: If True, include epic and story points columns
         show_links: If True, include links summary column
+        show_time: If True, include time tracking columns
 
     Returns:
         Formatted table string
@@ -422,12 +423,20 @@ def format_search_results(issues: List[Dict[str, Any]], show_agile: bool = False
             else:
                 row['Links'] = ''
 
+        if show_time:
+            tt = fields.get('timetracking', {})
+            row['Est'] = tt.get('originalEstimate', '')
+            row['Rem'] = tt.get('remainingEstimate', '')
+            row['Spent'] = tt.get('timeSpent', '')
+
         data.append(row)
 
     if show_agile:
         columns = ['Key', 'Type', 'Status', 'Pts', 'Epic', 'Summary']
     elif show_links:
         columns = ['Key', 'Type', 'Status', 'Links', 'Summary']
+    elif show_time:
+        columns = ['Key', 'Type', 'Status', 'Est', 'Rem', 'Spent', 'Summary']
     else:
         columns = ['Key', 'Type', 'Status', 'Priority', 'Summary']
 
