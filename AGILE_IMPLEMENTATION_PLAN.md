@@ -658,7 +658,7 @@ python get_backlog.py --board 123 --max-results 50
 
 ## Phase 4: Story Points & Estimation
 
-### Feature 4.1: Set Story Points
+### Feature 4.1: Set Story Points ✅ COMPLETED
 
 **Script:** `estimate_issue.py`
 
@@ -697,18 +697,18 @@ python estimate_issue.py --jql "sprint=456 AND type=Story" --points 2
 ```
 
 **Acceptance Criteria:**
-- [ ] All 6 tests pass
-- [ ] Supports single and bulk updates
-- [ ] Validates point scale
-- [ ] JQL query support
+- [x] All 6 tests pass
+- [x] Supports single and bulk updates
+- [x] Validates point scale
+- [x] JQL query support
 
 **Commits:**
-1. `test(jira-agile): add failing tests for estimate_issue`
-2. `feat(jira-agile): implement estimate_issue.py (6/6 tests passing)`
+1. `test(jira-agile): add failing tests for estimate_issue` ✅
+2. `feat(jira-agile): implement estimate_issue.py (6/6 tests passing)` ✅
 
 ---
 
-### Feature 4.2: Get Estimation Summary
+### Feature 4.2: Get Estimation Summary ✅ COMPLETED
 
 **Script:** `get_estimates.py`
 
@@ -755,25 +755,25 @@ By Assignee:
 ```
 
 **Acceptance Criteria:**
-- [ ] All 4 tests pass
-- [ ] Sums story points correctly
-- [ ] Groups by various dimensions
-- [ ] Shows percentages
+- [x] All 4 tests pass
+- [x] Sums story points correctly
+- [x] Groups by various dimensions
+- [x] Shows percentages
 
 **Commits:**
-1. `test(jira-agile): add failing tests for get_estimates`
-2. `feat(jira-agile): implement get_estimates.py (4/4 tests passing)`
+1. `test(jira-agile): add failing tests for get_estimates` ✅
+2. `feat(jira-agile): implement get_estimates.py (4/4 tests passing)` ✅
 
 ---
 
-### Phase 4 Completion
+### Phase 4 Completion ✅ COMPLETED
 
-- [ ] **Phase 4 Summary:**
-  - [ ] 2 scripts implemented (estimate_issue, get_estimates)
-  - [ ] 10 tests passing (73 total)
-  - [ ] Coverage ≥ 85% for estimation code
-  - [ ] SKILL.md updated with estimation examples
-  - **Commit:** `docs(jira-agile): complete Phase 4 - Story Points & Estimation`
+- [x] **Phase 4 Summary:**
+  - [x] 2 scripts implemented (estimate_issue, get_estimates)
+  - [x] 14 tests passing (96 total)
+  - [x] Coverage ≥ 85% for estimation code
+  - [x] SKILL.md updated with estimation examples
+  - **Commit:** `docs(jira-agile): complete Phase 4 - Story Points & Estimation` ✅
 
 ---
 

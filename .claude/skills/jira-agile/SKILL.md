@@ -93,6 +93,20 @@ This skill provides comprehensive Agile/Scrum workflow operations:
 - Group by epic option
 - Rank order preserved
 
+### 5. Story Points & Estimation
+
+**Set Story Points**: Estimate issues:
+- Single or bulk issue updates
+- Fibonacci validation (optional)
+- JQL query support
+- Clear estimates with zero
+
+**Get Estimates Summary**: View story point totals:
+- Sprint or epic totals
+- Group by assignee
+- Group by status with percentages
+- Text and JSON output
+
 ## Available scripts
 
 ### Epic Management
@@ -112,6 +126,10 @@ This skill provides comprehensive Agile/Scrum workflow operations:
 ### Backlog Management
 - `rank_issue.py` - Reorder issues in backlog (before/after/top/bottom)
 - `get_backlog.py` - Retrieve board backlog with filtering and epic grouping
+
+### Story Points & Estimation
+- `estimate_issue.py` - Set story points on issues (single, bulk, JQL)
+- `get_estimates.py` - Get story point summaries for sprints/epics
 
 ## Usage Examples
 
@@ -352,6 +370,63 @@ Backlog: 25/100 issues
 [PROJ-150] (12 issues)
   PROJ-151 - API endpoints (3 pts)
   ...
+```
+
+### Setting Story Points
+
+```bash
+# Set story points on a single issue
+python estimate_issue.py PROJ-1 --points 5
+
+# Set story points on multiple issues
+python estimate_issue.py PROJ-1,PROJ-2,PROJ-3 --points 3
+
+# Clear story point estimate
+python estimate_issue.py PROJ-1 --points 0
+
+# Bulk update via JQL query
+python estimate_issue.py --jql "sprint=456 AND type=Story" --points 2
+
+# Validate against Fibonacci sequence
+python estimate_issue.py PROJ-1 --points 5 --validate-fibonacci
+
+# Output as JSON
+python estimate_issue.py PROJ-1 --points 8 --output json
+```
+
+### Getting Estimation Summaries
+
+```bash
+# Get story point summary for a sprint
+python get_estimates.py --sprint 456
+
+# Get story point summary for an epic
+python get_estimates.py --epic PROJ-100
+
+# Group by assignee
+python get_estimates.py --sprint 456 --group-by assignee
+
+# Group by status
+python get_estimates.py --sprint 456 --group-by status
+
+# Export as JSON
+python get_estimates.py --sprint 456 --output json
+```
+
+Example output:
+```
+Sprint 456 Estimates
+Total: 55 points (25 issues)
+
+By Status:
+  Done: 32 points (58%)
+  In Progress: 15 points (27%)
+  To Do: 8 points (15%)
+
+By Assignee:
+  Alice: 20 points (36%)
+  Bob: 18 points (33%)
+  Charlie: 17 points (31%)
 ```
 
 ## Custom Field IDs
