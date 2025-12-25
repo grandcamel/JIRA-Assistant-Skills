@@ -110,9 +110,8 @@ python create_epic.py --project PROJ --summary "Epic" --description "Details" --
 python create_epic.py --project PROJ --summary "Epic" --assignee self --priority High
 ```
 
-**Integration Points:**
+**Integration Points (Future Work - jira-issue skill):**
 - [ ] Update `create_issue.py` to add `--epic` flag for creating issues in epic
-- [ ] Update SKILL.md with epic creation examples
 
 **Commits:**
 1. `test(jira-agile): add failing tests for create_epic`
@@ -290,7 +289,7 @@ python create_subtask.py --parent PROJ-101 --summary "Task" --estimate 4h
 - [x] Inherits project from parent
 - [x] Supports all standard issue fields
 
-**Integration Points:**
+**Integration Points (Future Work - jira-issue skill):**
 - [ ] Update `get_issue.py` to show subtasks
 
 **Commits:**
@@ -306,8 +305,8 @@ python create_subtask.py --parent PROJ-101 --summary "Task" --estimate 4h
   - [x] 4 scripts implemented (create_epic, add_to_epic, get_epic, create_subtask)
   - [x] 28 tests passing
   - [x] Coverage ≥ 85% for all epic-related code
-  - [ ] SKILL.md updated with epic examples
-  - **Commit:** `docs(jira-agile): complete Phase 1 - Epic Management`
+  - [x] SKILL.md created with comprehensive documentation
+  - **Commit:** `docs(jira-agile): complete Phase 1 - Epic Management` ✅
 
 ---
 
