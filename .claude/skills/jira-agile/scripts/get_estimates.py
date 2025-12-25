@@ -69,7 +69,9 @@ def get_estimates(sprint_id: int = None,
             # Search for issues in epic
             epic_key = validate_issue_key(epic_key)
             jql = f'"Epic Link" = {epic_key}'
-            result = client.search_issues(jql)
+            result = client.search_issues(jql, fields=[
+                'summary', 'status', 'assignee', STORY_POINTS_FIELD
+            ])
             issues = result.get('issues', [])
 
         # Calculate totals

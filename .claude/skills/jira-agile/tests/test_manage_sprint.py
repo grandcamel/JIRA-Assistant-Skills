@@ -51,7 +51,7 @@ class TestManageSprint:
         mock_jira_client.update_sprint.assert_called_once()
         call_args = mock_jira_client.update_sprint.call_args
         assert call_args[0][0] == 456  # Sprint ID
-        assert call_args[0][1]['state'] == 'active'
+        assert call_args[1]['state'] == 'active'  # kwargs
 
     def test_close_sprint(self, mock_jira_client, sample_sprint_response):
         """Test closing active sprint."""
@@ -76,7 +76,7 @@ class TestManageSprint:
         # Verify API call
         mock_jira_client.update_sprint.assert_called_once()
         call_args = mock_jira_client.update_sprint.call_args
-        assert call_args[0][1]['state'] == 'closed'
+        assert call_args[1]['state'] == 'closed'  # kwargs
 
     def test_close_sprint_with_incomplete_issues(self, mock_jira_client, sample_sprint_response):
         """Test moving incomplete issues to next sprint."""

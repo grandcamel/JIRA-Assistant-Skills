@@ -77,13 +77,13 @@ def start_sprint(sprint_id: int,
         update_data = {'state': 'active'}
 
         if start_date:
-            update_data['startDate'] = parse_date(start_date)
+            update_data['start_date'] = parse_date(start_date)
 
         if end_date:
-            update_data['endDate'] = parse_date(end_date)
+            update_data['end_date'] = parse_date(end_date)
 
         # Update sprint via Agile API
-        result = client.update_sprint(sprint_id, update_data)
+        result = client.update_sprint(sprint_id, **update_data)
         return result
 
     finally:
@@ -133,7 +133,7 @@ def close_sprint(sprint_id: int,
 
         # Close the sprint
         update_data = {'state': 'closed'}
-        sprint_result = client.update_sprint(sprint_id, update_data)
+        sprint_result = client.update_sprint(sprint_id, **update_data)
 
         # Merge results
         result.update(sprint_result)
@@ -190,16 +190,16 @@ def update_sprint(sprint_id: int,
             update_data['goal'] = goal
 
         if start_date:
-            update_data['startDate'] = parse_date(start_date)
+            update_data['start_date'] = parse_date(start_date)
 
         if end_date:
-            update_data['endDate'] = parse_date(end_date)
+            update_data['end_date'] = parse_date(end_date)
 
         if not update_data:
             raise ValidationError("At least one field to update is required")
 
         # Update sprint via Agile API
-        result = client.update_sprint(sprint_id, update_data)
+        result = client.update_sprint(sprint_id, **update_data)
         return result
 
     finally:

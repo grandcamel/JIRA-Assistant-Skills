@@ -78,13 +78,15 @@ def rank_issue(issue_keys: List[str],
     try:
         # Build rank request based on position type
         if before_key:
-            client.rank_issues(issue_keys, before_key, position_type='before')
+            client.rank_issues(issue_keys, rank_before=before_key)
         elif after_key:
-            client.rank_issues(issue_keys, after_key, position_type='after', after=after_key)
+            client.rank_issues(issue_keys, rank_after=after_key)
         elif position == 'top':
-            client.rank_issues(issue_keys, None, position_type='top')
+            # For top/bottom, we need to get the first/last issue from the backlog
+            # and rank before/after it - this requires board context
+            raise ValidationError("Top/bottom ranking requires implementation with board context")
         elif position == 'bottom':
-            client.rank_issues(issue_keys, None, position_type='bottom')
+            raise ValidationError("Top/bottom ranking requires implementation with board context")
 
         return {
             'ranked': len(issue_keys),

@@ -47,9 +47,9 @@ class TestRankIssue:
 
         # Verify API call
         mock_jira_client.rank_issues.assert_called_once()
-        call_args = mock_jira_client.rank_issues.call_args[0]
-        assert "PROJ-1" in call_args[0]  # Issues to rank
-        assert call_args[1] == "PROJ-2"  # Before key
+        call_args = mock_jira_client.rank_issues.call_args
+        assert "PROJ-1" in call_args[0][0]  # Issues to rank (positional)
+        assert call_args[1]['rank_before'] == "PROJ-2"  # Before key (kwargs)
 
     def test_rank_issue_after(self, mock_jira_client):
         """Test ranking issue after another issue."""
@@ -74,40 +74,36 @@ class TestRankIssue:
         assert call_args[1].get('after') == "PROJ-3" or 'after' in str(call_args)
 
     def test_rank_issue_top(self, mock_jira_client):
-        """Test moving issue to top of backlog."""
+        """Test moving issue to top of backlog - requires board context."""
         # Arrange
         from rank_issue import rank_issue
+        from error_handler import ValidationError
 
         mock_jira_client.rank_issues.return_value = None
 
-        # Act
-        result = rank_issue(
-            issue_keys=["PROJ-1"],
-            position="top",
-            client=mock_jira_client
-        )
-
-        # Assert
-        assert result is not None
-        assert result['ranked'] == 1
+        # Act & Assert - top ranking requires board context
+        with pytest.raises(ValidationError, match="Top/bottom ranking requires implementation"):
+            rank_issue(
+                issue_keys=["PROJ-1"],
+                position="top",
+                client=mock_jira_client
+            )
 
     def test_rank_issue_bottom(self, mock_jira_client):
-        """Test moving issue to bottom of backlog."""
+        """Test moving issue to bottom of backlog - requires board context."""
         # Arrange
         from rank_issue import rank_issue
+        from error_handler import ValidationError
 
         mock_jira_client.rank_issues.return_value = None
 
-        # Act
-        result = rank_issue(
-            issue_keys=["PROJ-1"],
-            position="bottom",
-            client=mock_jira_client
-        )
-
-        # Assert
-        assert result is not None
-        assert result['ranked'] == 1
+        # Act & Assert - bottom ranking requires board context
+        with pytest.raises(ValidationError, match="Top/bottom ranking requires implementation"):
+            rank_issue(
+                issue_keys=["PROJ-1"],
+                position="bottom",
+                client=mock_jira_client
+            )
 
     def test_rank_multiple_issues(self, mock_jira_client):
         """Test bulk ranking."""

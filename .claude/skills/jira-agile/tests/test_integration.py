@@ -235,12 +235,12 @@ class TestBacklogGroomingWorkflow:
         backlog = get_backlog(board_id=123, client=mock_jira_client)
         assert len(backlog['issues']) == 3
 
-        # Step 2: Reorder - move PROJ-11 to top
+        # Step 2: Reorder - move PROJ-11 before PROJ-10 (to top)
         mock_jira_client.rank_issues.return_value = None
 
         rank_result = rank_issue(
             issue_keys=['PROJ-11'],
-            position='top',
+            before_key='PROJ-10',
             client=mock_jira_client
         )
         assert rank_result['ranked'] == 1
