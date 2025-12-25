@@ -89,7 +89,7 @@ class TestCommentVisibility:
         assert result.get('visibility') is None
         mock_jira_client.add_comment.assert_called_once()
 
-    @patch('add_comment.get_jira_client')
+    @patch('update_comment.get_jira_client')
     def test_update_comment_preserve_visibility(self, mock_get_client, mock_jira_client, sample_comment_with_visibility):
         """Test that updating preserves visibility."""
         mock_get_client.return_value = mock_jira_client
@@ -104,7 +104,7 @@ class TestCommentVisibility:
         assert result['visibility']['type'] == 'role'
         assert result['visibility']['value'] == 'Administrators'
 
-    @patch('add_comment.get_jira_client')
+    @patch('get_comments.get_jira_client')
     def test_get_comment_shows_visibility(self, mock_get_client, mock_jira_client, sample_comment_with_visibility):
         """Test that visibility is shown in output."""
         mock_get_client.return_value = mock_jira_client
