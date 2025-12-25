@@ -176,6 +176,12 @@ def main():
 - Blocker chains: Traverse recursively with visited set to detect cycles
 - Integration: `create_issue.py --blocks`, `get_issue.py --show-links`, `jql_search.py --show-links`
 
+**Issue cloning**: Use `jira_client.clone_issue()` for copying issues:
+- Copies: summary, description, priority, labels, components, fixVersions
+- Creates "Cloners" link between clone and original
+- Optional flags: `clone_subtasks=True`, `clone_links=True`
+- Returns the new issue key after creation
+
 **Time tracking**: Use the Worklog API (`/rest/api/3/issue/{key}/worklog`) for time management:
 - Time format: JIRA accepts human-readable formats like '2h', '1d 4h', '30m', '1w'
 - Estimate adjustment: Use `adjustEstimate` parameter (auto, leave, new, manual)
@@ -319,6 +325,28 @@ When developing features using Test-Driven Development (TDD), follow this commit
    ```
 
 5. **Never commit failing tests**: If tests are failing, either fix the implementation or fix the tests before committing. The main branch should always have passing tests.
+
+## Live Integration Testing
+
+The project includes comprehensive live integration tests against real JIRA instances:
+
+```bash
+# Run all live integration tests
+pytest .claude/skills/shared/tests/live_integration/ --profile development -v
+
+# Run specific test modules
+pytest .claude/skills/shared/tests/live_integration/test_issue_lifecycle.py -v
+pytest .claude/skills/shared/tests/live_integration/test_agile_workflows.py -v
+```
+
+**Test structure**: Tests use session-scoped fixtures that create a test project at the start and clean up all test data at the end.
+
+**Profile requirement**: Live tests require `--profile development` to specify which JIRA instance to test against.
+
+**Current coverage**: 153 live integration tests covering all 7 skills across 3 phases:
+- Phase 1: Core operations (issue CRUD, lifecycle, collaboration)
+- Phase 2: Agile, relationships, time tracking
+- Phase 3: Search, filters, bulk operations
 
 ## Key Constraints
 
