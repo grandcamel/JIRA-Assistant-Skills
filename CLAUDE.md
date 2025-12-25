@@ -4,11 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Claude Code Skills project providing JIRA automation through four modular skills:
+This is a Claude Code Skills project providing JIRA automation through five modular skills:
 - **jira-issue**: Core CRUD operations on issues
 - **jira-lifecycle**: Workflow/transition management
 - **jira-search**: JQL queries and bulk operations
 - **jira-collaborate**: Comments, attachments, watchers
+- **jira-agile**: Agile/Scrum workflows (epics, sprints, backlog, story points)
 
 Each skill is designed for autonomous discovery and use by Claude Code.
 
@@ -157,6 +158,14 @@ def main():
 **Transition matching**: Use transition_issue.py's `find_transition_by_name()` pattern - exact match first, then partial match, raise ValidationError if ambiguous.
 
 **Bulk operations**: Always include `--dry-run` flag and confirmation prompts before modifying multiple issues.
+
+**Agile custom fields**: Story point and epic link fields vary by JIRA instance. Default field IDs:
+- Epic Link: `customfield_10014`
+- Story Points: `customfield_10016`
+- Epic Name: `customfield_10011`
+- Epic Color: `customfield_10012`
+
+**Sprint operations**: Use the Agile API (`/rest/agile/1.0/`) for sprint and board operations. Sprints require board context for creation.
 
 ## Git Commit Guidelines
 

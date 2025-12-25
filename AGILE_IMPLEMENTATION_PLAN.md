@@ -781,45 +781,45 @@ By Assignee:
 
 ### Integration Tasks
 
-- [ ] **Integration 1:** Update jira-issue scripts
-  - [ ] `create_issue.py`: Add `--epic` flag to create issue in epic
-  - [ ] `create_issue.py`: Add `--sprint` flag to create issue in sprint
-  - [ ] `create_issue.py`: Add `--story-points` flag
-  - [ ] `get_issue.py`: Show epic link, sprint, story points in output
-  - [ ] `get_issue.py`: Show subtasks if issue is parent
-  - **Commit:** `feat(jira-issue): integrate Agile fields (epic, sprint, story points)`
+- [x] **Integration 1:** Update jira-issue scripts ✅
+  - [x] `create_issue.py`: Add `--epic` flag to create issue in epic
+  - [x] `create_issue.py`: Add `--sprint` flag to create issue in sprint
+  - [x] `create_issue.py`: Add `--story-points` flag
+  - [x] `get_issue.py`: Show epic link, sprint, story points in output
+  - [x] `get_issue.py`: Show subtasks if issue is parent
+  - **Commit:** `feat(jira-issue): integrate Agile fields (epic, sprint, story points)` ✅
 
-- [ ] **Integration 2:** Update jira-lifecycle scripts
+- [ ] **Integration 2:** Update jira-lifecycle scripts (deferred)
   - [ ] `transition_issue.py`: Option to move to sprint on transition
-  - **Commit:** `feat(jira-lifecycle): add sprint integration to transitions`
+  - **Note:** Deferred for future enhancement
 
-- [ ] **Integration 3:** Update jira-search scripts
-  - [ ] Update search output to show sprint and epic columns
-  - [ ] Add sprint and epic to default fields
-  - **Commit:** `feat(jira-search): show Agile fields in search results`
+- [x] **Integration 3:** Update jira-search scripts ✅
+  - [x] Update search output to show sprint and epic columns (`--show-agile`)
+  - [x] Add sprint and epic to fields when `--show-agile` is used
+  - **Commit:** `feat(jira-search): show Agile fields in search results` ✅
 
 ### Documentation Updates
 
-- [ ] **Docs 1:** Create comprehensive SKILL.md for jira-agile
-  - [ ] "When to use this skill" section
-  - [ ] "What this skill does" section
-  - [ ] "Available scripts" with descriptions
-  - [ ] "Examples" section with realistic workflows
-  - [ ] Configuration notes
-  - [ ] Related skills section
-  - **Commit:** `docs(jira-agile): create comprehensive SKILL.md`
+- [x] **Docs 1:** Create comprehensive SKILL.md for jira-agile ✅
+  - [x] "When to use this skill" section
+  - [x] "What this skill does" section
+  - [x] "Available scripts" with descriptions
+  - [x] "Examples" section with realistic workflows
+  - [x] Configuration notes
+  - [x] Related skills section
+  - **Commit:** `docs(jira-agile): create comprehensive SKILL.md` ✅
 
-- [ ] **Docs 2:** Update CLAUDE.md
-  - [ ] Add jira-agile to project overview
-  - [ ] Add agile patterns to common patterns section
-  - [ ] Document story point custom field configuration
-  - **Commit:** `docs: update CLAUDE.md with jira-agile skill`
+- [x] **Docs 2:** Update CLAUDE.md ✅
+  - [x] Add jira-agile to project overview
+  - [x] Add agile patterns to common patterns section
+  - [x] Document story point custom field configuration
+  - **Commit:** `docs: update CLAUDE.md with jira-agile skill` ✅
 
-- [ ] **Docs 3:** Update GAP_ANALYSIS.md
-  - [ ] Mark Agile/Scrum gap as completed
-  - [ ] Update coverage metrics
-  - [ ] Move to implemented features section
-  - **Commit:** `docs: update GAP_ANALYSIS.md - Agile features complete`
+- [x] **Docs 3:** Update GAP_ANALYSIS.md ✅
+  - [x] Mark Agile/Scrum gap as completed
+  - [x] Update coverage metrics
+  - [x] Move to implemented features section
+  - **Commit:** `docs: update GAP_ANALYSIS.md - Agile features complete` ✅
 
 ### Testing & Quality
 
