@@ -1626,3 +1626,400 @@ class JiraClient:
         """
         self.delete(f'/rest/api/3/filter/{filter_id}/permission/{permission_id}',
                    operation=f"delete permission {permission_id} from filter {filter_id}")
+
+    # ========== Comment Visibility ==========
+
+    def add_comment_with_visibility(self, issue_key: str, body: Dict[str, Any],
+                                    visibility_type: str = None,
+                                    visibility_value: str = None) -> Dict[str, Any]:
+        """
+        Add a comment with visibility restrictions.
+
+        Args:
+            issue_key: Issue key (e.g., PROJ-123)
+            body: Comment body in ADF format
+            visibility_type: 'role' or 'group' (None for public)
+            visibility_value: Role or group name
+
+        Returns:
+            Created comment object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        data = {'body': body}
+        if visibility_type and visibility_value:
+            data['visibility'] = {
+                'type': visibility_type,
+                'value': visibility_value,
+                'identifier': visibility_value
+            }
+        return self.post(f'/rest/api/3/issue/{issue_key}/comment',
+                        data=data, operation=f"add comment to {issue_key}")
+
+    # ========== Changelog ==========
+
+    def get_changelog(self, issue_key: str, start_at: int = 0,
+                      max_results: int = 100) -> Dict[str, Any]:
+        """
+        Get issue changelog (activity history).
+
+        Args:
+            issue_key: Issue key (e.g., PROJ-123)
+            start_at: Starting index for pagination
+            max_results: Maximum results per page
+
+        Returns:
+            Changelog with values array of change entries
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {'startAt': start_at, 'maxResults': max_results}
+        return self.get(f'/rest/api/3/issue/{issue_key}/changelog',
+                       params=params,
+                       operation=f"get changelog for {issue_key}")
+
+    # ========== Notifications ==========
+
+    def notify_issue(self, issue_key: str, subject: str = None,
+                     text_body: str = None, html_body: str = None,
+                     to: Dict[str, Any] = None,
+                     restrict: Dict[str, Any] = None) -> None:
+        """
+        Send notification about an issue.
+
+        Args:
+            issue_key: Issue key (e.g., PROJ-123)
+            subject: Notification subject
+            text_body: Plain text body
+            html_body: HTML body
+            to: Recipients dict (reporter, assignee, watchers, voters, users, groups)
+            restrict: Restriction dict (permissions, groups)
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        data = {}
+        if subject:
+            data['subject'] = subject
+        if text_body:
+            data['textBody'] = text_body
+        if html_body:
+            data['htmlBody'] = html_body
+        if to:
+            data['to'] = to
+        if restrict:
+            data['restrict'] = restrict
+
+        self.post(f'/rest/api/3/issue/{issue_key}/notify',
+                 data=data, operation=f"notify about {issue_key}")
+
+    # ========== Version Management ==========
+
+    def create_version(self, project_id: int, name: str,
+                       description: str = None,
+                       start_date: str = None,
+                       release_date: str = None,
+                       released: bool = False,
+                       archived: bool = False) -> Dict[str, Any]:
+        """
+        Create a new project version.
+
+        Args:
+            project_id: Project ID (numeric)
+            name: Version name (e.g., 'v1.0.0')
+            description: Version description
+            start_date: Start date (YYYY-MM-DD)
+            release_date: Release date (YYYY-MM-DD)
+            released: Whether version is released
+            archived: Whether version is archived
+
+        Returns:
+            Created version object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        data = {
+            'projectId': project_id,
+            'name': name,
+            'released': released,
+            'archived': archived
+        }
+        if description:
+            data['description'] = description
+        if start_date:
+            data['startDate'] = start_date
+        if release_date:
+            data['releaseDate'] = release_date
+
+        return self.post('/rest/api/3/version', data=data,
+                        operation=f"create version '{name}'")
+
+    def get_version(self, version_id: str, expand: str = None) -> Dict[str, Any]:
+        """
+        Get a version by ID.
+
+        Args:
+            version_id: Version ID
+            expand: Optional expansions (e.g., 'issueStatusCounts')
+
+        Returns:
+            Version object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {}
+        if expand:
+            params['expand'] = expand
+        return self.get(f'/rest/api/3/version/{version_id}',
+                       params=params if params else None,
+                       operation=f"get version {version_id}")
+
+    def update_version(self, version_id: str, **kwargs) -> Dict[str, Any]:
+        """
+        Update a version.
+
+        Args:
+            version_id: Version ID
+            **kwargs: Fields to update (name, description, released, archived,
+                      start_date, release_date)
+
+        Returns:
+            Updated version object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        data = {}
+        field_mapping = {
+            'name': 'name',
+            'description': 'description',
+            'released': 'released',
+            'archived': 'archived',
+            'start_date': 'startDate',
+            'release_date': 'releaseDate'
+        }
+        for key, api_key in field_mapping.items():
+            if key in kwargs and kwargs[key] is not None:
+                data[api_key] = kwargs[key]
+
+        return self.put(f'/rest/api/3/version/{version_id}',
+                       data=data,
+                       operation=f"update version {version_id}")
+
+    def delete_version(self, version_id: str,
+                       move_fixed_to: str = None,
+                       move_affected_to: str = None) -> None:
+        """
+        Delete a version.
+
+        Args:
+            version_id: Version ID
+            move_fixed_to: Version ID to move fixVersion issues to
+            move_affected_to: Version ID to move affectedVersion issues to
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {}
+        if move_fixed_to:
+            params['moveFixIssuesTo'] = move_fixed_to
+        if move_affected_to:
+            params['moveAffectedIssuesTo'] = move_affected_to
+
+        endpoint = f'/rest/api/3/version/{version_id}'
+        url = f"{self.base_url}{endpoint}"
+        response = self.session.delete(url, params=params if params else None,
+                                      timeout=self.timeout)
+        handle_jira_error(response, f"delete version {version_id}")
+
+    def get_project_versions(self, project_key: str,
+                             expand: str = None) -> list:
+        """
+        Get all versions for a project.
+
+        Args:
+            project_key: Project key (e.g., 'PROJ')
+            expand: Optional expansions
+
+        Returns:
+            List of version objects
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {}
+        if expand:
+            params['expand'] = expand
+        return self.get(f'/rest/api/3/project/{project_key}/versions',
+                       params=params if params else None,
+                       operation=f"get versions for project {project_key}")
+
+    def get_version_issue_counts(self, version_id: str) -> Dict[str, Any]:
+        """
+        Get issue counts for a version.
+
+        Args:
+            version_id: Version ID
+
+        Returns:
+            Issue counts (issuesFixedCount, issuesAffectedCount)
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(f'/rest/api/3/version/{version_id}/relatedIssueCounts',
+                       operation=f"get issue counts for version {version_id}")
+
+    def get_version_unresolved_count(self, version_id: str) -> Dict[str, Any]:
+        """
+        Get unresolved issue count for a version.
+
+        Args:
+            version_id: Version ID
+
+        Returns:
+            Unresolved count data
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(f'/rest/api/3/version/{version_id}/unresolvedIssueCount',
+                       operation=f"get unresolved count for version {version_id}")
+
+    # ========== Component Management ==========
+
+    def create_component(self, project: str, name: str,
+                         description: str = None,
+                         lead_account_id: str = None,
+                         assignee_type: str = 'PROJECT_DEFAULT') -> Dict[str, Any]:
+        """
+        Create a new component.
+
+        Args:
+            project: Project key (e.g., 'PROJ')
+            name: Component name
+            description: Component description
+            lead_account_id: Account ID of component lead
+            assignee_type: 'PROJECT_DEFAULT', 'COMPONENT_LEAD', 'PROJECT_LEAD', 'UNASSIGNED'
+
+        Returns:
+            Created component object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        data = {
+            'project': project,
+            'name': name,
+            'assigneeType': assignee_type
+        }
+        if description:
+            data['description'] = description
+        if lead_account_id:
+            data['leadAccountId'] = lead_account_id
+
+        return self.post('/rest/api/3/component', data=data,
+                        operation=f"create component '{name}'")
+
+    def get_component(self, component_id: str) -> Dict[str, Any]:
+        """
+        Get a component by ID.
+
+        Args:
+            component_id: Component ID
+
+        Returns:
+            Component object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(f'/rest/api/3/component/{component_id}',
+                       operation=f"get component {component_id}")
+
+    def update_component(self, component_id: str, **kwargs) -> Dict[str, Any]:
+        """
+        Update a component.
+
+        Args:
+            component_id: Component ID
+            **kwargs: Fields to update (name, description, lead_account_id, assignee_type)
+
+        Returns:
+            Updated component object
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        data = {}
+        field_mapping = {
+            'name': 'name',
+            'description': 'description',
+            'lead_account_id': 'leadAccountId',
+            'assignee_type': 'assigneeType'
+        }
+        for key, api_key in field_mapping.items():
+            if key in kwargs and kwargs[key] is not None:
+                data[api_key] = kwargs[key]
+
+        return self.put(f'/rest/api/3/component/{component_id}',
+                       data=data,
+                       operation=f"update component {component_id}")
+
+    def delete_component(self, component_id: str,
+                         move_issues_to: str = None) -> None:
+        """
+        Delete a component.
+
+        Args:
+            component_id: Component ID
+            move_issues_to: Component ID to move issues to
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        params = {}
+        if move_issues_to:
+            params['moveIssuesTo'] = move_issues_to
+
+        endpoint = f'/rest/api/3/component/{component_id}'
+        url = f"{self.base_url}{endpoint}"
+        response = self.session.delete(url, params=params if params else None,
+                                      timeout=self.timeout)
+        handle_jira_error(response, f"delete component {component_id}")
+
+    def get_project_components(self, project_key: str) -> list:
+        """
+        Get all components for a project.
+
+        Args:
+            project_key: Project key (e.g., 'PROJ')
+
+        Returns:
+            List of component objects
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(f'/rest/api/3/project/{project_key}/components',
+                       operation=f"get components for project {project_key}")
+
+    def get_component_issue_counts(self, component_id: str) -> Dict[str, Any]:
+        """
+        Get issue counts for a component.
+
+        Args:
+            component_id: Component ID
+
+        Returns:
+            Issue count data
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(f'/rest/api/3/component/{component_id}/relatedIssueCounts',
+                       operation=f"get issue counts for component {component_id}")
