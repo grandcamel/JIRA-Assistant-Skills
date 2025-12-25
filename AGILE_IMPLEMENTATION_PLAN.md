@@ -312,7 +312,7 @@ python create_subtask.py --parent PROJ-101 --summary "Task" --estimate 4h
 
 ## Phase 2: Sprint Management
 
-### Feature 2.1: Create Sprint
+### Feature 2.1: Create Sprint ✅ COMPLETED
 
 **Script:** `create_sprint.py`
 
@@ -351,10 +351,10 @@ python create_sprint.py --board 123 --name "Sprint 42" --start "+1 week" --durat
 ```
 
 **Acceptance Criteria:**
-- [ ] All 6 tests pass
-- [ ] Sprint created in specified board
-- [ ] Supports date ranges
-- [ ] Sprint goal support
+- [x] All 6 tests pass
+- [x] Sprint created in specified board
+- [x] Supports date ranges
+- [x] Sprint goal support
 
 **Commits:**
 1. `test(jira-agile): add failing tests for create_sprint`
@@ -362,7 +362,7 @@ python create_sprint.py --board 123 --name "Sprint 42" --start "+1 week" --durat
 
 ---
 
-### Feature 2.2: Manage Sprint Lifecycle
+### Feature 2.2: Manage Sprint Lifecycle ✅ COMPLETED
 
 **Script:** `manage_sprint.py`
 
@@ -403,10 +403,10 @@ python manage_sprint.py --board 123 --get-active
 ```
 
 **Acceptance Criteria:**
-- [ ] All 6 tests pass
-- [ ] Can start/close sprints
-- [ ] Handles incomplete issues
-- [ ] Can update sprint metadata
+- [x] All 6 tests pass
+- [x] Can start/close sprints
+- [x] Handles incomplete issues
+- [x] Can update sprint metadata
 
 **Commits:**
 1. `test(jira-agile): add failing tests for manage_sprint`
@@ -414,7 +414,7 @@ python manage_sprint.py --board 123 --get-active
 
 ---
 
-### Feature 2.3: Move Issues to Sprint
+### Feature 2.3: Move Issues to Sprint ✅ COMPLETED
 
 **Script:** `move_to_sprint.py`
 
@@ -455,11 +455,11 @@ python move_to_sprint.py --sprint 456 --issues PROJ-1,PROJ-2 --dry-run
 ```
 
 **Acceptance Criteria:**
-- [ ] All 6 tests pass
-- [ ] Supports single and bulk moves
-- [ ] JQL query support
-- [ ] Dry-run mode
-- [ ] Progress indicator for bulk ops
+- [x] All 6 tests pass
+- [x] Supports single and bulk moves
+- [x] JQL query support
+- [x] Dry-run mode
+- [x] Progress indicator for bulk ops
 
 **Commits:**
 1. `test(jira-agile): add failing tests for move_to_sprint`
@@ -467,7 +467,7 @@ python move_to_sprint.py --sprint 456 --issues PROJ-1,PROJ-2 --dry-run
 
 ---
 
-### Feature 2.4: Get Sprint Info & Report
+### Feature 2.4: Get Sprint Info & Report ✅ COMPLETED
 
 **Script:** `get_sprint.py`
 
@@ -523,10 +523,10 @@ Issues:
 ```
 
 **Acceptance Criteria:**
-- [ ] All 6 tests pass
-- [ ] Shows sprint metadata
-- [ ] Lists issues in sprint
-- [ ] Calculates progress
+- [x] All 6 tests pass
+- [x] Shows sprint metadata
+- [x] Lists issues in sprint
+- [x] Calculates progress
 
 **Commits:**
 1. `test(jira-agile): add failing tests for get_sprint`
@@ -534,14 +534,14 @@ Issues:
 
 ---
 
-### Phase 2 Completion
+### Phase 2 Completion ✅ COMPLETED
 
-- [ ] **Phase 2 Summary:**
-  - [ ] 4 scripts implemented (create_sprint, manage_sprint, move_to_sprint, get_sprint)
-  - [ ] 24 tests passing (52 total)
-  - [ ] Coverage ≥ 85% for sprint-related code
-  - [ ] SKILL.md updated with sprint examples
-  - **Commit:** `docs(jira-agile): complete Phase 2 - Sprint Management`
+- [x] **Phase 2 Summary:**
+  - [x] 4 scripts implemented (create_sprint, manage_sprint, move_to_sprint, get_sprint)
+  - [x] 24 tests passing (68 total with Phase 1)
+  - [x] Coverage ≥ 85% for sprint-related code
+  - [x] SKILL.md updated with sprint examples
+  - **Commit:** `docs(jira-agile): complete Phase 2 - Sprint Management` ✅
 
 ---
 
