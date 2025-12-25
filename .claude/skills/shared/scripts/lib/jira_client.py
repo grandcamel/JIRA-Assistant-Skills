@@ -709,3 +709,91 @@ class JiraClient:
         return self.get(f'/rest/agile/1.0/board/{board_id}/sprint',
                        params=params,
                        operation=f"get sprints for board {board_id}")
+
+    # ========== Issue Link API Methods (/rest/api/3/issueLink) ==========
+
+    def get_link_types(self) -> list:
+        """
+        Get all available issue link types.
+
+        Returns:
+            List of link type objects with id, name, inward, outward
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        result = self.get('/rest/api/3/issueLinkType',
+                         operation="get issue link types")
+        return result.get('issueLinkTypes', [])
+
+    def get_link(self, link_id: str) -> Dict[str, Any]:
+        """
+        Get a specific issue link by ID.
+
+        Args:
+            link_id: The issue link ID
+
+        Returns:
+            Issue link data
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        return self.get(f'/rest/api/3/issueLink/{link_id}',
+                       operation=f"get issue link {link_id}")
+
+    def create_link(self, link_type: str, inward_key: str, outward_key: str,
+                    comment: Optional[Dict[str, Any]] = None) -> None:
+        """
+        Create a link between two issues.
+
+        Args:
+            link_type: Name of the link type (e.g., "Blocks", "Duplicate")
+            inward_key: Key of the inward issue (e.g., "is blocked by" side)
+            outward_key: Key of the outward issue (e.g., "blocks" side)
+            comment: Optional comment in ADF format
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        data = {
+            'type': {'name': link_type},
+            'inwardIssue': {'key': inward_key},
+            'outwardIssue': {'key': outward_key}
+        }
+        if comment:
+            data['comment'] = {'body': comment}
+
+        self.post('/rest/api/3/issueLink', data=data,
+                 operation=f"create link between {inward_key} and {outward_key}")
+
+    def delete_link(self, link_id: str) -> None:
+        """
+        Delete an issue link.
+
+        Args:
+            link_id: The issue link ID
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        self.delete(f'/rest/api/3/issueLink/{link_id}',
+                   operation=f"delete issue link {link_id}")
+
+    def get_issue_links(self, issue_key: str) -> list:
+        """
+        Get all links for an issue.
+
+        Args:
+            issue_key: Issue key (e.g., PROJ-123)
+
+        Returns:
+            List of issue links
+
+        Raises:
+            JiraError or subclass on failure
+        """
+        issue = self.get(f'/rest/api/3/issue/{issue_key}',
+                        params={'fields': 'issuelinks'},
+                        operation=f"get links for {issue_key}")
+        return issue.get('fields', {}).get('issuelinks', [])
