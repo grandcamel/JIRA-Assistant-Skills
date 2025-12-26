@@ -90,22 +90,16 @@ class TestKnowledgeBaseSearch:
 class TestKnowledgeBaseArticles:
     """Tests for knowledge base article operations."""
 
-    def test_get_article(self, jira_client, test_service_desk):
+    def test_get_article(self, jira_client, test_service_desk, kb_article):
         """Test getting a specific knowledge base article."""
+        if not kb_article:
+            pytest.skip("No articles found in knowledge base")
+
+        article_id = kb_article.get('id')
+        if not article_id:
+            pytest.skip("Article ID not available")
+
         try:
-            # First search for an article
-            result = jira_client.search_knowledge_base(
-                test_service_desk['id'],
-                query='guide'
-            )
-
-            if not result.get('values'):
-                pytest.skip("No articles found in knowledge base")
-
-            article_id = result['values'][0].get('id')
-            if not article_id:
-                pytest.skip("Article ID not available")
-
             # Get the specific article
             article = jira_client.get_knowledge_base_article(
                 test_service_desk['id'],
@@ -116,30 +110,18 @@ class TestKnowledgeBaseArticles:
 
         except Exception as e:
             if '404' in str(e) or '403' in str(e):
-                pytest.skip("Knowledge base not available")
+                pytest.skip("Knowledge base article retrieval not available")
             raise
 
-    def test_article_has_required_fields(self, jira_client, test_service_desk):
+    def test_article_has_required_fields(self, jira_client, kb_article):
         """Test that articles have required fields."""
-        try:
-            result = jira_client.search_knowledge_base(
-                test_service_desk['id'],
-                query='*'
-            )
+        if not kb_article:
+            pytest.skip("No articles in knowledge base")
 
-            if not result.get('values'):
-                pytest.skip("No articles in knowledge base")
-
-            article = result['values'][0]
-            # Articles should have basic fields
-            article_str = str(article).lower()
-            assert 'title' in article or 'title' in article_str
-            assert 'id' in article or 'id' in article_str
-
-        except Exception as e:
-            if '404' in str(e) or '403' in str(e):
-                pytest.skip("Knowledge base not available")
-            raise
+        # Articles should have basic fields
+        article_str = str(kb_article).lower()
+        assert 'title' in kb_article or 'title' in article_str
+        assert 'id' in kb_article or 'id' in article_str
 
 
 @pytest.mark.jsm
@@ -197,22 +179,16 @@ class TestKnowledgeBaseSuggestions:
 class TestKnowledgeBaseIntegration:
     """Tests for knowledge base integration with requests."""
 
-    def test_link_article_to_request(self, jira_client, test_service_desk, test_request):
+    def test_link_article_to_request(self, jira_client, test_request, kb_article):
         """Test linking a KB article to a request."""
+        if not kb_article:
+            pytest.skip("No articles to link")
+
+        article_id = kb_article.get('id')
+        if not article_id:
+            pytest.skip("Article ID not available")
+
         try:
-            # Search for an article to link
-            result = jira_client.search_knowledge_base(
-                test_service_desk['id'],
-                query='*'
-            )
-
-            if not result.get('values'):
-                pytest.skip("No articles to link")
-
-            article_id = result['values'][0].get('id')
-            if not article_id:
-                pytest.skip("Article ID not available")
-
             # Link article to request
             jira_client.link_knowledge_base_article(
                 test_request['issueKey'],
@@ -231,23 +207,20 @@ class TestKnowledgeBaseIntegration:
                 pytest.skip("KB linking not implemented")
             raise
 
-    def test_attach_solution_to_request(self, jira_client, test_service_desk, test_request):
+    def test_attach_solution_to_request(self, jira_client, test_request, kb_article):
         """Test attaching a solution article to a request."""
+        if not kb_article:
+            pytest.skip("No articles available")
+
+        article_id = kb_article.get('id')
+        if not article_id:
+            pytest.skip("Article ID not available")
+
         try:
-            result = jira_client.search_knowledge_base(
-                test_service_desk['id'],
-                query='*'
-            )
-
-            if not result.get('values'):
-                pytest.skip("No articles available")
-
-            article = result['values'][0]
-
             # Attempt to attach as solution
             jira_client.attach_article_as_solution(
                 test_request['issueKey'],
-                article.get('id')
+                article_id
             )
 
         except Exception as e:

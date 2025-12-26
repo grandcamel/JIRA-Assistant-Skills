@@ -276,6 +276,122 @@ def default_request_type(jira_client, test_service_desk) -> Dict[str, Any]:
     return types[0]
 
 
+@pytest.fixture(scope="session")
+def request_type_with_priority(jira_client, test_service_desk) -> Optional[Dict[str, Any]]:
+    """
+    Find a request type that supports the priority field.
+
+    Returns None if no request type supports priority (test should skip).
+    """
+    request_types = jira_client.get_request_types(test_service_desk['id'])
+
+    for rt in request_types.get('values', []):
+        try:
+            fields = jira_client.get_request_type_fields(
+                test_service_desk['id'],
+                rt['id']
+            )
+            field_ids = [f.get('fieldId', '') for f in fields.get('requestTypeFields', [])]
+            if 'priority' in field_ids:
+                return rt
+        except Exception:
+            continue
+
+    return None
+
+
+@pytest.fixture(scope="session")
+def request_type_with_approval(jira_client, test_service_desk) -> Optional[Dict[str, Any]]:
+    """
+    Find a request type that has an approval workflow configured.
+
+    Returns None if no request type has approval workflow (test should skip).
+    """
+    request_types = jira_client.get_request_types(test_service_desk['id'])
+
+    for rt in request_types.get('values', []):
+        try:
+            fields = jira_client.get_request_type_fields(
+                test_service_desk['id'],
+                rt['id']
+            )
+            field_ids = [f.get('fieldId', '').lower() for f in fields.get('requestTypeFields', [])]
+            # Look for approval-related fields
+            if any('approv' in fid for fid in field_ids):
+                return rt
+        except Exception:
+            continue
+
+    return None
+
+
+@pytest.fixture(scope="session")
+def kb_article(jira_client, test_service_desk) -> Optional[Dict[str, Any]]:
+    """
+    Find an existing knowledge base article for testing.
+
+    Returns None if no articles exist (test should skip).
+    """
+    try:
+        # Search for any article
+        result = jira_client.search_knowledge_base(
+            test_service_desk['id'],
+            query='*'
+        )
+        articles = result.get('values', [])
+        if articles:
+            return articles[0]
+    except Exception:
+        pass
+
+    # Try common search terms
+    for query in ['help', 'guide', 'how to', 'password', 'access']:
+        try:
+            result = jira_client.search_knowledge_base(
+                test_service_desk['id'],
+                query=query
+            )
+            articles = result.get('values', [])
+            if articles:
+                return articles[0]
+        except Exception:
+            continue
+
+    return None
+
+
+@pytest.fixture(scope="session")
+def request_with_sla(jira_client, test_service_desk, default_request_type) -> Optional[Dict[str, Any]]:
+    """
+    Create a request and check if it has SLAs configured.
+
+    Returns the request if SLAs are available, None otherwise.
+    """
+    request = jira_client.create_request(
+        service_desk_id=test_service_desk['id'],
+        request_type_id=default_request_type['id'],
+        summary=f'SLA Test Request {uuid.uuid4().hex[:8]}',
+        description='Request for SLA testing'
+    )
+
+    try:
+        # Check if SLAs are configured
+        sla_result = jira_client.get_request_sla(request['issueKey'])
+        if sla_result.get('values'):
+            # Has SLAs - return the request
+            return request
+    except Exception:
+        pass
+
+    # No SLAs - cleanup and return None
+    try:
+        jira_client.delete_issue(request['issueKey'])
+    except Exception:
+        pass
+
+    return None
+
+
 @pytest.fixture(scope="function")
 def test_request(jira_client, test_service_desk, default_request_type) -> Generator[Dict[str, Any], None, None]:
     """

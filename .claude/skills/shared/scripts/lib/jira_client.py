@@ -79,7 +79,8 @@ class JiraClient:
         return session
 
     def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None,
-            operation: str = "fetch data") -> Dict[str, Any]:
+            operation: str = "fetch data",
+            headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
         """
         Perform GET request.
 
@@ -87,6 +88,7 @@ class JiraClient:
             endpoint: API endpoint (e.g., '/rest/api/3/issue/PROJ-123')
             params: Query parameters
             operation: Description of operation for error messages
+            headers: Optional additional headers
 
         Returns:
             Response JSON as dictionary
@@ -95,12 +97,14 @@ class JiraClient:
             JiraError or subclass on failure
         """
         url = f"{self.base_url}{endpoint}"
-        response = self.session.get(url, params=params, timeout=self.timeout)
+        response = self.session.get(url, params=params, timeout=self.timeout,
+                                    headers=headers)
         handle_jira_error(response, operation)
         return response.json()
 
     def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None,
-             operation: str = "create resource") -> Dict[str, Any]:
+             operation: str = "create resource",
+             headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
         """
         Perform POST request.
 
@@ -108,6 +112,7 @@ class JiraClient:
             endpoint: API endpoint
             data: Request body (dict will be JSON-encoded, string used as-is)
             operation: Description of operation for error messages
+            headers: Optional additional headers
 
         Returns:
             Response JSON as dictionary
@@ -120,9 +125,11 @@ class JiraClient:
         # If data is already a string, send it as raw body
         # (e.g., for watcher API which expects just "accountId")
         if isinstance(data, str):
-            response = self.session.post(url, data=data, timeout=self.timeout)
+            response = self.session.post(url, data=data, timeout=self.timeout,
+                                         headers=headers)
         else:
-            response = self.session.post(url, json=data, timeout=self.timeout)
+            response = self.session.post(url, json=data, timeout=self.timeout,
+                                         headers=headers)
 
         handle_jira_error(response, operation)
 
@@ -2290,13 +2297,15 @@ class JiraClient:
 
     # ========== JSM Customer Management (/rest/servicedeskapi/customer) ==========
 
-    def create_customer(self, email: str, display_name: Optional[str] = None) -> Dict[str, Any]:
+    def create_customer(self, email: str, display_name: Optional[str] = None,
+                        service_desk_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Create a customer account for JSM.
 
         Args:
             email: Customer email address
             display_name: Display name (defaults to email if not provided)
+            service_desk_id: Optional service desk ID to add customer to
 
         Returns:
             Created customer data with accountId, emailAddress, displayName
@@ -2307,8 +2316,18 @@ class JiraClient:
         payload = {'email': email}
         if display_name:
             payload['displayName'] = display_name
-        return self.post('/rest/servicedeskapi/customer', data=payload,
-                        operation=f"create customer {email}")
+
+        customer = self.post('/rest/servicedeskapi/customer', data=payload,
+                            operation=f"create customer {email}")
+
+        # Add customer to service desk if specified
+        if service_desk_id and customer.get('accountId'):
+            try:
+                self.add_customers_to_service_desk(service_desk_id, [customer['accountId']])
+            except Exception:
+                pass  # Customer creation succeeded, service desk addition is optional
+
+        return customer
 
     def get_service_desk_customers(self, service_desk_id: str, query: Optional[str] = None,
                                     start: int = 0, limit: int = 50) -> Dict[str, Any]:
@@ -2330,9 +2349,11 @@ class JiraClient:
         params = {'start': start, 'limit': limit}
         if query:
             params['query'] = query
+        # Customer endpoints require experimental API header
         return self.get(f'/rest/servicedeskapi/servicedesk/{service_desk_id}/customer',
                        params=params,
-                       operation=f"get customers for service desk {service_desk_id}")
+                       operation=f"get customers for service desk {service_desk_id}",
+                       headers={'X-ExperimentalApi': 'opt-in'})
 
     def add_customers_to_service_desk(self, service_desk_id: str,
                                       account_ids: list) -> None:
@@ -2347,9 +2368,11 @@ class JiraClient:
             JiraError or subclass on failure
         """
         payload = {'accountIds': account_ids}
+        # Customer endpoints require experimental API header
         self.post(f'/rest/servicedeskapi/servicedesk/{service_desk_id}/customer',
                  data=payload,
-                 operation=f"add customers to service desk {service_desk_id}")
+                 operation=f"add customers to service desk {service_desk_id}",
+                 headers={'X-ExperimentalApi': 'opt-in'})
 
     def remove_customers_from_service_desk(self, service_desk_id: str,
                                            account_ids: list) -> None:
@@ -2366,13 +2389,19 @@ class JiraClient:
         payload = {'accountIds': account_ids}
         endpoint = f'/rest/servicedeskapi/servicedesk/{service_desk_id}/customer'
         url = f"{self.base_url}{endpoint}"
-        response = self.session.delete(url, json=payload, timeout=self.timeout)
+        # Customer endpoints require experimental API header
+        response = self.session.delete(url, json=payload, timeout=self.timeout,
+                                       headers={'X-ExperimentalApi': 'opt-in'})
         handle_jira_error(response, f"remove customers from service desk {service_desk_id}")
 
     # ========== JSM Request Management (/rest/servicedeskapi/request) ==========
 
     def create_request(self, service_desk_id: str, request_type_id: str,
-                       fields: Dict[str, Any], participants: Optional[list] = None,
+                       fields: Optional[Dict[str, Any]] = None,
+                       summary: Optional[str] = None,
+                       description: Optional[str] = None,
+                       priority: Optional[str] = None,
+                       participants: Optional[list] = None,
                        on_behalf_of: Optional[str] = None) -> Dict[str, Any]:
         """
         Create a service request via JSM API.
@@ -2381,6 +2410,9 @@ class JiraClient:
             service_desk_id: Service desk ID or key
             request_type_id: Request type ID
             fields: Dictionary of field values (summary, description, custom fields)
+            summary: Request summary (alternative to fields dict)
+            description: Request description (alternative to fields dict)
+            priority: Request priority name (alternative to fields dict)
             participants: List of participant email addresses (optional)
             on_behalf_of: Create request on behalf of user email (optional)
 
@@ -2390,6 +2422,18 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
+        # Build requestFieldValues from either fields dict or individual params
+        if fields is None:
+            fields = {}
+
+        # Add individual parameters to fields if provided
+        if summary:
+            fields['summary'] = summary
+        if description:
+            fields['description'] = description
+        if priority:
+            fields['priority'] = {'name': priority}
+
         payload = {
             'serviceDeskId': service_desk_id,
             'requestTypeId': request_type_id,
@@ -2507,22 +2551,26 @@ class JiraClient:
                        params=params,
                        operation=f"get SLAs for {issue_key}")
 
-    def get_request_sla(self, issue_key: str, sla_metric_id: str) -> Dict[str, Any]:
+    def get_request_sla(self, issue_key: str, sla_metric_id: str = None) -> Dict[str, Any]:
         """
-        Get a specific SLA metric for a request.
+        Get SLA metrics for a request.
 
         Args:
             issue_key: Issue key (e.g., 'SD-123')
-            sla_metric_id: SLA metric ID
+            sla_metric_id: SLA metric ID (optional - if not provided, returns all SLAs)
 
         Returns:
-            SLA metric details
+            SLA metric details, or all SLAs if sla_metric_id not provided
 
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/servicedeskapi/request/{issue_key}/sla/{sla_metric_id}',
-                       operation=f"get SLA {sla_metric_id} for {issue_key}")
+        if sla_metric_id:
+            return self.get(f'/rest/servicedeskapi/request/{issue_key}/sla/{sla_metric_id}',
+                           operation=f"get SLA {sla_metric_id} for {issue_key}")
+        else:
+            # Return all SLAs for the request
+            return self.get_request_slas(issue_key)
 
     # ========== JSM Queue Management (/rest/servicedeskapi/servicedesk/{id}/queue) ==========
 
@@ -2799,13 +2847,15 @@ class JiraClient:
                         data=data, operation=f"add JSM comment to {issue_key}")
 
     def get_request_comments(self, issue_key: str, public: bool = None,
+                             internal: bool = None,
                              start: int = 0, limit: int = 100) -> Dict[str, Any]:
         """
         Get comments for a JSM request with visibility information.
 
         Args:
             issue_key: Request key (e.g., REQ-123)
-            public: Filter by visibility (True=public, False=internal, None=all)
+            public: Filter by visibility (True=public only, False=internal only, None=all)
+            internal: Alias for filtering (True=internal only, False=public only, None=all)
             start: Starting index for pagination
             limit: Maximum results per page (max 100)
 
@@ -2816,6 +2866,12 @@ class JiraClient:
             JiraError or subclass on failure
         """
         params = {'start': start, 'limit': limit}
+
+        # Handle both 'public' and 'internal' parameters
+        # 'internal' is the inverse of 'public'
+        if internal is not None and public is None:
+            public = not internal
+
         if public is not None:
             params['public'] = str(public).lower()
 
@@ -2968,14 +3024,17 @@ class JiraClient:
     # ==========================================
 
     def search_kb_articles(self, service_desk_id: int, query: str,
-                           max_results: int = 50) -> list:
+                           highlight: bool = True, start: int = 0,
+                           limit: int = 50) -> list:
         """
         Search KB articles for a service desk.
 
         Args:
             service_desk_id: Service desk ID
             query: Search query string
-            max_results: Maximum results to return
+            highlight: Whether to highlight matches in results
+            start: Starting index for pagination
+            limit: Maximum results to return
 
         Returns:
             List of KB articles matching query
@@ -2985,7 +3044,7 @@ class JiraClient:
         """
         result = self.get(
             f'/rest/servicedeskapi/servicedesk/{service_desk_id}/knowledgebase/article',
-            params={'query': query, 'highlight': True, 'limit': max_results},
+            params={'query': query, 'highlight': highlight, 'start': start, 'limit': limit},
             operation=f"search KB articles for service desk {service_desk_id}"
         )
         return result.get('values', [])
@@ -3308,10 +3367,12 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        self.delete(
-            f'/rest/servicedeskapi/servicedesk/{service_desk_id}/organization/{organization_id}',
-            operation=f"remove organization {organization_id} from service desk {service_desk_id}"
-        )
+        # JSM API requires organization ID in request body, not path
+        endpoint = f'/rest/servicedeskapi/servicedesk/{service_desk_id}/organization'
+        url = f"{self.base_url}{endpoint}"
+        response = self.session.delete(url, json={'organizationId': organization_id},
+                                       timeout=self.timeout)
+        handle_jira_error(response, f"remove organization {organization_id} from service desk {service_desk_id}")
 
     def get_organization_users(self, organization_id: int,
                                start: int = 0, limit: int = 50) -> Dict[str, Any]:
@@ -3339,6 +3400,10 @@ class JiraClient:
         """
         Update an organization's name.
 
+        Note: The JSM REST API does not support organization updates.
+        This method will attempt the update but may fail with 405 Method Not Allowed.
+        Consider deleting and recreating the organization if update is required.
+
         Args:
             organization_id: Organization ID
             name: New organization name
@@ -3347,15 +3412,23 @@ class JiraClient:
             Updated organization object
 
         Raises:
-            JiraError or subclass on failure
+            JiraError or subclass on failure (likely 405 Method Not Allowed)
         """
-        # Note: JSM doesn't have a direct update endpoint for orgs
-        # This uses the property update if available
-        return self.put(
-            f'/rest/servicedeskapi/organization/{organization_id}',
-            data={'name': name},
-            operation=f"update organization {organization_id}"
-        )
+        # Note: JSM API v1 doesn't support organization updates
+        # Try POST with property endpoint as fallback
+        try:
+            return self.put(
+                f'/rest/servicedeskapi/organization/{organization_id}',
+                data={'name': name},
+                operation=f"update organization {organization_id}"
+            )
+        except Exception:
+            # Try alternative endpoint with POST
+            return self.post(
+                f'/rest/servicedeskapi/organization/{organization_id}/property/name',
+                data={'value': name},
+                operation=f"update organization {organization_id} name"
+            )
 
     def get_service_desk_agents(self, service_desk_id: str,
                                 start: int = 0, limit: int = 50) -> Dict[str, Any]:
