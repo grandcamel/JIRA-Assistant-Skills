@@ -17,13 +17,10 @@ from typing import List, Optional, Dict
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 # Imports from shared library
-from config_manager import get_jira_client
+from config_manager import get_jira_client, get_agile_field
 from error_handler import print_error, JiraError, ValidationError
 from validators import validate_issue_key
 from formatters import print_success, print_warning
-
-# Epic Link custom field (may vary per instance)
-EPIC_LINK_FIELD = 'customfield_10014'
 
 
 def add_to_epic(epic_key: Optional[str] = None,
@@ -92,6 +89,9 @@ def add_to_epic(epic_key: Optional[str] = None,
             result['would_add'] = len(issue_keys)
             return result
 
+        # Get the Epic Link field ID from configuration
+        epic_link_field = get_agile_field('epic_link', profile)
+
         # Process each issue
         for issue_key in issue_keys:
             try:
@@ -99,7 +99,7 @@ def add_to_epic(epic_key: Optional[str] = None,
 
                 # Build update fields
                 fields = {
-                    EPIC_LINK_FIELD: epic_key if not remove else None
+                    epic_link_field: epic_key if not remove else None
                 }
 
                 # Update the issue

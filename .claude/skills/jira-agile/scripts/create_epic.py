@@ -17,7 +17,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 # Imports from shared library
-from config_manager import get_jira_client
+from config_manager import get_jira_client, get_agile_fields
 from error_handler import print_error, JiraError, ValidationError
 from validators import validate_project_key
 from formatters import print_success
@@ -112,13 +112,15 @@ def create_epic(project: str, summary: str, description: str = None,
     if labels:
         fields['labels'] = labels
 
+    # Get Agile field IDs from configuration
+    agile_fields = get_agile_fields(profile)
+
     # Add epic-specific custom fields
-    # Note: customfield IDs may vary per JIRA instance
     if epic_name:
-        fields['customfield_10011'] = epic_name  # Epic Name
+        fields[agile_fields['epic_name']] = epic_name
 
     if color:
-        fields['customfield_10012'] = color.lower()  # Epic Color
+        fields[agile_fields['epic_color']] = color.lower()
 
     # Add any additional custom fields
     if custom_fields:

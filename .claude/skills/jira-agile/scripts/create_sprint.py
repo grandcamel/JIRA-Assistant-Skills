@@ -22,32 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts
 from config_manager import get_jira_client
 from error_handler import print_error, JiraError, ValidationError
 from formatters import print_success
-
-
-def parse_date(date_str: str) -> str:
-    """
-    Parse date string into ISO format for JIRA API.
-
-    Supports:
-    - ISO format: 2025-01-20 or 2025-01-20T00:00:00.000Z
-    - Relative format: +1w, +2d (future enhancement)
-
-    Returns:
-        Date string in JIRA format (ISO 8601)
-    """
-    if not date_str:
-        return None
-
-    # Already in full ISO format
-    if 'T' in date_str:
-        return date_str
-
-    # Simple date format YYYY-MM-DD
-    try:
-        dt = datetime.strptime(date_str, '%Y-%m-%d')
-        return dt.strftime('%Y-%m-%dT00:00:00.000Z')
-    except ValueError:
-        raise ValidationError(f"Invalid date format: {date_str}. Use YYYY-MM-DD format.")
+from time_utils import parse_date_to_iso
 
 
 def create_sprint(board_id: int, name: str,
@@ -80,9 +55,12 @@ def create_sprint(board_id: int, name: str,
     if not name:
         raise ValidationError("Sprint name is required")
 
-    # Parse and validate dates
-    parsed_start = parse_date(start_date) if start_date else None
-    parsed_end = parse_date(end_date) if end_date else None
+    # Parse and validate dates using shared utility
+    try:
+        parsed_start = parse_date_to_iso(start_date) if start_date else None
+        parsed_end = parse_date_to_iso(end_date) if end_date else None
+    except ValueError as e:
+        raise ValidationError(str(e))
 
     # Validate date range
     if parsed_start and parsed_end:

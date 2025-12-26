@@ -18,15 +18,10 @@ from typing import Optional, Dict, List
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 # Imports from shared library
-from config_manager import get_jira_client
+from config_manager import get_jira_client, get_agile_fields
 from error_handler import print_error, JiraError, ValidationError
 from validators import validate_issue_key
 from formatters import print_success
-
-# Story Points custom field (may vary per instance)
-STORY_POINTS_FIELD = 'customfield_10016'
-# Epic Link custom field
-EPIC_LINK_FIELD = 'customfield_10014'
 
 
 def get_epic(epic_key: str,
@@ -64,12 +59,18 @@ def get_epic(epic_key: str,
         should_close = False
 
     try:
+        # Get Agile field IDs from configuration
+        agile_fields = get_agile_fields(profile)
+        story_points_field = agile_fields['story_points']
+        epic_name_field = agile_fields['epic_name']
+
         # Fetch epic details
         epic = client.get_issue(epic_key)
 
         result = {
             'key': epic['key'],
-            'fields': epic['fields']
+            'fields': epic['fields'],
+            '_agile_fields': agile_fields  # Store for use in formatting
         }
 
         # Fetch children if requested
@@ -79,7 +80,7 @@ def get_epic(epic_key: str,
             jql = f'\"Epic Link\" = {epic_key} OR parent = {epic_key}'
             search_results = client.search_issues(
                 jql,
-                fields=['key', 'summary', 'status', 'issuetype', STORY_POINTS_FIELD],
+                fields=['key', 'summary', 'status', 'issuetype', story_points_field],
                 max_results=1000
             )
 
@@ -104,7 +105,7 @@ def get_epic(epic_key: str,
             done_points = 0
 
             for issue in children:
-                points = issue['fields'].get(STORY_POINTS_FIELD)
+                points = issue['fields'].get(story_points_field)
                 if points is not None:
                     total_points += points
                     if issue['fields']['status']['name'].lower() in ['done', 'closed', 'resolved']:
@@ -136,7 +137,13 @@ def format_epic_output(epic_data: Dict, format: str = 'text') -> str:
         Formatted string
     """
     if format == 'json':
-        return json.dumps(epic_data, indent=2)
+        # Remove internal fields before JSON output
+        output = {k: v for k, v in epic_data.items() if not k.startswith('_')}
+        return json.dumps(output, indent=2)
+
+    # Get field IDs from result or use defaults
+    agile_fields = epic_data.get('_agile_fields', {})
+    epic_name_field = agile_fields.get('epic_name', 'customfield_10011')
 
     # Text format
     lines = []
@@ -144,7 +151,7 @@ def format_epic_output(epic_data: Dict, format: str = 'text') -> str:
     lines.append(f"Summary: {epic_data['fields']['summary']}")
 
     # Epic Name if available
-    epic_name = epic_data['fields'].get('customfield_10011')
+    epic_name = epic_data['fields'].get(epic_name_field)
     if epic_name:
         lines.append(f"Epic Name: {epic_name}")
 

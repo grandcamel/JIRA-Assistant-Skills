@@ -19,13 +19,10 @@ from collections import defaultdict
 # Add shared lib to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
+from config_manager import get_jira_client, get_agile_fields
 from error_handler import print_error, JiraError, ValidationError
 from validators import validate_issue_key
 from formatters import print_success
-
-STORY_POINTS_FIELD = 'customfield_10016'
-EPIC_LINK_FIELD = 'customfield_10014'
 
 
 def get_estimates(sprint_id: int = None,
@@ -61,6 +58,10 @@ def get_estimates(sprint_id: int = None,
         should_close = False
 
     try:
+        # Get Agile field IDs from configuration
+        agile_fields = get_agile_fields(profile)
+        story_points_field = agile_fields['story_points']
+
         # Get issues
         if sprint_id:
             result = client.get_sprint_issues(sprint_id)
@@ -70,7 +71,7 @@ def get_estimates(sprint_id: int = None,
             epic_key = validate_issue_key(epic_key)
             jql = f'"Epic Link" = {epic_key}'
             result = client.search_issues(jql, fields=[
-                'summary', 'status', 'assignee', STORY_POINTS_FIELD
+                'summary', 'status', 'assignee', story_points_field
             ])
             issues = result.get('issues', [])
 
@@ -81,7 +82,7 @@ def get_estimates(sprint_id: int = None,
 
         for issue in issues:
             fields = issue.get('fields', {})
-            points = fields.get(STORY_POINTS_FIELD) or 0
+            points = fields.get(story_points_field) or 0
 
             total_points += points
 

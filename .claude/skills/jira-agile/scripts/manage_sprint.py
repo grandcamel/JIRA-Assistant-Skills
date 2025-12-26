@@ -24,21 +24,17 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts
 from config_manager import get_jira_client
 from error_handler import print_error, JiraError, ValidationError
 from formatters import print_success, print_warning
+from time_utils import parse_date_to_iso
 
 
-def parse_date(date_str: str) -> str:
-    """Parse date string into ISO format for JIRA API."""
+def _parse_date_safe(date_str: str) -> str:
+    """Parse date string into ISO format, converting ValueError to ValidationError."""
     if not date_str:
         return None
-
-    if 'T' in date_str:
-        return date_str
-
     try:
-        dt = datetime.strptime(date_str, '%Y-%m-%d')
-        return dt.strftime('%Y-%m-%dT00:00:00.000Z')
-    except ValueError:
-        raise ValidationError(f"Invalid date format: {date_str}. Use YYYY-MM-DD format.")
+        return parse_date_to_iso(date_str)
+    except ValueError as e:
+        raise ValidationError(str(e))
 
 
 def start_sprint(sprint_id: int,
@@ -77,10 +73,10 @@ def start_sprint(sprint_id: int,
         update_data = {'state': 'active'}
 
         if start_date:
-            update_data['start_date'] = parse_date(start_date)
+            update_data['start_date'] = _parse_date_safe(start_date)
 
         if end_date:
-            update_data['end_date'] = parse_date(end_date)
+            update_data['end_date'] = _parse_date_safe(end_date)
 
         # Update sprint via Agile API
         result = client.update_sprint(sprint_id, **update_data)
@@ -190,10 +186,10 @@ def update_sprint(sprint_id: int,
             update_data['goal'] = goal
 
         if start_date:
-            update_data['start_date'] = parse_date(start_date)
+            update_data['start_date'] = _parse_date_safe(start_date)
 
         if end_date:
-            update_data['end_date'] = parse_date(end_date)
+            update_data['end_date'] = _parse_date_safe(end_date)
 
         if not update_data:
             raise ValidationError("At least one field to update is required")

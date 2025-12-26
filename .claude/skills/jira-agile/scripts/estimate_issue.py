@@ -18,12 +18,11 @@ from typing import Optional, List
 # Add shared lib to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
+from config_manager import get_jira_client, get_agile_field
 from error_handler import print_error, JiraError, ValidationError
 from validators import validate_issue_key
 from formatters import print_success
 
-STORY_POINTS_FIELD = 'customfield_10016'
 FIBONACCI_SEQUENCE = [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]
 
 
@@ -83,6 +82,9 @@ def estimate_issue(issue_keys: List[str] = None,
         # Validate issue keys
         issue_keys = [validate_issue_key(k) for k in issue_keys]
 
+        # Get Story Points field ID from configuration
+        story_points_field = get_agile_field('story_points', profile)
+
         # Prepare update data
         # If points is 0, set to None to clear the field
         points_value = None if points == 0 else points
@@ -90,7 +92,7 @@ def estimate_issue(issue_keys: List[str] = None,
         updated = 0
         for key in issue_keys:
             client.update_issue(key, {
-                STORY_POINTS_FIELD: points_value
+                story_points_field: points_value
             })
             updated += 1
 

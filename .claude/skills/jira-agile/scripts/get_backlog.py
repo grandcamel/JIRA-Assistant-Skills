@@ -18,12 +18,9 @@ from typing import Optional
 # Add shared lib to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
+from config_manager import get_jira_client, get_agile_fields
 from error_handler import print_error, JiraError, ValidationError
 from formatters import print_success
-
-EPIC_LINK_FIELD = 'customfield_10014'
-STORY_POINTS_FIELD = 'customfield_10016'
 
 
 def get_backlog(board_id: int,
@@ -56,17 +53,25 @@ def get_backlog(board_id: int,
         should_close = False
 
     try:
+        # Get Agile field IDs from configuration
+        agile_fields = get_agile_fields(profile)
+        epic_link_field = agile_fields['epic_link']
+        story_points_field = agile_fields['story_points']
+
         result = client.get_board_backlog(
             board_id,
             jql=jql_filter,
             max_results=max_results
         )
 
+        # Store field IDs in result for use in main()
+        result['_agile_fields'] = agile_fields
+
         if group_by_epic:
             by_epic = {}
             no_epic = []
             for issue in result.get('issues', []):
-                epic_key = issue['fields'].get(EPIC_LINK_FIELD)
+                epic_key = issue['fields'].get(epic_link_field)
                 if epic_key:
                     if epic_key not in by_epic:
                         by_epic[epic_key] = []
@@ -117,16 +122,19 @@ def main():
         )
 
         if args.output == 'json':
-            print(json.dumps(result, indent=2))
+            # Remove internal field IDs before JSON output
+            output = {k: v for k, v in result.items() if not k.startswith('_')}
+            print(json.dumps(output, indent=2))
         else:
             issues = result.get('issues', [])
+            story_points_field = result.get('_agile_fields', {}).get('story_points', 'customfield_10016')
             print_success(f"Backlog: {len(issues)}/{result.get('total', len(issues))} issues")
 
             if args.group_by == 'epic' and 'by_epic' in result:
                 for epic_key, epic_issues in result['by_epic'].items():
                     print(f"\n[{epic_key}] ({len(epic_issues)} issues)")
                     for issue in epic_issues:
-                        points = issue['fields'].get(STORY_POINTS_FIELD, '')
+                        points = issue['fields'].get(story_points_field, '')
                         pts_str = f" ({points} pts)" if points else ""
                         print(f"  {issue['key']} - {issue['fields']['summary']}{pts_str}")
                 if result.get('no_epic'):
@@ -137,7 +145,7 @@ def main():
                 for issue in issues:
                     status = issue['fields']['status']['name']
                     summary = issue['fields']['summary']
-                    points = issue['fields'].get(STORY_POINTS_FIELD, '')
+                    points = issue['fields'].get(story_points_field, '')
                     pts_str = f" ({points} pts)" if points else ""
                     print(f"  [{status}] {issue['key']} - {summary}{pts_str}")
 
