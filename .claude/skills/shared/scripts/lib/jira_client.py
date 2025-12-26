@@ -1744,7 +1744,9 @@ class JiraClient:
 
     # ========== Version Management ==========
 
-    def create_version(self, project_id: int, name: str,
+    def create_version(self, name: str,
+                       project: str = None,
+                       project_id: int = None,
                        description: str = None,
                        start_date: str = None,
                        release_date: str = None,
@@ -1754,8 +1756,9 @@ class JiraClient:
         Create a new project version.
 
         Args:
-            project_id: Project ID (numeric)
             name: Version name (e.g., 'v1.0.0')
+            project: Project key (e.g., 'PROJ') - preferred
+            project_id: Project ID (numeric) - alternative to project
             description: Version description
             start_date: Start date (YYYY-MM-DD)
             release_date: Release date (YYYY-MM-DD)
@@ -1767,13 +1770,20 @@ class JiraClient:
 
         Raises:
             JiraError or subclass on failure
+            ValueError: If neither project nor project_id is provided
         """
+        if not project and not project_id:
+            raise ValueError("Either 'project' or 'project_id' must be provided")
+
         data = {
-            'projectId': project_id,
             'name': name,
             'released': released,
             'archived': archived
         }
+        if project:
+            data['project'] = project
+        else:
+            data['projectId'] = project_id
         if description:
             data['description'] = description
         if start_date:

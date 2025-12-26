@@ -32,24 +32,35 @@ def extract_blockers(links: list, direction: str = 'inward') -> list:
 
     Returns:
         List of blocker issue info dicts
+
+    Note on JIRA link semantics:
+        When fetching links for issue B where "A blocks B":
+        - The link has outwardIssue=A (A is on the "blocks" side)
+        - The link has NO inwardIssue because B itself is the inward issue
+
+        Therefore:
+        - To find issues blocking us (inward): look for outwardIssue
+        - To find issues we block (outward): look for inwardIssue
     """
     blockers = []
     for link in links:
         if link['type']['name'] != 'Blocks':
             continue
 
-        if direction == 'inward' and 'inwardIssue' in link:
-            # Issues that block this issue (inward = "is blocked by")
-            issue = link['inwardIssue']
+        if direction == 'inward' and 'outwardIssue' in link:
+            # Issues that block this issue - they appear as outwardIssue
+            # because this issue is on the "is blocked by" (inward) side
+            issue = link['outwardIssue']
             blockers.append({
                 'key': issue['key'],
                 'summary': issue.get('fields', {}).get('summary', ''),
                 'status': issue.get('fields', {}).get('status', {}).get('name', 'Unknown'),
                 'link_id': link['id']
             })
-        elif direction == 'outward' and 'outwardIssue' in link:
-            # Issues that this issue blocks (outward = "blocks")
-            issue = link['outwardIssue']
+        elif direction == 'outward' and 'inwardIssue' in link:
+            # Issues that this issue blocks - they appear as inwardIssue
+            # because this issue is on the "blocks" (outward) side
+            issue = link['inwardIssue']
             blockers.append({
                 'key': issue['key'],
                 'summary': issue.get('fields', {}).get('summary', ''),
