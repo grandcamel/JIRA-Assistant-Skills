@@ -19,7 +19,7 @@ sys.path.insert(0, str(shared_lib_path))
 sys.path.insert(0, str(scripts_path))
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 
 @pytest.mark.agile
@@ -168,16 +168,93 @@ class TestCreateSprint:
 class TestCreateSprintCLI:
     """Test command-line interface for create_sprint.py."""
 
-    @patch('sys.argv', ['create_sprint.py', '--board', '123', '--name', 'Sprint 42'])
-    def test_cli_minimal_args(self, mock_jira_client, sample_sprint_response):
-        """Test CLI with minimal required arguments."""
-        mock_jira_client.create_sprint.return_value = sample_sprint_response
-        # from create_sprint import main
-        pass
+    def test_cli_main_exists(self):
+        """Test CLI main function exists and is callable."""
+        from create_sprint import main
+        assert callable(main)
 
-    @patch('sys.argv', ['create_sprint.py', '--board', '123', '--name', 'Sprint 42', '--goal', 'Launch'])
-    def test_cli_with_goal(self, mock_jira_client, sample_sprint_response):
-        """Test CLI with sprint goal."""
-        mock_jira_client.create_sprint.return_value = sample_sprint_response
-        # from create_sprint import main
-        pass
+    def test_cli_help_output(self, capsys):
+        """Test that --help shows usage information."""
+        with patch('sys.argv', ['create_sprint.py', '--help']):
+            from create_sprint import main
+            try:
+                main()
+            except SystemExit:
+                pass  # --help causes SystemExit
+
+        captured = capsys.readouterr()
+        assert '--board' in captured.out or '--name' in captured.out or 'usage' in captured.out.lower()
+
+
+@pytest.mark.agile
+@pytest.mark.unit
+class TestCreateSprintErrorHandling:
+    """Test API error handling scenarios for create_sprint."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        from create_sprint import create_sprint
+
+        mock_jira_client.create_sprint.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        with pytest.raises(AuthenticationError):
+            create_sprint(
+                board_id=123,
+                name="Sprint 42",
+                client=mock_jira_client
+            )
+
+    def test_forbidden_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        from create_sprint import create_sprint
+
+        mock_jira_client.create_sprint.side_effect = PermissionError(
+            "Insufficient permissions"
+        )
+
+        with pytest.raises(PermissionError):
+            create_sprint(
+                board_id=123,
+                name="Sprint 42",
+                client=mock_jira_client
+            )
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        from create_sprint import create_sprint
+
+        mock_jira_client.create_sprint.side_effect = JiraError(
+            "Rate limit exceeded",
+            status_code=429
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            create_sprint(
+                board_id=123,
+                name="Sprint 42",
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+        from create_sprint import create_sprint
+
+        mock_jira_client.create_sprint.side_effect = JiraError(
+            "Internal server error",
+            status_code=500
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            create_sprint(
+                board_id=123,
+                name="Sprint 42",
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 500

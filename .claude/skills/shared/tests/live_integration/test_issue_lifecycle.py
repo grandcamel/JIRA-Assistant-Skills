@@ -8,6 +8,8 @@ import pytest
 import uuid
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestIssueCreate:
     """Tests for issue creation."""
 
@@ -19,11 +21,15 @@ class TestIssueCreate:
             'issuetype': {'name': 'Task'}
         })
 
-        assert issue['key'].startswith(test_project['key'])
-        assert 'id' in issue
-
-        # Cleanup
-        jira_client.delete_issue(issue['key'])
+        try:
+            assert issue['key'].startswith(test_project['key'])
+            assert 'id' in issue
+        finally:
+            # Cleanup always runs
+            try:
+                jira_client.delete_issue(issue['key'])
+            except Exception:
+                pass  # Issue may have been deleted by test
 
     def test_create_story(self, jira_client, test_project):
         """Test creating a story."""
@@ -38,10 +44,13 @@ class TestIssueCreate:
             }
         })
 
-        assert issue['key'].startswith(test_project['key'])
-
-        # Cleanup
-        jira_client.delete_issue(issue['key'])
+        try:
+            assert issue['key'].startswith(test_project['key'])
+        finally:
+            try:
+                jira_client.delete_issue(issue['key'])
+            except Exception:
+                pass
 
     def test_create_bug(self, jira_client, test_project):
         """Test creating a bug."""
@@ -52,10 +61,13 @@ class TestIssueCreate:
             'priority': {'name': 'High'}
         })
 
-        assert issue['key'].startswith(test_project['key'])
-
-        # Cleanup
-        jira_client.delete_issue(issue['key'])
+        try:
+            assert issue['key'].startswith(test_project['key'])
+        finally:
+            try:
+                jira_client.delete_issue(issue['key'])
+            except Exception:
+                pass
 
     def test_create_subtask(self, jira_client, test_project, test_issue):
         """Test creating a subtask under a parent issue."""
@@ -66,16 +78,21 @@ class TestIssueCreate:
             'parent': {'key': test_issue['key']}
         })
 
-        assert subtask['key'].startswith(test_project['key'])
+        try:
+            assert subtask['key'].startswith(test_project['key'])
 
-        # Verify parent relationship
-        subtask_data = jira_client.get_issue(subtask['key'])
-        assert subtask_data['fields']['parent']['key'] == test_issue['key']
+            # Verify parent relationship
+            subtask_data = jira_client.get_issue(subtask['key'])
+            assert subtask_data['fields']['parent']['key'] == test_issue['key']
+        finally:
+            try:
+                jira_client.delete_issue(subtask['key'])
+            except Exception:
+                pass
 
-        # Cleanup
-        jira_client.delete_issue(subtask['key'])
 
-
+@pytest.mark.integration
+@pytest.mark.shared
 class TestIssueRead:
     """Tests for reading issue data."""
 
@@ -121,6 +138,8 @@ class TestIssueRead:
             assert test_issue['key'] in keys
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestIssueUpdate:
     """Tests for updating issues."""
 
@@ -165,6 +184,8 @@ class TestIssueUpdate:
         assert updated['fields']['assignee'] is None
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestIssueDelete:
     """Tests for deleting issues."""
 
@@ -213,6 +234,8 @@ class TestIssueDelete:
             jira_client.get_issue(subtask['key'])
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestIssueTransitions:
     """Tests for issue status transitions."""
 
@@ -249,6 +272,8 @@ class TestIssueTransitions:
         assert updated['fields']['status']['name'] != 'To Do' or target_transition['name'] == 'To Do'
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestIssueResolution:
     """Tests for resolving and reopening issues."""
 

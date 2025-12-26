@@ -24,6 +24,8 @@ def make_adf_comment(text: str) -> dict:
     }
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestWorklogs:
     """Tests for worklog operations."""
 
@@ -152,6 +154,8 @@ class TestWorklogs:
             jira_client.get_worklog(test_issue['key'], worklog_id)
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestTimeEstimates:
     """Tests for time estimate operations."""
 
@@ -232,6 +236,8 @@ class TestTimeEstimates:
             assert tt.get('originalEstimateSeconds') == expected_seconds, f"Failed for {estimate}"
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestTimeTrackingWorkflow:
     """Tests for complete time tracking workflow."""
 
@@ -317,6 +323,8 @@ class TestTimeTrackingWorkflow:
         assert tt.get('remainingEstimateSeconds') == 14400
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestTimeTrackingEdgeCases:
     """Tests for edge cases in time tracking."""
 

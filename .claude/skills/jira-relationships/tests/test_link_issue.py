@@ -5,11 +5,13 @@ TDD tests for creating links between issues.
 """
 
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 # Import will be done inside tests after path setup via conftest
 
 
+@pytest.mark.relationships
+@pytest.mark.unit
 class TestLinkIssue:
     """Tests for the link_issue function."""
 
@@ -164,3 +166,75 @@ class TestLinkIssue:
         assert result is not None
         assert "PROJ-1" in str(result)
         assert "PROJ-2" in str(result)
+
+
+@pytest.mark.relationships
+@pytest.mark.unit
+class TestLinkIssueErrorHandling:
+    """Test API error handling scenarios for link_issue."""
+
+    def test_authentication_error(self, mock_jira_client, sample_link_types):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.get_link_types.return_value = sample_link_types
+        mock_jira_client.create_link.side_effect = AuthenticationError("Invalid token")
+
+        import link_issue
+        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(AuthenticationError):
+                link_issue.link_issue(issue_key="PROJ-1", blocks="PROJ-2")
+
+    def test_forbidden_error(self, mock_jira_client, sample_link_types):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+
+        mock_jira_client.get_link_types.return_value = sample_link_types
+        mock_jira_client.create_link.side_effect = PermissionError("Insufficient permissions")
+
+        import link_issue
+        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(PermissionError):
+                link_issue.link_issue(issue_key="PROJ-1", blocks="PROJ-2")
+
+    def test_issue_not_found_error(self, mock_jira_client, sample_link_types):
+        """Test handling of 404 issue not found."""
+        from error_handler import NotFoundError
+
+        mock_jira_client.get_link_types.return_value = sample_link_types
+        mock_jira_client.create_link.side_effect = NotFoundError("Issue PROJ-2 not found")
+
+        import link_issue
+        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(NotFoundError):
+                link_issue.link_issue(issue_key="PROJ-1", blocks="PROJ-2")
+
+    def test_rate_limit_error(self, mock_jira_client, sample_link_types):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_jira_client.get_link_types.return_value = sample_link_types
+        mock_jira_client.create_link.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        import link_issue
+        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(JiraError) as exc_info:
+                link_issue.link_issue(issue_key="PROJ-1", blocks="PROJ-2")
+            assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client, sample_link_types):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_jira_client.get_link_types.return_value = sample_link_types
+        mock_jira_client.create_link.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        import link_issue
+        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(JiraError) as exc_info:
+                link_issue.link_issue(issue_key="PROJ-1", blocks="PROJ-2")
+            assert exc_info.value.status_code == 500

@@ -8,6 +8,8 @@ import pytest
 import uuid
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestJQLValidation:
     """Tests for JQL validation and parsing."""
 
@@ -53,6 +55,8 @@ class TestJQLValidation:
         assert query_result.get('errors', []) == []
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestJQLAutocomplete:
     """Tests for JQL autocomplete data."""
 
@@ -90,8 +94,8 @@ class TestJQLAutocomplete:
         result = jira_client.get_jql_suggestions('status')
 
         assert 'results' in result
-        # Should have some status values
-        assert len(result['results']) >= 0  # May be empty if no issues exist
+        # Verify results is a list (may be empty if no issues exist)
+        assert isinstance(result['results'], list)
 
     def test_get_project_suggestions(self, jira_client, test_project):
         """Test getting project suggestions."""
@@ -100,6 +104,8 @@ class TestJQLAutocomplete:
         assert 'results' in result
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestFilterCRUD:
     """Tests for filter create, read, update, delete operations."""
 
@@ -270,6 +276,8 @@ class TestFilterCRUD:
                 pass
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestFilterFavourites:
     """Tests for filter favourite operations."""
 
@@ -337,6 +345,8 @@ class TestFilterFavourites:
                 pass
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestFilterSharing:
     """Tests for filter sharing permissions."""
 
@@ -464,6 +474,8 @@ class TestFilterSharing:
                 pass
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestFilterSearch:
     """Tests for executing searches with filters."""
 

@@ -2,9 +2,8 @@
 Tests for update_filter.py - Update saved filters.
 """
 
+import copy
 import pytest
-import json
-from unittest.mock import MagicMock
 import sys
 from pathlib import Path
 
@@ -12,13 +11,16 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.search
+@pytest.mark.unit
 class TestUpdateFilter:
     """Tests for updating filters."""
 
     def test_update_filter_name(self, mock_jira_client, sample_filter):
         """Test updating filter name."""
-        sample_filter['name'] = 'My Open Bugs'
-        mock_jira_client.update_filter.return_value = sample_filter
+        expected = copy.deepcopy(sample_filter)
+        expected['name'] = 'My Open Bugs'
+        mock_jira_client.update_filter.return_value = expected
 
         from update_filter import update_filter
 
@@ -30,8 +32,9 @@ class TestUpdateFilter:
     def test_update_filter_jql(self, mock_jira_client, sample_filter):
         """Test updating filter JQL."""
         new_jql = 'project = PROJ AND type = Bug AND status != Done'
-        sample_filter['jql'] = new_jql
-        mock_jira_client.update_filter.return_value = sample_filter
+        expected = copy.deepcopy(sample_filter)
+        expected['jql'] = new_jql
+        mock_jira_client.update_filter.return_value = expected
 
         from update_filter import update_filter
 
@@ -41,8 +44,9 @@ class TestUpdateFilter:
 
     def test_update_filter_description(self, mock_jira_client, sample_filter):
         """Test updating filter description."""
-        sample_filter['description'] = 'Updated description'
-        mock_jira_client.update_filter.return_value = sample_filter
+        expected = copy.deepcopy(sample_filter)
+        expected['description'] = 'Updated description'
+        mock_jira_client.update_filter.return_value = expected
 
         from update_filter import update_filter
 
@@ -53,9 +57,10 @@ class TestUpdateFilter:
 
     def test_update_multiple_fields(self, mock_jira_client, sample_filter):
         """Test updating multiple fields at once."""
-        sample_filter['name'] = 'New Name'
-        sample_filter['jql'] = 'project = TEST'
-        mock_jira_client.update_filter.return_value = sample_filter
+        expected = copy.deepcopy(sample_filter)
+        expected['name'] = 'New Name'
+        expected['jql'] = 'project = TEST'
+        mock_jira_client.update_filter.return_value = expected
 
         from update_filter import update_filter
 
@@ -104,3 +109,47 @@ class TestUpdateFilter:
 
         with pytest.raises(ValidationError):
             update_filter(mock_jira_client, '10042', jql='invalid jql syntax')
+
+
+@pytest.mark.search
+@pytest.mark.unit
+class TestUpdateFilterErrorHandling:
+    """Test API error handling scenarios for update_filter."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        mock_jira_client.update_filter.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        from update_filter import update_filter
+
+        with pytest.raises(AuthenticationError):
+            update_filter(mock_jira_client, '10042', name='New Name')
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        mock_jira_client.update_filter.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from update_filter import update_filter
+
+        with pytest.raises(JiraError) as exc_info:
+            update_filter(mock_jira_client, '10042', name='New Name')
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 internal server error."""
+        from error_handler import JiraError
+        mock_jira_client.update_filter.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from update_filter import update_filter
+
+        with pytest.raises(JiraError) as exc_info:
+            update_filter(mock_jira_client, '10042', name='New Name')
+        assert exc_info.value.status_code == 500

@@ -10,6 +10,8 @@ import time
 from datetime import datetime, timedelta
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestVersionCRUD:
     """Tests for version create, read, update, delete operations."""
 
@@ -185,6 +187,8 @@ class TestVersionCRUD:
             jira_client.get_version(created['id'])
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestVersionIssueManagement:
     """Tests for managing issue versions."""
 
@@ -340,6 +344,8 @@ class TestVersionIssueManagement:
             jira_client.delete_version(version['id'])
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestVersionWorkflow:
     """Tests for complete version lifecycle workflows."""
 

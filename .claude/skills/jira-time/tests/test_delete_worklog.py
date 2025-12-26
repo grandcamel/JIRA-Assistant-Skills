@@ -5,7 +5,7 @@ Tests deleting worklogs from JIRA issues.
 """
 
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 import sys
 from pathlib import Path
 
@@ -15,6 +15,8 @@ if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestDeleteWorklog:
     """Tests for deleting worklogs."""
 
@@ -46,6 +48,8 @@ class TestDeleteWorklog:
         assert call_args[1]['new_estimate'] == '2d'
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestDeleteWorklogDryRun:
     """Tests for dry-run mode."""
 
@@ -66,6 +70,8 @@ class TestDeleteWorklogDryRun:
         assert result.get('id') == '10045'
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestDeleteWorklogErrors:
     """Tests for error handling."""
 
@@ -94,3 +100,55 @@ class TestDeleteWorklogErrors:
 
         with pytest.raises(NotFoundError):
             delete_worklog(mock_jira_client, 'PROJ-999', '10045')
+
+    def test_delete_worklog_authentication_error_401(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.delete_worklog.side_effect = AuthenticationError("Invalid token")
+
+        from delete_worklog import delete_worklog
+
+        with pytest.raises(AuthenticationError):
+            delete_worklog(mock_jira_client, 'PROJ-123', '10045')
+
+    def test_delete_worklog_permission_denied_403(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+
+        mock_jira_client.delete_worklog.side_effect = PermissionError(
+            "You do not have permission to delete this worklog"
+        )
+
+        from delete_worklog import delete_worklog
+
+        with pytest.raises(PermissionError):
+            delete_worklog(mock_jira_client, 'PROJ-123', '10045')
+
+    def test_delete_worklog_rate_limit_error_429(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_jira_client.delete_worklog.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from delete_worklog import delete_worklog
+
+        with pytest.raises(JiraError) as exc_info:
+            delete_worklog(mock_jira_client, 'PROJ-123', '10045')
+        assert exc_info.value.status_code == 429
+
+    def test_delete_worklog_server_error_500(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_jira_client.delete_worklog.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from delete_worklog import delete_worklog
+
+        with pytest.raises(JiraError) as exc_info:
+            delete_worklog(mock_jira_client, 'PROJ-123', '10045')
+        assert exc_info.value.status_code == 500

@@ -6,6 +6,13 @@ import pytest
 from unittest.mock import MagicMock
 
 
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line("markers", "collaborate: mark test as collaborate skill test")
+    config.addinivalue_line("markers", "unit: mark test as unit test")
+    config.addinivalue_line("markers", "integration: mark test as integration test")
+
+
 @pytest.fixture
 def mock_jira_client():
     """Create a mock JIRA client."""

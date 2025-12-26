@@ -13,17 +13,20 @@ import pytest
 import asyncio
 from datetime import timedelta
 from pathlib import Path
-from unittest.mock import Mock, MagicMock, AsyncMock, patch
+from unittest.mock import Mock, MagicMock, patch
 import sys
 
 # Add shared lib to path (absolute path)
-shared_lib_path = str(Path(__file__).resolve().parent.parent.parent.parent / 'shared' / 'scripts' / 'lib')
+# From tests/ -> jira-ops/ -> skills/ then into shared/scripts/lib
+shared_lib_path = str(Path(__file__).resolve().parent.parent.parent / 'shared' / 'scripts' / 'lib')
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
 from request_batcher import RequestBatcher, BatchResult, BatchError
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestBatchCollectRequests:
     """Test collecting requests for batching."""
 
@@ -85,6 +88,8 @@ class TestBatchCollectRequests:
         assert len(batcher.requests) == 0
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestBatchExecuteParallel:
     """Test executing batch in parallel."""
 
@@ -123,6 +128,8 @@ class TestBatchExecuteParallel:
         assert id1 in results
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestBatchMaxConcurrent:
     """Test respecting max concurrent limit."""
 
@@ -160,6 +167,8 @@ class TestBatchMaxConcurrent:
         assert batcher.max_concurrent == 5
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestBatchErrorHandling:
     """Test handling partial failures."""
 
@@ -226,6 +235,8 @@ class TestBatchErrorHandling:
         assert len(results) == 5
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestBatchProgressCallback:
     """Test progress reporting."""
 
@@ -245,8 +256,8 @@ class TestBatchProgressCallback:
 
         await batcher.execute(progress_callback=progress_callback)
 
-        # Should have progress updates
-        assert len(progress_calls) > 0
+        # Should have progress updates for each request
+        assert len(progress_calls) >= 5  # At least one update per request
         # Last call should show all complete
         assert progress_calls[-1][0] == 5
         assert progress_calls[-1][1] == 5
@@ -271,6 +282,8 @@ class TestBatchProgressCallback:
         assert sorted(set(progress_values)) == [1, 2, 3]
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestBatchResultMapping:
     """Test mapping results to original requests."""
 
@@ -309,6 +322,8 @@ class TestBatchResultMapping:
         assert "/rest/api/3/issue/PROJ-1" in result.endpoint
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestBatchMethods:
     """Test different HTTP methods in batch."""
 
@@ -374,3 +389,97 @@ class TestBatchMethods:
         assert results[get_id].success
         assert results[post_id].success
         assert results[put_id].success
+
+
+@pytest.mark.ops
+@pytest.mark.unit
+class TestBatchErrorCodes:
+    """Test handling of specific HTTP error codes."""
+
+    @pytest.mark.asyncio
+    async def test_batch_handles_401_unauthorized(self, mock_jira_client):
+        """Test handling of 401 authentication error."""
+        mock_jira_client.get.side_effect = Exception("Authentication failed: 401 Unauthorized")
+        batcher = RequestBatcher(mock_jira_client)
+
+        request_id = batcher.add("GET", "/rest/api/3/issue/PROJ-1")
+        results = await batcher.execute()
+
+        assert results[request_id].success is False
+        assert results[request_id].error is not None
+        assert "401" in results[request_id].error or "Authentication" in results[request_id].error
+
+    @pytest.mark.asyncio
+    async def test_batch_handles_403_forbidden(self, mock_jira_client):
+        """Test handling of 403 permission denied error."""
+        mock_jira_client.get.side_effect = Exception("Permission denied: 403 Forbidden")
+        batcher = RequestBatcher(mock_jira_client)
+
+        request_id = batcher.add("GET", "/rest/api/3/issue/PROJ-1")
+        results = await batcher.execute()
+
+        assert results[request_id].success is False
+        assert results[request_id].error is not None
+        assert "403" in results[request_id].error or "Permission" in results[request_id].error
+
+    @pytest.mark.asyncio
+    async def test_batch_handles_404_not_found(self, mock_jira_client):
+        """Test handling of 404 not found error."""
+        mock_jira_client.get.side_effect = Exception("Issue not found: 404 Not Found")
+        batcher = RequestBatcher(mock_jira_client)
+
+        request_id = batcher.add("GET", "/rest/api/3/issue/NONEXISTENT-1")
+        results = await batcher.execute()
+
+        assert results[request_id].success is False
+        assert results[request_id].error is not None
+        assert "404" in results[request_id].error or "not found" in results[request_id].error.lower()
+
+    @pytest.mark.asyncio
+    async def test_batch_handles_429_rate_limit(self, mock_jira_client):
+        """Test handling of 429 rate limit error."""
+        mock_jira_client.get.side_effect = Exception("Rate limit exceeded: 429 Too Many Requests")
+        batcher = RequestBatcher(mock_jira_client)
+
+        request_id = batcher.add("GET", "/rest/api/3/issue/PROJ-1")
+        results = await batcher.execute()
+
+        assert results[request_id].success is False
+        assert results[request_id].error is not None
+        assert "429" in results[request_id].error or "Rate" in results[request_id].error
+
+    @pytest.mark.asyncio
+    async def test_batch_handles_500_server_error(self, mock_jira_client):
+        """Test handling of 500 internal server error."""
+        mock_jira_client.get.side_effect = Exception("Internal server error: 500")
+        batcher = RequestBatcher(mock_jira_client)
+
+        request_id = batcher.add("GET", "/rest/api/3/issue/PROJ-1")
+        results = await batcher.execute()
+
+        assert results[request_id].success is False
+        assert results[request_id].error is not None
+        assert "500" in results[request_id].error or "server" in results[request_id].error.lower()
+
+    @pytest.mark.asyncio
+    async def test_batch_delete_method(self, mock_jira_client):
+        """Test DELETE method in batch."""
+        mock_jira_client.delete.return_value = None
+        batcher = RequestBatcher(mock_jira_client)
+
+        request_id = batcher.add("DELETE", "/rest/api/3/issue/PROJ-1")
+        results = await batcher.execute()
+
+        mock_jira_client.delete.assert_called()
+        assert results[request_id].success is True
+
+    @pytest.mark.asyncio
+    async def test_batch_unsupported_method(self, mock_jira_client):
+        """Test handling of unsupported HTTP method."""
+        batcher = RequestBatcher(mock_jira_client)
+
+        request_id = batcher.add("PATCH", "/rest/api/3/issue/PROJ-1", data={})
+        results = await batcher.execute()
+
+        assert results[request_id].success is False
+        assert "Unsupported" in results[request_id].error or "method" in results[request_id].error.lower()

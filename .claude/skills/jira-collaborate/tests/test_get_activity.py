@@ -3,7 +3,7 @@ Tests for get_activity.py - Get issue activity/changelog.
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 import sys
 from pathlib import Path
 
@@ -11,6 +11,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.collaborate
+@pytest.mark.unit
 class TestGetActivity:
     """Tests for getting issue activity/changelog."""
 
@@ -141,3 +143,76 @@ class TestGetActivity:
         parsed_json = json.loads(json_output)
         assert len(parsed_json) == 6
         assert parsed_json[0]['field'] == 'status'
+
+
+@pytest.mark.collaborate
+@pytest.mark.unit
+class TestGetActivityErrorHandling:
+    """Test API error handling scenarios for get_activity."""
+
+    @patch('get_activity.get_jira_client')
+    def test_authentication_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.get_changelog.side_effect = AuthenticationError("Invalid API token")
+
+        from get_activity import get_activity
+
+        with pytest.raises(AuthenticationError):
+            get_activity('PROJ-123', profile=None)
+
+    @patch('get_activity.get_jira_client')
+    def test_permission_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.get_changelog.side_effect = PermissionError("No permission to view activity")
+
+        from get_activity import get_activity
+
+        with pytest.raises(PermissionError):
+            get_activity('PROJ-123', profile=None)
+
+    @patch('get_activity.get_jira_client')
+    def test_not_found_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 404 not found."""
+        from error_handler import NotFoundError
+
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.get_changelog.side_effect = NotFoundError("Issue PROJ-999 not found")
+
+        from get_activity import get_activity
+
+        with pytest.raises(NotFoundError):
+            get_activity('PROJ-999', profile=None)
+
+    @patch('get_activity.get_jira_client')
+    def test_rate_limit_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.get_changelog.side_effect = JiraError("Rate limit exceeded", status_code=429)
+
+        from get_activity import get_activity
+
+        with pytest.raises(JiraError) as exc_info:
+            get_activity('PROJ-123', profile=None)
+        assert exc_info.value.status_code == 429
+
+    @patch('get_activity.get_jira_client')
+    def test_server_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.get_changelog.side_effect = JiraError("Internal server error", status_code=500)
+
+        from get_activity import get_activity
+
+        with pytest.raises(JiraError) as exc_info:
+            get_activity('PROJ-123', profile=None)
+        assert exc_info.value.status_code == 500

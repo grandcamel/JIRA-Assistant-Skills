@@ -2,8 +2,16 @@
 Pytest fixtures for jira-search JQL and filter tests.
 """
 
+import copy
 import pytest
 from unittest.mock import MagicMock
+
+
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line("markers", "search: mark test as search skill test")
+    config.addinivalue_line("markers", "unit: mark test as unit test")
+    config.addinivalue_line("markers", "integration: mark test as integration test")
 
 
 @pytest.fixture
@@ -312,4 +320,42 @@ def sample_filter_with_subscriptions():
                 }
             ]
         }
+    }
+
+
+@pytest.fixture
+def filter_not_found_error():
+    """Sample 404 error for filter not found."""
+    return {
+        'errorMessages': ['Filter 99999 not found'],
+        'errors': {}
+    }
+
+
+@pytest.fixture
+def permission_denied_error():
+    """Sample 403 error for permission denied."""
+    return {
+        'errorMessages': ['You are not the owner of this filter'],
+        'errors': {}
+    }
+
+
+@pytest.fixture
+def validation_error_response():
+    """Sample 400 error for validation failure."""
+    return {
+        'errorMessages': [],
+        'errors': {
+            'jql': "JQL parse error: Field 'projct' does not exist"
+        }
+    }
+
+
+@pytest.fixture
+def rate_limit_error():
+    """Sample 429 rate limit error."""
+    return {
+        'errorMessages': ['Rate limit exceeded. Retry after 60 seconds.'],
+        'errors': {}
     }

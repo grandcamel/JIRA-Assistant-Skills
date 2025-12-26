@@ -15,6 +15,8 @@ if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestGetWorklogs:
     """Tests for fetching worklogs."""
 
@@ -40,6 +42,8 @@ class TestGetWorklogs:
         assert isinstance(result['worklogs'], list)
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestGetWorklogsFiltering:
     """Tests for filtering worklogs."""
 
@@ -72,6 +76,8 @@ class TestGetWorklogsFiltering:
         assert '2025-01-16' in result['worklogs'][0]['started']
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestGetWorklogsOutput:
     """Tests for output formatting."""
 
@@ -110,6 +116,8 @@ class TestGetWorklogsOutput:
         assert 'worklogs' in json_str
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestGetWorklogsEmpty:
     """Tests for empty worklog handling."""
 
@@ -124,6 +132,8 @@ class TestGetWorklogsEmpty:
         assert len(result['worklogs']) == 0
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestGetWorklogsErrors:
     """Tests for error handling."""
 
@@ -139,3 +149,55 @@ class TestGetWorklogsErrors:
 
         with pytest.raises(NotFoundError):
             get_worklogs(mock_jira_client, 'PROJ-999')
+
+    def test_get_worklogs_authentication_error_401(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.get_worklogs.side_effect = AuthenticationError("Invalid token")
+
+        from get_worklogs import get_worklogs
+
+        with pytest.raises(AuthenticationError):
+            get_worklogs(mock_jira_client, 'PROJ-123')
+
+    def test_get_worklogs_permission_denied_403(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+
+        mock_jira_client.get_worklogs.side_effect = PermissionError(
+            "You do not have permission to view worklogs"
+        )
+
+        from get_worklogs import get_worklogs
+
+        with pytest.raises(PermissionError):
+            get_worklogs(mock_jira_client, 'PROJ-123')
+
+    def test_get_worklogs_rate_limit_error_429(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_jira_client.get_worklogs.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from get_worklogs import get_worklogs
+
+        with pytest.raises(JiraError) as exc_info:
+            get_worklogs(mock_jira_client, 'PROJ-123')
+        assert exc_info.value.status_code == 429
+
+    def test_get_worklogs_server_error_500(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_jira_client.get_worklogs.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from get_worklogs import get_worklogs
+
+        with pytest.raises(JiraError) as exc_info:
+            get_worklogs(mock_jira_client, 'PROJ-123')
+        assert exc_info.value.status_code == 500

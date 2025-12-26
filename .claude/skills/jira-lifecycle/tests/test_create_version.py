@@ -2,8 +2,9 @@
 Tests for create_version.py - Create a project version.
 """
 
+import copy
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 import sys
 from pathlib import Path
 
@@ -11,6 +12,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.lifecycle
+@pytest.mark.unit
 class TestCreateVersion:
     """Tests for creating project versions."""
 
@@ -18,7 +21,7 @@ class TestCreateVersion:
     def test_create_basic_version(self, mock_get_client, mock_jira_client, sample_version):
         """Test creating a basic version with name only."""
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.create_version.return_value = sample_version
+        mock_jira_client.create_version.return_value = copy.deepcopy(sample_version)
 
         from create_version import create_version
 
@@ -157,3 +160,75 @@ class TestCreateVersion:
         assert result['name'] == 'v3.0.0'
         assert result['description'] == 'Major release'
         mock_jira_client.create_version.assert_not_called()
+
+
+@pytest.mark.lifecycle
+@pytest.mark.unit
+class TestCreateVersionErrorHandling:
+    """Test API error handling for create_version."""
+
+    @patch('create_version.get_jira_client')
+    def test_authentication_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.create_version.side_effect = AuthenticationError("Invalid token")
+
+        from create_version import create_version
+
+        with pytest.raises(AuthenticationError):
+            create_version(project='PROJ', name='v1.0.0', profile=None)
+
+    @patch('create_version.get_jira_client')
+    def test_permission_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.create_version.side_effect = PermissionError("Cannot create version")
+
+        from create_version import create_version
+
+        with pytest.raises(PermissionError):
+            create_version(project='PROJ', name='v1.0.0', profile=None)
+
+    @patch('create_version.get_jira_client')
+    def test_not_found_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 404 when project doesn't exist."""
+        from error_handler import NotFoundError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.create_version.side_effect = NotFoundError("Project", "INVALID")
+
+        from create_version import create_version
+
+        with pytest.raises(NotFoundError):
+            create_version(project='INVALID', name='v1.0.0', profile=None)
+
+    @patch('create_version.get_jira_client')
+    def test_rate_limit_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.create_version.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from create_version import create_version
+
+        with pytest.raises(JiraError) as exc_info:
+            create_version(project='PROJ', name='v1.0.0', profile=None)
+        assert exc_info.value.status_code == 429
+
+    @patch('create_version.get_jira_client')
+    def test_server_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.create_version.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from create_version import create_version
+
+        with pytest.raises(JiraError) as exc_info:
+            create_version(project='PROJ', name='v1.0.0', profile=None)
+        assert exc_info.value.status_code == 500

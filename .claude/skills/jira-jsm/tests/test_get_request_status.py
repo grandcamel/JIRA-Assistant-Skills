@@ -16,6 +16,8 @@ if scripts_path not in sys.path:
 import get_request_status
 
 
+@pytest.mark.jsm
+@pytest.mark.unit
 class TestGetRequestStatus:
     """Test status history functionality."""
 

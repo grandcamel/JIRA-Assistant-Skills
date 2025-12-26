@@ -4,8 +4,9 @@ Tests for clone_issue.py
 TDD tests for cloning issues with optional link handling.
 """
 
+import copy
 import pytest
-from unittest.mock import Mock, patch, call
+from unittest.mock import patch
 import json
 
 
@@ -91,6 +92,8 @@ def created_clone():
     }
 
 
+@pytest.mark.relationships
+@pytest.mark.unit
 class TestCloneIssue:
     """Tests for the clone_issue function."""
 
@@ -112,7 +115,9 @@ class TestCloneIssue:
         create_call = mock_jira_client.create_issue.call_args
         fields = create_call[0][0]
         assert 'summary' in fields
-        assert 'PROJ-123' in fields['summary'] or 'Clone' in fields['summary'] or sample_issue['fields']['summary'] in fields['summary']
+        # Clone summary should follow the pattern: "[Clone of PROJ-123] Original summary"
+        expected_summary = f"[Clone of PROJ-123] {sample_issue['fields']['summary']}"
+        assert fields['summary'] == expected_summary
 
         assert result['clone_key'] == 'PROJ-999'
         assert result['original_key'] == 'PROJ-123'
@@ -164,8 +169,10 @@ class TestCloneIssue:
             result = clone_issue.clone_issue('PROJ-123', include_subtasks=True)
 
         # Should create parent + 2 subtasks = 3 issues
-        assert mock_jira_client.create_issue.call_count >= 1  # At least the parent
-        assert 'subtasks_cloned' in result or result['clone_key'] == 'PROJ-999'
+        assert mock_jira_client.create_issue.call_count == 3
+        assert result['clone_key'] == 'PROJ-999'
+        # Verify subtasks were cloned
+        assert 'subtasks_cloned' in result or len(result.get('cloned_subtasks', [])) == 2
 
     def test_clone_without_links(self, mock_jira_client, sample_issue_with_links, created_clone):
         """Test cloning without copying original links."""
@@ -198,9 +205,10 @@ class TestCloneIssue:
     def test_clone_to_different_project(self, mock_jira_client, sample_issue, created_clone):
         """Test cloning to different project."""
         mock_jira_client.get_issue.return_value = sample_issue
-        # Clone goes to OTHER project
-        created_clone['key'] = 'OTHER-999'
-        mock_jira_client.create_issue.return_value = created_clone
+        # Clone goes to OTHER project - use deepcopy to avoid fixture mutation
+        other_clone = copy.deepcopy(created_clone)
+        other_clone['key'] = 'OTHER-999'
+        mock_jira_client.create_issue.return_value = other_clone
         mock_jira_client.create_link.return_value = None
 
         import clone_issue
@@ -214,6 +222,8 @@ class TestCloneIssue:
         assert result['clone_key'] == 'OTHER-999'
 
 
+@pytest.mark.relationships
+@pytest.mark.unit
 class TestCloneIssueFormat:
     """Tests for clone_issue output formatting."""
 
@@ -245,3 +255,70 @@ class TestCloneIssueFormat:
         # Should be valid JSON
         parsed = json.loads(output)
         assert 'clone_key' in parsed
+
+
+@pytest.mark.relationships
+@pytest.mark.unit
+class TestCloneIssueErrorHandling:
+    """Test API error handling scenarios for clone_issue."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.get_issue.side_effect = AuthenticationError("Invalid token")
+
+        import clone_issue
+        with patch.object(clone_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(AuthenticationError):
+                clone_issue.clone_issue('PROJ-123')
+
+    def test_forbidden_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+
+        mock_jira_client.get_issue.side_effect = PermissionError("Insufficient permissions")
+
+        import clone_issue
+        with patch.object(clone_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(PermissionError):
+                clone_issue.clone_issue('PROJ-123')
+
+    def test_issue_not_found_error(self, mock_jira_client):
+        """Test handling of 404 issue not found."""
+        from error_handler import NotFoundError
+
+        mock_jira_client.get_issue.side_effect = NotFoundError("Issue not found")
+
+        import clone_issue
+        with patch.object(clone_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(NotFoundError):
+                clone_issue.clone_issue('PROJ-999')
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_jira_client.get_issue.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        import clone_issue
+        with patch.object(clone_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(JiraError) as exc_info:
+                clone_issue.clone_issue('PROJ-123')
+            assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_jira_client.get_issue.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        import clone_issue
+        with patch.object(clone_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(JiraError) as exc_info:
+                clone_issue.clone_issue('PROJ-123')
+            assert exc_info.value.status_code == 500

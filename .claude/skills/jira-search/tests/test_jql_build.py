@@ -3,8 +3,6 @@ Tests for jql_build.py - Build JQL queries from components.
 """
 
 import pytest
-import json
-from unittest.mock import MagicMock
 import sys
 from pathlib import Path
 
@@ -12,6 +10,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.search
+@pytest.mark.unit
 class TestBuildJQL:
     """Tests for JQL query building."""
 

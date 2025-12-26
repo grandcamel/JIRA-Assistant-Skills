@@ -16,6 +16,8 @@ if scripts_path not in sys.path:
 import list_requests
 
 
+@pytest.mark.jsm
+@pytest.mark.unit
 class TestListRequests:
     """Test request listing functionality."""
 
@@ -139,3 +141,51 @@ class TestListRequests:
 
         assert len(result['issues']) == 0
         assert result['total'] == 0
+
+
+@pytest.mark.jsm
+@pytest.mark.unit
+class TestListRequestsApiErrors:
+    """Test API error handling scenarios for list_requests."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.search_issues.side_effect = AuthenticationError("Invalid token")
+
+        with pytest.raises(AuthenticationError):
+            list_requests.list_service_requests(service_desk_id='1')
+
+    def test_permission_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+
+        mock_jira_client.search_issues.side_effect = PermissionError("Access denied")
+
+        with pytest.raises(PermissionError):
+            list_requests.list_service_requests(service_desk_id='1')
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_jira_client.search_issues.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            list_requests.list_service_requests(service_desk_id='1')
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_jira_client.search_issues.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            list_requests.list_service_requests(service_desk_id='1')
+        assert exc_info.value.status_code == 500

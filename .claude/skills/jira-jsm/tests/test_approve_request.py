@@ -102,6 +102,6 @@ def test_approve_request_dry_run(mock_jira_client, sample_approval_pending, caps
 
     assert result == 0
     captured = capsys.readouterr()
-    assert 'DRY RUN' in captured.out or 'would approve' in captured.out.lower()
+    assert 'DRY RUN' in captured.out
     # Should NOT call answer_approval
     mock_jira_client.answer_approval.assert_not_called()

@@ -5,6 +5,7 @@ Provides mock JIRA API responses and client fixtures for testing
 issue linking operations without hitting real JIRA instance.
 """
 
+import copy
 import pytest
 from unittest.mock import Mock
 import sys
@@ -19,6 +20,13 @@ if shared_lib_path not in sys.path:
 scripts_path = str(Path(__file__).parent.parent / 'scripts')
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
+
+
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line("markers", "relationships: mark test as relationships skill test")
+    config.addinivalue_line("markers", "unit: mark test as unit test")
+    config.addinivalue_line("markers", "integration: mark test as integration test")
 
 
 @pytest.fixture
@@ -141,7 +149,7 @@ def sample_issue_with_links(sample_issue_links):
             "summary": "Main feature implementation",
             "status": {"name": "In Progress"},
             "issuetype": {"name": "Story"},
-            "issuelinks": sample_issue_links
+            "issuelinks": copy.deepcopy(sample_issue_links)
         }
     }
 

@@ -2,9 +2,8 @@
 Tests for create_filter.py - Create saved filters.
 """
 
+import copy
 import pytest
-import json
-from unittest.mock import MagicMock
 import sys
 from pathlib import Path
 
@@ -12,6 +11,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.search
+@pytest.mark.unit
 class TestCreateFilter:
     """Tests for creating saved filters."""
 
@@ -33,8 +34,9 @@ class TestCreateFilter:
 
     def test_create_filter_with_description(self, mock_jira_client, sample_filter):
         """Test creating filter with description."""
-        sample_filter['description'] = 'All bugs in the project'
-        mock_jira_client.create_filter.return_value = sample_filter
+        expected = copy.deepcopy(sample_filter)
+        expected['description'] = 'All bugs in the project'
+        mock_jira_client.create_filter.return_value = expected
 
         from create_filter import create_filter
 
@@ -49,8 +51,9 @@ class TestCreateFilter:
 
     def test_create_filter_as_favourite(self, mock_jira_client, sample_filter):
         """Test creating filter and marking as favourite."""
-        sample_filter['favourite'] = True
-        mock_jira_client.create_filter.return_value = sample_filter
+        expected = copy.deepcopy(sample_filter)
+        expected['favourite'] = True
+        mock_jira_client.create_filter.return_value = expected
 
         from create_filter import create_filter
 
@@ -65,10 +68,11 @@ class TestCreateFilter:
 
     def test_create_filter_shared_project(self, mock_jira_client, sample_filter):
         """Test creating filter shared with project."""
-        sample_filter['sharePermissions'] = [
+        expected = copy.deepcopy(sample_filter)
+        expected['sharePermissions'] = [
             {'type': 'project', 'project': {'id': '10000', 'key': 'PROJ'}}
         ]
-        mock_jira_client.create_filter.return_value = sample_filter
+        mock_jira_client.create_filter.return_value = expected
 
         from create_filter import create_filter, build_project_permission
 
@@ -85,10 +89,11 @@ class TestCreateFilter:
 
     def test_create_filter_shared_group(self, mock_jira_client, sample_filter):
         """Test creating filter shared with group."""
-        sample_filter['sharePermissions'] = [
+        expected = copy.deepcopy(sample_filter)
+        expected['sharePermissions'] = [
             {'type': 'group', 'group': {'name': 'developers'}}
         ]
-        mock_jira_client.create_filter.return_value = sample_filter
+        mock_jira_client.create_filter.return_value = expected
 
         from create_filter import create_filter, build_group_permission
 
@@ -134,3 +139,59 @@ class TestCreateFilter:
 
         # Should succeed (JIRA allows duplicate names)
         assert result['name'] == 'My Bugs'
+
+
+@pytest.mark.search
+@pytest.mark.unit
+class TestCreateFilterErrorHandling:
+    """Test API error handling scenarios for create_filter."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        mock_jira_client.create_filter.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        from create_filter import create_filter
+
+        with pytest.raises(AuthenticationError):
+            create_filter(mock_jira_client, name='Test', jql='project = PROJ')
+
+    def test_forbidden_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        mock_jira_client.create_filter.side_effect = PermissionError(
+            "You don't have permission to create filters"
+        )
+
+        from create_filter import create_filter
+
+        with pytest.raises(PermissionError):
+            create_filter(mock_jira_client, name='Test', jql='project = PROJ')
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        mock_jira_client.create_filter.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from create_filter import create_filter
+
+        with pytest.raises(JiraError) as exc_info:
+            create_filter(mock_jira_client, name='Test', jql='project = PROJ')
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 internal server error."""
+        from error_handler import JiraError
+        mock_jira_client.create_filter.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from create_filter import create_filter
+
+        with pytest.raises(JiraError) as exc_info:
+            create_filter(mock_jira_client, name='Test', jql='project = PROJ')
+        assert exc_info.value.status_code == 500

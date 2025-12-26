@@ -2,6 +2,7 @@
 Pytest configuration and shared fixtures for jira-dev tests.
 """
 
+import copy
 import sys
 from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
@@ -10,6 +11,13 @@ import pytest
 # Add lib path for imports
 lib_path = Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'
 sys.path.insert(0, str(lib_path))
+
+
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line("markers", "dev: mark test as jira-dev skill test")
+    config.addinivalue_line("markers", "unit: mark test as unit test")
+    config.addinivalue_line("markers", "integration: mark test as integration test")
 
 # Add scripts path for imports
 scripts_path = Path(__file__).parent.parent / 'scripts'
@@ -27,7 +35,7 @@ def mock_jira_client():
 @pytest.fixture
 def sample_issue():
     """Sample JIRA issue data."""
-    return {
+    _sample_issue = {
         'key': 'PROJ-123',
         'id': '10001',
         'self': 'https://company.atlassian.net/rest/api/3/issue/10001',
@@ -76,6 +84,7 @@ def sample_issue():
             ]
         }
     }
+    return copy.deepcopy(_sample_issue)
 
 
 @pytest.fixture
@@ -123,7 +132,7 @@ def sample_task_issue():
 @pytest.fixture
 def sample_dev_info():
     """Sample development information from JIRA."""
-    return {
+    _sample_dev_info = {
         'detail': [
             {
                 'repositories': [
@@ -159,6 +168,7 @@ def sample_dev_info():
             }
         ]
     }
+    return copy.deepcopy(_sample_dev_info)
 
 
 @pytest.fixture

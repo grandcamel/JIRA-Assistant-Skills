@@ -5,10 +5,18 @@ Provides mock JIRA API responses and client fixtures for testing
 time tracking operations without hitting real JIRA instance.
 """
 
+import copy
 import pytest
 from unittest.mock import Mock
 import sys
 from pathlib import Path
+
+
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line("markers", "time: mark test as time tracking skill test")
+    config.addinivalue_line("markers", "unit: mark test as unit test")
+    config.addinivalue_line("markers", "integration: mark test as integration test")
 
 # Add shared lib to path so imports work in tests
 shared_lib_path = str(Path(__file__).parent.parent.parent.parent / 'shared' / 'scripts' / 'lib')
@@ -73,12 +81,14 @@ def sample_worklog():
 @pytest.fixture
 def sample_worklogs(sample_worklog):
     """Sample list of worklogs for an issue."""
+    # Use deepcopy to prevent fixture mutation
+    worklog_copy = copy.deepcopy(sample_worklog)
     return {
         "startAt": 0,
         "maxResults": 20,
         "total": 3,
         "worklogs": [
-            sample_worklog,
+            worklog_copy,
             {
                 "id": "10046",
                 "self": "https://test.atlassian.net/rest/api/3/issue/10123/worklog/10046",

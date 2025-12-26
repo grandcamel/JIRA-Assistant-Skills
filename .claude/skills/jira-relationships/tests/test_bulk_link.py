@@ -5,7 +5,7 @@ TDD tests for bulk linking multiple issues.
 """
 
 import pytest
-from unittest.mock import Mock, patch, call
+from unittest.mock import patch
 import json
 
 
@@ -37,6 +37,8 @@ def existing_links():
     ]
 
 
+@pytest.mark.relationships
+@pytest.mark.unit
 class TestBulkLink:
     """Tests for the bulk_link function."""
 
@@ -154,6 +156,8 @@ class TestBulkLink:
         assert result['created'] == 2
 
 
+@pytest.mark.relationships
+@pytest.mark.unit
 class TestBulkLinkFormat:
     """Tests for bulk_link output formatting."""
 
@@ -189,3 +193,98 @@ class TestBulkLinkFormat:
         # Should be valid JSON
         parsed = json.loads(output)
         assert 'created' in parsed
+
+
+@pytest.mark.relationships
+@pytest.mark.unit
+class TestBulkLinkErrorHandling:
+    """Test API error handling scenarios for bulk_link.
+
+    Note: bulk_link catches individual link creation errors and continues
+    processing remaining issues, reporting errors in the result. This is
+    expected behavior for bulk operations.
+    """
+
+    def test_authentication_error_in_result(self, mock_jira_client):
+        """Test that authentication errors are captured in result."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.create_link.side_effect = AuthenticationError("Invalid token")
+
+        import bulk_link
+        with patch.object(bulk_link, 'get_jira_client', return_value=mock_jira_client):
+            result = bulk_link.bulk_link(
+                issues=['PROJ-1'],
+                target='PROJ-100',
+                link_type='Blocks'
+            )
+
+        # Bulk operations capture errors instead of raising them
+        assert result['failed'] == 1
+        assert result['created'] == 0
+        assert len(result['errors']) == 1
+        assert 'Invalid token' in result['errors'][0]
+
+    def test_forbidden_error_in_result(self, mock_jira_client):
+        """Test that permission errors are captured in result."""
+        from error_handler import PermissionError
+
+        mock_jira_client.create_link.side_effect = PermissionError("Insufficient permissions")
+
+        import bulk_link
+        with patch.object(bulk_link, 'get_jira_client', return_value=mock_jira_client):
+            result = bulk_link.bulk_link(
+                issues=['PROJ-1'],
+                target='PROJ-100',
+                link_type='Blocks'
+            )
+
+        # Bulk operations capture errors instead of raising them
+        assert result['failed'] == 1
+        assert result['created'] == 0
+        assert len(result['errors']) == 1
+        assert 'Insufficient permissions' in result['errors'][0]
+
+    def test_rate_limit_error_in_result(self, mock_jira_client):
+        """Test that rate limit errors are captured in result."""
+        from error_handler import JiraError
+
+        mock_jira_client.create_link.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        import bulk_link
+        with patch.object(bulk_link, 'get_jira_client', return_value=mock_jira_client):
+            result = bulk_link.bulk_link(
+                issues=['PROJ-1'],
+                target='PROJ-100',
+                link_type='Blocks'
+            )
+
+        # Bulk operations capture errors instead of raising them
+        assert result['failed'] == 1
+        assert result['created'] == 0
+        assert len(result['errors']) == 1
+        assert 'Rate limit exceeded' in result['errors'][0]
+
+    def test_server_error_in_result(self, mock_jira_client):
+        """Test that server errors are captured in result."""
+        from error_handler import JiraError
+
+        mock_jira_client.create_link.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        import bulk_link
+        with patch.object(bulk_link, 'get_jira_client', return_value=mock_jira_client):
+            result = bulk_link.bulk_link(
+                issues=['PROJ-1'],
+                target='PROJ-100',
+                link_type='Blocks'
+            )
+
+        # Bulk operations capture errors instead of raising them
+        assert result['failed'] == 1
+        assert result['created'] == 0
+        assert len(result['errors']) == 1
+        assert 'Internal server error' in result['errors'][0]

@@ -16,6 +16,8 @@ if scripts_path not in sys.path:
 import transition_request
 
 
+@pytest.mark.jsm
+@pytest.mark.unit
 class TestTransitionRequest:
     """Test request transition functionality."""
 

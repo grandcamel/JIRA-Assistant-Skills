@@ -11,7 +11,7 @@ TDD tests for:
 import pytest
 import sys
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import json
 
 # Add scripts path
@@ -22,6 +22,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 # Tests for create_branch_name.py
 # =============================================================================
 
+@pytest.mark.dev
+@pytest.mark.unit
 class TestCreateBranchName:
     """Tests for create_branch_name functionality."""
 
@@ -171,6 +173,8 @@ class TestCreateBranchName:
 # Tests for parse_commit_issues.py
 # =============================================================================
 
+@pytest.mark.dev
+@pytest.mark.unit
 class TestParseCommitIssues:
     """Tests for parse_commit_issues functionality."""
 
@@ -256,6 +260,8 @@ class TestParseCommitIssues:
 # Tests for link_commit.py
 # =============================================================================
 
+@pytest.mark.dev
+@pytest.mark.unit
 class TestLinkCommit:
     """Tests for link_commit functionality."""
 
@@ -347,6 +353,8 @@ class TestLinkCommit:
 # Tests for get_issue_commits.py
 # =============================================================================
 
+@pytest.mark.dev
+@pytest.mark.unit
 class TestGetIssueCommits:
     """Tests for get_issue_commits functionality."""
 
@@ -359,8 +367,8 @@ class TestGetIssueCommits:
         with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
             result = get_issue_commits('PROJ-123')
 
-        assert len(result) >= 1
-        assert 'id' in result[0] or 'sha' in result[0]
+        assert len(result) == 2, "Expected 2 commits from sample_dev_info"
+        assert 'id' in result[0], "Commit should have 'id' field"
 
     def test_get_commits_with_details(self, mock_jira_client, sample_dev_info):
         """Test including commit message and author."""
@@ -371,10 +379,10 @@ class TestGetIssueCommits:
         with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
             result = get_issue_commits('PROJ-123', detailed=True)
 
-        assert len(result) >= 1
+        assert len(result) == 2, "Expected 2 commits from sample_dev_info"
         commit = result[0]
-        assert 'message' in commit
-        assert 'author' in commit
+        assert 'message' in commit, "Detailed commit should have 'message' field"
+        assert 'author' in commit, "Detailed commit should have 'author' field"
 
     def test_get_commits_by_repo(self, mock_jira_client, sample_dev_info):
         """Test filtering by repository."""
@@ -386,7 +394,7 @@ class TestGetIssueCommits:
             result = get_issue_commits('PROJ-123', repo_filter='org/repo')
 
         # Should only return commits from org/repo
-        assert len(result) >= 1
+        assert len(result) == 2, "Expected 2 commits from org/repo repository"
 
     def test_get_commits_no_development_info(self, mock_jira_client):
         """Test handling when no dev info available."""
@@ -410,3 +418,199 @@ class TestGetIssueCommits:
         with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
             with pytest.raises(NotFoundError):
                 get_issue_commits('PROJ-999')
+
+
+# =============================================================================
+# Error Handling Tests
+# =============================================================================
+
+@pytest.mark.dev
+@pytest.mark.unit
+class TestCreateBranchNameErrors:
+    """Error handling tests for create_branch_name."""
+
+    def test_create_branch_name_auth_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from create_branch_name import create_branch_name
+        from error_handler import AuthenticationError
+
+        mock_jira_client.get_issue.side_effect = AuthenticationError("Invalid token")
+
+        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(AuthenticationError):
+                create_branch_name('PROJ-123')
+
+    def test_create_branch_name_permission_error(self, mock_jira_client):
+        """Test handling of 403 permission denied."""
+        from create_branch_name import create_branch_name
+        from error_handler import PermissionError
+
+        mock_jira_client.get_issue.side_effect = PermissionError("Access denied")
+
+        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(PermissionError):
+                create_branch_name('PROJ-123')
+
+    def test_create_branch_name_not_found_error(self, mock_jira_client):
+        """Test handling of 404 issue not found."""
+        from create_branch_name import create_branch_name
+        from error_handler import NotFoundError
+
+        mock_jira_client.get_issue.side_effect = NotFoundError("Issue", "PROJ-999")
+
+        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(NotFoundError):
+                create_branch_name('PROJ-999')
+
+    def test_create_branch_name_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from create_branch_name import create_branch_name
+        from error_handler import RateLimitError
+
+        mock_jira_client.get_issue.side_effect = RateLimitError(retry_after=60)
+
+        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(RateLimitError):
+                create_branch_name('PROJ-123')
+
+    def test_create_branch_name_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from create_branch_name import create_branch_name
+        from error_handler import ServerError
+
+        mock_jira_client.get_issue.side_effect = ServerError("Internal server error")
+
+        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(ServerError):
+                create_branch_name('PROJ-123')
+
+
+@pytest.mark.dev
+@pytest.mark.unit
+class TestLinkCommitErrors:
+    """Error handling tests for link_commit."""
+
+    def test_link_commit_auth_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from link_commit import link_commit
+        from error_handler import AuthenticationError
+
+        mock_jira_client.post.side_effect = AuthenticationError("Invalid token")
+
+        with patch('link_commit.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(AuthenticationError):
+                link_commit(
+                    issue_key='PROJ-123',
+                    commit_sha='abc123',
+                    message='Test commit'
+                )
+
+    def test_link_commit_permission_error(self, mock_jira_client):
+        """Test handling of 403 permission denied."""
+        from link_commit import link_commit
+        from error_handler import PermissionError
+
+        mock_jira_client.post.side_effect = PermissionError("Access denied")
+
+        with patch('link_commit.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(PermissionError):
+                link_commit(
+                    issue_key='PROJ-123',
+                    commit_sha='abc123',
+                    message='Test commit'
+                )
+
+    def test_link_commit_not_found_error(self, mock_jira_client):
+        """Test handling of 404 issue not found."""
+        from link_commit import link_commit
+        from error_handler import NotFoundError
+
+        mock_jira_client.post.side_effect = NotFoundError("Issue", "PROJ-999")
+
+        with patch('link_commit.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(NotFoundError):
+                link_commit(
+                    issue_key='PROJ-999',
+                    commit_sha='abc123',
+                    message='Test commit'
+                )
+
+    def test_link_commit_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from link_commit import link_commit
+        from error_handler import RateLimitError
+
+        mock_jira_client.post.side_effect = RateLimitError(retry_after=60)
+
+        with patch('link_commit.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(RateLimitError):
+                link_commit(
+                    issue_key='PROJ-123',
+                    commit_sha='abc123',
+                    message='Test commit'
+                )
+
+    def test_link_commit_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from link_commit import link_commit
+        from error_handler import ServerError
+
+        mock_jira_client.post.side_effect = ServerError("Internal server error")
+
+        with patch('link_commit.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(ServerError):
+                link_commit(
+                    issue_key='PROJ-123',
+                    commit_sha='abc123',
+                    message='Test commit'
+                )
+
+
+@pytest.mark.dev
+@pytest.mark.unit
+class TestGetIssueCommitsErrors:
+    """Error handling tests for get_issue_commits."""
+
+    def test_get_commits_auth_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from get_issue_commits import get_issue_commits
+        from error_handler import AuthenticationError
+
+        mock_jira_client.get.side_effect = AuthenticationError("Invalid token")
+
+        with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(AuthenticationError):
+                get_issue_commits('PROJ-123')
+
+    def test_get_commits_permission_error(self, mock_jira_client):
+        """Test handling of 403 permission denied."""
+        from get_issue_commits import get_issue_commits
+        from error_handler import PermissionError
+
+        mock_jira_client.get.side_effect = PermissionError("Access denied")
+
+        with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(PermissionError):
+                get_issue_commits('PROJ-123')
+
+    def test_get_commits_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from get_issue_commits import get_issue_commits
+        from error_handler import RateLimitError
+
+        mock_jira_client.get.side_effect = RateLimitError(retry_after=60)
+
+        with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(RateLimitError):
+                get_issue_commits('PROJ-123')
+
+    def test_get_commits_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from get_issue_commits import get_issue_commits
+        from error_handler import ServerError
+
+        mock_jira_client.get.side_effect = ServerError("Internal server error")
+
+        with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(ServerError):
+                get_issue_commits('PROJ-123')

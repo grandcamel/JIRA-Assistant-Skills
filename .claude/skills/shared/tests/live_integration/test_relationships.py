@@ -8,6 +8,8 @@ import pytest
 import uuid
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestLinkTypes:
     """Tests for link type operations."""
 
@@ -36,6 +38,8 @@ class TestLinkTypes:
         assert found, f"No common link types found. Available: {type_names}"
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestLinkCreation:
     """Tests for creating issue links."""
 
@@ -53,29 +57,32 @@ class TestLinkCreation:
             'issuetype': {'name': 'Task'}
         })
 
-        # Create link: blocker blocks blocked
-        jira_client.create_link(
-            link_type='Blocks',
-            inward_key=blocked['key'],   # is blocked by
-            outward_key=blocker['key']   # blocks
-        )
+        try:
+            # Create link: blocker blocks blocked
+            jira_client.create_link(
+                link_type='Blocks',
+                inward_key=blocked['key'],   # is blocked by
+                outward_key=blocker['key']   # blocks
+            )
 
-        # Verify link exists
-        links = jira_client.get_issue_links(blocker['key'])
-        assert len(links) >= 1
+            # Verify link exists
+            links = jira_client.get_issue_links(blocker['key'])
+            assert len(links) >= 1
 
-        linked_keys = []
-        for link in links:
-            if 'inwardIssue' in link:
-                linked_keys.append(link['inwardIssue']['key'])
-            if 'outwardIssue' in link:
-                linked_keys.append(link['outwardIssue']['key'])
+            linked_keys = []
+            for link in links:
+                if 'inwardIssue' in link:
+                    linked_keys.append(link['inwardIssue']['key'])
+                if 'outwardIssue' in link:
+                    linked_keys.append(link['outwardIssue']['key'])
 
-        assert blocked['key'] in linked_keys
-
-        # Cleanup
-        jira_client.delete_issue(blocker['key'])
-        jira_client.delete_issue(blocked['key'])
+            assert blocked['key'] in linked_keys
+        finally:
+            for issue in [blocker, blocked]:
+                try:
+                    jira_client.delete_issue(issue['key'])
+                except Exception:
+                    pass
 
     def test_create_relates_link(self, jira_client, test_project):
         """Test creating a 'relates to' link."""
@@ -90,23 +97,26 @@ class TestLinkCreation:
             'issuetype': {'name': 'Task'}
         })
 
-        # Create relates link
-        jira_client.create_link(
-            link_type='Relates',
-            inward_key=issue2['key'],
-            outward_key=issue1['key']
-        )
+        try:
+            # Create relates link
+            jira_client.create_link(
+                link_type='Relates',
+                inward_key=issue2['key'],
+                outward_key=issue1['key']
+            )
 
-        # Verify from both sides
-        links1 = jira_client.get_issue_links(issue1['key'])
-        links2 = jira_client.get_issue_links(issue2['key'])
+            # Verify from both sides
+            links1 = jira_client.get_issue_links(issue1['key'])
+            links2 = jira_client.get_issue_links(issue2['key'])
 
-        assert len(links1) >= 1
-        assert len(links2) >= 1
-
-        # Cleanup
-        jira_client.delete_issue(issue1['key'])
-        jira_client.delete_issue(issue2['key'])
+            assert len(links1) >= 1
+            assert len(links2) >= 1
+        finally:
+            for issue in [issue1, issue2]:
+                try:
+                    jira_client.delete_issue(issue['key'])
+                except Exception:
+                    pass
 
     def test_create_duplicate_link(self, jira_client, test_project):
         """Test creating a 'duplicate' link."""
@@ -121,22 +131,27 @@ class TestLinkCreation:
             'issuetype': {'name': 'Bug'}
         })
 
-        # Create duplicate link
-        jira_client.create_link(
-            link_type='Duplicate',
-            inward_key=duplicate['key'],   # is duplicated by
-            outward_key=original['key']    # duplicates
-        )
+        try:
+            # Create duplicate link
+            jira_client.create_link(
+                link_type='Duplicate',
+                inward_key=duplicate['key'],   # is duplicated by
+                outward_key=original['key']    # duplicates
+            )
 
-        # Verify link
-        links = jira_client.get_issue_links(original['key'])
-        assert len(links) >= 1
+            # Verify link
+            links = jira_client.get_issue_links(original['key'])
+            assert len(links) >= 1
+        finally:
+            for issue in [original, duplicate]:
+                try:
+                    jira_client.delete_issue(issue['key'])
+                except Exception:
+                    pass
 
-        # Cleanup
-        jira_client.delete_issue(original['key'])
-        jira_client.delete_issue(duplicate['key'])
 
-
+@pytest.mark.integration
+@pytest.mark.shared
 class TestLinkRetrieval:
     """Tests for retrieving issue links."""
 
@@ -159,19 +174,21 @@ class TestLinkRetrieval:
             'issuetype': {'name': 'Task'}
         })
 
-        # Create multiple links
-        jira_client.create_link('Blocks', issue2['key'], issue1['key'])
-        jira_client.create_link('Relates', issue3['key'], issue1['key'])
+        try:
+            # Create multiple links
+            jira_client.create_link('Blocks', issue2['key'], issue1['key'])
+            jira_client.create_link('Relates', issue3['key'], issue1['key'])
 
-        # Get links for issue1
-        links = jira_client.get_issue_links(issue1['key'])
+            # Get links for issue1
+            links = jira_client.get_issue_links(issue1['key'])
 
-        assert len(links) >= 2
-
-        # Cleanup
-        jira_client.delete_issue(issue1['key'])
-        jira_client.delete_issue(issue2['key'])
-        jira_client.delete_issue(issue3['key'])
+            assert len(links) >= 2
+        finally:
+            for issue in [issue1, issue2, issue3]:
+                try:
+                    jira_client.delete_issue(issue['key'])
+                except Exception:
+                    pass
 
     def test_get_link_by_id(self, jira_client, test_project):
         """Test getting a specific link by ID."""
@@ -187,24 +204,29 @@ class TestLinkRetrieval:
             'issuetype': {'name': 'Task'}
         })
 
-        # Create link
-        jira_client.create_link('Relates', issue2['key'], issue1['key'])
+        try:
+            # Create link
+            jira_client.create_link('Relates', issue2['key'], issue1['key'])
 
-        # Get link ID from issue
-        links = jira_client.get_issue_links(issue1['key'])
-        link_id = links[0]['id']
+            # Get link ID from issue
+            links = jira_client.get_issue_links(issue1['key'])
+            link_id = links[0]['id']
 
-        # Get link by ID
-        link = jira_client.get_link(link_id)
+            # Get link by ID
+            link = jira_client.get_link(link_id)
 
-        assert link['id'] == link_id
-        assert 'type' in link
+            assert link['id'] == link_id
+            assert 'type' in link
+        finally:
+            for issue in [issue1, issue2]:
+                try:
+                    jira_client.delete_issue(issue['key'])
+                except Exception:
+                    pass
 
-        # Cleanup
-        jira_client.delete_issue(issue1['key'])
-        jira_client.delete_issue(issue2['key'])
 
-
+@pytest.mark.integration
+@pytest.mark.shared
 class TestLinkDeletion:
     """Tests for deleting issue links."""
 
@@ -222,25 +244,28 @@ class TestLinkDeletion:
             'issuetype': {'name': 'Task'}
         })
 
-        # Create link
-        jira_client.create_link('Relates', issue2['key'], issue1['key'])
+        try:
+            # Create link
+            jira_client.create_link('Relates', issue2['key'], issue1['key'])
 
-        # Get link ID
-        links = jira_client.get_issue_links(issue1['key'])
-        assert len(links) >= 1
-        link_id = links[0]['id']
+            # Get link ID
+            links = jira_client.get_issue_links(issue1['key'])
+            assert len(links) >= 1
+            link_id = links[0]['id']
 
-        # Delete link
-        jira_client.delete_link(link_id)
+            # Delete link
+            jira_client.delete_link(link_id)
 
-        # Verify link is gone
-        links_after = jira_client.get_issue_links(issue1['key'])
-        link_ids_after = [l['id'] for l in links_after]
-        assert link_id not in link_ids_after
-
-        # Cleanup
-        jira_client.delete_issue(issue1['key'])
-        jira_client.delete_issue(issue2['key'])
+            # Verify link is gone
+            links_after = jira_client.get_issue_links(issue1['key'])
+            link_ids_after = [l['id'] for l in links_after]
+            assert link_id not in link_ids_after
+        finally:
+            for issue in [issue1, issue2]:
+                try:
+                    jira_client.delete_issue(issue['key'])
+                except Exception:
+                    pass
 
     def test_delete_all_links(self, jira_client, test_project):
         """Test deleting all links from an issue."""
@@ -260,24 +285,32 @@ class TestLinkDeletion:
             related.append(issue)
             jira_client.create_link('Relates', issue['key'], main_issue['key'])
 
-        # Verify links exist
-        links = jira_client.get_issue_links(main_issue['key'])
-        assert len(links) >= 3
+        try:
+            # Verify links exist
+            links = jira_client.get_issue_links(main_issue['key'])
+            assert len(links) >= 3
 
-        # Delete all links
-        for link in links:
-            jira_client.delete_link(link['id'])
+            # Delete all links
+            for link in links:
+                jira_client.delete_link(link['id'])
 
-        # Verify all gone
-        links_after = jira_client.get_issue_links(main_issue['key'])
-        assert len(links_after) == 0
+            # Verify all gone
+            links_after = jira_client.get_issue_links(main_issue['key'])
+            assert len(links_after) == 0
+        finally:
+            try:
+                jira_client.delete_issue(main_issue['key'])
+            except Exception:
+                pass
+            for issue in related:
+                try:
+                    jira_client.delete_issue(issue['key'])
+                except Exception:
+                    pass
 
-        # Cleanup
-        jira_client.delete_issue(main_issue['key'])
-        for issue in related:
-            jira_client.delete_issue(issue['key'])
 
-
+@pytest.mark.integration
+@pytest.mark.shared
 class TestIssueCloning:
     """Tests for issue cloning operations."""
 

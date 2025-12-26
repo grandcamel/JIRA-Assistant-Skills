@@ -15,6 +15,8 @@ if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestUpdateWorklog:
     """Tests for updating worklogs."""
 
@@ -84,6 +86,8 @@ class TestUpdateWorklog:
         assert 'comment' in call_args[1]
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestUpdateWorklogErrors:
     """Tests for error handling."""
 
@@ -112,3 +116,42 @@ class TestUpdateWorklogErrors:
 
         with pytest.raises(JiraError):
             update_worklog(mock_jira_client, 'PROJ-123', '10045', time_spent='2h')
+
+    def test_update_worklog_authentication_error_401(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.update_worklog.side_effect = AuthenticationError("Invalid token")
+
+        from update_worklog import update_worklog
+
+        with pytest.raises(AuthenticationError):
+            update_worklog(mock_jira_client, 'PROJ-123', '10045', time_spent='2h')
+
+    def test_update_worklog_rate_limit_error_429(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_jira_client.update_worklog.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from update_worklog import update_worklog
+
+        with pytest.raises(JiraError) as exc_info:
+            update_worklog(mock_jira_client, 'PROJ-123', '10045', time_spent='2h')
+        assert exc_info.value.status_code == 429
+
+    def test_update_worklog_server_error_500(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_jira_client.update_worklog.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from update_worklog import update_worklog
+
+        with pytest.raises(JiraError) as exc_info:
+            update_worklog(mock_jira_client, 'PROJ-123', '10045', time_spent='2h')
+        assert exc_info.value.status_code == 500

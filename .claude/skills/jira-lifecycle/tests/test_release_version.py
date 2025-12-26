@@ -2,8 +2,9 @@
 Tests for release_version.py - Release a project version.
 """
 
+import copy
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 import sys
 from pathlib import Path
 
@@ -11,6 +12,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.lifecycle
+@pytest.mark.unit
 class TestReleaseVersion:
     """Tests for releasing project versions."""
 
@@ -129,3 +132,75 @@ class TestReleaseVersion:
         assert result['released'] is True
         assert result['releaseDate'] == '2025-03-01'
         mock_jira_client.update_version.assert_not_called()
+
+
+@pytest.mark.lifecycle
+@pytest.mark.unit
+class TestReleaseVersionErrorHandling:
+    """Test API error handling for release_version."""
+
+    @patch('release_version.get_jira_client')
+    def test_authentication_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.update_version.side_effect = AuthenticationError("Invalid token")
+
+        from release_version import release_version
+
+        with pytest.raises(AuthenticationError):
+            release_version(version_id='10001', profile=None)
+
+    @patch('release_version.get_jira_client')
+    def test_permission_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.update_version.side_effect = PermissionError("Cannot release version")
+
+        from release_version import release_version
+
+        with pytest.raises(PermissionError):
+            release_version(version_id='10001', profile=None)
+
+    @patch('release_version.get_jira_client')
+    def test_not_found_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 404 when version doesn't exist."""
+        from error_handler import NotFoundError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.update_version.side_effect = NotFoundError("Version", "99999")
+
+        from release_version import release_version
+
+        with pytest.raises(NotFoundError):
+            release_version(version_id='99999', profile=None)
+
+    @patch('release_version.get_jira_client')
+    def test_rate_limit_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.update_version.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from release_version import release_version
+
+        with pytest.raises(JiraError) as exc_info:
+            release_version(version_id='10001', profile=None)
+        assert exc_info.value.status_code == 429
+
+    @patch('release_version.get_jira_client')
+    def test_server_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.update_version.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from release_version import release_version
+
+        with pytest.raises(JiraError) as exc_info:
+            release_version(version_id='10001', profile=None)
+        assert exc_info.value.status_code == 500

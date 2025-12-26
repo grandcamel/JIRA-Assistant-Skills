@@ -17,6 +17,8 @@ if scripts_path not in sys.path:
 import find_affected_assets
 
 
+@pytest.mark.jsm
+@pytest.mark.unit
 class TestFindAffectedAssets:
     """Test affected asset discovery functionality."""
 

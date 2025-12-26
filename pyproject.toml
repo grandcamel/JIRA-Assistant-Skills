@@ -1,0 +1,36 @@
+[tool.pytest.ini_options]
+minversion = "7.0"
+pythonpath = ["."]
+testpaths = [".claude/skills"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+markers = [
+    "unit: Unit tests (fast, no external dependencies)",
+    "integration: Integration tests (may hit external services)",
+    "slow: Slow-running tests",
+    "admin: Tests for jira-admin skill",
+    "agile: Tests for jira-agile skill",
+    "bulk: Tests for jira-bulk skill",
+    "collaborate: Tests for jira-collaborate skill",
+    "dev: Tests for jira-dev skill",
+    "fields: Tests for jira-fields skill",
+    "issue: Tests for jira-issue skill",
+    "jsm: Tests for jira-jsm skill",
+    "lifecycle: Tests for jira-lifecycle skill",
+    "ops: Tests for jira-ops skill",
+    "relationships: Tests for jira-relationships skill",
+    "search: Tests for jira-search skill",
+    "shared: Tests for shared library",
+    "time: Tests for jira-time skill",
+]
+
+[tool.coverage.run]
+source = [".claude/skills"]
+omit = ["*/tests/*", "*/conftest.py", "*/__init__.py"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false

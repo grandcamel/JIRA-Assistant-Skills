@@ -2,9 +2,9 @@
 Tests for bulk_clone.py - TDD approach (Phase 2).
 """
 
+import copy
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 import pytest
 
 # Add scripts to path
@@ -12,6 +12,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkCloneBasic:
     """Test cloning multiple issues."""
 
@@ -42,6 +44,8 @@ class TestBulkCloneBasic:
         assert len(result['created_issues']) == 3
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkCloneWithSubtasks:
     """Test including subtasks in clone."""
 
@@ -70,6 +74,8 @@ class TestBulkCloneWithSubtasks:
         assert mock_jira_client.create_issue.call_count >= 1
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkCloneWithLinks:
     """Test copying issue links."""
 
@@ -94,6 +100,8 @@ class TestBulkCloneWithLinks:
         assert result['success'] == 1
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkCloneWithPrefix:
     """Test adding prefix to cloned summaries."""
 
@@ -119,6 +127,8 @@ class TestBulkCloneWithPrefix:
         assert '[Clone]' in fields.get('summary', '')
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkCloneToProject:
     """Test cloning to different project."""
 
@@ -144,6 +154,8 @@ class TestBulkCloneToProject:
         assert fields.get('project', {}).get('key') == 'NEWPROJ'
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkCloneStripValues:
     """Test stripping certain fields (status, assignee)."""
 
@@ -152,7 +164,7 @@ class TestBulkCloneStripValues:
         from bulk_clone import bulk_clone
 
         # Setup mock - issue has assignee
-        issue = sample_issues[1].copy()  # Has assignee
+        issue = copy.deepcopy(sample_issues[1])  # Has assignee - use deepcopy to avoid mutation
         mock_jira_client.get_issue.return_value = issue
         mock_jira_client.create_issue.return_value = {'key': 'PROJ-101', 'id': '10101'}
 
@@ -171,6 +183,8 @@ class TestBulkCloneStripValues:
         assert 'status' not in fields
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkCloneDryRun:
     """Test dry-run preview."""
 
@@ -195,6 +209,8 @@ class TestBulkCloneDryRun:
         mock_jira_client.create_issue.assert_not_called()
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkClonePartialFailure:
     """Test partial failure handling."""
 
@@ -227,6 +243,8 @@ class TestBulkClonePartialFailure:
         assert result['failed'] == 1
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkCloneByJql:
     """Test cloning issues from JQL."""
 
@@ -256,6 +274,8 @@ class TestBulkCloneByJql:
         mock_jira_client.search_issues.assert_called_once()
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkCloneProgressCallback:
     """Test progress reporting."""
 
@@ -290,3 +310,105 @@ class TestBulkCloneProgressCallback:
 
         # Verify progress was reported
         assert len(progress_calls) == 2
+
+
+@pytest.mark.bulk
+@pytest.mark.unit
+class TestBulkCloneApiErrors:
+    """Test API error handling scenarios."""
+
+    def test_authentication_error(self, mock_jira_client, sample_issues):
+        """Test handling of 401 unauthorized error."""
+        from bulk_clone import bulk_clone
+        from error_handler import AuthenticationError
+
+        mock_jira_client.get_issue.return_value = sample_issues[0]
+        mock_jira_client.create_issue.side_effect = AuthenticationError("Invalid token")
+
+        result = bulk_clone(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+        assert 'PROJ-1' in result.get('errors', {})
+
+    def test_permission_denied_error(self, mock_jira_client, sample_issues):
+        """Test handling of 403 forbidden error."""
+        from bulk_clone import bulk_clone
+        from error_handler import JiraError
+
+        mock_jira_client.get_issue.return_value = sample_issues[0]
+        mock_jira_client.create_issue.side_effect = JiraError(
+            "You do not have permission", status_code=403
+        )
+
+        result = bulk_clone(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+        assert 'PROJ-1' in result.get('errors', {})
+
+    def test_not_found_error(self, mock_jira_client):
+        """Test handling of 404 not found error during issue fetch."""
+        from bulk_clone import bulk_clone
+        from error_handler import JiraError
+
+        # 404 during initial issue fetch propagates as exception
+        mock_jira_client.get_issue.side_effect = JiraError(
+            "Issue not found", status_code=404
+        )
+
+        # The script raises the error when issue cannot be fetched during preparation
+        with pytest.raises(JiraError) as exc_info:
+            bulk_clone(
+                client=mock_jira_client,
+                issue_keys=['PROJ-999'],
+                dry_run=False
+            )
+
+        assert '404' in str(exc_info.value) or 'not found' in str(exc_info.value).lower()
+
+    def test_rate_limit_error(self, mock_jira_client, sample_issues):
+        """Test handling of 429 rate limit error."""
+        from bulk_clone import bulk_clone
+        from error_handler import JiraError
+
+        mock_jira_client.get_issue.return_value = sample_issues[0]
+        mock_jira_client.create_issue.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        result = bulk_clone(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+
+    def test_server_error(self, mock_jira_client, sample_issues):
+        """Test handling of 500 internal server error."""
+        from bulk_clone import bulk_clone
+        from error_handler import JiraError
+
+        mock_jira_client.get_issue.return_value = sample_issues[0]
+        mock_jira_client.create_issue.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        result = bulk_clone(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0

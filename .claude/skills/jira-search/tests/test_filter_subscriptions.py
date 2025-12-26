@@ -3,7 +3,6 @@ Tests for filter_subscriptions.py - View filter subscriptions.
 """
 
 import pytest
-from unittest.mock import MagicMock
 import sys
 from pathlib import Path
 
@@ -11,6 +10,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.search
+@pytest.mark.unit
 class TestFilterSubscriptions:
     """Tests for viewing filter subscriptions."""
 
@@ -80,3 +81,59 @@ class TestFilterSubscriptions:
 
         with pytest.raises(NotFoundError):
             get_subscriptions(mock_jira_client, '99999')
+
+
+@pytest.mark.search
+@pytest.mark.unit
+class TestFilterSubscriptionsErrorHandling:
+    """Test API error handling scenarios for filter_subscriptions."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        mock_jira_client.get_filter.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        from filter_subscriptions import get_subscriptions
+
+        with pytest.raises(AuthenticationError):
+            get_subscriptions(mock_jira_client, '10042')
+
+    def test_forbidden_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        mock_jira_client.get_filter.side_effect = PermissionError(
+            "You don't have permission to view this filter"
+        )
+
+        from filter_subscriptions import get_subscriptions
+
+        with pytest.raises(PermissionError):
+            get_subscriptions(mock_jira_client, '10042')
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        mock_jira_client.get_filter.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from filter_subscriptions import get_subscriptions
+
+        with pytest.raises(JiraError) as exc_info:
+            get_subscriptions(mock_jira_client, '10042')
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 internal server error."""
+        from error_handler import JiraError
+        mock_jira_client.get_filter.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from filter_subscriptions import get_subscriptions
+
+        with pytest.raises(JiraError) as exc_info:
+            get_subscriptions(mock_jira_client, '10042')
+        assert exc_info.value.status_code == 500

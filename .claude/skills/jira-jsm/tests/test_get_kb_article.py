@@ -17,6 +17,8 @@ if scripts_path not in sys.path:
 import get_kb_article
 
 
+@pytest.mark.jsm
+@pytest.mark.unit
 class TestGetKBArticle:
     """Test KB article retrieval functionality."""
 
@@ -61,8 +63,9 @@ class TestGetKBArticle:
 
     def test_get_kb_article_error(self, mock_jira_client):
         """Test error when article doesn't exist."""
-        mock_jira_client.get_kb_article.side_effect = Exception("Article not found")
+        from error_handler import NotFoundError
+        mock_jira_client.get_kb_article.side_effect = NotFoundError("Article not found")
 
         with patch('get_kb_article.get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(Exception, match="Article not found"):
+            with pytest.raises(NotFoundError, match="Article not found"):
                 get_kb_article.get_kb_article("999999")

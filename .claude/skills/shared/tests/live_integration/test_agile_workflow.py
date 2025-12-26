@@ -4,11 +4,14 @@ Live Integration Tests: Agile Workflow
 Tests for sprint, epic, and backlog operations against a real JIRA instance.
 """
 
+import os
 import pytest
 import uuid
 from datetime import datetime, timedelta
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestSprintLifecycle:
     """Tests for sprint CRUD operations."""
 
@@ -23,11 +26,14 @@ class TestSprintLifecycle:
             goal='Test sprint goal'
         )
 
-        assert sprint['id'] is not None
-        assert sprint['state'] == 'future'
-
-        # Cleanup
-        jira_client.delete_sprint(sprint['id'])
+        try:
+            assert sprint['id'] is not None
+            assert sprint['state'] == 'future'
+        finally:
+            try:
+                jira_client.delete_sprint(sprint['id'])
+            except Exception:
+                pass
 
     def test_create_sprint_with_dates(self, jira_client, test_project):
         """Test creating a sprint with start/end dates."""
@@ -44,11 +50,14 @@ class TestSprintLifecycle:
             end_date=f'{end_date}T00:00:00.000Z'
         )
 
-        assert sprint['id'] is not None
-        assert 'startDate' in sprint or sprint['state'] == 'future'
-
-        # Cleanup
-        jira_client.delete_sprint(sprint['id'])
+        try:
+            assert sprint['id'] is not None
+            assert 'startDate' in sprint or sprint['state'] == 'future'
+        finally:
+            try:
+                jira_client.delete_sprint(sprint['id'])
+            except Exception:
+                pass
 
     def test_get_sprint(self, jira_client, test_sprint):
         """Test fetching sprint details."""
@@ -99,11 +108,14 @@ class TestSprintLifecycle:
             jira_client.get_sprint(sprint['id'])
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestSprintIssueManagement:
     """Tests for moving issues to/from sprints."""
 
     # Sprint field ID - may vary by JIRA instance
-    SPRINT_FIELD = 'customfield_10020'
+    # Override via JIRA_SPRINT_FIELD_ID environment variable
+    SPRINT_FIELD = os.environ.get('JIRA_SPRINT_FIELD_ID', 'customfield_10020')
 
     def _verify_issue_in_sprint(self, jira_client, sprint_id, issue_key):
         """Verify an issue is assigned to a sprint by checking its sprint field."""
@@ -140,20 +152,23 @@ class TestSprintIssueManagement:
             })
             issues.append(issue)
 
-        issue_keys = [i['key'] for i in issues]
+        try:
+            issue_keys = [i['key'] for i in issues]
 
-        # Move to sprint
-        jira_client.move_issues_to_sprint(test_sprint['id'], issue_keys)
+            # Move to sprint
+            jira_client.move_issues_to_sprint(test_sprint['id'], issue_keys)
 
-        # Verify all issues have sprint field set
-        for key in issue_keys:
-            assert self._verify_issue_in_sprint(
-                jira_client, test_sprint['id'], key
-            ), f"Issue {key} sprint field not set"
-
-        # Cleanup
-        for issue in issues:
-            jira_client.delete_issue(issue['key'])
+            # Verify all issues have sprint field set
+            for key in issue_keys:
+                assert self._verify_issue_in_sprint(
+                    jira_client, test_sprint['id'], key
+                ), f"Issue {key} sprint field not set"
+        finally:
+            for issue in issues:
+                try:
+                    jira_client.delete_issue(issue['key'])
+                except Exception:
+                    pass
 
     def test_get_sprint_issues(self, jira_client, test_project, test_sprint):
         """Test getting issues in a sprint.
@@ -170,27 +185,32 @@ class TestSprintIssueManagement:
             'issuetype': {'name': 'Task'}
         })
 
-        jira_client.move_issues_to_sprint(test_sprint['id'], [issue['key']])
+        try:
+            jira_client.move_issues_to_sprint(test_sprint['id'], [issue['key']])
 
-        # Get sprint issues - API should return valid response structure
-        result = jira_client.get_sprint_issues(test_sprint['id'])
-        assert 'issues' in result
+            # Get sprint issues - API should return valid response structure
+            result = jira_client.get_sprint_issues(test_sprint['id'])
+            assert 'issues' in result
 
-        # For simple boards, the agile API may return empty, so verify via field
-        if len(result['issues']) == 0:
-            # Fallback: verify sprint assignment via issue's sprint field
-            assert self._verify_issue_in_sprint(
-                jira_client, test_sprint['id'], issue['key']
-            ), "Sprint assignment failed - issue has no sprint field"
-        else:
-            # Scrum boards: verify issue appears in results
-            issue_keys = [i['key'] for i in result['issues']]
-            assert issue['key'] in issue_keys
+            # For simple boards, the agile API may return empty, so verify via field
+            if len(result['issues']) == 0:
+                # Fallback: verify sprint assignment via issue's sprint field
+                assert self._verify_issue_in_sprint(
+                    jira_client, test_sprint['id'], issue['key']
+                ), "Sprint assignment failed - issue has no sprint field"
+            else:
+                # Scrum boards: verify issue appears in results
+                issue_keys = [i['key'] for i in result['issues']]
+                assert issue['key'] in issue_keys
+        finally:
+            try:
+                jira_client.delete_issue(issue['key'])
+            except Exception:
+                pass
 
-        # Cleanup
-        jira_client.delete_issue(issue['key'])
 
-
+@pytest.mark.integration
+@pytest.mark.shared
 class TestBacklog:
     """Tests for backlog operations."""
 
@@ -206,13 +226,16 @@ class TestBacklog:
             'issuetype': {'name': 'Story'}
         })
 
-        # Get backlog
-        result = jira_client.get_board_backlog(test_project['board_id'])
+        try:
+            # Get backlog
+            result = jira_client.get_board_backlog(test_project['board_id'])
 
-        assert 'issues' in result
-
-        # Cleanup
-        jira_client.delete_issue(issue['key'])
+            assert 'issues' in result
+        finally:
+            try:
+                jira_client.delete_issue(issue['key'])
+            except Exception:
+                pass
 
     def test_rank_issues(self, jira_client, test_project):
         """Test ranking issues in backlog."""
@@ -228,21 +251,26 @@ class TestBacklog:
             'issuetype': {'name': 'Story'}
         })
 
-        # Rank issue2 before issue1
-        jira_client.rank_issues([issue2['key']], rank_before=issue1['key'])
+        try:
+            # Rank issue2 before issue1
+            jira_client.rank_issues([issue2['key']], rank_before=issue1['key'])
 
-        # Verify ranking (issue2 should come before issue1 in backlog)
-        if test_project.get('board_id'):
-            result = jira_client.get_board_backlog(test_project['board_id'])
-            keys = [i['key'] for i in result.get('issues', [])]
-            if issue1['key'] in keys and issue2['key'] in keys:
-                assert keys.index(issue2['key']) < keys.index(issue1['key'])
+            # Verify ranking (issue2 should come before issue1 in backlog)
+            if test_project.get('board_id'):
+                result = jira_client.get_board_backlog(test_project['board_id'])
+                keys = [i['key'] for i in result.get('issues', [])]
+                if issue1['key'] in keys and issue2['key'] in keys:
+                    assert keys.index(issue2['key']) < keys.index(issue1['key'])
+        finally:
+            for issue in [issue1, issue2]:
+                try:
+                    jira_client.delete_issue(issue['key'])
+                except Exception:
+                    pass
 
-        # Cleanup
-        jira_client.delete_issue(issue1['key'])
-        jira_client.delete_issue(issue2['key'])
 
-
+@pytest.mark.integration
+@pytest.mark.shared
 class TestEpicOperations:
     """Tests for epic operations.
 
@@ -260,14 +288,17 @@ class TestEpicOperations:
             'issuetype': {'name': 'Epic'}
         })
 
-        assert epic['key'].startswith(test_project['key'])
+        try:
+            assert epic['key'].startswith(test_project['key'])
 
-        # Verify it's an epic
-        epic_data = jira_client.get_issue(epic['key'])
-        assert epic_data['fields']['issuetype']['name'] == 'Epic'
-
-        # Cleanup
-        jira_client.delete_issue(epic['key'])
+            # Verify it's an epic
+            epic_data = jira_client.get_issue(epic['key'])
+            assert epic_data['fields']['issuetype']['name'] == 'Epic'
+        finally:
+            try:
+                jira_client.delete_issue(epic['key'])
+            except Exception:
+                pass
 
     def test_add_issue_to_epic(self, jira_client, test_project, test_epic):
         """Test adding an issue to an epic.
@@ -283,13 +314,16 @@ class TestEpicOperations:
             'parent': {'key': test_epic['key']}
         })
 
-        # Verify parent relationship
-        story_data = jira_client.get_issue(story['key'])
-        parent = story_data['fields'].get('parent', {})
-        assert parent.get('key') == test_epic['key']
-
-        # Cleanup
-        jira_client.delete_issue(story['key'])
+        try:
+            # Verify parent relationship
+            story_data = jira_client.get_issue(story['key'])
+            parent = story_data['fields'].get('parent', {})
+            assert parent.get('key') == test_epic['key']
+        finally:
+            try:
+                jira_client.delete_issue(story['key'])
+            except Exception:
+                pass
 
     def test_get_epic_children(self, jira_client, test_project, test_epic):
         """Test getting issues in an epic.
@@ -312,27 +346,32 @@ class TestEpicOperations:
 
         story_keys = [s['key'] for s in stories]
 
-        # Verify parent relationship directly (no indexing delay)
-        for story in stories:
-            story_data = jira_client.get_issue(story['key'])
-            assert story_data['fields']['parent']['key'] == test_epic['key']
+        try:
+            # Verify parent relationship directly (no indexing delay)
+            for story in stories:
+                story_data = jira_client.get_issue(story['key'])
+                assert story_data['fields']['parent']['key'] == test_epic['key']
 
-        # Optionally also verify via JQL search (may have indexing delay)
-        for attempt in range(5):
-            result = jira_client.search_issues(
-                f'parent = {test_epic["key"]}',
-                fields=['key', 'summary']
-            )
-            result_keys = [i['key'] for i in result.get('issues', [])]
-            if all(key in result_keys for key in story_keys):
-                break
-            time.sleep(1)
+            # Optionally also verify via JQL search (may have indexing delay)
+            for attempt in range(5):
+                result = jira_client.search_issues(
+                    f'parent = {test_epic["key"]}',
+                    fields=['key', 'summary']
+                )
+                result_keys = [i['key'] for i in result.get('issues', [])]
+                if all(key in result_keys for key in story_keys):
+                    break
+                time.sleep(1)
+        finally:
+            for story in stories:
+                try:
+                    jira_client.delete_issue(story['key'])
+                except Exception:
+                    pass
 
-        # Cleanup
-        for story in stories:
-            jira_client.delete_issue(story['key'])
 
-
+@pytest.mark.integration
+@pytest.mark.shared
 class TestBoardOperations:
     """Tests for board operations."""
 
@@ -357,11 +396,14 @@ class TestBoardOperations:
             assert test_project['key'] in board_project_keys
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestStoryPoints:
     """Tests for story point estimation."""
 
     # Story points field ID - may vary by JIRA instance
-    STORY_POINTS_FIELD = 'customfield_10016'
+    # Override via JIRA_STORY_POINTS_FIELD_ID environment variable
+    STORY_POINTS_FIELD = os.environ.get('JIRA_STORY_POINTS_FIELD_ID', 'customfield_10016')
 
     def test_set_story_points(self, jira_client, test_project):
         """Test setting story points on an issue."""

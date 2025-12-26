@@ -2,8 +2,9 @@
 Tests for move_issues_version.py - Move issues between versions.
 """
 
+import copy
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 import sys
 from pathlib import Path
 
@@ -11,6 +12,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.lifecycle
+@pytest.mark.unit
 class TestMoveIssuesVersion:
     """Tests for moving issues between versions."""
 
@@ -129,3 +132,76 @@ class TestMoveIssuesVersion:
 
         # Should have moved issues after confirmation
         assert result['moved'] == 2
+
+
+@pytest.mark.lifecycle
+@pytest.mark.unit
+class TestMoveIssuesVersionErrorHandling:
+    """Test API error handling for move_issues_version."""
+
+    @patch('move_issues_version.get_jira_client')
+    def test_authentication_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.search_issues.side_effect = AuthenticationError("Invalid token")
+
+        from move_issues_version import move_issues_to_version
+
+        with pytest.raises(AuthenticationError):
+            move_issues_to_version(jql='project = PROJ', target_version='v2.0.0', profile=None)
+
+    @patch('move_issues_version.get_jira_client')
+    def test_permission_error(self, mock_get_client, mock_jira_client, sample_issue_list):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.search_issues.return_value = copy.deepcopy(sample_issue_list)
+        mock_jira_client.update_issue.side_effect = PermissionError("Cannot update issue")
+
+        from move_issues_version import move_issues_to_version
+
+        with pytest.raises(PermissionError):
+            move_issues_to_version(jql='project = PROJ', target_version='v2.0.0', profile=None)
+
+    @patch('move_issues_version.get_jira_client')
+    def test_not_found_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 404 when issues not found."""
+        from error_handler import NotFoundError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.search_issues.side_effect = NotFoundError("Issue", "PROJ-999")
+
+        from move_issues_version import move_issues_to_version
+
+        with pytest.raises(NotFoundError):
+            move_issues_to_version(jql='issue = PROJ-999', target_version='v2.0.0', profile=None)
+
+    @patch('move_issues_version.get_jira_client')
+    def test_rate_limit_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.search_issues.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from move_issues_version import move_issues_to_version
+
+        with pytest.raises(JiraError) as exc_info:
+            move_issues_to_version(jql='project = PROJ', target_version='v2.0.0', profile=None)
+        assert exc_info.value.status_code == 429
+
+    @patch('move_issues_version.get_jira_client')
+    def test_server_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.search_issues.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from move_issues_version import move_issues_to_version
+
+        with pytest.raises(JiraError) as exc_info:
+            move_issues_to_version(jql='project = PROJ', target_version='v2.0.0', profile=None)
+        assert exc_info.value.status_code == 500

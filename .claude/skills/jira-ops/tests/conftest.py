@@ -5,16 +5,25 @@ Provides fixtures for testing caching, rate limiting, and other
 robustness features without hitting real JIRA instance.
 """
 
+import copy
 import pytest
 import sys
 import os
 import tempfile
 import shutil
 from pathlib import Path
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
+
+
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line("markers", "ops: mark test as ops skill test")
+    config.addinivalue_line("markers", "unit: mark test as unit test")
+    config.addinivalue_line("markers", "integration: mark test as integration test")
+    config.addinivalue_line("markers", "asyncio: mark test as async test")
 
 # Add shared lib to path so imports work in tests (use resolve for absolute paths)
-shared_lib_path = str(Path(__file__).resolve().parent.parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(Path(__file__).resolve().parent.parent.parent / 'shared' / 'scripts' / 'lib')
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
@@ -46,7 +55,7 @@ def mock_jira_client():
 @pytest.fixture
 def sample_issue_data():
     """Sample JIRA issue data for cache testing."""
-    return {
+    data = {
         "id": "10100",
         "key": "PROJ-123",
         "self": "https://test.atlassian.net/rest/api/3/issue/10100",
@@ -59,36 +68,40 @@ def sample_issue_data():
             "priority": {"name": "Medium"}
         }
     }
+    return copy.deepcopy(data)
 
 
 @pytest.fixture
 def sample_project_data():
     """Sample JIRA project data for cache testing."""
-    return {
+    data = {
         "id": "10000",
         "key": "PROJ",
         "name": "Test Project",
         "projectTypeKey": "software"
     }
+    return copy.deepcopy(data)
 
 
 @pytest.fixture
 def sample_user_data():
     """Sample JIRA user data for cache testing."""
-    return {
+    data = {
         "accountId": "557058:test-user-id",
         "displayName": "Test User",
         "emailAddress": "test@example.com",
         "active": True
     }
+    return copy.deepcopy(data)
 
 
 @pytest.fixture
 def sample_field_data():
     """Sample JIRA field data for cache testing."""
-    return {
+    data = {
         "id": "customfield_10016",
         "name": "Story Points",
         "custom": True,
         "clauseNames": ["cf[10016]", "Story Points"]
     }
+    return copy.deepcopy(data)

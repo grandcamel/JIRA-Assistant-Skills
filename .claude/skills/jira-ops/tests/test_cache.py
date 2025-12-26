@@ -20,13 +20,15 @@ from pathlib import Path
 import sys
 
 # Add shared lib to path (absolute path)
-shared_lib_path = str(Path(__file__).resolve().parent.parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(Path(__file__).resolve().parent.parent.parent / 'shared' / 'scripts' / 'lib')
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
 from cache import JiraCache, CacheStats
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheGetHit:
     """Test cache hit returns cached value."""
 
@@ -54,6 +56,8 @@ class TestCacheGetHit:
         assert project_result["key"] == "PROJ"
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheGetMiss:
     """Test cache miss returns None."""
 
@@ -75,6 +79,8 @@ class TestCacheGetMiss:
         assert result is None
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheSet:
     """Test setting cache values."""
 
@@ -115,6 +121,8 @@ class TestCacheSet:
         assert result == complex_data
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheTTLExpiration:
     """Test cache returns None after TTL expires."""
 
@@ -155,6 +163,8 @@ class TestCacheTTLExpiration:
         assert cache.ttl_defaults["search"] == timedelta(minutes=1)
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheInvalidateKey:
     """Test invalidating specific cache key."""
 
@@ -177,6 +187,8 @@ class TestCacheInvalidateKey:
         cache.invalidate(key="nonexistent", category="issue")
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheInvalidatePattern:
     """Test invalidating keys by pattern."""
 
@@ -207,6 +219,8 @@ class TestCacheInvalidatePattern:
         assert cache.get("issue:PROJ-456", category="issue") is not None
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheInvalidateCategory:
     """Test invalidating entire category."""
 
@@ -224,6 +238,8 @@ class TestCacheInvalidateCategory:
         assert cache.get("PROJ", category="project") is not None
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheClearAll:
     """Test clearing entire cache."""
 
@@ -241,6 +257,8 @@ class TestCacheClearAll:
         assert cache.get("user1", category="user") is None
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheSizeLimit:
     """Test cache respects size limit."""
 
@@ -271,6 +289,8 @@ class TestCacheSizeLimit:
             assert cache.get(f"key{i}", category="issue") is not None
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheLRUEviction:
     """Test LRU eviction when cache is full."""
 
@@ -292,9 +312,18 @@ class TestCacheLRUEviction:
 
         # old2 should be evicted first (least recently used)
         # old1 might still exist since we accessed it
-        # This is a best-effort test - exact behavior depends on implementation
+        # Verify LRU eviction occurred
+        # old2 should be evicted first (least recently used)
+        old2_result = cache.get("old2", category="issue")
+        assert old2_result is None, "old2 should have been evicted (LRU)"
+
+        # Verify the cache is respecting size limits
+        stats = cache.get_stats()
+        assert stats.total_size_bytes <= cache.max_size
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCachePersistence:
     """Test cache persists across sessions."""
 
@@ -325,6 +354,8 @@ class TestCachePersistence:
         assert any(cache_path.iterdir())
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheConcurrentAccess:
     """Test thread-safe cache access."""
 
@@ -412,6 +443,8 @@ class TestCacheConcurrentAccess:
         assert len(errors) == 0
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheStats:
     """Test cache statistics."""
 
@@ -424,7 +457,9 @@ class TestCacheStats:
 
         stats = cache.get_stats()
 
-        assert stats.entry_count >= 3
+        assert stats.entry_count == 3
+        assert "issue" in stats.by_category
+        assert "project" in stats.by_category
 
     def test_cache_stats_by_category(self, temp_cache_dir):
         """Test cache tracks stats by category."""
@@ -436,7 +471,9 @@ class TestCacheStats:
         stats = cache.get_stats()
 
         assert "issue" in stats.by_category
-        assert stats.by_category["issue"]["count"] >= 2
+        assert stats.by_category["issue"]["count"] == 2
+        assert "project" in stats.by_category
+        assert stats.by_category["project"]["count"] == 1
 
     def test_cache_stats_hit_rate(self, temp_cache_dir, sample_issue_data):
         """Test cache tracks hit rate."""
@@ -455,6 +492,8 @@ class TestCacheStats:
         assert stats.misses >= 1
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheKeyGeneration:
     """Test cache key generation helpers."""
 

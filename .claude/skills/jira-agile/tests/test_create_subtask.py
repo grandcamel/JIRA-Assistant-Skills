@@ -19,7 +19,7 @@ sys.path.insert(0, str(shared_lib_path))
 sys.path.insert(0, str(scripts_path))
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 
 @pytest.mark.agile
@@ -193,21 +193,96 @@ class TestCreateSubtask:
 class TestCreateSubtaskCLI:
     """Test command-line interface for create_subtask.py."""
 
-    @patch('sys.argv', ['create_subtask.py', '--parent', 'PROJ-101', '--summary', 'Task'])
-    def test_cli_minimal_args(self, mock_jira_client, sample_issue_response, sample_subtask_response):
-        """Test CLI with minimal required arguments."""
-        # This will fail initially - tests the CLI parsing
-        mock_jira_client.get_issue.return_value = sample_issue_response
-        mock_jira_client.create_issue.return_value = sample_subtask_response
+    def test_cli_main_exists(self):
+        """Test CLI main function exists and is callable."""
+        from create_subtask import main
+        assert callable(main)
 
-        # from create_subtask import main
-        # This is a placeholder - will implement when script exists
-        pass
-
-    @patch('sys.argv', ['create_subtask.py', '--help'])
     def test_cli_help_output(self, capsys):
         """Test that --help shows usage information."""
-        # This will fail initially
-        # from create_subtask import main
-        # Will test help output includes required flags
-        pass
+        with patch('sys.argv', ['create_subtask.py', '--help']):
+            from create_subtask import main
+            try:
+                main()
+            except SystemExit:
+                pass  # --help causes SystemExit
+
+        captured = capsys.readouterr()
+        assert '--parent' in captured.out or '--summary' in captured.out or 'usage' in captured.out.lower()
+
+
+@pytest.mark.agile
+@pytest.mark.unit
+class TestCreateSubtaskErrorHandling:
+    """Test API error handling scenarios for create_subtask."""
+
+    def test_authentication_error(self, mock_jira_client, sample_issue_response):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        from create_subtask import create_subtask
+
+        mock_jira_client.get_issue.return_value = sample_issue_response
+        mock_jira_client.create_issue.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        with pytest.raises(AuthenticationError):
+            create_subtask(
+                parent_key="PROJ-101",
+                summary="Task",
+                client=mock_jira_client
+            )
+
+    def test_forbidden_error(self, mock_jira_client, sample_issue_response):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        from create_subtask import create_subtask
+
+        mock_jira_client.get_issue.return_value = sample_issue_response
+        mock_jira_client.create_issue.side_effect = PermissionError(
+            "Insufficient permissions"
+        )
+
+        with pytest.raises(PermissionError):
+            create_subtask(
+                parent_key="PROJ-101",
+                summary="Task",
+                client=mock_jira_client
+            )
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        from create_subtask import create_subtask
+
+        mock_jira_client.get_issue.side_effect = JiraError(
+            "Rate limit exceeded",
+            status_code=429
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            create_subtask(
+                parent_key="PROJ-101",
+                summary="Task",
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client, sample_issue_response):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+        from create_subtask import create_subtask
+
+        mock_jira_client.get_issue.return_value = sample_issue_response
+        mock_jira_client.create_issue.side_effect = JiraError(
+            "Internal server error",
+            status_code=500
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            create_subtask(
+                parent_key="PROJ-101",
+                summary="Task",
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 500

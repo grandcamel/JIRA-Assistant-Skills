@@ -15,6 +15,8 @@ if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestGetTimeTracking:
     """Tests for getting time tracking info."""
 
@@ -56,6 +58,8 @@ class TestGetTimeTracking:
         assert result.get('remainingEstimate') is None
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestGetTimeTrackingProgress:
     """Tests for progress calculations."""
 
@@ -89,3 +93,74 @@ class TestGetTimeTrackingProgress:
         progress = calculate_progress(result)
 
         assert progress == 0
+
+
+@pytest.mark.time
+@pytest.mark.unit
+class TestGetTimeTrackingErrors:
+    """Tests for error handling."""
+
+    def test_get_time_tracking_issue_not_found(self, mock_jira_client):
+        """Test error when issue doesn't exist."""
+        from error_handler import NotFoundError
+
+        mock_jira_client.get_time_tracking.side_effect = NotFoundError(
+            "Issue PROJ-999 not found"
+        )
+
+        from get_time_tracking import get_time_tracking
+
+        with pytest.raises(NotFoundError):
+            get_time_tracking(mock_jira_client, 'PROJ-999')
+
+    def test_get_time_tracking_authentication_error_401(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.get_time_tracking.side_effect = AuthenticationError("Invalid token")
+
+        from get_time_tracking import get_time_tracking
+
+        with pytest.raises(AuthenticationError):
+            get_time_tracking(mock_jira_client, 'PROJ-123')
+
+    def test_get_time_tracking_permission_denied_403(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+
+        mock_jira_client.get_time_tracking.side_effect = PermissionError(
+            "You do not have permission to view this issue"
+        )
+
+        from get_time_tracking import get_time_tracking
+
+        with pytest.raises(PermissionError):
+            get_time_tracking(mock_jira_client, 'PROJ-123')
+
+    def test_get_time_tracking_rate_limit_error_429(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_jira_client.get_time_tracking.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from get_time_tracking import get_time_tracking
+
+        with pytest.raises(JiraError) as exc_info:
+            get_time_tracking(mock_jira_client, 'PROJ-123')
+        assert exc_info.value.status_code == 429
+
+    def test_get_time_tracking_server_error_500(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_jira_client.get_time_tracking.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from get_time_tracking import get_time_tracking
+
+        with pytest.raises(JiraError) as exc_info:
+            get_time_tracking(mock_jira_client, 'PROJ-123')
+        assert exc_info.value.status_code == 500

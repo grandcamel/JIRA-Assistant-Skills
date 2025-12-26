@@ -80,7 +80,7 @@ def test_decline_dry_run(mock_jira_client, sample_approval_pending, capsys):
 
     assert result == 0
     captured = capsys.readouterr()
-    assert 'DRY RUN' in captured.out or 'would decline' in captured.out.lower()
+    assert 'DRY RUN' in captured.out
     mock_jira_client.answer_approval.assert_not_called()
 
 
@@ -106,4 +106,4 @@ def test_decline_request_output(mock_jira_client, capsys):
 
     assert result == 0
     captured = capsys.readouterr()
-    assert 'DECLINED' in captured.out or 'decline' in captured.out.lower()
+    assert 'decline' in captured.out.lower()

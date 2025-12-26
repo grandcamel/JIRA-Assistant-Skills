@@ -3,7 +3,6 @@ Tests for delete_filter.py - Delete saved filters.
 """
 
 import pytest
-from unittest.mock import MagicMock
 import sys
 from pathlib import Path
 
@@ -11,6 +10,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.search
+@pytest.mark.unit
 class TestDeleteFilter:
     """Tests for deleting filters."""
 
@@ -71,3 +72,47 @@ class TestDeleteFilter:
         assert '10042' in result
         # delete_filter should NOT be called
         mock_jira_client.delete_filter.assert_not_called()
+
+
+@pytest.mark.search
+@pytest.mark.unit
+class TestDeleteFilterErrorHandling:
+    """Test API error handling scenarios for delete_filter."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        mock_jira_client.delete_filter.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        from delete_filter import delete_filter
+
+        with pytest.raises(AuthenticationError):
+            delete_filter(mock_jira_client, '10042')
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        mock_jira_client.delete_filter.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from delete_filter import delete_filter
+
+        with pytest.raises(JiraError) as exc_info:
+            delete_filter(mock_jira_client, '10042')
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 internal server error."""
+        from error_handler import JiraError
+        mock_jira_client.delete_filter.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from delete_filter import delete_filter
+
+        with pytest.raises(JiraError) as exc_info:
+            delete_filter(mock_jira_client, '10042')
+        assert exc_info.value.status_code == 500

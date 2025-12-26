@@ -4,16 +4,24 @@ Pytest fixtures for jira-bulk tests.
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 import pytest
 
 # Add shared lib to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line("markers", "bulk: mark test as bulk operations skill test")
+    config.addinivalue_line("markers", "unit: mark test as unit test")
+    config.addinivalue_line("markers", "integration: mark test as integration test")
+
+
 @pytest.fixture
 def mock_jira_client():
     """Create a mock JiraClient with common methods."""
+    from unittest.mock import MagicMock
     client = MagicMock()
     client.search_issues = MagicMock()
     client.get_issue = MagicMock()

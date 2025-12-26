@@ -5,7 +5,7 @@ Tests exporting timesheets to CSV/JSON formats.
 """
 
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 import sys
 from pathlib import Path
 import json
@@ -51,6 +51,8 @@ def sample_timesheet_data():
     }
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestExportFormats:
     """Tests for export format generation."""
 
@@ -96,6 +98,8 @@ class TestExportFormats:
         assert 'Seconds' in header
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestExportFile:
     """Tests for file export."""
 

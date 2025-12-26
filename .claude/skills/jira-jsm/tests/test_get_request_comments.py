@@ -87,7 +87,7 @@ def test_get_comments_with_pagination(mock_jira_client):
 
     assert result == 0
     # Should have called twice for pagination
-    assert mock_jira_client.get_request_comments.call_count >= 1
+    assert mock_jira_client.get_request_comments.call_count == 2
 
 
 def test_get_comments_empty(mock_jira_client, capsys):
@@ -106,7 +106,7 @@ def test_get_comments_empty(mock_jira_client, capsys):
 
     assert result == 0
     captured = capsys.readouterr()
-    assert 'No comments' in captured.out or '0 comment' in captured.out
+    assert 'No comments' in captured.out
 
 
 def test_get_comment_by_id(mock_jira_client, sample_comment_public):
@@ -132,7 +132,7 @@ def test_format_text_output(mock_jira_client, sample_comments_response, capsys):
     assert result == 0
     captured = capsys.readouterr()
     # Should show visibility clearly
-    assert 'PUBLIC' in captured.out or 'INTERNAL' in captured.out or 'Public' in captured.out
+    assert 'public' in captured.out.lower()
 
 
 def test_format_json_output(mock_jira_client, sample_comments_response, capsys):

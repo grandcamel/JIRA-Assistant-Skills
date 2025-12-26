@@ -17,6 +17,8 @@ if scripts_path not in sys.path:
 import search_kb
 
 
+@pytest.mark.jsm
+@pytest.mark.unit
 class TestSearchKB:
     """Test KB search functionality."""
 
@@ -77,3 +79,55 @@ class TestSearchKB:
         """Test search with excerpts highlighting."""
         # Verify excerpts contain <em> tags for highlighting
         assert '<em>password</em>' in sample_kb_search_results[0]['excerpt']
+
+
+@pytest.mark.jsm
+@pytest.mark.unit
+class TestSearchKBApiErrors:
+    """Test API error handling scenarios for search_kb."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.search_kb_articles.side_effect = AuthenticationError("Invalid token")
+
+        with patch('search_kb.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(AuthenticationError):
+                search_kb.search_kb(1, "password")
+
+    def test_permission_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+
+        mock_jira_client.search_kb_articles.side_effect = PermissionError("Access denied")
+
+        with patch('search_kb.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(PermissionError):
+                search_kb.search_kb(1, "password")
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_jira_client.search_kb_articles.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        with patch('search_kb.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(JiraError) as exc_info:
+                search_kb.search_kb(1, "password")
+            assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_jira_client.search_kb_articles.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        with patch('search_kb.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(JiraError) as exc_info:
+                search_kb.search_kb(1, "password")
+            assert exc_info.value.status_code == 500

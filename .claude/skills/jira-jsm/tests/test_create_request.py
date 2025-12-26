@@ -7,7 +7,6 @@ participants, and on-behalf-of functionality.
 
 import pytest
 from unittest.mock import patch, Mock
-import json
 from pathlib import Path
 import sys
 
@@ -19,6 +18,8 @@ if scripts_path not in sys.path:
 import create_request
 
 
+@pytest.mark.jsm
+@pytest.mark.unit
 class TestCreateRequestBasic:
     """Test basic request creation functionality."""
 
@@ -145,3 +146,71 @@ class TestCreateRequestBasic:
                 summary="Test",
                 description="Test"
             )
+
+
+@pytest.mark.jsm
+@pytest.mark.unit
+class TestCreateRequestApiErrors:
+    """Test API error handling scenarios for create_request."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.create_request.side_effect = AuthenticationError("Invalid token")
+
+        with pytest.raises(AuthenticationError):
+            create_request.create_service_request(
+                service_desk_id="1",
+                request_type_id="10",
+                summary="Test",
+                description="Test"
+            )
+
+    def test_permission_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+
+        mock_jira_client.create_request.side_effect = PermissionError("Access denied")
+
+        with pytest.raises(PermissionError):
+            create_request.create_service_request(
+                service_desk_id="1",
+                request_type_id="10",
+                summary="Test",
+                description="Test"
+            )
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_jira_client.create_request.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            create_request.create_service_request(
+                service_desk_id="1",
+                request_type_id="10",
+                summary="Test",
+                description="Test"
+            )
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_jira_client.create_request.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            create_request.create_service_request(
+                service_desk_id="1",
+                request_type_id="10",
+                summary="Test",
+                description="Test"
+            )
+        assert exc_info.value.status_code == 500

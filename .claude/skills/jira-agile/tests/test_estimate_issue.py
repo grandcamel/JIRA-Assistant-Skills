@@ -18,6 +18,7 @@ sys.path.insert(0, str(scripts_path))
 
 import pytest
 from unittest.mock import Mock, patch
+import copy
 
 
 @pytest.mark.agile
@@ -144,15 +145,134 @@ class TestEstimateIssue:
         mock_jira_client.search_issues.assert_called_once()
 
 
+    @pytest.mark.xfail(reason="dry_run parameter not yet implemented in estimate_issue")
+    def test_estimate_dry_run(self, mock_jira_client):
+        """Test dry-run mode shows preview without making changes."""
+        from estimate_issue import estimate_issue
+
+        result = estimate_issue(
+            issue_keys=["PROJ-1", "PROJ-2"],
+            points=5,
+            dry_run=True,
+            client=mock_jira_client
+        )
+
+        # Verify dry-run response
+        assert result.get('dry_run') is True or result.get('would_update') == 2
+        # Verify NO actual update was called
+        mock_jira_client.update_issue.assert_not_called()
+
+
 @pytest.mark.agile
 @pytest.mark.unit
 class TestEstimateIssueCLI:
     """Test command-line interface for estimate_issue.py."""
 
-    def test_cli_single_issue(self, mock_jira_client):
-        """Test CLI with single issue."""
-        pass
+    def test_cli_main_exists(self):
+        """Test CLI main function exists and is callable."""
+        from estimate_issue import main
+        assert callable(main)
 
-    def test_cli_jql_query(self, mock_jira_client):
-        """Test CLI with JQL query."""
-        pass
+    def test_cli_help_output(self, capsys):
+        """Test that --help shows usage information."""
+        with patch('sys.argv', ['estimate_issue.py', '--help']):
+            from estimate_issue import main
+            try:
+                main()
+            except SystemExit:
+                pass  # --help causes SystemExit
+
+        captured = capsys.readouterr()
+        assert '--points' in captured.out or 'usage' in captured.out.lower()
+
+
+@pytest.mark.agile
+@pytest.mark.unit
+class TestEstimateIssueErrorHandling:
+    """Test API error handling scenarios for estimate_issue."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        from estimate_issue import estimate_issue
+
+        mock_jira_client.update_issue.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        with pytest.raises(AuthenticationError):
+            estimate_issue(
+                issue_keys=["PROJ-1"],
+                points=5,
+                client=mock_jira_client
+            )
+
+    def test_forbidden_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        from estimate_issue import estimate_issue
+
+        mock_jira_client.update_issue.side_effect = PermissionError(
+            "Insufficient permissions"
+        )
+
+        with pytest.raises(PermissionError):
+            estimate_issue(
+                issue_keys=["PROJ-1"],
+                points=5,
+                client=mock_jira_client
+            )
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        from estimate_issue import estimate_issue
+
+        mock_jira_client.update_issue.side_effect = JiraError(
+            "Rate limit exceeded",
+            status_code=429
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            estimate_issue(
+                issue_keys=["PROJ-1"],
+                points=5,
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+        from estimate_issue import estimate_issue
+
+        mock_jira_client.update_issue.side_effect = JiraError(
+            "Internal server error",
+            status_code=500
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            estimate_issue(
+                issue_keys=["PROJ-1"],
+                points=5,
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 500
+
+    def test_issue_not_found(self, mock_jira_client):
+        """Test error when issue doesn't exist."""
+        from error_handler import JiraError
+        from estimate_issue import estimate_issue
+
+        mock_jira_client.update_issue.side_effect = JiraError(
+            "Issue does not exist",
+            status_code=404
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            estimate_issue(
+                issue_keys=["PROJ-999"],
+                points=5,
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 404

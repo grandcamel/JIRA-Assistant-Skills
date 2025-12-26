@@ -8,6 +8,8 @@ import pytest
 import uuid
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestComponentCRUD:
     """Tests for component create, read, update, delete operations."""
 
@@ -189,6 +191,8 @@ class TestComponentCRUD:
             jira_client.get_component(created['id'])
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestComponentIssueManagement:
     """Tests for managing component assignments."""
 
@@ -345,6 +349,8 @@ class TestComponentIssueManagement:
             jira_client.delete_component(component2['id'])
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestComponentWorkflow:
     """Tests for complete component lifecycle workflows."""
 

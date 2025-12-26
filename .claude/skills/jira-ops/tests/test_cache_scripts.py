@@ -11,11 +11,10 @@ import pytest
 import json
 import sys
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-import subprocess
+from unittest.mock import Mock, patch
 
 # Add shared lib to path (use resolve for absolute paths)
-shared_lib_path = str(Path(__file__).resolve().parent.parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(Path(__file__).resolve().parent.parent.parent / 'shared' / 'scripts' / 'lib')
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
@@ -27,6 +26,8 @@ if scripts_path not in sys.path:
 from cache import JiraCache
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheStatusScript:
     """Tests for cache_status.py script."""
 
@@ -74,6 +75,8 @@ class TestCacheStatusScript:
             assert "total_size_bytes" in data
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheClearScript:
     """Tests for cache_clear.py script."""
 
@@ -158,6 +161,8 @@ class TestCacheClearScript:
         assert cache2.get("issue1", category="issue") is not None
 
 
+@pytest.mark.ops
+@pytest.mark.unit
 class TestCacheWarmScript:
     """Tests for cache_warm.py script."""
 

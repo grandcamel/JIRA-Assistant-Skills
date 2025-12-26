@@ -19,7 +19,7 @@ sys.path.insert(0, str(shared_lib_path))
 sys.path.insert(0, str(scripts_path))
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 
 @pytest.mark.agile
@@ -164,14 +164,106 @@ class TestGetSprint:
 class TestGetSprintCLI:
     """Test command-line interface for get_sprint.py."""
 
-    @patch('sys.argv', ['get_sprint.py', '456'])
-    def test_cli_basic(self, mock_jira_client, sample_sprint_response):
-        """Test CLI with sprint ID."""
-        # from get_sprint import main
-        pass
+    def test_cli_main_exists(self):
+        """Test CLI main function exists and is callable."""
+        from get_sprint import main
+        assert callable(main)
 
-    @patch('sys.argv', ['get_sprint.py', '--board', '123', '--active'])
-    def test_cli_active_sprint(self, mock_jira_client, sample_sprint_response):
-        """Test CLI to get active sprint."""
-        # from get_sprint import main
-        pass
+    def test_cli_help_output(self, capsys):
+        """Test that --help shows usage information."""
+        with patch('sys.argv', ['get_sprint.py', '--help']):
+            from get_sprint import main
+            try:
+                main()
+            except SystemExit:
+                pass  # --help causes SystemExit
+
+        captured = capsys.readouterr()
+        assert 'sprint' in captured.out.lower() or 'usage' in captured.out.lower()
+
+
+@pytest.mark.agile
+@pytest.mark.unit
+class TestGetSprintErrorHandling:
+    """Test API error handling scenarios for get_sprint."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        from get_sprint import get_sprint
+
+        mock_jira_client.get_sprint.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        with pytest.raises(AuthenticationError):
+            get_sprint(
+                sprint_id=456,
+                client=mock_jira_client
+            )
+
+    def test_forbidden_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        from get_sprint import get_sprint
+
+        mock_jira_client.get_sprint.side_effect = PermissionError(
+            "Insufficient permissions"
+        )
+
+        with pytest.raises(PermissionError):
+            get_sprint(
+                sprint_id=456,
+                client=mock_jira_client
+            )
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        from get_sprint import get_sprint
+
+        mock_jira_client.get_sprint.side_effect = JiraError(
+            "Rate limit exceeded",
+            status_code=429
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            get_sprint(
+                sprint_id=456,
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+        from get_sprint import get_sprint
+
+        mock_jira_client.get_sprint.side_effect = JiraError(
+            "Internal server error",
+            status_code=500
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            get_sprint(
+                sprint_id=456,
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 500
+
+    def test_sprint_not_found(self, mock_jira_client):
+        """Test error when sprint doesn't exist."""
+        from error_handler import JiraError
+        from get_sprint import get_sprint
+
+        mock_jira_client.get_sprint.side_effect = JiraError(
+            "Sprint does not exist",
+            status_code=404
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            get_sprint(
+                sprint_id=999,
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 404

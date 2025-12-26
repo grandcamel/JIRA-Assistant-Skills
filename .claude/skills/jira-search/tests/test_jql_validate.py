@@ -3,8 +3,6 @@ Tests for jql_validate.py - Validate JQL syntax.
 """
 
 import pytest
-import json
-from unittest.mock import MagicMock, patch
 import sys
 from pathlib import Path
 
@@ -12,6 +10,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.search
+@pytest.mark.unit
 class TestValidateJQL:
     """Tests for JQL validation."""
 
@@ -127,3 +127,59 @@ class TestValidateJQL:
         # Test suggestion function
         suggestion = suggest_correction('statuss', ['status', 'summary', 'sprint'])
         assert suggestion == 'status'
+
+
+@pytest.mark.search
+@pytest.mark.unit
+class TestJqlValidateErrorHandling:
+    """Test API error handling scenarios for jql_validate."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        mock_jira_client.parse_jql.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        from jql_validate import validate_jql
+
+        with pytest.raises(AuthenticationError):
+            validate_jql(mock_jira_client, 'project = PROJ')
+
+    def test_forbidden_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        mock_jira_client.parse_jql.side_effect = PermissionError(
+            "You don't have permission to access this resource"
+        )
+
+        from jql_validate import validate_jql
+
+        with pytest.raises(PermissionError):
+            validate_jql(mock_jira_client, 'project = PROJ')
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        mock_jira_client.parse_jql.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from jql_validate import validate_jql
+
+        with pytest.raises(JiraError) as exc_info:
+            validate_jql(mock_jira_client, 'project = PROJ')
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 internal server error."""
+        from error_handler import JiraError
+        mock_jira_client.parse_jql.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from jql_validate import validate_jql
+
+        with pytest.raises(JiraError) as exc_info:
+            validate_jql(mock_jira_client, 'project = PROJ')
+        assert exc_info.value.status_code == 500

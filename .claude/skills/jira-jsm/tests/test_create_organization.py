@@ -5,7 +5,6 @@ Tests for create_organization.py script.
 import pytest
 from unittest.mock import Mock, patch
 import sys
-import json
 from pathlib import Path
 
 scripts_path = str(Path(__file__).parent.parent / 'scripts')

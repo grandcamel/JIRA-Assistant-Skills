@@ -16,6 +16,8 @@ if scripts_path not in sys.path:
 import create_asset
 
 
+@pytest.mark.jsm
+@pytest.mark.unit
 class TestCreateAsset:
     """Test asset creation functionality."""
 
@@ -70,9 +72,10 @@ class TestCreateAsset:
 
     def test_create_asset_error(self, mock_jira_client):
         """Test error when creation fails."""
+        from error_handler import JiraError
         mock_jira_client.has_assets_license.return_value = True
-        mock_jira_client.create_asset.side_effect = Exception("Creation failed")
+        mock_jira_client.create_asset.side_effect = JiraError("Creation failed")
 
         with patch('create_asset.get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(Exception, match="Creation failed"):
+            with pytest.raises(JiraError, match="Creation failed"):
                 create_asset.create_asset(5, {"IP Address": "192.168.1.105"})

@@ -6,7 +6,7 @@ including the new sprint integration feature.
 """
 
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 # Import the module under test
 import transition_issue
@@ -14,6 +14,8 @@ from transition_issue import find_transition_by_name, transition_issue as do_tra
 from error_handler import ValidationError
 
 
+@pytest.mark.lifecycle
+@pytest.mark.unit
 class TestFindTransitionByName:
     """Tests for transition name matching logic."""
 
@@ -51,6 +53,8 @@ class TestFindTransitionByName:
         assert "Ambiguous" in str(exc_info.value)
 
 
+@pytest.mark.lifecycle
+@pytest.mark.unit
 class TestTransitionIssue:
     """Tests for the transition_issue function."""
 
@@ -115,6 +119,8 @@ class TestTransitionIssue:
         assert "not available" in str(exc_info.value)
 
 
+@pytest.mark.lifecycle
+@pytest.mark.unit
 class TestTransitionWithSprint:
     """Tests for the sprint integration feature."""
 
@@ -190,3 +196,61 @@ class TestTransitionWithSprint:
 
         # Verify order: transition first, then sprint move
         assert call_order == ['transition', 'sprint_move']
+
+
+@pytest.mark.lifecycle
+@pytest.mark.unit
+class TestTransitionIssueErrorHandling:
+    """Test API error handling for transition_issue."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        mock_jira_client.get_transitions.side_effect = AuthenticationError("Invalid token")
+
+        with patch.object(transition_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(AuthenticationError):
+                do_transition(issue_key="PROJ-123", transition_name="In Progress")
+
+    def test_permission_error(self, mock_jira_client, sample_transitions):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        mock_jira_client.get_transitions.return_value = sample_transitions
+        mock_jira_client.transition_issue.side_effect = PermissionError("Cannot transition")
+
+        with patch.object(transition_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(PermissionError):
+                do_transition(issue_key="PROJ-123", transition_name="In Progress")
+
+    def test_not_found_error(self, mock_jira_client):
+        """Test handling of 404 when issue doesn't exist."""
+        from error_handler import NotFoundError
+        mock_jira_client.get_transitions.side_effect = NotFoundError("Issue", "PROJ-999")
+
+        with patch.object(transition_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(NotFoundError):
+                do_transition(issue_key="PROJ-999", transition_name="In Progress")
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        mock_jira_client.get_transitions.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        with patch.object(transition_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(JiraError) as exc_info:
+                do_transition(issue_key="PROJ-123", transition_name="In Progress")
+            assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+        mock_jira_client.get_transitions.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        with patch.object(transition_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(JiraError) as exc_info:
+                do_transition(issue_key="PROJ-123", transition_name="In Progress")
+            assert exc_info.value.status_code == 500

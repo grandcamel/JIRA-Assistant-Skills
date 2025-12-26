@@ -16,6 +16,8 @@ if scripts_path not in sys.path:
 import link_asset
 
 
+@pytest.mark.jsm
+@pytest.mark.unit
 class TestLinkAsset:
     """Test asset linking functionality."""
 
@@ -51,27 +53,30 @@ class TestLinkAsset:
 
     def test_link_asset_invalid_request(self, mock_jira_client):
         """Test error when request doesn't exist."""
+        from error_handler import NotFoundError
         mock_jira_client.has_assets_license.return_value = True
-        mock_jira_client.link_asset_to_request.side_effect = Exception("Request not found")
+        mock_jira_client.link_asset_to_request.side_effect = NotFoundError("Request not found")
 
         with patch('link_asset.get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(Exception, match="Request not found"):
+            with pytest.raises(NotFoundError, match="Request not found"):
                 link_asset.link_asset(10001, "REQ-999")
 
     def test_link_asset_invalid_asset(self, mock_jira_client):
         """Test error when asset doesn't exist."""
+        from error_handler import NotFoundError
         mock_jira_client.has_assets_license.return_value = True
-        mock_jira_client.link_asset_to_request.side_effect = Exception("Asset not found")
+        mock_jira_client.link_asset_to_request.side_effect = NotFoundError("Asset not found")
 
         with patch('link_asset.get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(Exception, match="Asset not found"):
+            with pytest.raises(NotFoundError, match="Asset not found"):
                 link_asset.link_asset(999999, "REQ-123")
 
     def test_link_asset_error(self, mock_jira_client):
         """Test error handling during link operation."""
+        from error_handler import JiraError
         mock_jira_client.has_assets_license.return_value = True
-        mock_jira_client.link_asset_to_request.side_effect = Exception("Link failed")
+        mock_jira_client.link_asset_to_request.side_effect = JiraError("Link failed")
 
         with patch('link_asset.get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(Exception, match="Link failed"):
+            with pytest.raises(JiraError, match="Link failed"):
                 link_asset.link_asset(10001, "REQ-123")

@@ -124,7 +124,7 @@ def test_list_approvals_empty(mock_jira_client, capsys):
 
     assert result == 0
     captured = capsys.readouterr()
-    assert 'No pending approvals' in captured.out or '0 pending' in captured.out
+    assert 'No pending approvals' in captured.out
 
 
 def test_format_text_output(mock_jira_client, capsys):

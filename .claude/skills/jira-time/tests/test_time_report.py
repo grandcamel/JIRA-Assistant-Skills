@@ -5,10 +5,9 @@ Tests generating time reports from JIRA worklogs.
 """
 
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 import sys
 from pathlib import Path
-from datetime import datetime, timedelta
 
 # Add paths for imports
 scripts_path = str(Path(__file__).parent.parent / 'scripts')
@@ -60,6 +59,8 @@ def sample_worklogs_for_report():
     ]
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestTimeReportFiltering:
     """Tests for filtering worklogs."""
 
@@ -113,6 +114,8 @@ class TestTimeReportFiltering:
         assert len(result['entries']) == 2
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestTimeReportGrouping:
     """Tests for grouping worklogs."""
 
@@ -166,6 +169,8 @@ class TestTimeReportGrouping:
         assert result['group_by'] == 'user'
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestTimeReportOutput:
     """Tests for output formatting."""
 
@@ -199,6 +204,8 @@ class TestTimeReportOutput:
         assert result['entry_count'] == 3
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestTimeReportEmpty:
     """Tests for empty results."""
 
@@ -212,3 +219,61 @@ class TestTimeReportEmpty:
         assert result['total_seconds'] == 0
         assert result['entry_count'] == 0
         assert result['entries'] == []
+
+
+@pytest.mark.time
+@pytest.mark.unit
+class TestTimeReportErrors:
+    """Tests for error handling."""
+
+    def test_report_authentication_error_401(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.search_issues.side_effect = AuthenticationError("Invalid token")
+
+        from time_report import generate_report
+
+        with pytest.raises(AuthenticationError):
+            generate_report(mock_jira_client, project='PROJ')
+
+    def test_report_permission_denied_403(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+
+        mock_jira_client.search_issues.side_effect = PermissionError(
+            "You do not have permission to search issues"
+        )
+
+        from time_report import generate_report
+
+        with pytest.raises(PermissionError):
+            generate_report(mock_jira_client, project='PROJ')
+
+    def test_report_rate_limit_error_429(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_jira_client.search_issues.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from time_report import generate_report
+
+        with pytest.raises(JiraError) as exc_info:
+            generate_report(mock_jira_client, project='PROJ')
+        assert exc_info.value.status_code == 429
+
+    def test_report_server_error_500(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_jira_client.search_issues.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from time_report import generate_report
+
+        with pytest.raises(JiraError) as exc_info:
+            generate_report(mock_jira_client, project='PROJ')
+        assert exc_info.value.status_code == 500

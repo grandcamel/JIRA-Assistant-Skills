@@ -3,7 +3,7 @@ Tests for comment visibility (internal vs external comments).
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 import sys
 from pathlib import Path
 
@@ -11,6 +11,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.collaborate
+@pytest.mark.unit
 class TestCommentVisibility:
     """Tests for adding comments with visibility restrictions."""
 
@@ -138,3 +140,87 @@ class TestCommentVisibility:
                 visibility_value='InvalidRole',
                 profile=None
             )
+
+
+@pytest.mark.collaborate
+@pytest.mark.unit
+class TestCommentVisibilityErrorHandling:
+    """Test API error handling scenarios for comment visibility."""
+
+    @patch('add_comment.get_jira_client')
+    def test_authentication_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.add_comment_with_visibility.side_effect = AuthenticationError("Invalid API token")
+
+        from add_comment import add_comment_with_visibility
+
+        with pytest.raises(AuthenticationError):
+            add_comment_with_visibility(
+                'PROJ-123',
+                'Test comment',
+                visibility_type='role',
+                visibility_value='Administrators',
+                profile=None
+            )
+
+    @patch('add_comment.get_jira_client')
+    def test_permission_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.add_comment_with_visibility.side_effect = PermissionError("No permission to add comments")
+
+        from add_comment import add_comment_with_visibility
+
+        with pytest.raises(PermissionError):
+            add_comment_with_visibility(
+                'PROJ-123',
+                'Test comment',
+                visibility_type='role',
+                visibility_value='Administrators',
+                profile=None
+            )
+
+    @patch('add_comment.get_jira_client')
+    def test_rate_limit_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.add_comment_with_visibility.side_effect = JiraError("Rate limit exceeded", status_code=429)
+
+        from add_comment import add_comment_with_visibility
+
+        with pytest.raises(JiraError) as exc_info:
+            add_comment_with_visibility(
+                'PROJ-123',
+                'Test comment',
+                visibility_type='role',
+                visibility_value='Administrators',
+                profile=None
+            )
+        assert exc_info.value.status_code == 429
+
+    @patch('add_comment.get_jira_client')
+    def test_server_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.add_comment_with_visibility.side_effect = JiraError("Internal server error", status_code=500)
+
+        from add_comment import add_comment_with_visibility
+
+        with pytest.raises(JiraError) as exc_info:
+            add_comment_with_visibility(
+                'PROJ-123',
+                'Test comment',
+                visibility_type='role',
+                visibility_value='Administrators',
+                profile=None
+            )
+        assert exc_info.value.status_code == 500

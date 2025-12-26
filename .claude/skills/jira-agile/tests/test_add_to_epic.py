@@ -19,7 +19,7 @@ sys.path.insert(0, str(shared_lib_path))
 sys.path.insert(0, str(scripts_path))
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 
 @pytest.mark.agile
@@ -192,20 +192,95 @@ class TestAddToEpic:
 class TestAddToEpicCLI:
     """Test command-line interface for add_to_epic.py."""
 
-    @patch('sys.argv', ['add_to_epic.py', '--epic', 'PROJ-100', '--issues', 'PROJ-101,PROJ-102'])
-    def test_cli_multiple_issues(self, mock_jira_client, sample_epic_response):
-        """Test CLI with multiple issues."""
-        # This will fail initially - tests the CLI parsing
+    def test_cli_main_exists(self):
+        """Test CLI main function exists and is callable."""
+        from add_to_epic import main
+        assert callable(main)
+
+    def test_cli_help_output(self, capsys):
+        """Test that --help shows usage information."""
+        with patch('sys.argv', ['add_to_epic.py', '--help']):
+            from add_to_epic import main
+            try:
+                main()
+            except SystemExit:
+                pass  # --help causes SystemExit
+
+        captured = capsys.readouterr()
+        assert '--epic' in captured.out or 'usage' in captured.out.lower()
+
+
+@pytest.mark.agile
+@pytest.mark.unit
+class TestAddToEpicErrorHandling:
+    """Test API error handling scenarios for add_to_epic."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        from add_to_epic import add_to_epic
+
+        mock_jira_client.get_issue.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        with pytest.raises(AuthenticationError):
+            add_to_epic(
+                epic_key="PROJ-100",
+                issue_keys=["PROJ-101"],
+                client=mock_jira_client
+            )
+
+    def test_forbidden_error(self, mock_jira_client, sample_epic_response):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        from add_to_epic import add_to_epic
+
         mock_jira_client.get_issue.return_value = sample_epic_response
-        mock_jira_client.update_issue.return_value = None
+        mock_jira_client.update_issue.side_effect = PermissionError(
+            "Insufficient permissions"
+        )
 
-        # from add_to_epic import main
-        # This is a placeholder - will implement when script exists
-        pass
+        # add_to_epic tracks failures rather than raising for individual issues
+        result = add_to_epic(
+            epic_key="PROJ-100",
+            issue_keys=["PROJ-101"],
+            client=mock_jira_client
+        )
+        assert result['failed'] == 1
 
-    @patch('sys.argv', ['add_to_epic.py', '--epic', 'PROJ-100', '--jql', 'project=PROJ'])
-    def test_cli_with_jql(self, mock_jira_client, sample_epic_response):
-        """Test CLI with JQL query instead of issue keys."""
-        # This will fail initially
-        # from add_to_epic import main
-        pass
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        from add_to_epic import add_to_epic
+
+        mock_jira_client.get_issue.side_effect = JiraError(
+            "Rate limit exceeded",
+            status_code=429
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            add_to_epic(
+                epic_key="PROJ-100",
+                issue_keys=["PROJ-101"],
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+        from add_to_epic import add_to_epic
+
+        mock_jira_client.get_issue.side_effect = JiraError(
+            "Internal server error",
+            status_code=500
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            add_to_epic(
+                epic_key="PROJ-100",
+                issue_keys=["PROJ-101"],
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 500

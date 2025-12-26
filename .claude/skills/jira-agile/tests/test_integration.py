@@ -18,7 +18,7 @@ sys.path.insert(0, str(shared_lib_path))
 sys.path.insert(0, str(scripts_path))
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 EPIC_LINK_FIELD = 'customfield_10014'
 STORY_POINTS_FIELD = 'customfield_10016'

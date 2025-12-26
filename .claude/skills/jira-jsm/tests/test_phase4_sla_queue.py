@@ -16,7 +16,7 @@ import pytest
 import sys
 import json
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 # Add shared lib to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'shared' / 'scripts' / 'lib'))
@@ -285,7 +285,8 @@ def test_check_paused_sla():
 
 def test_check_multiple_breaches(mock_breached_sla):
     """Test request with multiple breached SLAs."""
-    breached_sla2 = mock_breached_sla.copy()
+    import copy
+    breached_sla2 = copy.deepcopy(mock_breached_sla)
     breached_sla2['id'] = "3"
     breached_sla2['name'] = "Another Breached SLA"
 

@@ -10,6 +10,8 @@ import tempfile
 import os
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestComments:
     """Tests for comment operations."""
 
@@ -121,6 +123,8 @@ class TestComments:
             jira_client.get_comment(test_issue['key'], comment_id)
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestAttachments:
     """Tests for attachment operations."""
 
@@ -233,6 +237,8 @@ class TestAttachments:
                 os.unlink(download_path)
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestWatchers:
     """Tests for watcher operations."""
 
@@ -295,6 +301,8 @@ class TestWatchers:
         assert current_user_id not in watcher_ids
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestUserSearch:
     """Tests for user search operations."""
 
@@ -328,6 +336,8 @@ class TestUserSearch:
         assert len(user_id) > 0
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestNotifications:
     """Tests for notification operations.
 
@@ -363,46 +373,69 @@ class TestNotifications:
             raise
 
     def test_notify_specific_user(self, jira_client, test_issue):
-        """Test sending notification to a specific user."""
+        """
+        Test sending notification to a specific user.
+
+        Note: JIRA's notify API returns empty on success. We verify success
+        by the absence of exceptions. Email delivery cannot be verified via API.
+        """
         current_user_id = jira_client.get_current_user_id()
 
-        jira_client.notify_issue(
-            test_issue['key'],
-            subject="Test notification to specific user",
-            text_body="User-specific notification test",
-            to={'users': [{'accountId': current_user_id}]}
-        )
-
-        assert True
+        # This should not raise an exception
+        try:
+            jira_client.notify_issue(
+                test_issue['key'],
+                subject="Test notification to specific user",
+                text_body="User-specific notification test",
+                to={'users': [{'accountId': current_user_id}]}
+            )
+        except Exception as e:
+            pytest.fail(f"Notification failed unexpectedly: {e}")
+        # Success: API call completed without exception
 
     def test_notify_with_html_body(self, jira_client, test_issue):
-        """Test notification with HTML body content."""
+        """
+        Test notification with HTML body content.
+
+        Note: JIRA's notify API returns empty on success. We verify success
+        by the absence of exceptions.
+        """
         current_user_id = jira_client.get_current_user_id()
 
-        jira_client.notify_issue(
-            test_issue['key'],
-            subject="HTML notification test",
-            html_body="<p>This is a <strong>test</strong> notification.</p>",
-            to={'users': [{'accountId': current_user_id}]}
-        )
-
-        assert True
+        try:
+            jira_client.notify_issue(
+                test_issue['key'],
+                subject="HTML notification test",
+                html_body="<p>This is a <strong>test</strong> notification.</p>",
+                to={'users': [{'accountId': current_user_id}]}
+            )
+        except Exception as e:
+            pytest.fail(f"Notification with HTML body failed unexpectedly: {e}")
+        # Success: API call completed without exception
 
     def test_notify_with_custom_subject(self, jira_client, test_issue):
-        """Test notification with custom subject."""
-        import uuid
+        """
+        Test notification with custom subject.
+
+        Note: JIRA's notify API returns empty on success. We verify success
+        by the absence of exceptions.
+        """
         current_user_id = jira_client.get_current_user_id()
 
-        jira_client.notify_issue(
-            test_issue['key'],
-            subject=f"Custom Subject {uuid.uuid4().hex[:8]}",
-            text_body="Test body",
-            to={'users': [{'accountId': current_user_id}]}
-        )
+        try:
+            jira_client.notify_issue(
+                test_issue['key'],
+                subject=f"Custom Subject {uuid.uuid4().hex[:8]}",
+                text_body="Test body",
+                to={'users': [{'accountId': current_user_id}]}
+            )
+        except Exception as e:
+            pytest.fail(f"Notification with custom subject failed unexpectedly: {e}")
+        # Success: API call completed without exception
 
-        assert True
 
-
+@pytest.mark.integration
+@pytest.mark.shared
 class TestActivityHistory:
     """Tests for activity/changelog operations."""
 

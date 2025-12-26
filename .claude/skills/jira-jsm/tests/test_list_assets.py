@@ -17,6 +17,8 @@ if scripts_path not in sys.path:
 import list_assets
 
 
+@pytest.mark.jsm
+@pytest.mark.unit
 class TestListAssets:
     """Test asset listing functionality."""
 

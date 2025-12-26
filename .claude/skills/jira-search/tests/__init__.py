@@ -1,0 +1,1 @@
+"""jira-search tests package."""

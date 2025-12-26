@@ -4,7 +4,6 @@ Tests for bulk_assign.py - TDD approach.
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 import pytest
 
 # Add scripts to path
@@ -12,6 +11,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkAssignToUser:
     """Test assigning multiple issues to specific user."""
 
@@ -36,6 +37,8 @@ class TestBulkAssignToUser:
         assert mock_jira_client.assign_issue.call_count == 3
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkAssignToSelf:
     """Test assigning to self."""
 
@@ -60,6 +63,8 @@ class TestBulkAssignToSelf:
         mock_jira_client.get_current_user_id.assert_called_once()
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkAssignUnassign:
     """Test removing assignee (unassign)."""
 
@@ -85,6 +90,8 @@ class TestBulkAssignUnassign:
             assert call[0][1] is None or call[1].get('account_id') is None
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkAssignByJql:
     """Test assigning issues matching JQL."""
 
@@ -112,6 +119,8 @@ class TestBulkAssignByJql:
         mock_jira_client.search_issues.assert_called_once()
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkAssignWithEmail:
     """Test resolving user by email."""
 
@@ -137,6 +146,8 @@ class TestBulkAssignWithEmail:
         assert result['success'] == 1
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkAssignDryRun:
     """Test dry-run preview."""
 
@@ -163,18 +174,25 @@ class TestBulkAssignDryRun:
         mock_jira_client.assign_issue.assert_not_called()
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkAssignInvalidUser:
     """Test error handling for invalid user."""
 
     def test_bulk_assign_invalid_user(self, mock_jira_client):
-        """Test error handling for invalid user."""
+        """Test error handling when assignee cannot be found."""
         from bulk_assign import bulk_assign
         from error_handler import JiraError
 
-        # Setup mock - user lookup fails
+        # Setup mock - user lookup returns empty, script treats email as account ID
         mock_jira_client.get.return_value = []  # No user found
 
-        # Execute
+        # The actual API call will fail when trying to assign with invalid account ID
+        mock_jira_client.assign_issue.side_effect = JiraError(
+            "User not found", status_code=404
+        )
+
+        # Execute - the assign operation should fail
         result = bulk_assign(
             client=mock_jira_client,
             issue_keys=['PROJ-1'],
@@ -182,10 +200,13 @@ class TestBulkAssignInvalidUser:
             dry_run=False
         )
 
-        # Verify failure
-        assert result['failed'] >= 0  # Either fails or handles gracefully
+        # Verify the operation failed
+        assert result['failed'] == 1
+        assert result['success'] == 0
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkAssignPartialFailure:
     """Test partial failure handling."""
 
@@ -215,6 +236,8 @@ class TestBulkAssignPartialFailure:
         assert result['failed'] == 1
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkAssignProgressCallback:
     """Test progress reporting."""
 
@@ -247,3 +270,104 @@ class TestBulkAssignProgressCallback:
 
         # Verify progress was reported
         assert len(progress_calls) == 2
+
+
+@pytest.mark.bulk
+@pytest.mark.unit
+class TestBulkAssignApiErrors:
+    """Test API error handling scenarios."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized error."""
+        from bulk_assign import bulk_assign
+        from error_handler import AuthenticationError
+
+        mock_jira_client.assign_issue.side_effect = AuthenticationError("Invalid token")
+
+        result = bulk_assign(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            assignee='user-123',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+        assert 'PROJ-1' in result.get('errors', {})
+
+    def test_permission_denied_error(self, mock_jira_client):
+        """Test handling of 403 forbidden error."""
+        from bulk_assign import bulk_assign
+        from error_handler import JiraError
+
+        mock_jira_client.assign_issue.side_effect = JiraError(
+            "You do not have permission", status_code=403
+        )
+
+        result = bulk_assign(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            assignee='user-123',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+        assert 'PROJ-1' in result.get('errors', {})
+
+    def test_not_found_error(self, mock_jira_client):
+        """Test handling of 404 not found error."""
+        from bulk_assign import bulk_assign
+        from error_handler import JiraError
+
+        mock_jira_client.assign_issue.side_effect = JiraError(
+            "Issue not found", status_code=404
+        )
+
+        result = bulk_assign(
+            client=mock_jira_client,
+            issue_keys=['PROJ-999'],
+            assignee='user-123',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit error."""
+        from bulk_assign import bulk_assign
+        from error_handler import JiraError
+
+        mock_jira_client.assign_issue.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        result = bulk_assign(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            assignee='user-123',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 internal server error."""
+        from bulk_assign import bulk_assign
+        from error_handler import JiraError
+
+        mock_jira_client.assign_issue.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        result = bulk_assign(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            assignee='user-123',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0

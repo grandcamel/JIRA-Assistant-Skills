@@ -19,6 +19,8 @@ from bulk_set_priority import bulk_set_priority
 from bulk_clone import bulk_clone
 
 
+@pytest.mark.bulk
+@pytest.mark.integration
 class TestBulkTransition:
     """Tests for bulk transition operations."""
 
@@ -31,10 +33,9 @@ class TestBulkTransition:
         )
 
         assert result['total'] == 1
-        assert result['successful'] == 1
+        assert result['success'] == 1
         assert result['failed'] == 0
-        assert len(result['results']) == 1
-        assert result['results'][0]['status'] == 'success'
+        assert len(result['processed']) == 1
 
         # Verify issue is in Done status
         issue = jira_client.get_issue(single_issue['key'])
@@ -51,7 +52,7 @@ class TestBulkTransition:
         )
 
         assert result['total'] == 5
-        assert result['successful'] == 5
+        assert result['success'] == 5
         assert result['failed'] == 0
 
         # Verify all issues are in Done status
@@ -70,7 +71,7 @@ class TestBulkTransition:
             max_issues=10
         )
 
-        assert result['successful'] >= 1
+        assert result['success'] >= 1
         assert result['failed'] == 0
 
     def test_bulk_transition_dry_run(self, jira_client, test_project, bulk_issues):
@@ -109,7 +110,7 @@ class TestBulkTransition:
             comment=comment_text
         )
 
-        assert result['successful'] == 1
+        assert result['success'] == 1
 
         # Verify comment was added
         comments = jira_client.get_comments(single_issue['key'])
@@ -125,6 +126,8 @@ class TestBulkTransition:
         assert any(comment_text in body for body in comment_bodies)
 
 
+@pytest.mark.bulk
+@pytest.mark.integration
 class TestBulkAssign:
     """Tests for bulk assignment operations."""
 
@@ -139,7 +142,7 @@ class TestBulkAssign:
         )
 
         assert result['total'] == 3
-        assert result['successful'] == 3
+        assert result['success'] == 3
         assert result['failed'] == 0
 
         # Verify assignment
@@ -167,7 +170,7 @@ class TestBulkAssign:
             unassign=True
         )
 
-        assert result['successful'] == 3
+        assert result['success'] == 3
 
         # Verify unassignment
         for key in issue_keys:
@@ -185,7 +188,7 @@ class TestBulkAssign:
             max_issues=10
         )
 
-        assert result['successful'] >= 1
+        assert result['success'] >= 1
 
     def test_bulk_assign_dry_run(self, jira_client, test_project, bulk_issues):
         """Test dry run mode."""
@@ -207,6 +210,8 @@ class TestBulkAssign:
             assert issue['fields']['assignee'] is None
 
 
+@pytest.mark.bulk
+@pytest.mark.integration
 class TestBulkSetPriority:
     """Tests for bulk priority operations."""
 
@@ -221,7 +226,7 @@ class TestBulkSetPriority:
         )
 
         assert result['total'] == 3
-        assert result['successful'] == 3
+        assert result['success'] == 3
 
         # Verify priority
         for key in issue_keys:
@@ -238,7 +243,7 @@ class TestBulkSetPriority:
             priority='Low'
         )
 
-        assert result['successful'] == 2
+        assert result['success'] == 2
 
         for key in issue_keys:
             issue = jira_client.get_issue(key)
@@ -255,7 +260,7 @@ class TestBulkSetPriority:
             max_issues=10
         )
 
-        assert result['successful'] >= 1
+        assert result['success'] >= 1
 
     def test_bulk_set_priority_dry_run(self, jira_client, test_project, bulk_issues):
         """Test dry run mode."""
@@ -282,6 +287,8 @@ class TestBulkSetPriority:
             assert issue['fields']['priority']['name'] == original_priorities[key]
 
 
+@pytest.mark.bulk
+@pytest.mark.integration
 class TestBulkClone:
     """Tests for bulk clone operations."""
 
@@ -293,11 +300,11 @@ class TestBulkClone:
         )
 
         assert result['total'] == 1
-        assert result['successful'] == 1
-        assert len(result['results']) == 1
+        assert result['success'] == 1
+        assert len(result['created_issues']) == 1
 
         # Get the cloned issue key
-        clone_key = result['results'][0].get('clone_key')
+        clone_key = result['created_issues'][0]
         assert clone_key is not None
         assert clone_key != single_issue['key']
 
@@ -318,15 +325,14 @@ class TestBulkClone:
         )
 
         assert result['total'] == 3
-        assert result['successful'] == 3
+        assert result['success'] == 3
 
         # Cleanup clones
-        for r in result['results']:
-            if r.get('clone_key'):
-                try:
-                    jira_client.delete_issue(r['clone_key'])
-                except Exception:
-                    pass
+        for clone_key in result['created_issues']:
+            try:
+                jira_client.delete_issue(clone_key)
+            except Exception:
+                pass
 
     def test_bulk_clone_with_prefix(self, jira_client, test_project, single_issue):
         """Test cloning with summary prefix."""
@@ -338,9 +344,9 @@ class TestBulkClone:
             prefix=prefix
         )
 
-        assert result['successful'] == 1
+        assert result['success'] == 1
 
-        clone_key = result['results'][0].get('clone_key')
+        clone_key = result['created_issues'][0]
         clone = jira_client.get_issue(clone_key)
         assert clone['fields']['summary'].startswith(prefix)
 
@@ -375,6 +381,8 @@ class TestBulkClone:
         assert after_count == before_count
 
 
+@pytest.mark.bulk
+@pytest.mark.integration
 class TestBulkOperationEdgeCases:
     """Tests for edge cases and error handling."""
 
@@ -387,7 +395,7 @@ class TestBulkOperationEdgeCases:
         )
 
         assert result['total'] == 0
-        assert result['successful'] == 0
+        assert result['success'] == 0
         assert result['failed'] == 0
 
     def test_invalid_issue_key(self, jira_client, test_project):
@@ -399,7 +407,7 @@ class TestBulkOperationEdgeCases:
         )
 
         assert result['failed'] == 1
-        assert result['successful'] == 0
+        assert result['success'] == 0
 
     def test_max_issues_limit(self, jira_client, test_project, bulk_issues):
         """Test max_issues parameter."""
@@ -413,7 +421,7 @@ class TestBulkOperationEdgeCases:
         )
 
         assert result['total'] == 2  # Limited to 2
-        assert result['successful'] == 2
+        assert result['success'] == 2
 
     def test_jql_with_no_results(self, jira_client, test_project):
         """Test JQL query with no matching issues."""

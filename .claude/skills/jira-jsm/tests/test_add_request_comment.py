@@ -67,13 +67,15 @@ def test_add_comment_with_body(mock_jira_client, sample_comment_public):
 
 def test_add_comment_multiline(mock_jira_client, sample_comment_public):
     """Test multiline comment text."""
+    import copy
     multiline_body = """Issue resolved.
 
 Root cause: Database connection timeout.
 Fix: Increased timeout to 30s."""
 
-    sample_comment_public['body'] = multiline_body
-    mock_jira_client.add_request_comment.return_value = sample_comment_public
+    comment_response = copy.deepcopy(sample_comment_public)
+    comment_response['body'] = multiline_body
+    mock_jira_client.add_request_comment.return_value = comment_response
 
     from add_request_comment import main
     with patch('add_request_comment.get_jira_client', return_value=mock_jira_client):

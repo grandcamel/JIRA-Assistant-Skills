@@ -2,8 +2,9 @@
 Tests for delete_component.py - Delete a project component.
 """
 
+import copy
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 import sys
 from pathlib import Path
 
@@ -11,6 +12,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.lifecycle
+@pytest.mark.unit
 class TestDeleteComponent:
     """Tests for deleting project components."""
 
@@ -113,3 +116,75 @@ class TestDeleteComponent:
         delete_component(component_id='10000', profile=None)
 
         mock_jira_client.delete_component.assert_called_once()
+
+
+@pytest.mark.lifecycle
+@pytest.mark.unit
+class TestDeleteComponentErrorHandling:
+    """Test API error handling for delete_component."""
+
+    @patch('delete_component.get_jira_client')
+    def test_authentication_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.delete_component.side_effect = AuthenticationError("Invalid token")
+
+        from delete_component import delete_component
+
+        with pytest.raises(AuthenticationError):
+            delete_component(component_id='10000', profile=None)
+
+    @patch('delete_component.get_jira_client')
+    def test_permission_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.delete_component.side_effect = PermissionError("Cannot delete component")
+
+        from delete_component import delete_component
+
+        with pytest.raises(PermissionError):
+            delete_component(component_id='10000', profile=None)
+
+    @patch('delete_component.get_jira_client')
+    def test_not_found_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 404 when component doesn't exist."""
+        from error_handler import NotFoundError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.delete_component.side_effect = NotFoundError("Component", "99999")
+
+        from delete_component import delete_component
+
+        with pytest.raises(NotFoundError):
+            delete_component(component_id='99999', profile=None)
+
+    @patch('delete_component.get_jira_client')
+    def test_rate_limit_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.delete_component.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from delete_component import delete_component
+
+        with pytest.raises(JiraError) as exc_info:
+            delete_component(component_id='10000', profile=None)
+        assert exc_info.value.status_code == 429
+
+    @patch('delete_component.get_jira_client')
+    def test_server_error(self, mock_get_client, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.delete_component.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from delete_component import delete_component
+
+        with pytest.raises(JiraError) as exc_info:
+            delete_component(component_id='10000', profile=None)
+        assert exc_info.value.status_code == 500

@@ -15,6 +15,8 @@ if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestSetEstimate:
     """Tests for setting time estimates."""
 
@@ -80,6 +82,8 @@ class TestSetEstimate:
         assert call_args[1]['remaining_estimate'] == '2d'
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestSetEstimateValidation:
     """Tests for input validation."""
 
@@ -100,6 +104,8 @@ class TestSetEstimateValidation:
             set_estimate(mock_jira_client, 'PROJ-123')
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestSetEstimateErrors:
     """Tests for error handling."""
 
@@ -115,3 +121,55 @@ class TestSetEstimateErrors:
 
         with pytest.raises(NotFoundError):
             set_estimate(mock_jira_client, 'PROJ-999', original_estimate='2d')
+
+    def test_set_estimate_authentication_error_401(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.set_time_tracking.side_effect = AuthenticationError("Invalid token")
+
+        from set_estimate import set_estimate
+
+        with pytest.raises(AuthenticationError):
+            set_estimate(mock_jira_client, 'PROJ-123', original_estimate='2d')
+
+    def test_set_estimate_permission_denied_403(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+
+        mock_jira_client.set_time_tracking.side_effect = PermissionError(
+            "You do not have permission to edit time tracking"
+        )
+
+        from set_estimate import set_estimate
+
+        with pytest.raises(PermissionError):
+            set_estimate(mock_jira_client, 'PROJ-123', original_estimate='2d')
+
+    def test_set_estimate_rate_limit_error_429(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_jira_client.set_time_tracking.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from set_estimate import set_estimate
+
+        with pytest.raises(JiraError) as exc_info:
+            set_estimate(mock_jira_client, 'PROJ-123', original_estimate='2d')
+        assert exc_info.value.status_code == 429
+
+    def test_set_estimate_server_error_500(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_jira_client.set_time_tracking.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from set_estimate import set_estimate
+
+        with pytest.raises(JiraError) as exc_info:
+            set_estimate(mock_jira_client, 'PROJ-123', original_estimate='2d')
+        assert exc_info.value.status_code == 500

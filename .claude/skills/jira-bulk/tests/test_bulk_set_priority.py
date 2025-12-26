@@ -4,7 +4,6 @@ Tests for bulk_set_priority.py - TDD approach.
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 import pytest
 
 # Add scripts to path
@@ -12,6 +11,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkPriorityByKeys:
     """Test setting priority on multiple issues by keys."""
 
@@ -36,6 +37,8 @@ class TestBulkPriorityByKeys:
         assert mock_jira_client.update_issue.call_count == 3
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkPriorityByJql:
     """Test setting priority via JQL filter."""
 
@@ -63,6 +66,8 @@ class TestBulkPriorityByJql:
         mock_jira_client.search_issues.assert_called_once()
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkPriorityInvalid:
     """Test error for invalid priority name."""
 
@@ -81,6 +86,8 @@ class TestBulkPriorityInvalid:
             )
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkPriorityDryRun:
     """Test dry-run preview."""
 
@@ -107,6 +114,8 @@ class TestBulkPriorityDryRun:
         mock_jira_client.update_issue.assert_not_called()
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkPriorityPartialFailure:
     """Test partial failure handling."""
 
@@ -136,6 +145,8 @@ class TestBulkPriorityPartialFailure:
         assert result['failed'] == 1
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkPriorityAllStandard:
     """Test all standard priorities work."""
 
@@ -159,6 +170,8 @@ class TestBulkPriorityAllStandard:
         assert result['success'] == 1
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkPriorityProgressCallback:
     """Test progress reporting."""
 
@@ -193,6 +206,8 @@ class TestBulkPriorityProgressCallback:
         assert len(progress_calls) == 3
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkPriorityNoIssues:
     """Test when no issues found."""
 
@@ -217,3 +232,104 @@ class TestBulkPriorityNoIssues:
         # Verify
         assert result['success'] == 0
         assert result['total'] == 0
+
+
+@pytest.mark.bulk
+@pytest.mark.unit
+class TestBulkPriorityApiErrors:
+    """Test API error handling scenarios."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized error."""
+        from bulk_set_priority import bulk_set_priority
+        from error_handler import AuthenticationError
+
+        mock_jira_client.update_issue.side_effect = AuthenticationError("Invalid token")
+
+        result = bulk_set_priority(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            priority='High',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+        assert 'PROJ-1' in result.get('errors', {})
+
+    def test_permission_denied_error(self, mock_jira_client):
+        """Test handling of 403 forbidden error."""
+        from bulk_set_priority import bulk_set_priority
+        from error_handler import JiraError
+
+        mock_jira_client.update_issue.side_effect = JiraError(
+            "You do not have permission", status_code=403
+        )
+
+        result = bulk_set_priority(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            priority='High',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+        assert 'PROJ-1' in result.get('errors', {})
+
+    def test_not_found_error(self, mock_jira_client):
+        """Test handling of 404 not found error."""
+        from bulk_set_priority import bulk_set_priority
+        from error_handler import JiraError
+
+        mock_jira_client.update_issue.side_effect = JiraError(
+            "Issue not found", status_code=404
+        )
+
+        result = bulk_set_priority(
+            client=mock_jira_client,
+            issue_keys=['PROJ-999'],
+            priority='High',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit error."""
+        from bulk_set_priority import bulk_set_priority
+        from error_handler import JiraError
+
+        mock_jira_client.update_issue.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        result = bulk_set_priority(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            priority='High',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 internal server error."""
+        from bulk_set_priority import bulk_set_priority
+        from error_handler import JiraError
+
+        mock_jira_client.update_issue.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        result = bulk_set_priority(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            priority='High',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0

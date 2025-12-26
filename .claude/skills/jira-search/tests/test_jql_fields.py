@@ -4,7 +4,6 @@ Tests for jql_fields.py - List JQL searchable fields and operators.
 
 import pytest
 import json
-from unittest.mock import MagicMock, patch
 import sys
 from pathlib import Path
 
@@ -12,6 +11,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.search
+@pytest.mark.unit
 class TestGetAllFields:
     """Tests for fetching all searchable fields."""
 
@@ -91,3 +92,59 @@ class TestGetAllFields:
         assert isinstance(parsed, list)
         assert len(parsed) == 7
         assert parsed[0]['value'] == 'assignee'
+
+
+@pytest.mark.search
+@pytest.mark.unit
+class TestJqlFieldsErrorHandling:
+    """Test API error handling scenarios for jql_fields."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        mock_jira_client.get_jql_autocomplete.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        from jql_fields import get_fields
+
+        with pytest.raises(AuthenticationError):
+            get_fields(mock_jira_client)
+
+    def test_forbidden_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        mock_jira_client.get_jql_autocomplete.side_effect = PermissionError(
+            "You don't have permission to access this resource"
+        )
+
+        from jql_fields import get_fields
+
+        with pytest.raises(PermissionError):
+            get_fields(mock_jira_client)
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        mock_jira_client.get_jql_autocomplete.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from jql_fields import get_fields
+
+        with pytest.raises(JiraError) as exc_info:
+            get_fields(mock_jira_client)
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 internal server error."""
+        from error_handler import JiraError
+        mock_jira_client.get_jql_autocomplete.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from jql_fields import get_fields
+
+        with pytest.raises(JiraError) as exc_info:
+            get_fields(mock_jira_client)
+        assert exc_info.value.status_code == 500

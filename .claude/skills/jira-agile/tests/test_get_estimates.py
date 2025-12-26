@@ -18,6 +18,7 @@ sys.path.insert(0, str(scripts_path))
 
 import pytest
 from unittest.mock import Mock, patch
+import copy
 
 STORY_POINTS_FIELD = 'customfield_10016'
 
@@ -138,10 +139,106 @@ class TestGetEstimates:
 class TestGetEstimatesCLI:
     """Test command-line interface for get_estimates.py."""
 
-    def test_cli_sprint(self, mock_jira_client):
-        """Test CLI with sprint ID."""
-        pass
+    def test_cli_main_exists(self):
+        """Test CLI main function exists and is callable."""
+        from get_estimates import main
+        assert callable(main)
 
-    def test_cli_epic(self, mock_jira_client):
-        """Test CLI with epic key."""
-        pass
+    def test_cli_help_output(self, capsys):
+        """Test that --help shows usage information."""
+        with patch('sys.argv', ['get_estimates.py', '--help']):
+            from get_estimates import main
+            try:
+                main()
+            except SystemExit:
+                pass  # --help causes SystemExit
+
+        captured = capsys.readouterr()
+        assert '--sprint' in captured.out or '--epic' in captured.out or 'usage' in captured.out.lower()
+
+
+@pytest.mark.agile
+@pytest.mark.unit
+class TestGetEstimatesErrorHandling:
+    """Test API error handling scenarios for get_estimates."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        from get_estimates import get_estimates
+
+        mock_jira_client.get_sprint_issues.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        with pytest.raises(AuthenticationError):
+            get_estimates(
+                sprint_id=456,
+                client=mock_jira_client
+            )
+
+    def test_forbidden_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        from get_estimates import get_estimates
+
+        mock_jira_client.get_sprint_issues.side_effect = PermissionError(
+            "Insufficient permissions"
+        )
+
+        with pytest.raises(PermissionError):
+            get_estimates(
+                sprint_id=456,
+                client=mock_jira_client
+            )
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        from get_estimates import get_estimates
+
+        mock_jira_client.get_sprint_issues.side_effect = JiraError(
+            "Rate limit exceeded",
+            status_code=429
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            get_estimates(
+                sprint_id=456,
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+        from get_estimates import get_estimates
+
+        mock_jira_client.get_sprint_issues.side_effect = JiraError(
+            "Internal server error",
+            status_code=500
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            get_estimates(
+                sprint_id=456,
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 500
+
+    def test_sprint_not_found(self, mock_jira_client):
+        """Test error when sprint doesn't exist."""
+        from error_handler import JiraError
+        from get_estimates import get_estimates
+
+        mock_jira_client.get_sprint_issues.side_effect = JiraError(
+            "Sprint does not exist",
+            status_code=404
+        )
+
+        with pytest.raises(JiraError) as exc_info:
+            get_estimates(
+                sprint_id=999,
+                client=mock_jira_client
+            )
+        assert exc_info.value.status_code == 404

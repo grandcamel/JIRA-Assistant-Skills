@@ -4,7 +4,6 @@ Tests for bulk_transition.py - TDD approach.
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch, call
 import pytest
 
 # Add scripts to path
@@ -12,6 +11,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkTransitionByKeys:
     """Test transitioning multiple issues by key list."""
 
@@ -38,6 +39,8 @@ class TestBulkTransitionByKeys:
         assert mock_jira_client.transition_issue.call_count == 3
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkTransitionByJql:
     """Test transitioning all issues matching JQL query."""
 
@@ -67,6 +70,8 @@ class TestBulkTransitionByJql:
         mock_jira_client.search_issues.assert_called_once()
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkTransitionWithResolution:
     """Test setting resolution during transition."""
 
@@ -94,6 +99,8 @@ class TestBulkTransitionWithResolution:
                'resolution' in (call_args[0][2] if len(call_args[0]) > 2 else {})
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkTransitionWithComment:
     """Test adding comment during transition."""
 
@@ -118,6 +125,8 @@ class TestBulkTransitionWithComment:
         assert result['success'] == 1
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkTransitionDryRun:
     """Test dry-run mode shows preview without changes."""
 
@@ -146,6 +155,8 @@ class TestBulkTransitionDryRun:
         mock_jira_client.transition_issue.assert_not_called()
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkTransitionRateLimiting:
     """Test rate limiting and throttling."""
 
@@ -174,9 +185,14 @@ class TestBulkTransitionRateLimiting:
 
         # Verify some delay occurred (at least 9 delays of 0.01s)
         assert result['success'] == 10
-        assert elapsed >= 0.05  # At least some delay
+        # Verify delay_between_ops was applied (9 delays for 10 issues)
+        expected_min_delay = 9 * 0.01 * 0.5  # 0.045s minimum (allow 50% tolerance)
+        assert elapsed >= expected_min_delay, \
+            f"Expected at least {expected_min_delay}s delay, got {elapsed}s"
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkTransitionPartialFailure:
     """Test handling when some issues fail to transition."""
 
@@ -209,6 +225,8 @@ class TestBulkTransitionPartialFailure:
         assert 'PROJ-2' in result['errors']
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkTransitionInvalidTransition:
     """Test error when transition not available for issue status."""
 
@@ -235,6 +253,8 @@ class TestBulkTransitionInvalidTransition:
         assert 'PROJ-1' in result['errors']
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkTransitionProgressCallback:
     """Test progress reporting during operation."""
 
@@ -272,6 +292,8 @@ class TestBulkTransitionProgressCallback:
         assert progress_calls[2]['current'] == 3
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkTransitionNoIssuesFound:
     """Test when no issues match the criteria."""
 
@@ -299,6 +321,8 @@ class TestBulkTransitionNoIssuesFound:
         assert result['total'] == 0
 
 
+@pytest.mark.bulk
+@pytest.mark.unit
 class TestBulkTransitionMaxIssues:
     """Test respecting max_issues limit."""
 
@@ -329,3 +353,108 @@ class TestBulkTransitionMaxIssues:
         assert mock_jira_client.transition_issue.call_count == 2
         # Verify search was called with max_results
         mock_jira_client.search_issues.assert_called_once()
+
+
+@pytest.mark.bulk
+@pytest.mark.unit
+class TestBulkTransitionApiErrors:
+    """Test API error handling scenarios."""
+
+    def test_authentication_error(self, mock_jira_client, sample_transitions):
+        """Test handling of 401 unauthorized error."""
+        from bulk_transition import bulk_transition
+        from error_handler import AuthenticationError
+
+        mock_jira_client.get_transitions.return_value = sample_transitions
+        mock_jira_client.transition_issue.side_effect = AuthenticationError("Invalid token")
+
+        result = bulk_transition(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            target_status='Done',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+        assert 'PROJ-1' in result.get('errors', {})
+
+    def test_permission_denied_error(self, mock_jira_client, sample_transitions):
+        """Test handling of 403 forbidden error."""
+        from bulk_transition import bulk_transition
+        from error_handler import JiraError
+
+        mock_jira_client.get_transitions.return_value = sample_transitions
+        mock_jira_client.transition_issue.side_effect = JiraError(
+            "You do not have permission", status_code=403
+        )
+
+        result = bulk_transition(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            target_status='Done',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+        assert 'PROJ-1' in result.get('errors', {})
+
+    def test_not_found_error(self, mock_jira_client):
+        """Test handling of 404 not found error."""
+        from bulk_transition import bulk_transition
+        from error_handler import JiraError
+
+        mock_jira_client.get_transitions.side_effect = JiraError(
+            "Issue not found", status_code=404
+        )
+
+        result = bulk_transition(
+            client=mock_jira_client,
+            issue_keys=['PROJ-999'],
+            target_status='Done',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+
+    def test_rate_limit_error(self, mock_jira_client, sample_transitions):
+        """Test handling of 429 rate limit error."""
+        from bulk_transition import bulk_transition
+        from error_handler import JiraError
+
+        mock_jira_client.get_transitions.return_value = sample_transitions
+        mock_jira_client.transition_issue.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        result = bulk_transition(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            target_status='Done',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0
+
+    def test_server_error(self, mock_jira_client, sample_transitions):
+        """Test handling of 500 internal server error."""
+        from bulk_transition import bulk_transition
+        from error_handler import JiraError
+
+        mock_jira_client.get_transitions.return_value = sample_transitions
+        mock_jira_client.transition_issue.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        result = bulk_transition(
+            client=mock_jira_client,
+            issue_keys=['PROJ-1'],
+            target_status='Done',
+            dry_run=False
+        )
+
+        assert result['failed'] == 1
+        assert result['success'] == 0

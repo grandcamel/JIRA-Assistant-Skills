@@ -11,6 +11,8 @@ import uuid
 import time
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestProjectCreation:
     """Tests for project creation."""
 
@@ -78,6 +80,8 @@ class TestProjectCreation:
                 pass
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestProjectRetrieval:
     """Tests for project retrieval."""
 
@@ -115,6 +119,8 @@ class TestProjectRetrieval:
             assert len(status_group['statuses']) >= 1
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestProjectDeletion:
     """Tests for project deletion."""
 
@@ -173,6 +179,8 @@ class TestProjectDeletion:
             jira_client.get_issue(issue['key'])
 
 
+@pytest.mark.integration
+@pytest.mark.shared
 class TestCompleteWorkflow:
     """End-to-end workflow tests."""
 

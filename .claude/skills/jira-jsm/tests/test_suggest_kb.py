@@ -17,6 +17,8 @@ if scripts_path not in sys.path:
 import suggest_kb
 
 
+@pytest.mark.jsm
+@pytest.mark.unit
 class TestSuggestKB:
     """Test KB suggestion functionality."""
 

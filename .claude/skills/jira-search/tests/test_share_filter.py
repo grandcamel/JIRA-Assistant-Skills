@@ -3,7 +3,6 @@ Tests for share_filter.py - Manage filter sharing permissions.
 """
 
 import pytest
-from unittest.mock import MagicMock
 import sys
 from pathlib import Path
 
@@ -11,6 +10,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.search
+@pytest.mark.unit
 class TestShareFilter:
     """Tests for managing filter share permissions."""
 
@@ -140,3 +141,59 @@ class TestShareFilter:
 
         with pytest.raises(PermissionError):
             share_with_project(mock_jira_client, '10042', 'PROJ')
+
+
+@pytest.mark.search
+@pytest.mark.unit
+class TestShareFilterErrorHandling:
+    """Test API error handling scenarios for share_filter."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        mock_jira_client.add_filter_permission.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        from share_filter import share_with_project
+
+        with pytest.raises(AuthenticationError):
+            share_with_project(mock_jira_client, '10042', 'PROJ')
+
+    def test_filter_not_found(self, mock_jira_client):
+        """Test handling of 404 not found."""
+        from error_handler import NotFoundError
+        mock_jira_client.add_filter_permission.side_effect = NotFoundError(
+            "Filter 99999 not found"
+        )
+
+        from share_filter import share_with_project
+
+        with pytest.raises(NotFoundError):
+            share_with_project(mock_jira_client, '99999', 'PROJ')
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        mock_jira_client.add_filter_permission.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from share_filter import share_with_project
+
+        with pytest.raises(JiraError) as exc_info:
+            share_with_project(mock_jira_client, '10042', 'PROJ')
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 internal server error."""
+        from error_handler import JiraError
+        mock_jira_client.add_filter_permission.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from share_filter import share_with_project
+
+        with pytest.raises(JiraError) as exc_info:
+            share_with_project(mock_jira_client, '10042', 'PROJ')
+        assert exc_info.value.status_code == 500

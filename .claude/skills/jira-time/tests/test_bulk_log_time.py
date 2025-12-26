@@ -15,6 +15,8 @@ if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestBulkLogTime:
     """Tests for bulk time logging."""
 
@@ -50,6 +52,8 @@ class TestBulkLogTime:
             assert call_args[1].get('comment') is not None
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestBulkLogTimeDryRun:
     """Tests for dry-run mode."""
 
@@ -75,6 +79,8 @@ class TestBulkLogTimeDryRun:
         assert result['would_log_count'] == 2
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestBulkLogTimeJQL:
     """Tests for JQL-based bulk logging."""
 
@@ -102,6 +108,8 @@ class TestBulkLogTimeJQL:
         assert result['success_count'] == 3
 
 
+@pytest.mark.time
+@pytest.mark.unit
 class TestBulkLogTimeErrors:
     """Tests for error handling."""
 
@@ -127,3 +135,61 @@ class TestBulkLogTimeErrors:
         assert result['failure_count'] == 1
         assert len(result['failures']) == 1
         assert result['failures'][0]['issue'] == 'PROJ-2'
+
+    def test_bulk_log_authentication_error_401(self, mock_jira_client):
+        """Test handling of 401 unauthorized - captured in failures."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.add_worklog.side_effect = AuthenticationError("Invalid token")
+
+        from bulk_log_time import bulk_log_time
+
+        # Bulk log catches errors and records them as failures
+        result = bulk_log_time(
+            mock_jira_client,
+            issues=['PROJ-1'],
+            time_spent='30m'
+        )
+        assert result['success_count'] == 0
+        assert result['failure_count'] == 1
+        assert 'Invalid token' in result['failures'][0]['error']
+
+    def test_bulk_log_rate_limit_error_429(self, mock_jira_client):
+        """Test handling of 429 rate limit - captured in failures."""
+        from error_handler import JiraError
+
+        mock_jira_client.add_worklog.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from bulk_log_time import bulk_log_time
+
+        # Bulk log catches errors and records them as failures
+        result = bulk_log_time(
+            mock_jira_client,
+            issues=['PROJ-1'],
+            time_spent='30m'
+        )
+        assert result['success_count'] == 0
+        assert result['failure_count'] == 1
+        assert 'Rate limit' in result['failures'][0]['error']
+
+    def test_bulk_log_server_error_500(self, mock_jira_client):
+        """Test handling of 500 server error - captured in failures."""
+        from error_handler import JiraError
+
+        mock_jira_client.add_worklog.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from bulk_log_time import bulk_log_time
+
+        # Bulk log catches errors and records them as failures
+        result = bulk_log_time(
+            mock_jira_client,
+            issues=['PROJ-1'],
+            time_spent='30m'
+        )
+        assert result['success_count'] == 0
+        assert result['failure_count'] == 1
+        assert 'Internal server error' in result['failures'][0]['error']

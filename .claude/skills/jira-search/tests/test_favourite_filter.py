@@ -2,8 +2,8 @@
 Tests for favourite_filter.py - Manage filter favourites.
 """
 
+import copy
 import pytest
-from unittest.mock import MagicMock
 import sys
 from pathlib import Path
 
@@ -11,13 +11,16 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.search
+@pytest.mark.unit
 class TestFavouriteFilter:
     """Tests for managing filter favourites."""
 
     def test_add_to_favourites(self, mock_jira_client, sample_filter):
         """Test adding filter to favourites."""
-        sample_filter['favourite'] = True
-        mock_jira_client.add_filter_favourite.return_value = sample_filter
+        expected = copy.deepcopy(sample_filter)
+        expected['favourite'] = True
+        mock_jira_client.add_filter_favourite.return_value = expected
 
         from favourite_filter import add_favourite
 
@@ -38,8 +41,9 @@ class TestFavouriteFilter:
 
     def test_already_favourite(self, mock_jira_client, sample_filter):
         """Test handling already favourited filter."""
-        sample_filter['favourite'] = True
-        mock_jira_client.add_filter_favourite.return_value = sample_filter
+        expected = copy.deepcopy(sample_filter)
+        expected['favourite'] = True
+        mock_jira_client.add_filter_favourite.return_value = expected
 
         from favourite_filter import add_favourite
 
@@ -68,3 +72,59 @@ class TestFavouriteFilter:
 
         with pytest.raises(NotFoundError):
             add_favourite(mock_jira_client, '99999')
+
+
+@pytest.mark.search
+@pytest.mark.unit
+class TestFavouriteFilterErrorHandling:
+    """Test API error handling scenarios for favourite_filter."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        mock_jira_client.add_filter_favourite.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        from favourite_filter import add_favourite
+
+        with pytest.raises(AuthenticationError):
+            add_favourite(mock_jira_client, '10042')
+
+    def test_forbidden_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        mock_jira_client.add_filter_favourite.side_effect = PermissionError(
+            "You don't have permission to favourite this filter"
+        )
+
+        from favourite_filter import add_favourite
+
+        with pytest.raises(PermissionError):
+            add_favourite(mock_jira_client, '10042')
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        mock_jira_client.add_filter_favourite.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from favourite_filter import add_favourite
+
+        with pytest.raises(JiraError) as exc_info:
+            add_favourite(mock_jira_client, '10042')
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 internal server error."""
+        from error_handler import JiraError
+        mock_jira_client.add_filter_favourite.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from favourite_filter import add_favourite
+
+        with pytest.raises(JiraError) as exc_info:
+            add_favourite(mock_jira_client, '10042')
+        assert exc_info.value.status_code == 500

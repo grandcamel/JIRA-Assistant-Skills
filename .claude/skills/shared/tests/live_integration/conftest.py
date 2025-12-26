@@ -20,6 +20,14 @@ import pytest
 from pathlib import Path
 from typing import Generator, Dict, Any
 
+
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line("markers", "integration: mark test as integration test")
+    config.addinivalue_line("markers", "shared: mark test as shared library test")
+    config.addinivalue_line("markers", "slow: mark test as slow running")
+    config.addinivalue_line("markers", "api: mark test as requiring API access")
+
 # Add shared lib to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts' / 'lib'))
 
@@ -298,3 +306,18 @@ def test_sprint(jira_client, test_project) -> Generator[Dict[str, Any], None, No
             jira_client.delete_sprint(sprint['id'])
     except Exception:
         pass
+
+
+@pytest.fixture(scope="session")
+def agile_field_ids():
+    """
+    Return Agile custom field IDs for the current JIRA instance.
+
+    These can be overridden via environment variables for different instances.
+    """
+    return {
+        'sprint': os.environ.get('JIRA_SPRINT_FIELD_ID', 'customfield_10020'),
+        'story_points': os.environ.get('JIRA_STORY_POINTS_FIELD_ID', 'customfield_10016'),
+        'epic_link': os.environ.get('JIRA_EPIC_LINK_FIELD_ID', 'customfield_10014'),
+        'epic_name': os.environ.get('JIRA_EPIC_NAME_FIELD_ID', 'customfield_10011'),
+    }

@@ -16,6 +16,8 @@ if scripts_path not in sys.path:
 import update_asset
 
 
+@pytest.mark.jsm
+@pytest.mark.unit
 class TestUpdateAsset:
     """Test asset update functionality."""
 
@@ -76,9 +78,10 @@ class TestUpdateAsset:
 
     def test_update_asset_error(self, mock_jira_client):
         """Test error when update fails."""
+        from error_handler import JiraError
         mock_jira_client.has_assets_license.return_value = True
-        mock_jira_client.update_asset.side_effect = Exception("Update failed")
+        mock_jira_client.update_asset.side_effect = JiraError("Update failed")
 
         with patch('update_asset.get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(Exception, match="Update failed"):
+            with pytest.raises(JiraError, match="Update failed"):
                 update_asset.update_asset(10001, {"Status": "Inactive"})

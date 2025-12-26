@@ -9,7 +9,7 @@ TDD tests for:
 import pytest
 import sys
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import json
 
 # Add scripts path
@@ -20,6 +20,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 # Tests for link_pr.py
 # =============================================================================
 
+@pytest.mark.dev
+@pytest.mark.unit
 class TestLinkPR:
     """Tests for link_pr functionality."""
 
@@ -121,6 +123,8 @@ class TestLinkPR:
 # Tests for create_pr_description.py
 # =============================================================================
 
+@pytest.mark.dev
+@pytest.mark.unit
 class TestCreatePRDescription:
     """Tests for create_pr_description functionality."""
 
@@ -160,8 +164,8 @@ class TestCreatePRDescription:
         with patch('create_pr_description.get_jira_client', return_value=mock_jira_client):
             result = create_pr_description('PROJ-123', include_checklist=True)
 
-        # Should have checklist markers
-        assert '- [ ]' in result or '- []' in result
+        # Should have checklist markers with standard markdown format
+        assert '- [ ]' in result, "Checklist should use '- [ ]' format"
 
     def test_create_pr_description_markdown_format(self, mock_jira_client, sample_issue):
         """Test Markdown output format."""
@@ -172,8 +176,8 @@ class TestCreatePRDescription:
         with patch('create_pr_description.get_jira_client', return_value=mock_jira_client):
             result = create_pr_description('PROJ-123')
 
-        # Should be valid markdown with headers
-        assert '##' in result or '#' in result
+        # Should be valid markdown with h2 headers
+        assert '## ' in result, "PR description should have markdown h2 headers (## )"
 
     def test_create_pr_description_with_labels(self, mock_jira_client, sample_issue):
         """Test including labels from issue."""
@@ -184,8 +188,10 @@ class TestCreatePRDescription:
         with patch('create_pr_description.get_jira_client', return_value=mock_jira_client):
             result = create_pr_description('PROJ-123', include_labels=True)
 
-        # Labels from sample_issue: ['mobile', 'ui']
-        assert 'mobile' in result.lower() or 'ui' in result.lower()
+        # Labels from sample_issue: ['mobile', 'ui'] - should have Labels section
+        result_lower = result.lower()
+        assert 'mobile' in result_lower, "Label 'mobile' should be in output"
+        assert 'ui' in result_lower, "Label 'ui' should be in output"
 
     def test_create_pr_description_json_output(self, mock_jira_client, sample_issue):
         """Test JSON output format."""
@@ -200,3 +206,144 @@ class TestCreatePRDescription:
         data = json.loads(output)
         assert 'description' in data
         assert 'issue_key' in data
+
+
+# =============================================================================
+# Error Handling Tests
+# =============================================================================
+
+@pytest.mark.dev
+@pytest.mark.unit
+class TestLinkPRErrors:
+    """Error handling tests for link_pr."""
+
+    def test_link_pr_auth_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from link_pr import link_pr
+        from error_handler import AuthenticationError
+
+        mock_jira_client.post.side_effect = AuthenticationError("Invalid token")
+
+        with patch('link_pr.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(AuthenticationError):
+                link_pr(
+                    issue_key='PROJ-123',
+                    pr_url='https://github.com/org/repo/pull/456'
+                )
+
+    def test_link_pr_permission_error(self, mock_jira_client):
+        """Test handling of 403 permission denied."""
+        from link_pr import link_pr
+        from error_handler import PermissionError
+
+        mock_jira_client.post.side_effect = PermissionError("Access denied")
+
+        with patch('link_pr.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(PermissionError):
+                link_pr(
+                    issue_key='PROJ-123',
+                    pr_url='https://github.com/org/repo/pull/456'
+                )
+
+    def test_link_pr_not_found_error(self, mock_jira_client):
+        """Test handling of 404 issue not found."""
+        from link_pr import link_pr
+        from error_handler import NotFoundError
+
+        mock_jira_client.post.side_effect = NotFoundError("Issue", "PROJ-999")
+
+        with patch('link_pr.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(NotFoundError):
+                link_pr(
+                    issue_key='PROJ-999',
+                    pr_url='https://github.com/org/repo/pull/456'
+                )
+
+    def test_link_pr_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from link_pr import link_pr
+        from error_handler import RateLimitError
+
+        mock_jira_client.post.side_effect = RateLimitError(retry_after=60)
+
+        with patch('link_pr.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(RateLimitError):
+                link_pr(
+                    issue_key='PROJ-123',
+                    pr_url='https://github.com/org/repo/pull/456'
+                )
+
+    def test_link_pr_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from link_pr import link_pr
+        from error_handler import ServerError
+
+        mock_jira_client.post.side_effect = ServerError("Internal server error")
+
+        with patch('link_pr.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(ServerError):
+                link_pr(
+                    issue_key='PROJ-123',
+                    pr_url='https://github.com/org/repo/pull/456'
+                )
+
+
+@pytest.mark.dev
+@pytest.mark.unit
+class TestCreatePRDescriptionErrors:
+    """Error handling tests for create_pr_description."""
+
+    def test_create_pr_description_auth_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from create_pr_description import create_pr_description
+        from error_handler import AuthenticationError
+
+        mock_jira_client.get_issue.side_effect = AuthenticationError("Invalid token")
+
+        with patch('create_pr_description.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(AuthenticationError):
+                create_pr_description('PROJ-123')
+
+    def test_create_pr_description_permission_error(self, mock_jira_client):
+        """Test handling of 403 permission denied."""
+        from create_pr_description import create_pr_description
+        from error_handler import PermissionError
+
+        mock_jira_client.get_issue.side_effect = PermissionError("Access denied")
+
+        with patch('create_pr_description.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(PermissionError):
+                create_pr_description('PROJ-123')
+
+    def test_create_pr_description_not_found_error(self, mock_jira_client):
+        """Test handling of 404 issue not found."""
+        from create_pr_description import create_pr_description
+        from error_handler import NotFoundError
+
+        mock_jira_client.get_issue.side_effect = NotFoundError("Issue", "PROJ-999")
+
+        with patch('create_pr_description.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(NotFoundError):
+                create_pr_description('PROJ-999')
+
+    def test_create_pr_description_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from create_pr_description import create_pr_description
+        from error_handler import RateLimitError
+
+        mock_jira_client.get_issue.side_effect = RateLimitError(retry_after=60)
+
+        with patch('create_pr_description.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(RateLimitError):
+                create_pr_description('PROJ-123')
+
+    def test_create_pr_description_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from create_pr_description import create_pr_description
+        from error_handler import ServerError
+
+        mock_jira_client.get_issue.side_effect = ServerError("Internal server error")
+
+        with patch('create_pr_description.get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(ServerError):
+                create_pr_description('PROJ-123')

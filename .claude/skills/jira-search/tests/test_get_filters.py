@@ -4,7 +4,6 @@ Tests for get_filters.py - List and search filters.
 
 import pytest
 import json
-from unittest.mock import MagicMock
 import sys
 from pathlib import Path
 
@@ -12,6 +11,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 
+@pytest.mark.search
+@pytest.mark.unit
 class TestGetFilters:
     """Tests for getting and searching filters."""
 
@@ -103,3 +104,71 @@ class TestGetFilters:
         parsed = json.loads(output)
         assert isinstance(parsed, list)
         assert len(parsed) == 3
+
+
+@pytest.mark.search
+@pytest.mark.unit
+class TestGetFiltersErrorHandling:
+    """Test API error handling scenarios for get_filters."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+        mock_jira_client.get_my_filters.side_effect = AuthenticationError(
+            "Invalid API token"
+        )
+
+        from get_filters import get_my_filters
+
+        with pytest.raises(AuthenticationError):
+            get_my_filters(mock_jira_client)
+
+    def test_forbidden_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+        mock_jira_client.get_my_filters.side_effect = PermissionError(
+            "You don't have permission to access filters"
+        )
+
+        from get_filters import get_my_filters
+
+        with pytest.raises(PermissionError):
+            get_my_filters(mock_jira_client)
+
+    def test_filter_not_found(self, mock_jira_client):
+        """Test handling of 404 not found."""
+        from error_handler import NotFoundError
+        mock_jira_client.get_filter.side_effect = NotFoundError(
+            "Filter 99999 not found"
+        )
+
+        from get_filters import get_filter_by_id
+
+        with pytest.raises(NotFoundError):
+            get_filter_by_id(mock_jira_client, '99999')
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+        mock_jira_client.get_my_filters.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        from get_filters import get_my_filters
+
+        with pytest.raises(JiraError) as exc_info:
+            get_my_filters(mock_jira_client)
+        assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 internal server error."""
+        from error_handler import JiraError
+        mock_jira_client.get_my_filters.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        from get_filters import get_my_filters
+
+        with pytest.raises(JiraError) as exc_info:
+            get_my_filters(mock_jira_client)
+        assert exc_info.value.status_code == 500

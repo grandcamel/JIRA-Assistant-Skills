@@ -5,9 +5,11 @@ TDD tests for removing issue links.
 """
 
 import pytest
-from unittest.mock import Mock, patch, call
+from unittest.mock import patch
 
 
+@pytest.mark.relationships
+@pytest.mark.unit
 class TestUnlinkIssue:
     """Tests for the unlink_issue function."""
 
@@ -88,3 +90,75 @@ class TestUnlinkIssue:
                 )
 
         assert "specify" in str(exc_info.value).lower()
+
+
+@pytest.mark.relationships
+@pytest.mark.unit
+class TestUnlinkIssueErrorHandling:
+    """Test API error handling scenarios for unlink_issue."""
+
+    def test_authentication_error(self, mock_jira_client, sample_issue_links):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.get_issue_links.return_value = sample_issue_links
+        mock_jira_client.delete_link.side_effect = AuthenticationError("Invalid token")
+
+        import unlink_issue
+        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(AuthenticationError):
+                unlink_issue.unlink_issue(issue_key="PROJ-123", from_issue="PROJ-456")
+
+    def test_forbidden_error(self, mock_jira_client, sample_issue_links):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+
+        mock_jira_client.get_issue_links.return_value = sample_issue_links
+        mock_jira_client.delete_link.side_effect = PermissionError("Insufficient permissions")
+
+        import unlink_issue
+        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(PermissionError):
+                unlink_issue.unlink_issue(issue_key="PROJ-123", from_issue="PROJ-456")
+
+    def test_link_not_found_error(self, mock_jira_client, sample_issue_links):
+        """Test handling of 404 link not found."""
+        from error_handler import NotFoundError
+
+        mock_jira_client.get_issue_links.return_value = sample_issue_links
+        mock_jira_client.delete_link.side_effect = NotFoundError("Link not found")
+
+        import unlink_issue
+        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(NotFoundError):
+                unlink_issue.unlink_issue(issue_key="PROJ-123", from_issue="PROJ-456")
+
+    def test_rate_limit_error(self, mock_jira_client, sample_issue_links):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_jira_client.get_issue_links.return_value = sample_issue_links
+        mock_jira_client.delete_link.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        import unlink_issue
+        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(JiraError) as exc_info:
+                unlink_issue.unlink_issue(issue_key="PROJ-123", from_issue="PROJ-456")
+            assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client, sample_issue_links):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_jira_client.get_issue_links.return_value = sample_issue_links
+        mock_jira_client.delete_link.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        import unlink_issue
+        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(JiraError) as exc_info:
+                unlink_issue.unlink_issue(issue_key="PROJ-123", from_issue="PROJ-456")
+            assert exc_info.value.status_code == 500

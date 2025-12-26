@@ -5,10 +5,12 @@ TDD tests for viewing issue links.
 """
 
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 import json
 
 
+@pytest.mark.relationships
+@pytest.mark.unit
 class TestGetLinks:
     """Tests for the get_links function."""
 
@@ -111,3 +113,59 @@ class TestGetLinks:
         with patch.object(get_links, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(NotFoundError):
                 get_links.get_links("PROJ-999")
+
+
+@pytest.mark.relationships
+@pytest.mark.unit
+class TestGetLinksErrorHandling:
+    """Test API error handling scenarios for get_links."""
+
+    def test_authentication_error(self, mock_jira_client):
+        """Test handling of 401 unauthorized."""
+        from error_handler import AuthenticationError
+
+        mock_jira_client.get_issue_links.side_effect = AuthenticationError("Invalid token")
+
+        import get_links
+        with patch.object(get_links, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(AuthenticationError):
+                get_links.get_links("PROJ-123")
+
+    def test_forbidden_error(self, mock_jira_client):
+        """Test handling of 403 forbidden."""
+        from error_handler import PermissionError
+
+        mock_jira_client.get_issue_links.side_effect = PermissionError("Insufficient permissions")
+
+        import get_links
+        with patch.object(get_links, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(PermissionError):
+                get_links.get_links("PROJ-123")
+
+    def test_rate_limit_error(self, mock_jira_client):
+        """Test handling of 429 rate limit."""
+        from error_handler import JiraError
+
+        mock_jira_client.get_issue_links.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
+
+        import get_links
+        with patch.object(get_links, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(JiraError) as exc_info:
+                get_links.get_links("PROJ-123")
+            assert exc_info.value.status_code == 429
+
+    def test_server_error(self, mock_jira_client):
+        """Test handling of 500 server error."""
+        from error_handler import JiraError
+
+        mock_jira_client.get_issue_links.side_effect = JiraError(
+            "Internal server error", status_code=500
+        )
+
+        import get_links
+        with patch.object(get_links, 'get_jira_client', return_value=mock_jira_client):
+            with pytest.raises(JiraError) as exc_info:
+                get_links.get_links("PROJ-123")
+            assert exc_info.value.status_code == 500
