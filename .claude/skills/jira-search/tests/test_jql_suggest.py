@@ -26,7 +26,7 @@ class TestSuggestValues:
 
         from jql_suggest import get_suggestions
 
-        suggestions = get_suggestions(mock_jira_client, 'project')
+        suggestions = get_suggestions(mock_jira_client, 'project', use_cache=False)
 
         assert len(suggestions) == 2
         assert suggestions[0]['value'] == 'PROJ'
@@ -70,7 +70,7 @@ class TestSuggestValues:
 
         from jql_suggest import get_suggestions
 
-        suggestions = get_suggestions(mock_jira_client, 'status', prefix='In Pr')
+        suggestions = get_suggestions(mock_jira_client, 'status', prefix='In Pr', use_cache=False)
 
         assert len(suggestions) == 1
         assert suggestions[0]['value'] == 'In Progress'
@@ -119,7 +119,7 @@ class TestJqlSuggestErrorHandling:
         from jql_suggest import get_suggestions
 
         with pytest.raises(AuthenticationError):
-            get_suggestions(mock_jira_client, 'status')
+            get_suggestions(mock_jira_client, 'status', use_cache=False)
 
     def test_forbidden_error(self, mock_jira_client):
         """Test handling of 403 forbidden."""
@@ -131,7 +131,7 @@ class TestJqlSuggestErrorHandling:
         from jql_suggest import get_suggestions
 
         with pytest.raises(PermissionError):
-            get_suggestions(mock_jira_client, 'status')
+            get_suggestions(mock_jira_client, 'status', use_cache=False)
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
@@ -143,7 +143,7 @@ class TestJqlSuggestErrorHandling:
         from jql_suggest import get_suggestions
 
         with pytest.raises(JiraError) as exc_info:
-            get_suggestions(mock_jira_client, 'status')
+            get_suggestions(mock_jira_client, 'status', use_cache=False)
         assert exc_info.value.status_code == 429
 
     def test_server_error(self, mock_jira_client):
@@ -156,5 +156,5 @@ class TestJqlSuggestErrorHandling:
         from jql_suggest import get_suggestions
 
         with pytest.raises(JiraError) as exc_info:
-            get_suggestions(mock_jira_client, 'status')
+            get_suggestions(mock_jira_client, 'status', use_cache=False)
         assert exc_info.value.status_code == 500

@@ -54,6 +54,7 @@ This skill provides powerful search and query capabilities:
    - Export to JSON format
    - Select specific fields to export
    - Format for reporting or analysis
+   - Streaming export for large result sets
 
 7. **Bulk Updates**: Update multiple issues at once
    - Apply changes to search results
@@ -202,8 +203,108 @@ python filter_subscriptions.py 10042
 # Export to CSV
 python export_results.py "project = PROJ AND created >= -7d" --output report.csv
 
+# Export to JSON
+python export_results.py "project = PROJ" --output issues.json --format json
+
+# Export specific fields only
+python export_results.py "project = PROJ" --output report.csv --fields key,summary,status,priority
+
+# Export large result sets (pagination handled automatically)
+python export_results.py "project = PROJ" --output all-issues.csv --max-results 5000
+
 # Bulk update labels
 python bulk_update.py "project = PROJ AND labels = old-label" --add-labels "new-label"
+```
+
+## Streaming Export for Large Data Sets
+
+When exporting large numbers of issues (>1000), the export_results.py script automatically handles pagination to fetch all results efficiently.
+
+### How Streaming Export Works
+
+1. **Automatic Pagination**: Results are fetched in batches (default 100 issues per request)
+2. **Memory Efficient**: Issues are written to file as they're fetched, not held in memory
+3. **Progress Tracking**: Shows progress for large exports
+4. **Resumable**: If interrupted, simply re-run the export
+
+### Usage Examples
+
+```bash
+# Export all issues from a project (may be thousands)
+python export_results.py "project = PROJ" --output all-issues.csv --max-results 10000
+
+# Export with specific fields to reduce response size
+python export_results.py "project = PROJ" \
+  --output minimal.csv \
+  --fields key,summary,status \
+  --max-results 10000
+
+# Export to JSON for programmatic processing
+python export_results.py "project = PROJ AND created >= -30d" \
+  --output monthly-report.json \
+  --format json \
+  --max-results 5000
+```
+
+### Performance Considerations
+
+| Result Size | Estimated Time | Recommendation |
+|-------------|---------------|----------------|
+| < 100 | < 5 seconds | Default settings work well |
+| 100-1000 | 5-30 seconds | Consider specifying only needed fields |
+| 1000-5000 | 30 seconds - 2 minutes | Use `--fields` to limit data |
+| > 5000 | 2+ minutes | Consider exporting in date ranges |
+
+### Optimizing Large Exports
+
+**1. Limit Fields**
+Only request the fields you need to reduce API response size and processing time:
+```bash
+python export_results.py "project = PROJ" \
+  --fields key,summary,status,priority,created,updated \
+  --output optimized.csv
+```
+
+**2. Split by Date Range**
+For very large exports, split into smaller date ranges:
+```bash
+# Export by quarter
+python export_results.py "project = PROJ AND created >= 2025-01-01 AND created < 2025-04-01" \
+  --output q1-2025.csv
+
+python export_results.py "project = PROJ AND created >= 2025-04-01 AND created < 2025-07-01" \
+  --output q2-2025.csv
+```
+
+**3. Export During Off-Peak Hours**
+Large exports consume API quota. Run during off-peak hours to avoid rate limiting:
+```bash
+# Schedule for late night
+at 2:00 AM <<< 'python export_results.py "project = PROJ" --output nightly-export.csv'
+```
+
+### Output Formats
+
+**CSV Format** (default):
+```csv
+key,summary,status,priority,issuetype,assignee,created,updated
+PROJ-123,Fix login bug,Done,High,Bug,john.doe,2025-01-15,2025-01-20
+PROJ-124,Add dark mode,In Progress,Medium,Story,jane.smith,2025-01-16,2025-01-21
+```
+
+**JSON Format**:
+```json
+{
+  "issues": [
+    {
+      "key": "PROJ-123",
+      "summary": "Fix login bug",
+      "status": "Done",
+      "priority": "High"
+    }
+  ],
+  "total": 2
+}
 ```
 
 ## JQL Basics

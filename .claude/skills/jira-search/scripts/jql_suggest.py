@@ -4,6 +4,9 @@ Get JQL field value suggestions for autocomplete.
 
 Provides suggestions for field values like status, project, assignee, etc.
 to help build accurate JQL queries.
+
+Features caching for improved performance - suggestions are cached for
+1 hour by default.
 """
 
 import argparse
@@ -18,23 +21,32 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts
 from config_manager import get_jira_client
 from error_handler import JiraError, print_error
 from formatters import format_table
+from autocomplete_cache import get_autocomplete_cache
 
 
 def get_suggestions(client, field_name: str,
-                    prefix: str = '') -> List[Dict[str, Any]]:
+                    prefix: str = '',
+                    use_cache: bool = True,
+                    refresh_cache: bool = False) -> List[Dict[str, Any]]:
     """
-    Get autocomplete suggestions for a field value.
+    Get autocomplete suggestions for a field value with caching.
 
     Args:
         client: JIRA client
         field_name: Field to get suggestions for
         prefix: Partial value to filter suggestions
+        use_cache: Use cached data if available (default: True)
+        refresh_cache: Force refresh from API (default: False)
 
     Returns:
         List of suggestion objects with value and displayName
     """
-    result = client.get_jql_suggestions(field_name, prefix)
-    return result.get('results', [])
+    if use_cache:
+        cache = get_autocomplete_cache()
+        return cache.get_suggestions(field_name, prefix, client, force_refresh=refresh_cache)
+    else:
+        result = client.get_jql_suggestions(field_name, prefix)
+        return result.get('results', [])
 
 
 def format_value_for_jql(value: str) -> str:
@@ -127,6 +139,10 @@ Examples:
                         help='Filter suggestions by prefix')
     parser.add_argument('--output', '-o', choices=['text', 'json'],
                         default='text', help='Output format (default: text)')
+    parser.add_argument('--no-cache', action='store_true',
+                        help='Bypass cache and fetch from API')
+    parser.add_argument('--refresh', action='store_true',
+                        help='Force refresh cache from API')
     parser.add_argument('--profile', '-p',
                         help='JIRA profile to use')
 
@@ -135,7 +151,13 @@ Examples:
     try:
         client = get_jira_client(args.profile)
 
-        suggestions = get_suggestions(client, args.field, args.prefix)
+        suggestions = get_suggestions(
+            client,
+            args.field,
+            args.prefix,
+            use_cache=not args.no_cache,
+            refresh_cache=args.refresh
+        )
 
         if args.output == 'json':
             print(format_suggestions_json(suggestions))

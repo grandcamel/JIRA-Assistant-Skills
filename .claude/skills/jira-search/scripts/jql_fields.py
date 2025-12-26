@@ -4,6 +4,9 @@ List JQL searchable fields and their valid operators.
 
 Shows all fields available for JQL queries, including system fields
 and custom fields, along with their supported operators.
+
+Features caching for improved performance - field definitions are
+cached for 1 day by default.
 """
 
 import argparse
@@ -18,25 +21,34 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts
 from config_manager import get_jira_client
 from error_handler import JiraError, print_error
 from formatters import format_table
+from autocomplete_cache import get_autocomplete_cache
 
 
 def get_fields(client, name_filter: Optional[str] = None,
                custom_only: bool = False,
-               system_only: bool = False) -> List[Dict[str, Any]]:
+               system_only: bool = False,
+               use_cache: bool = True,
+               refresh_cache: bool = False) -> List[Dict[str, Any]]:
     """
-    Get JQL searchable fields.
+    Get JQL searchable fields with caching support.
 
     Args:
         client: JIRA client
         name_filter: Filter fields by name (case-insensitive substring match)
         custom_only: Only return custom fields
         system_only: Only return system fields
+        use_cache: Use cached data if available (default: True)
+        refresh_cache: Force refresh from API (default: False)
 
     Returns:
         List of field objects
     """
-    data = client.get_jql_autocomplete()
-    fields = data.get('visibleFieldNames', [])
+    if use_cache:
+        cache = get_autocomplete_cache()
+        fields = cache.get_fields(client, force_refresh=refresh_cache)
+    else:
+        data = client.get_jql_autocomplete()
+        fields = data.get('visibleFieldNames', [])
 
     # Apply filters
     if name_filter:
@@ -128,6 +140,10 @@ Examples:
                         help='Show only system fields')
     parser.add_argument('--output', '-o', choices=['text', 'json'],
                         default='text', help='Output format (default: text)')
+    parser.add_argument('--no-cache', action='store_true',
+                        help='Bypass cache and fetch from API')
+    parser.add_argument('--refresh', action='store_true',
+                        help='Force refresh cache from API')
     parser.add_argument('--profile', '-p',
                         help='JIRA profile to use')
 
@@ -146,7 +162,9 @@ Examples:
             client,
             name_filter=args.name_filter,
             custom_only=args.custom_only,
-            system_only=args.system_only
+            system_only=args.system_only,
+            use_cache=not args.no_cache,
+            refresh_cache=args.refresh
         )
 
         if args.output == 'json':

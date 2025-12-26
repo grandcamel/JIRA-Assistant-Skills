@@ -22,7 +22,7 @@ class TestGetAllFields:
 
         from jql_fields import get_fields
 
-        fields = get_fields(mock_jira_client)
+        fields = get_fields(mock_jira_client, use_cache=False)
 
         assert len(fields) == 7
         assert any(f['value'] == 'assignee' for f in fields)
@@ -109,7 +109,7 @@ class TestJqlFieldsErrorHandling:
         from jql_fields import get_fields
 
         with pytest.raises(AuthenticationError):
-            get_fields(mock_jira_client)
+            get_fields(mock_jira_client, use_cache=False)
 
     def test_forbidden_error(self, mock_jira_client):
         """Test handling of 403 forbidden."""
@@ -121,7 +121,7 @@ class TestJqlFieldsErrorHandling:
         from jql_fields import get_fields
 
         with pytest.raises(PermissionError):
-            get_fields(mock_jira_client)
+            get_fields(mock_jira_client, use_cache=False)
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
@@ -133,7 +133,7 @@ class TestJqlFieldsErrorHandling:
         from jql_fields import get_fields
 
         with pytest.raises(JiraError) as exc_info:
-            get_fields(mock_jira_client)
+            get_fields(mock_jira_client, use_cache=False)
         assert exc_info.value.status_code == 429
 
     def test_server_error(self, mock_jira_client):
@@ -146,5 +146,5 @@ class TestJqlFieldsErrorHandling:
         from jql_fields import get_fields
 
         with pytest.raises(JiraError) as exc_info:
-            get_fields(mock_jira_client)
+            get_fields(mock_jira_client, use_cache=False)
         assert exc_info.value.status_code == 500

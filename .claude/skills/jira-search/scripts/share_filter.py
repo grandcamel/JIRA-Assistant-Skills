@@ -175,6 +175,123 @@ def format_permission(perm: Dict[str, Any]) -> str:
         return f"Unknown type: {perm_type}"
 
 
+def handle_list_permissions(client, args) -> None:
+    """
+    Handle listing filter permissions.
+
+    Args:
+        client: JIRA client
+        args: Parsed command-line arguments
+    """
+    permissions = list_permissions(client, args.filter_id)
+
+    if args.output == 'json':
+        print(json.dumps(permissions, indent=2))
+    else:
+        if not permissions:
+            print(f"Filter {args.filter_id} has no share permissions (private).")
+        else:
+            print(f"Share permissions for filter {args.filter_id}:")
+            print()
+            print(f"{'ID':<10} {'Type':<15} {'Shared With':<40}")
+            print('-' * 65)
+            for perm in permissions:
+                perm_id = perm.get('id', 'N/A')
+                perm_type = perm.get('type', 'unknown')
+                shared_with = format_permission(perm)
+                print(f"{perm_id:<10} {perm_type:<15} {shared_with:<40}")
+
+
+def handle_unshare(client, args) -> None:
+    """
+    Handle removing a share permission.
+
+    Args:
+        client: JIRA client
+        args: Parsed command-line arguments
+    """
+    unshare(client, args.filter_id, args.unshare)
+
+    if args.output == 'json':
+        print(json.dumps({
+            'action': 'removed',
+            'filter_id': args.filter_id,
+            'permission_id': args.unshare
+        }, indent=2))
+    else:
+        print(f"Permission {args.unshare} removed from filter {args.filter_id}.")
+
+
+def handle_share_project(client, args) -> None:
+    """
+    Handle sharing filter with a project or project role.
+
+    Args:
+        client: JIRA client
+        args: Parsed command-line arguments
+    """
+    if args.role:
+        result = share_with_project_role(client, args.filter_id,
+                                         args.project, args.role)
+        action_desc = f"project {args.project} role {args.role}"
+    else:
+        result = share_with_project(client, args.filter_id, args.project)
+        action_desc = f"project {args.project}"
+
+    if args.output == 'json':
+        print(json.dumps({'action': 'shared', 'permission': result}, indent=2))
+    else:
+        print(f"Filter {args.filter_id} shared with {action_desc}.")
+
+
+def handle_share_group(client, args) -> None:
+    """
+    Handle sharing filter with a group.
+
+    Args:
+        client: JIRA client
+        args: Parsed command-line arguments
+    """
+    result = share_with_group(client, args.filter_id, args.group)
+
+    if args.output == 'json':
+        print(json.dumps({'action': 'shared', 'permission': result}, indent=2))
+    else:
+        print(f"Filter {args.filter_id} shared with group {args.group}.")
+
+
+def handle_share_global(client, args) -> None:
+    """
+    Handle sharing filter globally with all authenticated users.
+
+    Args:
+        client: JIRA client
+        args: Parsed command-line arguments
+    """
+    result = share_globally(client, args.filter_id)
+
+    if args.output == 'json':
+        print(json.dumps({'action': 'shared', 'permission': result}, indent=2))
+    else:
+        print(f"Filter {args.filter_id} shared with all authenticated users.")
+
+
+def handle_share_user(client, args) -> None:
+    """
+    Handle sharing filter with a specific user.
+
+    Args:
+        client: JIRA client
+        args: Parsed command-line arguments
+    """
+    result = share_with_user(client, args.filter_id, args.user)
+
+    if args.output == 'json':
+        print(json.dumps({'action': 'shared', 'permission': result}, indent=2))
+    else:
+        print(f"Filter {args.filter_id} shared with user {args.user}.")
+
+
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
@@ -223,82 +340,18 @@ Examples:
         client = get_jira_client(args.profile)
 
         if args.list:
-            # List current permissions
-            permissions = list_permissions(client, args.filter_id)
-
-            if args.output == 'json':
-                print(json.dumps(permissions, indent=2))
-            else:
-                if not permissions:
-                    print(f"Filter {args.filter_id} has no share permissions (private).")
-                else:
-                    print(f"Share permissions for filter {args.filter_id}:")
-                    print()
-                    print(f"{'ID':<10} {'Type':<15} {'Shared With':<40}")
-                    print('-' * 65)
-                    for perm in permissions:
-                        perm_id = perm.get('id', 'N/A')
-                        perm_type = perm.get('type', 'unknown')
-                        shared_with = format_permission(perm)
-                        print(f"{perm_id:<10} {perm_type:<15} {shared_with:<40}")
-
+            handle_list_permissions(client, args)
         elif args.unshare:
-            # Remove permission
-            unshare(client, args.filter_id, args.unshare)
-
-            if args.output == 'json':
-                print(json.dumps({
-                    'action': 'removed',
-                    'filter_id': args.filter_id,
-                    'permission_id': args.unshare
-                }, indent=2))
-            else:
-                print(f"Permission {args.unshare} removed from filter {args.filter_id}.")
-
+            handle_unshare(client, args)
         elif args.project:
-            # Share with project or project role
-            if args.role:
-                result = share_with_project_role(client, args.filter_id,
-                                                 args.project, args.role)
-                action_desc = f"project {args.project} role {args.role}"
-            else:
-                result = share_with_project(client, args.filter_id, args.project)
-                action_desc = f"project {args.project}"
-
-            if args.output == 'json':
-                print(json.dumps({'action': 'shared', 'permission': result}, indent=2))
-            else:
-                print(f"Filter {args.filter_id} shared with {action_desc}.")
-
+            handle_share_project(client, args)
         elif args.group:
-            # Share with group
-            result = share_with_group(client, args.filter_id, args.group)
-
-            if args.output == 'json':
-                print(json.dumps({'action': 'shared', 'permission': result}, indent=2))
-            else:
-                print(f"Filter {args.filter_id} shared with group {args.group}.")
-
+            handle_share_group(client, args)
         elif args.share_global:
-            # Share globally
-            result = share_globally(client, args.filter_id)
-
-            if args.output == 'json':
-                print(json.dumps({'action': 'shared', 'permission': result}, indent=2))
-            else:
-                print(f"Filter {args.filter_id} shared with all authenticated users.")
-
+            handle_share_global(client, args)
         elif args.user:
-            # Share with user
-            result = share_with_user(client, args.filter_id, args.user)
-
-            if args.output == 'json':
-                print(json.dumps({'action': 'shared', 'permission': result}, indent=2))
-            else:
-                print(f"Filter {args.filter_id} shared with user {args.user}.")
-
+            handle_share_user(client, args)
         else:
-            # No action specified - show current permissions
             parser.print_help()
 
     except JiraError as e:
