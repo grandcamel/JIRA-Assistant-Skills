@@ -5,8 +5,8 @@
 **Current Implementation:** 12 skills, 134 scripts, ~18,000+ LOC
 **Coverage:** ~97% of JIRA and JSM API capabilities
 **Maturity:** Production-ready with comprehensive Agile, Relationship, Time Tracking, Advanced Search, Version/Release, Component, Collaboration, **JSM ITSM**, **Bulk Operations**, **Developer Integration**, and **Cache Management** support
-**Recent Achievement:** ✅ **New Skills Complete** - jira-bulk (4 scripts, 21 live tests), jira-dev (6 scripts, 25 live tests), jira-fields (4 scripts, 18 live tests), jira-ops (3 scripts, 21 live tests)
-**Latest Update:** 85 new live integration tests for bulk, dev, fields, and ops skills
+**Recent Achievement:** ✅ **New Skills Complete** - jira-bulk (4 scripts, 22 live tests), jira-dev (6 scripts, 25 live tests), jira-fields (4 scripts, 18 live tests), jira-ops (3 scripts, 22 live tests)
+**Latest Update:** 87 new live integration tests for bulk, dev, fields, and ops skills
 **Opportunity:** 3% of JIRA functionality remains (administration, advanced reporting)
 
 ---
@@ -25,9 +25,9 @@
 - **jira-time** (9 scripts): Worklogs, estimates, time reports, timesheets, bulk time logging, TDD with 63 tests
 - **jira-fields** (4 scripts): Field discovery, project field checking, Agile field configuration, custom field creation, 18 live integration tests
 - **jira-jsm** (45 scripts): Service desk management, request types, customers, organizations, SLA tracking, queues, approvals, public/internal comments, knowledge base, TDD with 324 tests
-- **jira-bulk** ✅ **NEW** (4 scripts): Bulk transitions, assignments, priority changes, cloning at scale with dry-run support, 21 live + 42 unit tests
+- **jira-bulk** ✅ **NEW** (4 scripts): Bulk transitions, assignments, priority changes, cloning at scale with dry-run support, 22 live + 42 unit tests
 - **jira-dev** ✅ **NEW** (6 scripts): Git branch generation, commit/PR linking, PR description generation, 25 live + 42 unit tests
-- **jira-ops** ✅ **NEW** (3 scripts): Cache warming, cache management, request batching utilities, 21 live integration tests
+- **jira-ops** ✅ **NEW** (3 scripts): Cache warming, cache management, request batching utilities, 22 live integration tests
 
 **Shared Infrastructure:**
 - Multi-profile configuration system
@@ -243,7 +243,7 @@ Remaining (future enhancement):
 #### **G. Bulk Operations (90% coverage) ✅ COMPLETED**
 **Status:** Fully implemented via `jira-bulk` skill (2025-12-26)
 
-Implemented capabilities (4 scripts, 21 live + 42 unit tests):
+Implemented capabilities (4 scripts, 22 live + 42 unit tests):
 - **bulk_transition.py**: Transition multiple issues via keys or JQL, with resolution and comment support
 - **bulk_assign.py**: Assign/unassign multiple issues, supports 'self' keyword
 - **bulk_set_priority.py**: Set priority on multiple issues
@@ -751,9 +751,9 @@ Features:
 7. ✅ Component Management (4 scripts) - Component CRUD
 8. ✅ Live Integration Test Framework (242 core + 94 JSM tests) - Real API validation
 9. ✅ Jira Service Management (45 scripts, 324 tests) - Full ITSM support
-10. ✅ **Bulk Operations (4 scripts, 63 tests)** - Transitions, assignments, priorities, cloning
+10. ✅ **Bulk Operations (4 scripts, 64 tests)** - Transitions, assignments, priorities, cloning
 11. ✅ **Developer Integration (6 scripts, 67 tests)** - Git branches, commits, PRs
-12. ✅ **Cache & Operations (3 scripts, 21 tests)** - Caching, warming, batching
+12. ✅ **Cache & Operations (3 scripts, 22 tests)** - Caching, warming, batching
 
 **JSM Capabilities Now Available:**
 - Service desk discovery and management
@@ -811,6 +811,6 @@ The addition of JSM support unlocks enterprise service desk use cases:
 ---
 
 **Document Version:** 2.2
-**Date:** 2025-12-26 (Updated: Added jira-bulk, jira-dev, jira-ops skills with 85 live integration tests)
+**Date:** 2025-12-26 (Updated: Added jira-bulk, jira-dev, jira-ops skills with 87 live integration tests)
 **Previous:** 2025-12-26 v2.1 (JSM test fixtures improved, accurate test counts)
 **Next Review:** 2026-01-26
