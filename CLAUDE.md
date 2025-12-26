@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Claude Code Skills project providing JIRA automation through seven modular skills:
+This is a Claude Code Skills project providing JIRA automation through eight modular skills:
 - **jira-issue**: Core CRUD operations on issues
 - **jira-lifecycle**: Workflow/transition management
 - **jira-search**: JQL queries, saved filters, JQL builder/validator, and bulk operations
@@ -12,6 +12,7 @@ This is a Claude Code Skills project providing JIRA automation through seven mod
 - **jira-agile**: Agile/Scrum workflows (epics, sprints, backlog, story points)
 - **jira-relationships**: Issue linking, dependencies, blocker chains, cloning
 - **jira-time**: Time tracking, worklogs, estimates, and time reports
+- **jira-jsm**: Jira Service Management (service desks, requests, SLAs, queues, customers, approvals, knowledge base)
 
 Each skill is designed for autonomous discovery and use by Claude Code.
 
@@ -255,6 +256,7 @@ Use scopes to identify which part of the codebase changed. Suggested scopes for 
 - **jira-agile**: Changes to the jira-agile skill
 - **jira-relationships**: Changes to the jira-relationships skill
 - **jira-time**: Changes to the jira-time skill
+- **jira-jsm**: Changes to the jira-jsm skill
 - **shared**: Changes to shared library code
 - **config**: Configuration changes
 - **docs**: Documentation updates (CLAUDE.md, README.md, etc.)
@@ -331,22 +333,38 @@ When developing features using Test-Driven Development (TDD), follow this commit
 The project includes comprehensive live integration tests against real JIRA instances:
 
 ```bash
-# Run all live integration tests
+# Run all shared/core live integration tests
 pytest .claude/skills/shared/tests/live_integration/ --profile development -v
+
+# Run JSM live integration tests
+pytest .claude/skills/jira-jsm/tests/live_integration/ --profile development --skip-premium -v
 
 # Run specific test modules
 pytest .claude/skills/shared/tests/live_integration/test_issue_lifecycle.py -v
-pytest .claude/skills/shared/tests/live_integration/test_agile_workflows.py -v
+pytest .claude/skills/jira-jsm/tests/live_integration/test_request_lifecycle.py -v
 ```
 
-**Test structure**: Tests use session-scoped fixtures that create a test project at the start and clean up all test data at the end.
+**Test structure**: Tests use session-scoped fixtures that create a test project/service desk at the start and clean up all test data at the end.
 
 **Profile requirement**: Live tests require `--profile development` to specify which JIRA instance to test against.
 
-**Current coverage**: 153 live integration tests covering all 7 skills across 3 phases:
-- Phase 1: Core operations (issue CRUD, lifecycle, collaboration)
-- Phase 2: Agile, relationships, time tracking
-- Phase 3: Search, filters, bulk operations
+**Current coverage**:
+- **Core skills**: 153 live integration tests covering 7 skills across 3 phases
+  - Phase 1: Core operations (issue CRUD, lifecycle, collaboration)
+  - Phase 2: Agile, relationships, time tracking
+  - Phase 3: Search, filters, bulk operations
+- **JSM skill**: 94 live integration tests covering service management features
+  - Service desks, request types, portals
+  - Request lifecycle (CRUD, transitions, comments)
+  - Customers, organizations, participants
+  - SLAs, queues, approvals
+  - Knowledge base integration
+  - Assets/CMDB (requires JSM Premium)
+
+**JSM test options**:
+- `--skip-premium`: Skip tests requiring JSM Premium license (Assets/CMDB)
+- `--service-desk-id N`: Use existing service desk instead of creating one
+- `--keep-project`: Keep test service desk after tests (for debugging)
 
 ## Key Constraints
 

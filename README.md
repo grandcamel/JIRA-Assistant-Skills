@@ -4,7 +4,7 @@ A comprehensive set of Claude Code Skills for automating JIRA and JIRA Service M
 
 ## Overview
 
-This project provides seven modular skills that enable Claude Code to interact with JIRA:
+This project provides eight modular skills that enable Claude Code to interact with JIRA:
 
 - **jira-issue** - Core CRUD operations (create, read, update, delete issues)
 - **jira-lifecycle** - Workflow management (transitions, assignments, resolve/reopen)
@@ -13,6 +13,7 @@ This project provides seven modular skills that enable Claude Code to interact w
 - **jira-agile** - Agile/Scrum workflows (epics, sprints, backlog, story points)
 - **jira-relationships** - Issue linking (dependencies, blocker chains, cloning)
 - **jira-time** - Time tracking (worklogs, estimates, time reports)
+- **jira-jsm** - Jira Service Management (service desks, requests, SLAs, queues, customers, approvals)
 
 ## Features
 
@@ -240,6 +241,40 @@ python .claude/skills/jira-time/scripts/export_timesheets.py \
   --project PROJ --period 2025-01 --output timesheets.csv
 ```
 
+### jira-jsm (Service Management)
+
+Jira Service Management operations:
+
+```bash
+# List service desks
+python .claude/skills/jira-jsm/scripts/list_service_desks.py
+
+# Create a service request
+python .claude/skills/jira-jsm/scripts/create_request.py \
+  --service-desk 1 --request-type 10 \
+  --summary "Laptop not working" --description "Screen is black"
+
+# Get request details
+python .claude/skills/jira-jsm/scripts/get_request.py SD-123
+
+# Manage customers
+python .claude/skills/jira-jsm/scripts/add_customer.py \
+  --service-desk 1 --email customer@example.com
+
+# View SLA status
+python .claude/skills/jira-jsm/scripts/get_sla.py SD-123
+
+# List queues
+python .claude/skills/jira-jsm/scripts/list_queues.py --service-desk 1
+
+# Search knowledge base
+python .claude/skills/jira-jsm/scripts/search_kb.py --service-desk 1 --query "password reset"
+
+# Manage approvals
+python .claude/skills/jira-jsm/scripts/get_approvals.py SD-123
+python .claude/skills/jira-jsm/scripts/approve_request.py SD-123 --approval-id 456
+```
+
 ## Configuration
 
 ### Multi-Profile Setup
@@ -295,6 +330,7 @@ Settings are merged in order (later overrides earlier):
     ├── jira-agile/                 # Epics, sprints, backlog
     ├── jira-relationships/         # Issue linking, cloning
     ├── jira-time/                  # Time tracking, worklogs
+    ├── jira-jsm/                   # Jira Service Management
     └── shared/
         ├── scripts/lib/            # Shared Python modules
         ├── tests/                  # Unit and live integration tests
@@ -331,6 +367,15 @@ Claude: [Uses jira-relationships skill to show blocker chain]
 
 User: "Log 2 hours on PROJ-123 for debugging"
 Claude: [Uses jira-time skill to add worklog]
+
+User: "Create a service request for a laptop issue"
+Claude: [Uses jira-jsm skill to create request]
+
+User: "What's the SLA status on SD-456?"
+Claude: [Uses jira-jsm skill to check SLA]
+
+User: "Approve the pending request SD-789"
+Claude: [Uses jira-jsm skill to approve]
 ```
 
 ## Security
@@ -344,9 +389,16 @@ Claude: [Uses jira-time skill to add worklog]
 ## Requirements
 
 - Python 3.8+
-- JIRA Cloud or JIRA Service Management
+- JIRA Cloud (for core skills) or JIRA Service Management (for jira-jsm)
 - API token with appropriate permissions
 - Dependencies: `requests`, `tabulate`, `colorama`, `python-dotenv`
+
+### JSM-Specific Requirements
+
+For jira-jsm skill:
+- Jira Service Management Cloud instance
+- Service Desk Agent permissions
+- Assets/CMDB features require JSM Premium license
 
 ## Permissions
 
@@ -360,6 +412,8 @@ Minimum JIRA permissions required:
 - Assign Issues
 - Manage Sprints (for jira-agile)
 - Log Work (for jira-time)
+- Service Desk Agent (for jira-jsm)
+- Manage Customers (for jira-jsm customer operations)
 
 ## Troubleshooting
 
