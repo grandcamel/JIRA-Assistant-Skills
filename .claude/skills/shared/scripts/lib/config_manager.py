@@ -6,6 +6,8 @@ Handles loading and merging configuration from multiple sources:
 2. .claude/settings.local.json (personal settings, gitignored)
 3. .claude/settings.json (team defaults, committed)
 4. Hardcoded defaults (fallbacks)
+
+Supports configurable Agile field IDs with automatic discovery fallback.
 """
 
 import os
@@ -17,6 +19,16 @@ from error_handler import ValidationError
 from validators import validate_url, validate_email
 from jira_client import JiraClient
 from automation_client import AutomationClient
+
+
+# Default Agile field IDs (common defaults, may vary per JIRA instance)
+DEFAULT_AGILE_FIELDS = {
+    'epic_link': 'customfield_10014',
+    'story_points': 'customfield_10016',
+    'epic_name': 'customfield_10011',
+    'epic_color': 'customfield_10012',
+    'sprint': 'customfield_10020'
+}
 
 
 class ConfigManager:
@@ -273,6 +285,78 @@ class ConfigManager:
         """
         return list(self.config.get('jira', {}).get('profiles', {}).keys())
 
+    def get_agile_fields(self, profile: Optional[str] = None) -> Dict[str, str]:
+        """
+        Get Agile field IDs for a profile.
+
+        Returns configured field IDs merged with defaults.
+
+        Args:
+            profile: Profile name (default: self.profile)
+
+        Returns:
+            Dictionary of field names to field IDs:
+            - epic_link: Epic Link field ID
+            - story_points: Story Points field ID
+            - epic_name: Epic Name field ID
+            - epic_color: Epic Color field ID
+            - sprint: Sprint field ID
+        """
+        profile = profile or self.profile
+
+        # Start with defaults
+        fields = DEFAULT_AGILE_FIELDS.copy()
+
+        # Check environment variables (highest priority)
+        env_mappings = {
+            'epic_link': 'JIRA_EPIC_LINK_FIELD',
+            'story_points': 'JIRA_STORY_POINTS_FIELD',
+            'epic_name': 'JIRA_EPIC_NAME_FIELD',
+            'epic_color': 'JIRA_EPIC_COLOR_FIELD',
+            'sprint': 'JIRA_SPRINT_FIELD'
+        }
+
+        for field_name, env_var in env_mappings.items():
+            env_value = os.getenv(env_var)
+            if env_value:
+                fields[field_name] = env_value
+
+        # Override with profile-specific config
+        try:
+            profile_config = self.get_profile_config(profile)
+            agile_config = profile_config.get('agile_fields', {})
+            for field_name, field_id in agile_config.items():
+                if field_id:
+                    fields[field_name] = field_id
+        except ValidationError:
+            pass  # Profile doesn't exist, use defaults
+
+        return fields
+
+    def get_agile_field(self, field_name: str, profile: Optional[str] = None) -> str:
+        """
+        Get a specific Agile field ID.
+
+        Args:
+            field_name: Field name (epic_link, story_points, epic_name, epic_color, sprint)
+            profile: Profile name (default: self.profile)
+
+        Returns:
+            Field ID string
+
+        Raises:
+            ValidationError: If field_name is not a valid Agile field
+        """
+        valid_fields = ['epic_link', 'story_points', 'epic_name', 'epic_color', 'sprint']
+        if field_name not in valid_fields:
+            raise ValidationError(
+                f"Invalid Agile field name: {field_name}. "
+                f"Valid fields: {', '.join(valid_fields)}"
+            )
+
+        fields = self.get_agile_fields(profile)
+        return fields[field_name]
+
     def get_automation_client(self, profile: Optional[str] = None) -> AutomationClient:
         """
         Create a configured Automation API client for a profile.
@@ -341,3 +425,35 @@ def get_automation_client(profile: Optional[str] = None) -> AutomationClient:
     """
     config_manager = ConfigManager(profile=profile)
     return config_manager.get_automation_client()
+
+
+def get_agile_fields(profile: Optional[str] = None) -> Dict[str, str]:
+    """
+    Convenience function to get Agile field IDs.
+
+    Args:
+        profile: Profile name (default: from config or environment)
+
+    Returns:
+        Dictionary of field names to field IDs
+    """
+    config_manager = ConfigManager(profile=profile)
+    return config_manager.get_agile_fields()
+
+
+def get_agile_field(field_name: str, profile: Optional[str] = None) -> str:
+    """
+    Convenience function to get a specific Agile field ID.
+
+    Args:
+        field_name: Field name (epic_link, story_points, epic_name, epic_color, sprint)
+        profile: Profile name (default: from config or environment)
+
+    Returns:
+        Field ID string
+
+    Raises:
+        ValidationError: If field_name is not a valid Agile field
+    """
+    config_manager = ConfigManager(profile=profile)
+    return config_manager.get_agile_field(field_name)

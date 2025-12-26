@@ -40,6 +40,38 @@
                 "use_service_management": {
                   "type": "boolean",
                   "description": "Whether this instance uses JIRA Service Management"
+                },
+                "agile_fields": {
+                  "type": "object",
+                  "description": "Custom field IDs for Agile fields (varies by JIRA instance)",
+                  "properties": {
+                    "epic_link": {
+                      "type": "string",
+                      "pattern": "^customfield_[0-9]+$",
+                      "description": "Epic Link field ID (e.g., customfield_10014)"
+                    },
+                    "story_points": {
+                      "type": "string",
+                      "pattern": "^customfield_[0-9]+$",
+                      "description": "Story Points field ID (e.g., customfield_10016)"
+                    },
+                    "epic_name": {
+                      "type": "string",
+                      "pattern": "^customfield_[0-9]+$",
+                      "description": "Epic Name field ID (e.g., customfield_10011)"
+                    },
+                    "epic_color": {
+                      "type": "string",
+                      "pattern": "^customfield_[0-9]+$",
+                      "description": "Epic Color field ID (e.g., customfield_10012)"
+                    },
+                    "sprint": {
+                      "type": "string",
+                      "pattern": "^customfield_[0-9]+$",
+                      "description": "Sprint field ID (e.g., customfield_10020)"
+                    }
+                  },
+                  "additionalProperties": false
                 }
               },
               "required": ["url"]

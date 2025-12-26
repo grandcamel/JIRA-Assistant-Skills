@@ -6,19 +6,40 @@
         "url": "https://your-company.atlassian.net",
         "project_keys": ["PROD", "OPS"],
         "default_project": "PROD",
-        "use_service_management": false
+        "use_service_management": false,
+        "agile_fields": {
+          "epic_link": "customfield_10014",
+          "story_points": "customfield_10016",
+          "epic_name": "customfield_10011",
+          "epic_color": "customfield_10012",
+          "sprint": "customfield_10020"
+        }
       },
       "development": {
         "url": "https://your-company-dev.atlassian.net",
         "project_keys": ["DEV", "TEST"],
         "default_project": "DEV",
-        "use_service_management": true
+        "use_service_management": true,
+        "agile_fields": {
+          "epic_link": "customfield_10014",
+          "story_points": "customfield_10016",
+          "epic_name": "customfield_10011",
+          "epic_color": "customfield_10012",
+          "sprint": "customfield_10020"
+        }
       },
       "staging": {
         "url": "https://your-company-staging.atlassian.net",
         "project_keys": ["STAGE"],
         "default_project": "STAGE",
-        "use_service_management": false
+        "use_service_management": false,
+        "agile_fields": {
+          "epic_link": "customfield_10014",
+          "story_points": "customfield_10016",
+          "epic_name": "customfield_10011",
+          "epic_color": "customfield_10012",
+          "sprint": "customfield_10020"
+        }
       }
     },
     "api": {
