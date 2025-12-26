@@ -5,7 +5,8 @@
 **Current Implementation:** 9 skills, 121 scripts, ~15,000+ LOC
 **Coverage:** ~95% of JIRA and JSM API capabilities
 **Maturity:** Production-ready with comprehensive Agile, Relationship, Time Tracking, Advanced Search, Version/Release, Component, Collaboration, and **JSM ITSM** support, plus Live Integration Test Framework
-**Recent Achievement:** ✅ **JSM (Jira Service Management) - 100% COMPLETE** (45 scripts, 324 tests)
+**Recent Achievement:** ✅ **JSM (Jira Service Management) - 100% COMPLETE** (45 scripts, 94 live integration tests)
+**Latest Update:** Smart test fixtures for feature discovery (priority, approval, SLA, KB)
 **Opportunity:** 5% of JIRA functionality remains (administration, advanced reporting)
 
 ---
@@ -158,9 +159,10 @@ Remaining (future enhancement):
 
 **Implementation Summary:**
 - **Scripts:** 45 JSM-specific scripts
-- **Tests:** 324 passing tests (100% success rate)
+- **Live Integration Tests:** 94 tests (61 passed, 33 skipped based on environment)
 - **API Coverage:** 100% of JSM endpoints (`/rest/servicedeskapi/`)
 - **Phases:** 6 implementation phases completed
+- **Smart Fixtures:** Auto-discovery of request types with priority, approval, SLA support
 
 **Implemented Categories:**
 1. **Service Desk Discovery** (6 scripts, 18 tests) ✅
@@ -219,6 +221,12 @@ Remaining (future enhancement):
 - Implementation plans: `docs/implementation-plans/jsm/`
 - JSM Gap Analysis: `docs/analysis/JSM_GAP_ANALYSIS.md`
 - SKILL.md: `.claude/skills/jira-jsm/SKILL.md`
+
+**Test Environment Setup (to reduce skipped tests):**
+- **SLAs (6 tests):** Configure SLAs in Project Settings → SLAs
+- **Knowledge Base (6 tests):** Link Confluence space and create articles
+- **Approval Workflow (3 tests):** Configure approval in Request Type settings
+- **Assets/CMDB (12 tests):** Requires JSM Premium license
 
 **Deferred:**
 - Assets/Insight (separate API, requires additional licensing)
@@ -329,8 +337,9 @@ Remaining (future enhancement):
 ### **C. Robustness & Scale**
 
 **Current strengths:**
-1. ✅ **Test coverage**: 228 unit tests + 153 live integration tests = 381 total tests
+1. ✅ **Test coverage**: 228 unit tests + 153 core live integration tests + 94 JSM live integration tests = 475 total tests
 2. ✅ **Live integration test framework**: Pytest-based framework with session-scoped fixtures for real JIRA API testing
+3. ✅ **Smart test fixtures**: Auto-discovery fixtures find request types with priority, approval, SLA, and KB support
 
 **Current gaps:**
 1. **No caching**: Every request hits API (slow for large datasets)
@@ -647,7 +656,7 @@ Features:
 - JSM coverage: ✅ **100%** (New!)
 
 **Quality metrics:**
-- Test coverage: ✅ **705 tests** (228 unit + 153 live integration + 324 JSM), Target 300+ exceeded!
+- Test coverage: ✅ **475 tests** (228 unit + 153 core live integration + 94 JSM live integration), Target 300+ exceeded!
 - Error handling: Currently 90%, Target 95%
 - Documentation completeness: ✅ **90%** (Target met!)
 
@@ -725,7 +734,7 @@ Features:
 
 **Statistics:**
 - **Total Scripts:** 121 (76 JIRA + 45 JSM)
-- **Total Tests:** 705 (228 unit + 153 integration + 324 JSM)
+- **Total Tests:** 475 (228 unit + 153 core integration + 94 JSM integration)
 - **Skills:** 9 production-ready skills
 - **API Coverage:** 95% overall (100% JIRA Core + 100% JSM)
 
@@ -741,7 +750,7 @@ Features:
 3. **Natural language interface** → AI-powered query building
 
 **Strategic Advantage:**
-The architectural foundation (shared libraries, multi-profile, ADF support, comprehensive TDD with 705 tests) is exceptional. With **9 skills covering 121 scripts**, this toolkit now provides **enterprise-grade JIRA and JSM automation** covering:
+The architectural foundation (shared libraries, multi-profile, ADF support, comprehensive TDD with 475 tests) is exceptional. With **9 skills covering 121 scripts**, this toolkit now provides **enterprise-grade JIRA and JSM automation** covering:
 - Core issue management
 - Agile/Scrum workflows
 - Time tracking and billing
@@ -764,6 +773,7 @@ The addition of JSM support unlocks enterprise service desk use cases:
 
 ---
 
-**Document Version:** 2.0
-**Date:** 2025-12-25 (Updated: JSM implementation complete - 45 scripts, 324 tests, 100% coverage)
-**Next Review:** 2026-01-25
+**Document Version:** 2.1
+**Date:** 2025-12-26 (Updated: JSM test fixtures improved, accurate test counts)
+**Previous:** 2025-12-25 (JSM implementation complete - 45 scripts, 94 live tests)
+**Next Review:** 2026-01-26
