@@ -9,6 +9,18 @@ import uuid
 from datetime import datetime, timedelta
 
 
+def make_adf_comment(text: str) -> dict:
+    """Create an ADF-formatted comment."""
+    return {
+        'type': 'doc',
+        'version': 1,
+        'content': [{
+            'type': 'paragraph',
+            'content': [{'type': 'text', 'text': text}]
+        }]
+    }
+
+
 @pytest.mark.integration
 @pytest.mark.time
 @pytest.mark.worklog
@@ -28,8 +40,6 @@ class TestWorklogCreation:
 
     def test_add_worklog_with_comment(self, jira_client, test_issue):
         """Test adding a worklog with a comment."""
-        from conftest import make_adf_comment
-
         comment = make_adf_comment(f'Worklog comment {uuid.uuid4().hex[:8]}')
         result = jira_client.add_worklog(
             test_issue['key'],
@@ -169,8 +179,6 @@ class TestWorklogUpdate:
 
     def test_update_worklog_with_comment(self, jira_client, issue_with_worklog):
         """Test updating a worklog with a new comment."""
-        from conftest import make_adf_comment
-
         worklog_id = issue_with_worklog['worklog_id']
         comment = make_adf_comment('Updated worklog comment')
 
