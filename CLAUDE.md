@@ -374,11 +374,11 @@ pytest .claude/skills/jira-jsm/tests/live_integration/test_request_lifecycle.py 
   - SLAs, queues, approvals
   - Knowledge base integration
   - Assets/CMDB (requires JSM Premium)
-- **New skills**: 85 live integration tests + 84 unit tests
-  - jira-bulk: 21 live + 42 unit tests (bulk transitions, assignments, priorities, cloning)
+- **New skills**: 87 live integration tests + 84 unit tests
+  - jira-bulk: 22 live + 42 unit tests (bulk transitions, assignments, priorities, cloning)
   - jira-dev: 25 live + 42 unit tests (Git integration, PR management)
   - jira-fields: 18 live tests (field discovery, Agile fields)
-  - jira-ops: 21 live tests (cache warming, cache operations)
+  - jira-ops: 22 live tests (cache warming, cache operations)
 
 **JSM test options**:
 - `--skip-premium`: Skip tests requiring JSM Premium license (Assets/CMDB)
