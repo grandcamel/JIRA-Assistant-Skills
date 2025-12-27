@@ -1,0 +1,73 @@
+{
+  "name": "JIRA Assistant Skills",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest",
+      "ppa": true
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.formatting.provider": "black",
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.cwd": "/workspaces/jira-assistant-skills",
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        "editor.formatOnSave": true,
+        "editor.rulers": [100]
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "charliermarsh.ruff",
+        "eamodio.gitlens",
+        "GitHub.copilot"
+      ]
+    },
+    "codespaces": {
+      "openFiles": [
+        "README.md",
+        ".claude/skills/jira-issue/SKILL.md"
+      ]
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  "postStartCommand": "echo '\\n=== JIRA Assistant Skills Ready ===\\nRun: python .claude/skills/jira-issue/scripts/get_issue.py --help\\n'",
+
+  "containerEnv": {
+    "JIRA_SITE_URL": "${localEnv:JIRA_SITE_URL}",
+    "JIRA_EMAIL": "${localEnv:JIRA_EMAIL}",
+    "JIRA_API_TOKEN": "${localEnv:JIRA_API_TOKEN}",
+    "JIRA_PROFILE": "development"
+  },
+
+  "remoteEnv": {
+    "PYTHONPATH": "/workspaces/jira-assistant-skills/.claude/skills/shared/scripts/lib"
+  },
+
+  "mounts": [],
+  "forwardPorts": [],
+
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "4gb",
+    "storage": "16gb"
+  },
+
+  "updateContentCommand": "pip install --upgrade pip && pip install -r .claude/skills/shared/scripts/lib/requirements.txt",
+
+  "waitFor": "updateContentCommand"
+}
