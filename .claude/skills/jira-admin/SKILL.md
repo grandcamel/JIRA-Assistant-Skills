@@ -1,3 +1,8 @@
+---
+name: "JIRA Administration"
+description: "JIRA project and system administration - projects, automation rules, permissions, users, notifications, screens, issue types, workflows. Use when managing projects, configuring automation, or administering JIRA."
+---
+
 # JIRA Admin Skill
 
 ## When to Use This Skill
@@ -88,6 +93,67 @@ This skill requires **Administer Jira** global permission for most operations, o
 - List all statuses with filtering by category or workflow
 - Get workflow information for a specific issue
 - **Note:** Workflow creation/modification NOT supported via REST API
+
+## Troubleshooting & Error Handling
+
+### Common Errors and Solutions
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| **403 Forbidden** | Insufficient permissions | Verify you have "Administer Jira" or "Administer Projects" permission |
+| **404 Not Found** | Resource doesn't exist | Check project key, scheme ID, or issue type ID spelling |
+| **409 Conflict** | Resource already exists | Choose a different name or key (e.g., project key already in use) |
+| **400 Bad Request** | Invalid input format | Validate key format (uppercase, 2-10 chars), check required fields |
+| **401 Unauthorized** | Invalid or expired token | Regenerate API token at id.atlassian.com |
+| **500 Internal Server Error** | JIRA server issue | Retry the operation; contact Atlassian support if persistent |
+
+### Permission Verification
+
+Before troubleshooting, verify your permissions:
+```bash
+# Check current user permissions
+python search_users.py --me --include-groups
+
+# Verify project access
+python list_projects.py --type software
+```
+
+### Configuration Debugging
+
+```bash
+# View complete project configuration
+python get_config.py PROJ --show-schemes
+
+# Check which scheme is assigned to a project
+python get_project_issue_type_scheme.py --project-id 10000
+python get_workflow_scheme.py --id 10100 --show-projects
+```
+
+### Common Operation Failures
+
+**Project Creation Fails:**
+- Ensure project key is unique, uppercase, 2-10 characters, starts with a letter
+- Verify you have the required JIRA product license (Software, Service Management)
+- Check that the template key is valid for your instance
+
+**Scheme Assignment Fails:**
+- Cannot delete schemes in use - reassign projects first
+- Issue type scheme assignment may fail if project has issues using types not in new scheme
+- Workflow scheme assignment requires status migration if statuses differ
+
+**Automation Rule Issues:**
+- Complex rule creation may require the JIRA UI
+- Ensure Cloud ID is retrievable (required for Automation API)
+- Check API token scopes include `manage:jira-automation`
+
+### Dry-Run Mode
+
+All mutating operations support `--dry-run` to preview changes:
+```bash
+python delete_project.py PROJ --dry-run
+python assign_permission_scheme.py --project PROJ --scheme 10050 --dry-run
+python create_notification_scheme.py --name "Test" --dry-run
+```
 
 ## Available Scripts
 
@@ -1761,3 +1827,19 @@ When assigning a new workflow scheme, you may need to provide status migration m
 5. **Draft schemes** exist when a scheme is being edited but not yet published
 6. **Global vs Project scope** - global workflows are available instance-wide
 7. **Scheme assignment requires confirmation** - use --dry-run to preview changes
+
+---
+
+## Related Skills
+
+This skill works well in combination with:
+
+| Skill | Use Case |
+|-------|----------|
+| **jira-issue** | Core issue CRUD operations after configuring projects and issue types |
+| **jira-lifecycle** | Workflow transitions (uses workflows configured via this skill) |
+| **jira-fields** | Custom field management and discovery for screen configuration |
+| **jira-agile** | Sprint and board management for Scrum/Kanban projects |
+| **jira-jsm** | Service desk configuration (requires JSM projects created here) |
+| **jira-bulk** | Bulk operations across projects managed by this skill |
+| **jira-search** | JQL queries leveraging issue types and workflows configured here |

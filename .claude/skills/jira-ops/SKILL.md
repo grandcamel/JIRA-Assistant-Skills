@@ -1,6 +1,29 @@
+---
+name: "JIRA Operations"
+description: "Cache management and operational utilities for JIRA Assistant - cache warming, clearing, status monitoring. Use when optimizing performance, managing cache, or checking operational status."
+---
+
 # JIRA Operations Skill
 
 Cache management, request batching, and operational utilities for JIRA Assistant.
+
+## When to Use This Skill
+
+Use this skill when you need to:
+- **Monitor cache status**: Check cache size, entry counts, and hit rates
+- **Clear cache data**: Remove stale or sensitive cached data
+- **Pre-warm cache**: Load commonly accessed data for better performance
+- **Optimize performance**: Reduce API calls through effective caching
+- **Troubleshoot slowness**: Diagnose cache-related performance issues
+- **Prepare for production**: Warm cache before heavy usage periods
+
+## What This Skill Does
+
+- **Cache Status Monitoring**: Display detailed cache statistics including size, entries, hit rates, and breakdowns by category
+- **Cache Clearing**: Remove cache entries by category, pattern, or all at once with dry-run support
+- **Cache Warming**: Pre-load project metadata, field definitions, and other frequently accessed data
+- **Request Batching**: Parallel request execution for bulk operations (programmatic API)
+- **Performance Optimization**: Reduce JIRA API calls through intelligent caching with configurable TTL
 
 ## Quick Start
 
@@ -85,6 +108,16 @@ python cache_warm.py --fields
 # Cache everything
 python cache_warm.py --all --profile production --verbose
 ```
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | General error (invalid arguments, operation failed) |
+| 2 | Configuration error (missing credentials, invalid profile) |
+| 3 | Cache database error (cannot open, corrupted, permission denied) |
+| 4 | Network error (cannot connect to JIRA) |
 
 ## Configuration
 

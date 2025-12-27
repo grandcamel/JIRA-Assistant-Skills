@@ -1,3 +1,8 @@
+---
+name: "JIRA Lifecycle Management"
+description: "Workflow and lifecycle management for JIRA issues - transitions, assignments, versions, components. Use when transitioning issues, assigning users, managing versions, or handling components."
+---
+
 # jira-lifecycle
 
 Workflow and lifecycle management for JIRA issues - transitions, assignments, and status changes.
@@ -5,7 +10,7 @@ Workflow and lifecycle management for JIRA issues - transitions, assignments, an
 ## When to use this skill
 
 Use this skill when you need to:
-- Transition issues through workflow states (To Do → In Progress → Done)
+- Transition issues through workflow states (To Do -> In Progress -> Done)
 - Assign or reassign issues to team members
 - Resolve issues with resolution fields
 - Reopen closed issues
@@ -76,13 +81,40 @@ This skill provides workflow and lifecycle management operations:
 - `get_versions.py` - List versions with issue counts
 - `release_version.py` - Release version with date/description
 - `archive_version.py` - Archive old version
-- `move_issues_version.py` - Move issues between versions
+- `move_issues_version.py` - Move issues between versions (supports `--dry-run`)
 
 ### Component Management
 - `create_component.py` - Create project component
 - `get_components.py` - List components with issue counts
 - `update_component.py` - Update component details
-- `delete_component.py` - Delete component with confirmation
+- `delete_component.py` - Delete component with confirmation (supports `--dry-run`)
+
+## Common Options
+
+All scripts in this skill support these common options:
+
+| Option | Description |
+|--------|-------------|
+| `--profile PROFILE` | Use a specific JIRA profile from settings (e.g., `development`, `production`) |
+| `--format FORMAT` | Output format: `table`, `json`, or `csv` (default: `table`) |
+| `--output FILE` | Write output to file instead of stdout |
+| `--help` | Show help message and exit |
+
+### Dry Run Support
+
+The following scripts support `--dry-run` to preview changes without executing:
+
+| Script | Dry Run Behavior |
+|--------|------------------|
+| `move_issues_version.py` | Shows which issues would be moved without modifying them |
+| `delete_component.py` | Shows what would be deleted without removing the component |
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success - operation completed successfully |
+| 1 | Error - operation failed (check stderr for details) |
 
 ## Examples
 
@@ -115,6 +147,10 @@ python get_components.py PROJ --id 10000
 python update_component.py --id 10000 --name "New Name" --description "Updated"
 python delete_component.py --id 10000 --dry-run
 python delete_component.py --id 10000 --move-to 10001
+
+# Using profiles
+python transition_issue.py PROJ-123 --name "Done" --profile production
+python get_versions.py PROJ --profile development --format json
 ```
 
 ## Workflow Compatibility
@@ -126,6 +162,42 @@ Works with:
 - Simplified workflows
 
 The scripts automatically adapt to different workflow configurations.
+
+## Troubleshooting
+
+### Common Issues
+
+#### "No transition found" error
+- **Cause**: The requested transition is not available from the current issue status
+- **Solution**: Run `get_transitions.py ISSUE-KEY` to see available transitions from the current status
+- **Note**: Workflows may require issues to pass through intermediate states
+
+#### "Transition requires fields" error
+- **Cause**: The transition has mandatory fields that must be set
+- **Solution**: Use the `--fields` option to provide required field values, or check the transition configuration in JIRA admin
+
+#### "User not found" when assigning
+- **Cause**: The user email or account ID is incorrect or the user lacks project access
+- **Solution**: Verify the user exists in JIRA and has the necessary project permissions
+
+#### "Cannot resolve issue" error
+- **Cause**: The issue is not in a state that allows resolution, or resolution field is not configured
+- **Solution**: Transition the issue to an appropriate status first, or check project workflow configuration
+
+#### "Version already exists" error
+- **Cause**: A version with the same name already exists in the project
+- **Solution**: Use a different version name or update the existing version
+
+#### "Component in use" when deleting
+- **Cause**: Issues are assigned to the component being deleted
+- **Solution**: Use `--move-to COMPONENT_ID` to migrate issues to another component before deletion
+
+### Debugging Tips
+
+1. **Check current status**: Use `get_transitions.py` to understand available workflow paths
+2. **Use dry-run first**: For bulk operations, always test with `--dry-run` before executing
+3. **Verify permissions**: Ensure your JIRA account has transition/assignment permissions for the project
+4. **Check workflow restrictions**: Some transitions may be restricted by conditions (e.g., only assignee can resolve)
 
 ## Configuration
 

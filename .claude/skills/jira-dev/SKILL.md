@@ -1,6 +1,22 @@
+---
+name: "JIRA Developer Integration"
+description: "Developer workflow integration for JIRA - Git branch names, commit parsing, PR descriptions. Use when generating branch names from issues, linking commits, or creating PR descriptions."
+---
+
 # JIRA Developer Integration Skill
 
 Developer workflow integration for JIRA including Git, CI/CD, and release automation.
+
+## When to use this skill
+
+Use this skill when you need to:
+- Generate standardized Git branch names from JIRA issues
+- Extract JIRA issue keys from commit messages
+- Link Git commits to JIRA issues via comments
+- Retrieve commits linked to a JIRA issue via Development Information API
+- Link Pull Requests (GitHub, GitLab, Bitbucket) to JIRA issues
+- Generate PR descriptions from JIRA issue details
+- Integrate developer workflows with JIRA tracking
 
 ## Phase 1: Git Integration
 
@@ -104,27 +120,6 @@ python get_issue_commits.py PROJ-123 --output json
 
 **Note:** Requires JIRA Development Information integration (GitHub for JIRA, etc.)
 
-## Configuration
-
-Uses shared configuration from `.claude/settings.json` and `.claude/settings.local.json`.
-
-Required environment variables or config:
-- `JIRA_SITE_URL`: Your JIRA instance URL
-- `JIRA_EMAIL`: Your JIRA email
-- `JIRA_API_TOKEN`: Your JIRA API token
-
-## Issue Type Prefixes
-
-| Issue Type | Branch Prefix |
-|------------|--------------|
-| Bug, Defect | `bugfix/` |
-| Story, Feature, Improvement | `feature/` |
-| Task, Sub-task | `task/` |
-| Epic | `epic/` |
-| Spike, Research | `spike/` |
-| Chore, Maintenance | `chore/` |
-| Documentation | `docs/` |
-
 ## Phase 2: PR Management
 
 ### link_pr.py
@@ -215,6 +210,113 @@ The login button does not respond to clicks on mobile devices...
 - [ ] No regressions introduced
 ```
 
+## Configuration
+
+Uses shared configuration from `.claude/settings.json` and `.claude/settings.local.json`.
+
+Required environment variables or config:
+- `JIRA_SITE_URL`: Your JIRA instance URL
+- `JIRA_EMAIL`: Your JIRA email
+- `JIRA_API_TOKEN`: Your JIRA API token
+
+## Issue Type Prefixes
+
+| Issue Type | Branch Prefix |
+|------------|--------------|
+| Bug, Defect | `bugfix/` |
+| Story, Feature, Improvement | `feature/` |
+| Task, Sub-task | `task/` |
+| Epic | `epic/` |
+| Spike, Research | `spike/` |
+| Chore, Maintenance | `chore/` |
+| Documentation | `docs/` |
+
+## Common Options
+
+All scripts support these common options:
+
+| Option | Description |
+|--------|-------------|
+| `--profile` | JIRA profile for multi-instance support |
+| `--output` | Output format: `text` (default), `json`, or `git` (branch scripts only) |
+| `--help` | Show detailed help and examples |
+
+Script-specific options:
+
+| Script | Key Options |
+|--------|-------------|
+| `create_branch_name.py` | `--prefix`, `--auto-prefix`, `--max-length` |
+| `parse_commit_issues.py` | `--from-stdin`, `--project`, `--unique` |
+| `link_commit.py` | `--commit`, `--repo`, `--message`, `--from-message` |
+| `get_issue_commits.py` | `--detailed`, `--repo` |
+| `link_pr.py` | `--pr`, `--status`, `--title` |
+| `create_pr_description.py` | `--include-checklist`, `--include-labels`, `--include-components`, `--copy` |
+
+## Exit Codes
+
+All scripts use the following exit codes:
+
+| Exit Code | Meaning |
+|-----------|---------|
+| 0 | Operation completed successfully |
+| 1 | Error occurred (validation, API, or configuration error) |
+| 2 | Invalid arguments or usage error |
+
+## Troubleshooting
+
+### Development Information API Issues
+
+**Problem:** `get_issue_commits.py` returns empty results
+
+**Solutions:**
+1. Verify your JIRA instance has a Development Tool integration installed (e.g., GitHub for JIRA, Bitbucket for JIRA)
+2. Check that commits include JIRA issue keys in commit messages
+3. Ensure the integration has synced recent commits (may take a few minutes)
+4. Verify you have permission to view development information on the issue
+
+### Branch Name Generation Issues
+
+**Problem:** Branch name is truncated unexpectedly
+
+**Solution:** Use `--max-length` to increase the limit (default is 50 characters):
+```bash
+python create_branch_name.py PROJ-123 --max-length 80
+```
+
+**Problem:** Issue type not recognized for auto-prefix
+
+**Solution:** Use custom prefix instead:
+```bash
+python create_branch_name.py PROJ-123 --prefix custom-type
+```
+
+### Commit Linking Issues
+
+**Problem:** Comment not appearing on JIRA issue
+
+**Solutions:**
+1. Verify JIRA API credentials have comment permission
+2. Check the issue key is valid and accessible
+3. Ensure the repository URL format is correct for your provider
+
+### PR Link Issues
+
+**Problem:** PR link not recognized by JIRA
+
+**Solutions:**
+1. Verify the PR URL format matches supported providers
+2. Check that JIRA has the corresponding integration installed
+3. For GitLab, use the correct merge request URL format (`/-/merge_requests/`)
+
+### Common API Errors
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| 401 Unauthorized | Invalid or expired API token | Regenerate token at id.atlassian.com |
+| 403 Forbidden | Insufficient permissions | Request access from JIRA admin |
+| 404 Not Found | Issue key doesn't exist | Verify issue key format and project access |
+| 429 Rate Limited | Too many API requests | Wait and retry; scripts auto-retry with backoff |
+
 ## Scripts Summary
 
 | Phase | Script | Purpose | Tests |
@@ -226,3 +328,11 @@ The login button does not respond to clicks on mobile devices...
 | 2 | link_pr.py | Link PRs to issues | 7 |
 | 2 | create_pr_description.py | Generate PR descriptions | 6 |
 | **Total** | **6 scripts** | | **42 tests** |
+
+## Related Skills
+
+- **jira-issue**: Core CRUD operations on issues (get issue details for branch names)
+- **jira-lifecycle**: Workflow transitions (auto-transition on PR merge)
+- **jira-collaborate**: Comments and attachments (commit linking uses comments)
+- **jira-search**: JQL queries to find issues for bulk operations
+- **jira-bulk**: Bulk operations for processing multiple issues from commits

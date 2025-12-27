@@ -1,13 +1,6 @@
 ---
-name: jira-jsm
-version: 1.0.0
-description: Complete ITSM/ITIL workflow support for Jira Service Management
-category: jira
-tags: [jsm, itsm, itil, service-desk, sla, approvals, customers, assets, knowledge-base]
-author: Claude Code
-requires:
-  - jira-issue
-  - shared
+name: "JIRA Service Management"
+description: "Complete ITSM/ITIL workflow support for JSM - service desks, requests, SLAs, customers, approvals, knowledge base. Use when managing service desk requests, tracking SLAs, or handling customer operations."
 ---
 
 # jira-jsm
@@ -111,6 +104,60 @@ Knowledge management and asset tracking:
   - Update asset attributes
   - Link assets to requests
   - Find affected assets for requests
+
+## Common Options
+
+All scripts in this skill support the following common options:
+
+| Option | Description | Example |
+|--------|-------------|---------|
+| `--help` | Show help message and exit | `python script.py --help` |
+| `--profile PROFILE` | Use specific JIRA profile from settings | `--profile production` |
+| `--output FORMAT` | Output format: text, json, table | `--output json` |
+| `--service-desk ID` | Service desk ID (numeric) | `--service-desk 1` |
+
+### Script-Specific Options
+
+| Script | Key Options |
+|--------|-------------|
+| `create_request.py` | `--request-type`, `--summary`, `--description`, `--on-behalf-of`, `--field` |
+| `get_request.py` | `--show-sla`, `--show-comments`, `--show-participants` |
+| `list_requests.py` | `--filter`, `--max-results`, `--start` |
+| `add_request_comment.py` | `--body`, `--internal` (for agent-only comments) |
+| `get_sla.py` | `--sla-id` (for specific SLA metric) |
+| `list_customers.py` | `--filter`, `--max-results` |
+| `create_asset.py` | `--object-schema`, `--object-type`, `--attributes` |
+
+## Exit Codes
+
+All scripts use consistent exit codes:
+
+| Code | Meaning | Description |
+|------|---------|-------------|
+| 0 | Success | Operation completed successfully |
+| 1 | General Error | Unspecified error occurred |
+| 2 | Validation Error | Invalid input parameters (bad issue key, missing required field) |
+| 3 | Authentication Error | Invalid or expired API token |
+| 4 | Permission Error | User lacks required JIRA permissions |
+| 5 | Not Found | Service desk, request, customer, or resource not found |
+| 6 | Conflict Error | Operation conflicts with current state (e.g., duplicate customer) |
+| 7 | Rate Limit Error | API rate limit exceeded (after retries exhausted) |
+
+### Exit Code Examples
+
+```bash
+# Check exit code after command
+python get_request.py SD-123
+echo $?  # 0 = success, non-zero = error
+
+# Handle errors in scripts
+python create_request.py --service-desk 1 --request-type 10 --summary "Test"
+if [ $? -eq 3 ]; then
+    echo "Authentication failed - check API token"
+elif [ $? -eq 5 ]; then
+    echo "Service desk not found"
+fi
+```
 
 ## Available Scripts (45 total)
 
@@ -970,20 +1017,71 @@ python add_customer.py --service-desk 1 --user user@example.com
 
 ### Cloud vs Data Center API Differences
 
-**JSM Cloud** (this implementation):
-- Uses `/rest/servicedeskapi/*` endpoints
-- Customer management via email addresses
-- Assets require separate "Assets - For JSM" app
+This skill is designed for **JSM Cloud**. When working with JSM Data Center, be aware of the following differences:
 
-**JSM Data Center**:
-- Some endpoints differ (e.g., `/rest/servicedesk/1/*`)
-- Customer management may use usernames instead of email
-- Assets/Insight may be built-in depending on version
+#### API Endpoint Differences
 
-**Migration tip**: When moving between Cloud and Data Center, update:
-1. API endpoint paths in shared library
-2. Customer/user identifier format (email vs username)
-3. Assets API endpoints if using built-in Insight
+| Feature | Cloud Endpoint | Data Center Endpoint |
+|---------|----------------|---------------------|
+| Service Desk API | `/rest/servicedeskapi/*` | `/rest/servicedesk/1/*` |
+| Customer API | Uses email addresses | May use usernames |
+| Assets/Insight | Separate app required | Built-in (version dependent) |
+| Request create | `/rest/servicedeskapi/request` | `/rest/servicedesk/1/request` |
+
+#### Customer/User Identification
+
+**Cloud**:
+```bash
+# Uses email addresses for customer identification
+python add_customer.py --service-desk 1 --user user@example.com
+python create_request.py --on-behalf-of user@example.com
+```
+
+**Data Center**:
+```bash
+# May require usernames instead of email addresses
+python add_customer.py --service-desk 1 --user jdoe
+python create_request.py --on-behalf-of jdoe
+```
+
+#### Assets/Insight Integration
+
+**Cloud**:
+- Requires separate "Assets - For Jira Service Management" app
+- API: `/rest/insight/1.0/*` or newer `/gateway/api/jsm/assets/*`
+- Free tier available (up to 100 assets)
+
+**Data Center**:
+- May be built-in depending on version (8.x vs 9.x)
+- API paths may differ: `/rest/insight/1.0/*`
+- Full functionality included with JSM license
+
+#### Migration Considerations
+
+When migrating scripts between Cloud and Data Center:
+
+1. **Update API endpoint paths** in shared library configuration
+2. **Change customer identifiers** from email to username (or vice versa)
+3. **Verify Assets API availability** and endpoint paths
+4. **Test SLA APIs** as response formats may differ slightly
+5. **Check approval workflow APIs** for any differences in approval state handling
+
+#### Version-Specific Notes
+
+| Version | Notes |
+|---------|-------|
+| Data Center 8.x | Limited JSM API support, some endpoints differ |
+| Data Center 9.0+ | Better API parity with Cloud |
+| Cloud | Primary target, all features supported |
+
+**Tip**: Use the `--profile` flag to maintain separate configurations for Cloud and Data Center instances:
+```bash
+# Cloud instance
+python list_service_desks.py --profile cloud-prod
+
+# Data Center instance
+python list_service_desks.py --profile dc-prod
+```
 
 ## Best Practices
 

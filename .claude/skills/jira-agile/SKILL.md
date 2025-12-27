@@ -1,3 +1,8 @@
+---
+name: "JIRA Agile Management"
+description: "Agile and Scrum workflow management - epics, sprints, backlogs, story points. Use when creating epics, managing sprints, ranking backlog items, or estimating issues."
+---
+
 # jira-agile
 
 Agile and Scrum workflow management for JIRA - epics, sprints, backlogs, and story points.
@@ -131,6 +136,67 @@ This skill provides comprehensive Agile/Scrum workflow operations:
 - `estimate_issue.py` - Set story points on issues (single, bulk, JQL)
 - `get_estimates.py` - Get story point summaries for sprints/epics
 
+## Common Options
+
+All scripts in this skill support the following common options:
+
+### Profile Selection
+```bash
+--profile <name>    # Use a specific JIRA profile (dev, staging, prod)
+```
+
+Example:
+```bash
+python get_epic.py PROJ-100 --profile development
+python create_sprint.py --board 123 --name "Sprint 1" --profile staging
+```
+
+### Output Format
+```bash
+--output <format>   # Output format: text (default), json
+```
+
+Example:
+```bash
+python get_epic.py PROJ-100 --output json
+python get_sprint.py 456 --with-issues --output json
+python get_backlog.py --board 123 --output json
+python get_estimates.py --sprint 456 --output json
+```
+
+### Dry Run Mode
+For scripts that modify data, preview changes before applying:
+```bash
+--dry-run           # Preview changes without making them
+```
+
+Example:
+```bash
+python add_to_epic.py --epic PROJ-100 --issues PROJ-101,PROJ-102 --dry-run
+python move_to_sprint.py --sprint 456 --jql "status='To Do'" --dry-run
+python estimate_issue.py --jql "sprint=456" --points 3 --dry-run
+```
+
+## Exit Codes
+
+All scripts return standard exit codes:
+
+| Code | Meaning | Description |
+|------|---------|-------------|
+| 0 | Success | Operation completed successfully |
+| 1 | Error | Operation failed (validation, API error, etc.) |
+| 130 | Cancelled | Operation cancelled by user (Ctrl+C) |
+
+Example usage in shell scripts:
+```bash
+python add_to_epic.py --epic PROJ-100 --issues PROJ-101
+if [ $? -eq 0 ]; then
+    echo "Issues added successfully"
+else
+    echo "Failed to add issues"
+fi
+```
+
 ## Usage Examples
 
 ### Creating Epics
@@ -151,6 +217,9 @@ python create_epic.py --project PROJ \
   --color blue \
   --assignee self \
   --priority High
+
+# Create epic and output as JSON
+python create_epic.py --project PROJ --summary "Mobile App MVP" --output json
 ```
 
 ### Managing Epic Relationships
@@ -240,6 +309,9 @@ python create_sprint.py --board 123 --name "Sprint 42" \
 # Create sprint with goal
 python create_sprint.py --board 123 --name "Sprint 42" \
   --goal "Launch MVP" --start 2025-01-20 --end 2025-02-03
+
+# Create sprint and output as JSON
+python create_sprint.py --board 123 --name "Sprint 42" --output json
 ```
 
 ### Managing Sprint Lifecycle
@@ -458,6 +530,10 @@ If your JIRA instance uses different field IDs, you can:
 - Use `transition_issue.py` to move epic children through workflow states
 - Progress calculations in `get_epic.py` reflect current status of all children
 
+### jira-fields skill
+- Use `get_agile_fields.py` to discover correct custom field IDs for your instance
+- Helpful when Epic Link or Story Points fields have different IDs
+
 ## Notes
 
 - All scripts support the `--profile` flag for managing multiple JIRA instances
@@ -510,16 +586,37 @@ If your JIRA instance uses different field IDs, you can:
 
 ### "Epic Link field not found"
 - Custom field IDs vary by JIRA instance
+- Use `jira-fields` skill's `get_agile_fields.py` to discover correct field ID
 - Check your instance's epic link field ID and update EPIC_LINK_FIELD constant in script
+- API endpoint for field discovery: `https://your-domain.atlassian.net/rest/api/3/field`
 
 ### "Issue type 'Epic' not found"
 - Ensure your project has Epic issue type enabled
-- Check project settings → Issue Types
+- Check project settings at: Administration > Projects > [Project] > Issue Types
+- Some project templates may use different names or not include Epics
 
 ### "Subtask cannot have subtasks"
 - JIRA enforces a one-level hierarchy for subtasks
 - Use epics for multi-level organization instead
+- Consider using issue links (jira-relationships skill) for complex dependencies
 
 ### Story points not showing
 - Ensure Story Points field exists in your JIRA instance
+- Use `jira-fields` skill to discover the correct field ID
 - Check STORY_POINTS_FIELD constant matches your field ID
+- Verify the field is on your project's screens
+
+### "Board not found" or "Sprint not found"
+- Verify the board/sprint ID is correct
+- Ensure you have permission to access the board
+- Check that the board is a Scrum board (Kanban boards don't have sprints)
+
+### Permission errors on bulk operations
+- Bulk operations require appropriate permissions on all target issues
+- Use `--dry-run` first to identify issues you cannot modify
+- Check project permissions and issue security levels
+
+### API rate limiting (429 errors)
+- The client automatically retries with exponential backoff
+- For very large bulk operations, consider splitting into smaller batches
+- Use JQL queries with `--dry-run` to estimate operation size first

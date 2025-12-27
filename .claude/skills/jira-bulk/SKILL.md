@@ -1,3 +1,8 @@
+---
+name: "JIRA Bulk Operations"
+description: "High-performance bulk operations at scale - transitions, assignments, priorities, cloning with progress tracking. Use when transitioning multiple issues, bulk assigning, or cloning with dry-run preview."
+---
+
 # jira-bulk
 
 Bulk operations for JIRA issue management at scale - transitions, assignments, priorities, and cloning.
@@ -89,6 +94,52 @@ All scripts support:
 - `--profile` - JIRA profile for multi-instance support
 - `--dry-run` - Preview changes without making them
 - `--max-issues` - Limit number of issues to process (default: 100)
+
+## Advanced Features
+
+### Batch Processing
+
+For large operations (500+ issues), use batch processing to improve reliability:
+
+```bash
+# Process in batches of 100 issues
+python bulk_transition.py --jql "project=PROJ" --to "Done" --batch-size 100
+
+# Auto-calculated batch size (recommended for very large operations)
+python bulk_transition.py --jql "project=PROJ" --to "Done" --max-issues 5000
+```
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `--batch-size` | Auto-calculated | Number of issues to process per batch |
+| `--max-issues` | 10000 | Maximum total issues to process |
+
+### Checkpoint and Resume
+
+For very large or critical operations, enable checkpointing to allow resumption after interruption:
+
+```bash
+# Enable checkpointing for a large operation
+python bulk_transition.py --jql "project=PROJ" --to "Done" --enable-checkpoint
+
+# List all pending checkpoints
+python bulk_transition.py --list-checkpoints
+
+# Resume an interrupted operation
+python bulk_transition.py --resume transition-20231215-143022 --to "Done"
+```
+
+| Parameter | Description |
+|-----------|-------------|
+| `--enable-checkpoint` | Save progress to allow resumption if operation is interrupted |
+| `--list-checkpoints` | Show all pending checkpoints that can be resumed |
+| `--resume <operation-id>` | Resume a previously interrupted operation by its ID |
+
+Checkpoints are stored in `~/.jira-skills/checkpoints/` and contain:
+- Operation ID (timestamp-based identifier)
+- Progress percentage and counts
+- List of processed issue keys
+- Start and last update timestamps
 
 ## Rate Limiting
 
@@ -185,6 +236,49 @@ In addition to `delay_between_ops`, the underlying JIRA client automatically:
 - Retries on HTTP 429 (Rate Limit) with exponential backoff
 - Retries on 5xx server errors (500, 502, 503, 504)
 - Uses up to 3 retry attempts with increasing delays
+
+## Troubleshooting
+
+### Common Errors
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `Transition not available` | Issue is not in a state that allows the target transition | Check the issue's current status and available transitions with `get_issue.py --show-transitions` |
+| `Permission denied` | User lacks permission to perform the operation | Verify JIRA permissions for the project/issue type |
+| `Rate limit exceeded (429)` | Too many API requests | Increase `delay_between_ops` or reduce `--batch-size` |
+| `Issue not found` | Issue key doesn't exist or user can't access it | Verify issue keys and project access |
+| `Invalid JQL` | Malformed JQL query | Test the JQL in JIRA's issue search first |
+| `Resolution not found` | Invalid resolution name | Check available resolutions in project settings |
+
+### Timeout Issues
+
+For very large operations that may timeout:
+
+```bash
+# Use smaller batch sizes
+python bulk_transition.py --jql "project=PROJ" --to "Done" --batch-size 50
+
+# Enable checkpointing to allow resume after timeout
+python bulk_transition.py --jql "project=PROJ" --to "Done" --enable-checkpoint --batch-size 50
+```
+
+### Partial Failures
+
+When operations partially fail:
+
+1. Review the error summary at the end of execution
+2. The `errors` dictionary contains issue-specific failure reasons
+3. Use `--dry-run` first to identify potential issues before executing
+4. Consider running failed issues in a separate batch after fixing the underlying issue
+
+### Confirmation Prompts
+
+Operations affecting more than 50 issues will prompt for confirmation:
+
+```bash
+# Skip confirmation (use with caution)
+python bulk_transition.py --jql "project=PROJ" --to "Done" --yes
+```
 
 ## Related skills
 
