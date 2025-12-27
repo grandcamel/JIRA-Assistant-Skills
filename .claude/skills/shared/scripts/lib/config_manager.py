@@ -3,9 +3,10 @@ Configuration management for JIRA Assistant Skills.
 
 Handles loading and merging configuration from multiple sources:
 1. Environment variables (highest priority)
-2. .claude/settings.local.json (personal settings, gitignored)
-3. .claude/settings.json (team defaults, committed)
-4. Hardcoded defaults (fallbacks)
+2. System keychain (if keyring available)
+3. .claude/settings.local.json (personal settings, gitignored)
+4. .claude/settings.json (team defaults, committed)
+5. Hardcoded defaults (fallbacks)
 
 Supports configurable Agile field IDs with automatic discovery fallback.
 """
@@ -19,6 +20,13 @@ from error_handler import ValidationError
 from validators import validate_url, validate_email
 from jira_client import JiraClient
 from automation_client import AutomationClient
+
+# Try to import credential_manager for keychain support
+try:
+    from credential_manager import CredentialManager, is_keychain_available
+    CREDENTIAL_MANAGER_AVAILABLE = True
+except ImportError:
+    CREDENTIAL_MANAGER_AVAILABLE = False
 
 
 # Default Agile field IDs (common defaults, may vary per JIRA instance)
@@ -161,7 +169,11 @@ class ConfigManager:
         """
         Get JIRA credentials (URL, email, API token) for a profile.
 
-        Merges from environment variables and configuration files.
+        Checks in priority order:
+        1. Environment variables (highest priority)
+        2. System keychain (if keyring available)
+        3. settings.local.json
+        4. settings.json (for URL only)
 
         Args:
             profile: Profile name (default: self.profile)
@@ -173,48 +185,66 @@ class ConfigManager:
             ValidationError: If required credentials are missing
         """
         profile = profile or self.profile
-        profile_config = self.get_profile_config(profile)
 
+        # Get profile config (may raise ValidationError if profile doesn't exist)
+        try:
+            profile_config = self.get_profile_config(profile)
+        except ValidationError:
+            profile_config = {}
+
+        # Initialize credential variables
+        url, email, api_token = None, None, None
+
+        # Priority 1: Environment variables (highest priority)
         url = os.getenv('JIRA_SITE_URL')
+        email = os.getenv('JIRA_EMAIL')
+        api_token = os.getenv(f'JIRA_API_TOKEN_{profile.upper()}') or os.getenv('JIRA_API_TOKEN')
+
+        # Priority 2: System keychain (if available and we're missing any credential)
+        if CREDENTIAL_MANAGER_AVAILABLE and is_keychain_available():
+            if not (url and email and api_token):
+                try:
+                    cred_mgr = CredentialManager(profile)
+                    kc_url, kc_email, kc_token = cred_mgr.get_credentials_from_keychain(profile)
+                    url = url or kc_url
+                    email = email or kc_email
+                    api_token = api_token or kc_token
+                except Exception:
+                    pass  # Keychain lookup failed, continue to JSON fallback
+
+        # Priority 3: settings.local.json credentials
+        if not (url and email and api_token):
+            credentials = self.config.get('jira', {}).get('credentials', {})
+            profile_creds = credentials.get(profile, {})
+            email = email or profile_creds.get('email')
+            api_token = api_token or profile_creds.get('api_token')
+
+        # Priority 4: settings.json for URL (from profile config)
         if not url:
             url = profile_config.get('url')
 
+        # Validate we have all required credentials
         if not url:
             raise ValidationError(
                 f"JIRA URL not configured for profile '{profile}'. "
-                "Set JIRA_SITE_URL environment variable or configure in .claude/settings.json"
+                "Set JIRA_SITE_URL environment variable, run setup.py, or configure in .claude/settings.json"
             )
-
-        url = validate_url(url)
-
-        api_token = os.getenv(f'JIRA_API_TOKEN_{profile.upper()}')
-        if not api_token:
-            api_token = os.getenv('JIRA_API_TOKEN')
-
-        if not api_token:
-            credentials = self.config.get('jira', {}).get('credentials', {})
-            profile_creds = credentials.get(profile, {})
-            api_token = profile_creds.get('api_token')
 
         if not api_token:
             raise ValidationError(
                 f"JIRA API token not configured for profile '{profile}'. "
-                "Set JIRA_API_TOKEN environment variable or configure in .claude/settings.local.json\n"
+                "Set JIRA_API_TOKEN environment variable, run setup.py, or configure in .claude/settings.local.json\n"
                 "Get a token at: https://id.atlassian.com/manage-profile/security/api-tokens"
             )
-
-        email = os.getenv('JIRA_EMAIL')
-        if not email:
-            credentials = self.config.get('jira', {}).get('credentials', {})
-            profile_creds = credentials.get(profile, {})
-            email = profile_creds.get('email')
 
         if not email:
             raise ValidationError(
                 f"JIRA email not configured for profile '{profile}'. "
-                "Set JIRA_EMAIL environment variable or configure in .claude/settings.local.json"
+                "Set JIRA_EMAIL environment variable, run setup.py, or configure in .claude/settings.local.json"
             )
 
+        # Validate format
+        url = validate_url(url)
         email = validate_email(email)
 
         return url, email, api_token

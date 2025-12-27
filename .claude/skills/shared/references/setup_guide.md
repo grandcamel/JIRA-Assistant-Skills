@@ -2,25 +2,68 @@
 
 Complete setup guide for getting started with JIRA Assistant Skills.
 
-## Prerequisites
+## Quick Start (Recommended)
+
+The fastest way to get started:
+
+### Option 1: One-Line Install
+
+**macOS / Linux:**
+```bash
+curl -sSL https://raw.githubusercontent.com/YOUR_ORG/jira-assistant-skills/main/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+iwr -useb https://raw.githubusercontent.com/YOUR_ORG/jira-assistant-skills/main/install.ps1 | iex
+```
+
+### Option 2: Interactive Setup Wizard
+
+```bash
+python setup.py
+```
+
+This wizard will:
+1. Check your Python version
+2. Install dependencies
+3. Open the browser for API token creation
+4. Prompt for your credentials
+5. Validate the connection
+6. Store credentials securely in your system keychain
+
+### Option 3: Claude Code Slash Command
+
+```
+/jira-assistant-setup
+```
+
+Claude will guide you through the setup conversationally.
+
+---
+
+## Manual Setup
+
+If you prefer manual configuration, follow these steps:
+
+### Prerequisites
 
 - Python 3.8 or higher
 - JIRA Cloud or JIRA Service Management instance
 - JIRA account with appropriate permissions
 
-## Step 1: Install Dependencies
+### Step 1: Install Dependencies
 
 ```bash
-cd .claude/skills/shared/scripts/lib
-pip install -r requirements.txt
+pip install -r .claude/skills/shared/scripts/lib/requirements.txt
 ```
 
-Or install globally:
+Or install individually:
 ```bash
-pip install requests tabulate colorama python-dotenv
+pip install requests tabulate colorama python-dotenv keyring
 ```
 
-## Step 2: Get JIRA API Token
+### Step 2: Get JIRA API Token
 
 1. Go to https://id.atlassian.com/manage-profile/security/api-tokens
 2. Click "Create API token"
@@ -100,6 +143,38 @@ python .claude/skills/jira-search/scripts/jql_search.py "project = PROJ"
 
 If these work, you're all set!
 
+## Credential Storage Options
+
+Credentials can be stored in multiple ways (checked in this order):
+
+| Method | Security | Platform | Command |
+|--------|----------|----------|---------|
+| Environment variables | Variable | All | `export JIRA_API_TOKEN=...` |
+| System keychain | Highest | All | `python setup.py` (default) |
+| settings.local.json | Medium | All | `python setup.py --json-only` |
+
+### System Keychain (Recommended)
+
+The setup wizard stores credentials in your system keychain by default:
+- **macOS**: Keychain Access
+- **Windows**: Credential Manager
+- **Linux**: GNOME Keyring / KWallet
+
+### Environment Variables
+
+Set these environment variables:
+```bash
+export JIRA_API_TOKEN="your-token"
+export JIRA_EMAIL="your-email@company.com"
+export JIRA_SITE_URL="https://company.atlassian.net"
+```
+
+For profile-specific tokens:
+```bash
+export JIRA_API_TOKEN_PRODUCTION="prod-token"
+export JIRA_API_TOKEN_DEVELOPMENT="dev-token"
+```
+
 ## Configuration Priority
 
 Settings are merged in this order (later overrides earlier):
@@ -107,7 +182,8 @@ Settings are merged in this order (later overrides earlier):
 1. Hardcoded defaults
 2. `.claude/settings.json` (team defaults)
 3. `.claude/settings.local.json` (personal settings)
-4. Environment variables (highest priority)
+4. System keychain
+5. Environment variables (highest priority)
 
 ## Multiple Profiles
 

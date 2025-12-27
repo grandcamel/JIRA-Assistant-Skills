@@ -15,6 +15,10 @@ python-dotenv>=1.0.0
 # Progress bar for bulk operations
 tqdm>=4.66.0
 
+# Secure credential storage (system keychain)
+# Optional: graceful fallback to JSON if unavailable
+keyring>=24.0.0
+
 # Testing dependencies
 pytest>=7.4.0
 pytest-cov>=4.1.0
