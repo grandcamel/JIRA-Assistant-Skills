@@ -2,11 +2,15 @@
 """
 Transition a JIRA issue to a new status.
 
+If project context has been discovered (via discover_project.py), error messages
+and dry-run output will include expected workflow transitions from the context.
+
 Usage:
     python transition_issue.py PROJ-123 --name "In Progress"
     python transition_issue.py PROJ-123 --id 31
     python transition_issue.py PROJ-123 --name "Done" --resolution "Fixed"
     python transition_issue.py PROJ-123 --name "In Progress" --sprint 42
+    python transition_issue.py PROJ-123 --name "Done" --dry-run  # Preview with context hints
 """
 
 import sys
@@ -16,12 +20,45 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
+from config_manager import get_jira_client, has_project_context, get_project_context
 from error_handler import print_error, JiraError, ValidationError
 from validators import validate_issue_key, validate_transition_id
 from formatters import print_success, print_info, format_transitions
 from adf_helper import text_to_adf
 from transition_helpers import find_transition_by_name
+from project_context import get_valid_transitions, get_statuses_for_issue_type
+
+
+def get_context_workflow_hint(project_key: str, issue_type: str, current_status: str, profile: str = None) -> str:
+    """
+    Get workflow hint from project context if available.
+
+    Args:
+        project_key: Project key
+        issue_type: Issue type name
+        current_status: Current status name
+        profile: JIRA profile
+
+    Returns:
+        String with expected transitions from context, or empty string if no context
+    """
+    if not has_project_context(project_key, profile):
+        return ""
+
+    context = get_project_context(project_key, profile)
+    if not context.has_context():
+        return ""
+
+    valid_transitions = get_valid_transitions(context, issue_type, current_status)
+    if not valid_transitions:
+        return ""
+
+    # Format context workflow info
+    lines = ["\nExpected transitions from project context:"]
+    for t in valid_transitions:
+        lines.append(f"  - {t.get('name')} → {t.get('to_status')}")
+
+    return "\n".join(lines)
 
 
 def transition_issue(issue_key: str, transition_id: str = None,
@@ -53,10 +90,17 @@ def transition_issue(issue_key: str, transition_id: str = None,
 
     client = get_jira_client(profile)
 
+    # Get issue details first for context hints
+    issue = client.get_issue(issue_key, fields=['status', 'issuetype', 'project'])
+    current_status = issue.get('fields', {}).get('status', {}).get('name', 'Unknown')
+    issue_type = issue.get('fields', {}).get('issuetype', {}).get('name', 'Unknown')
+    project_key = issue.get('fields', {}).get('project', {}).get('key', issue_key.split('-')[0])
+
     transitions = client.get_transitions(issue_key)
 
     if not transitions:
-        raise ValidationError(f"No transitions available for {issue_key}")
+        context_hint = get_context_workflow_hint(project_key, issue_type, current_status, profile)
+        raise ValidationError(f"No transitions available for {issue_key} (status: {current_status}){context_hint}")
 
     if transition_name:
         transition = find_transition_by_name(transitions, transition_name)
@@ -66,8 +110,9 @@ def transition_issue(issue_key: str, transition_id: str = None,
         matching = [t for t in transitions if t['id'] == transition_id]
         if not matching:
             available = format_transitions(transitions)
+            context_hint = get_context_workflow_hint(project_key, issue_type, current_status, profile)
             raise ValidationError(
-                f"Transition ID '{transition_id}' not available.\n\n{available}"
+                f"Transition ID '{transition_id}' not available.\n\n{available}{context_hint}"
             )
         transition = matching[0]
 
@@ -79,9 +124,6 @@ def transition_issue(issue_key: str, transition_id: str = None,
     if comment:
         transition_fields['comment'] = text_to_adf(comment)
 
-    # Get current status for dry-run display
-    issue = client.get_issue(issue_key, fields=['status'])
-    current_status = issue.get('fields', {}).get('status', {}).get('name', 'Unknown')
     target_status = transition.get('to', {}).get('name', transition.get('name', 'Unknown'))
 
     result = {
@@ -107,6 +149,12 @@ def transition_issue(issue_key: str, transition_id: str = None,
             print(f"  Comment: (would add comment)")
         if sprint_id:
             print(f"  Sprint: Would move to sprint {sprint_id}")
+
+        # Show context workflow hint if available
+        context_hint = get_context_workflow_hint(project_key, issue_type, target_status, profile)
+        if context_hint:
+            print(f"\n  After transition, expected options:{context_hint.replace(chr(10), chr(10) + '  ')}")
+
         client.close()
         return result
 

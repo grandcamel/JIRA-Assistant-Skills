@@ -10,6 +10,7 @@ Cache management, request batching, and operational utilities for JIRA Assistant
 ## When to Use This Skill
 
 Use this skill when you need to:
+- **Discover project context**: Auto-discover project metadata, workflows, and usage patterns
 - **Monitor cache status**: Check cache size, entry counts, and hit rates
 - **Clear cache data**: Remove stale or sensitive cached data
 - **Pre-warm cache**: Load commonly accessed data for better performance
@@ -19,6 +20,7 @@ Use this skill when you need to:
 
 ## What This Skill Does
 
+- **Project Discovery**: Discover project metadata, workflows, and usage patterns to enable intelligent defaults
 - **Cache Status Monitoring**: Display detailed cache statistics including size, entries, hit rates, and breakdowns by category
 - **Cache Clearing**: Remove cache entries by category, pattern, or all at once with dry-run support
 - **Cache Warming**: Pre-load project metadata, field definitions, and other frequently accessed data
@@ -28,6 +30,9 @@ Use this skill when you need to:
 ## Quick Start
 
 ```bash
+# Discover project context for intelligent defaults
+python discover_project.py PROJ --profile development
+
 # Check cache status
 python cache_status.py
 
@@ -40,6 +45,12 @@ python cache_warm.py --all --profile production
 
 ## Scripts
 
+### Project Discovery
+
+| Script | Description |
+|--------|-------------|
+| `discover_project.py` | Discover project metadata, workflows, and patterns for intelligent defaults |
+
 ### Cache Management
 
 | Script | Description |
@@ -49,6 +60,50 @@ python cache_warm.py --all --profile production
 | `cache_warm.py` | Pre-warm cache with commonly accessed data |
 
 ## Script Details
+
+### discover_project.py
+
+Discover JIRA project context and save to skill directory for intelligent defaults.
+
+```bash
+# Discover and save to shareable skill directory
+python discover_project.py PROJ
+
+# Use specific profile
+python discover_project.py PROJ --profile development
+
+# Save to personal settings.local.json instead
+python discover_project.py PROJ --personal
+
+# Save to both skill directory and settings.local.json
+python discover_project.py PROJ --both
+
+# Custom sample size and period
+python discover_project.py PROJ --sample-size 200 --days 60
+
+# Output as JSON without saving
+python discover_project.py PROJ --output json --no-save
+```
+
+**What Gets Discovered:**
+
+- **Metadata**: Issue types, components, versions, priorities, assignable users
+- **Workflows**: Valid status transitions for each issue type
+- **Patterns**: Common assignees, labels, priorities based on recent activity
+- **Defaults**: Auto-generated sensible defaults based on patterns
+
+**Output:**
+
+Creates a skill directory at `.claude/skills/jira-project-{PROJECT_KEY}/`:
+```
+jira-project-PROJ/
+├── SKILL.md              # Skill documentation
+├── context/
+│   ├── metadata.json     # Issue types, components, versions
+│   ├── workflows.json    # Status transitions per issue type
+│   └── patterns.json     # Usage patterns from recent issues
+└── defaults.json         # Auto-generated default values
+```
 
 ### cache_status.py
 

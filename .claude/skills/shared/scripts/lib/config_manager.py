@@ -487,3 +487,65 @@ def get_agile_field(field_name: str, profile: Optional[str] = None) -> str:
     """
     config_manager = ConfigManager(profile=profile)
     return config_manager.get_agile_field(field_name)
+
+
+# Project context functions - lazy imports to avoid circular dependencies
+def get_project_context(project_key: str, profile: Optional[str] = None):
+    """
+    Convenience function to get project context.
+
+    Lazy-loads project context from skill directory and/or settings.local.json.
+
+    Args:
+        project_key: JIRA project key (e.g., 'PROJ')
+        profile: Profile name (default: from config or environment)
+
+    Returns:
+        ProjectContext object with metadata, workflows, patterns, and defaults
+    """
+    from project_context import get_project_context as _get_project_context
+    return _get_project_context(project_key, profile)
+
+
+def get_project_defaults(project_key: str, issue_type: Optional[str] = None,
+                         profile: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Convenience function to get default values for issue creation.
+
+    Args:
+        project_key: JIRA project key (e.g., 'PROJ')
+        issue_type: Issue type name (e.g., 'Bug', 'Story') - if specified,
+                    merges global defaults with type-specific defaults
+        profile: Profile name (default: from config or environment)
+
+    Returns:
+        Dict with default values: priority, assignee, labels, components, etc.
+        Returns empty dict if no project context exists.
+    """
+    from project_context import get_project_context as _get_project_context
+    from project_context import get_defaults_for_issue_type
+
+    context = _get_project_context(project_key, profile)
+
+    if not context.has_context():
+        return {}
+
+    if issue_type:
+        return get_defaults_for_issue_type(context, issue_type)
+    else:
+        return context.defaults.get('global', {})
+
+
+def has_project_context(project_key: str, profile: Optional[str] = None) -> bool:
+    """
+    Convenience function to check if project context exists.
+
+    Args:
+        project_key: JIRA project key
+        profile: Profile name (default: from config or environment)
+
+    Returns:
+        True if skill directory or settings config exists for this project
+    """
+    from project_context import has_project_context as _has_project_context
+    return _has_project_context(project_key, profile)

@@ -2,6 +2,10 @@
 """
 Create a new JIRA issue.
 
+If project context has been discovered (via discover_project.py), default values
+for priority, assignee, labels, components, and story_points will be applied
+automatically for unspecified fields. Use --no-defaults to skip this behavior.
+
 Usage:
     python create_issue.py --project PROJ --type Bug --summary "Issue summary"
     python create_issue.py --project PROJ --type Task --summary "Task" --description "Details" --priority High
@@ -10,6 +14,7 @@ Usage:
     python create_issue.py --project PROJ --type Task --summary "Task" --blocks PROJ-123
     python create_issue.py --project PROJ --type Task --summary "Task" --relates-to PROJ-456
     python create_issue.py --project PROJ --type Task --summary "Task" --estimate "2d"
+    python create_issue.py --project PROJ --type Bug --summary "Bug" --no-defaults
 """
 
 import sys
@@ -20,7 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client, get_agile_fields
+from config_manager import get_jira_client, get_agile_fields, get_project_defaults, has_project_context
 from error_handler import print_error, JiraError, PermissionError, NotFoundError
 from validators import validate_project_key, validate_issue_key
 from formatters import format_issue, print_success
@@ -47,7 +52,7 @@ def create_issue(project: str, issue_type: str, summary: str,
                 epic: str = None, sprint: int = None,
                 story_points: float = None,
                 blocks: list = None, relates_to: list = None,
-                estimate: str = None) -> dict:
+                estimate: str = None, no_defaults: bool = False) -> dict:
     """
     Create a new JIRA issue.
 
@@ -69,11 +74,33 @@ def create_issue(project: str, issue_type: str, summary: str,
         blocks: List of issue keys this issue blocks
         relates_to: List of issue keys this issue relates to
         estimate: Original time estimate (e.g., '2d', '4h')
+        no_defaults: If True, skip applying project context defaults
 
     Returns:
         Created issue data
     """
     project = validate_project_key(project)
+
+    # Apply project context defaults for unspecified fields
+    defaults_applied = []
+    if not no_defaults and has_project_context(project, profile):
+        defaults = get_project_defaults(project, issue_type, profile)
+        if defaults:
+            if priority is None and 'priority' in defaults:
+                priority = defaults['priority']
+                defaults_applied.append('priority')
+            if assignee is None and 'assignee' in defaults:
+                assignee = defaults['assignee']
+                defaults_applied.append('assignee')
+            if labels is None and 'labels' in defaults:
+                labels = defaults['labels']
+                defaults_applied.append('labels')
+            if components is None and 'components' in defaults:
+                components = defaults['components']
+                defaults_applied.append('components')
+            if story_points is None and 'story_points' in defaults:
+                story_points = defaults['story_points']
+                defaults_applied.append('story_points')
 
     fields = {}
 
@@ -171,6 +198,8 @@ def create_issue(project: str, issue_type: str, summary: str,
         result['links_created'] = links_created
     if links_failed:
         result['links_failed'] = links_failed
+    if defaults_applied:
+        result['defaults_applied'] = defaults_applied
 
     client.close()
 
@@ -220,6 +249,9 @@ def main():
                        help='Original time estimate (e.g., 2d, 4h, 1w)')
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
+    parser.add_argument('--no-defaults',
+                       action='store_true',
+                       help='Disable project context defaults')
     parser.add_argument('--output', '-o',
                        choices=['text', 'json'],
                        default='text',
@@ -251,7 +283,8 @@ def main():
             story_points=args.story_points,
             blocks=blocks,
             relates_to=relates_to,
-            estimate=args.estimate
+            estimate=args.estimate,
+            no_defaults=args.no_defaults
         )
 
         issue_key = result.get('key')
@@ -261,6 +294,9 @@ def main():
         else:
             print_success(f"Created issue: {issue_key}")
             print(f"URL: {result.get('self', '').replace('/rest/api/3/issue/', '/browse/')}")
+            defaults_applied = result.get('defaults_applied', [])
+            if defaults_applied:
+                print(f"Defaults applied: {', '.join(defaults_applied)}")
             links_created = result.get('links_created', [])
             if links_created:
                 print(f"Links: {', '.join(links_created)}")
