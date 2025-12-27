@@ -579,6 +579,10 @@ All scripts return consistent exit codes:
 Uses shared configuration from `.claude/settings.json` and `.claude/settings.local.json`.
 Requires JIRA credentials via environment variables or settings files.
 
+## Best Practices
+
+For comprehensive guidance on JQL query optimization, filter organization, and export strategies, see [Best Practices Guide](docs/BEST_PRACTICES.md).
+
 ## Related skills
 
 - **jira-issue**: For creating and updating individual issues

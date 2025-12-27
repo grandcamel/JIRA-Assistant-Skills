@@ -1830,6 +1830,24 @@ When assigning a new workflow scheme, you may need to provide status migration m
 
 ---
 
+## Best Practices
+
+For comprehensive guidance on JIRA administration, see the [BEST_PRACTICES.md](docs/BEST_PRACTICES.md) document, which covers:
+
+- **Project Management**: Project naming conventions, lifecycle management, category organization
+- **Permission Schemes**: Principle of least privilege, scheme design patterns, holder type reference
+- **Automation Rules**: Rule design principles, common patterns, template usage
+- **Notification Schemes**: Minimizing noise, targeting recipients, scheme structure
+- **Screen Management**: Understanding the 3-tier hierarchy, field organization
+- **Issue Types & Schemes**: Type design, naming conventions, scheme strategies
+- **Workflow Management**: Workflow discovery, scheme assignment, status migration
+- **User & Group Management**: User discovery, group best practices, GDPR considerations
+- **Security Considerations**: API token security, permission auditing, scheme protection
+- **Performance Tips**: Efficient API usage, caching, large-scale operations
+- **Common Pitfalls**: Anti-patterns and solutions for each administration area
+
+---
+
 ## Related Skills
 
 This skill works well in combination with:

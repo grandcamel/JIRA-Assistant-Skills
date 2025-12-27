@@ -403,6 +403,10 @@ PYTHONPATH=".claude/skills/shared/scripts/lib:.claude/skills/jira-ops/scripts" \
   python -m pytest .claude/skills/jira-ops/tests/ -v
 ```
 
+## Best Practices
+
+For comprehensive guidance on cache management strategies, performance optimization, and operational workflows, see [Best Practices Guide](docs/BEST_PRACTICES.md).
+
 ## Roadmap
 
 Future enhancements planned:

@@ -252,6 +252,10 @@ Requires JIRA credentials via environment variables or settings files.
 - Combine units: `1d 4h`, `2h 30m`
 - Time tracking must be enabled for the project
 
+## Best Practices
+
+For comprehensive guidance on issue creation, field conventions, and workflow patterns, see [Best Practices Guide](docs/BEST_PRACTICES.md).
+
 ## Related skills
 
 - **jira-lifecycle**: For workflow transitions and status changes

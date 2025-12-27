@@ -1111,6 +1111,8 @@ python list_service_desks.py --profile dc-prod
 - Use organizations for bulk notifications
 - Maintain organization membership regularly
 
+For comprehensive JSM guidance including ITIL workflows, SLA strategies, and customer management patterns, see [Best Practices Guide](docs/BEST_PRACTICES.md).
+
 ## Performance Tips
 
 ### Bulk Operations

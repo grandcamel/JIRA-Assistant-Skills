@@ -257,6 +257,10 @@ To use time tracking features, you typically need:
 - **Edit All Worklogs** - Modify/delete any user's worklogs (admin)
 - **Delete All Worklogs** - Delete any user's worklogs (admin)
 
+## Best Practices
+
+For comprehensive guidance on time logging workflows, estimate management, and reporting patterns, see [Best Practices Guide](docs/BEST_PRACTICES.md).
+
 ## Related skills
 
 - **jira-issue**: Create and manage issues (can set estimates on creation)

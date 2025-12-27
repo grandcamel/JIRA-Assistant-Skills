@@ -280,6 +280,10 @@ Operations affecting more than 50 issues will prompt for confirmation:
 python bulk_transition.py --jql "project=PROJ" --to "Done" --yes
 ```
 
+## Best Practices
+
+For comprehensive guidance on bulk operation patterns, dry-run strategies, and batch processing optimization, see [Best Practices Guide](docs/BEST_PRACTICES.md).
+
 ## Related skills
 
 - **jira-lifecycle**: For single-issue transitions and assignments

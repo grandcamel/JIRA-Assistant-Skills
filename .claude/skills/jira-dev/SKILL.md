@@ -329,6 +329,10 @@ python create_branch_name.py PROJ-123 --prefix custom-type
 | 2 | create_pr_description.py | Generate PR descriptions | 6 |
 | **Total** | **6 scripts** | | **42 tests** |
 
+## Best Practices
+
+For comprehensive guidance on Git integration patterns, branch naming conventions, and PR workflows, see [Best Practices Guide](docs/BEST_PRACTICES.md).
+
 ## Related Skills
 
 - **jira-issue**: Core CRUD operations on issues (get issue details for branch names)

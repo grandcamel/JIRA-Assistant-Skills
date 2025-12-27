@@ -620,3 +620,7 @@ If your JIRA instance uses different field IDs, you can:
 - The client automatically retries with exponential backoff
 - For very large bulk operations, consider splitting into smaller batches
 - Use JQL queries with `--dry-run` to estimate operation size first
+
+## Best Practices
+
+For comprehensive guidance on Agile workflows, sprint planning, and estimation strategies, see [Best Practices Guide](docs/BEST_PRACTICES.md).

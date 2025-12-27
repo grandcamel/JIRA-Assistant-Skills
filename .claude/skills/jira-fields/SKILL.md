@@ -268,3 +268,7 @@ python check_project_fields.py PROJ --check-agile
 2. Check JIRA_EMAIL matches the account that created the token
 3. Generate a new API token at https://id.atlassian.com/manage-profile/security/api-tokens
 4. Try a different profile: `--profile development`
+
+## Best Practices
+
+For comprehensive guidance on custom field management, Agile field configuration, and project field strategies, see [Best Practices Guide](docs/BEST_PRACTICES.md).

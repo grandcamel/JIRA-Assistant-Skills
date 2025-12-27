@@ -204,6 +204,10 @@ The scripts automatically adapt to different workflow configurations.
 Uses shared configuration from `.claude/settings.json` and `.claude/settings.local.json`.
 Requires JIRA credentials via environment variables or settings files.
 
+## Best Practices
+
+For comprehensive guidance on workflow design, transition patterns, and version management, see [Best Practices Guide](docs/BEST_PRACTICES.md).
+
 ## Related skills
 
 - **jira-issue**: For creating and updating issues

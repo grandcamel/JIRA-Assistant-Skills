@@ -223,6 +223,10 @@ Common JIRA link types:
 Uses shared configuration from `.claude/settings.json` and `.claude/settings.local.json`.
 Requires JIRA credentials via environment variables or settings files.
 
+## Best Practices
+
+For comprehensive guidance on linking patterns, dependency management, and clone workflows, see [Best Practices Guide](docs/BEST_PRACTICES.md).
+
 ## Related skills
 
 - **jira-issue**: For creating and updating issues
