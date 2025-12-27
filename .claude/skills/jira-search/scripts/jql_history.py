@@ -411,7 +411,7 @@ Examples:
             client = get_jira_client(args.profile)
             results = client.search_issues(
                 jql,
-                fields=['key', 'summary', 'status', 'priority', 'issuetype', 'assignee'],
+                fields=['key', 'summary', 'status', 'priority', 'issuetype', 'assignee', 'reporter'],
                 max_results=args.max_results
             )
             client.close()

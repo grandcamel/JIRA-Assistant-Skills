@@ -403,6 +403,8 @@ def format_search_results(issues: List[Dict[str, Any]], show_agile: bool = False
             'Type': fields.get('issuetype', {}).get('name', ''),
             'Status': fields.get('status', {}).get('name', ''),
             'Priority': fields.get('priority', {}).get('name', '') if fields.get('priority') else '',
+            'Assignee': fields.get('assignee', {}).get('displayName', '') if fields.get('assignee') else '',
+            'Reporter': fields.get('reporter', {}).get('displayName', '') if fields.get('reporter') else '',
             'Summary': fields.get('summary', '')[:50]
         }
 
@@ -432,13 +434,13 @@ def format_search_results(issues: List[Dict[str, Any]], show_agile: bool = False
         data.append(row)
 
     if show_agile:
-        columns = ['Key', 'Type', 'Status', 'Pts', 'Epic', 'Summary']
+        columns = ['Key', 'Type', 'Status', 'Pts', 'Epic', 'Assignee', 'Reporter', 'Summary']
     elif show_links:
-        columns = ['Key', 'Type', 'Status', 'Links', 'Summary']
+        columns = ['Key', 'Type', 'Status', 'Links', 'Assignee', 'Reporter', 'Summary']
     elif show_time:
-        columns = ['Key', 'Type', 'Status', 'Est', 'Rem', 'Spent', 'Summary']
+        columns = ['Key', 'Type', 'Status', 'Est', 'Rem', 'Spent', 'Assignee', 'Reporter', 'Summary']
     else:
-        columns = ['Key', 'Type', 'Status', 'Priority', 'Summary']
+        columns = ['Key', 'Type', 'Status', 'Priority', 'Assignee', 'Reporter', 'Summary']
 
     return format_table(data, columns=columns)
 

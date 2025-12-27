@@ -86,7 +86,7 @@ def search_issues(jql: str, fields: list = None, max_results: int = 50,
     jql = validate_jql(jql)
 
     if fields is None:
-        fields = ['key', 'summary', 'status', 'priority', 'issuetype', 'assignee']
+        fields = ['key', 'summary', 'status', 'priority', 'issuetype', 'assignee', 'reporter']
         if include_agile:
             fields.extend([EPIC_LINK_FIELD, STORY_POINTS_FIELD, 'sprint'])
         if include_links:
@@ -124,7 +124,7 @@ Examples:
     parser.add_argument('--save-favourite', action='store_true',
                        help='Add saved filter to favourites (use with --save-as)')
     parser.add_argument('--fields', '-f',
-                       help='Comma-separated list of fields to return (default: key,summary,status,priority,issuetype,assignee)')
+                       help='Comma-separated list of fields to return (default: key,summary,status,priority,issuetype,assignee,reporter)')
     parser.add_argument('--max-results', '-m',
                        type=int,
                        default=50,
@@ -174,7 +174,7 @@ Examples:
         # Build fields list
         fields = [f.strip() for f in args.fields.split(',')] if args.fields else None
         if fields is None:
-            fields = ['key', 'summary', 'status', 'priority', 'issuetype', 'assignee']
+            fields = ['key', 'summary', 'status', 'priority', 'issuetype', 'assignee', 'reporter']
             if args.show_agile:
                 fields.extend([EPIC_LINK_FIELD, STORY_POINTS_FIELD, 'sprint'])
             if args.show_links:

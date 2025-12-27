@@ -200,6 +200,7 @@ def main():
 - Filter CRUD: `/rest/api/3/filter` for create, read, update, delete filters
 - Filter Sharing: `/rest/api/3/filter/{id}/permission` for sharing with projects, groups, users
 - Integration: `jql_search.py --filter 10042` to run saved filter, `jql_search.py "query" --save-as "Name"`
+- **Default search fields**: `key, summary, status, priority, issuetype, assignee, reporter` - Reporter is included by default to identify who created each issue
 
 **JQL Query Patterns**:
 ```jql

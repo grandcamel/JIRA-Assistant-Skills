@@ -736,7 +736,7 @@ python favourite_filter.py 10042 --remove
 # Good - Only needed fields
 python export_results.py "project = PROJ" \
   --output report.csv \
-  --fields key,summary,status,priority,assignee,created
+  --fields key,summary,status,priority,assignee,reporter,created
 
 # Less optimal - All fields (slower, larger)
 python export_results.py "project = PROJ" --output report.csv
@@ -745,16 +745,16 @@ python export_results.py "project = PROJ" --output report.csv
 **Common field combinations:**
 ```bash
 # Bug report
---fields key,summary,priority,status,assignee,created,resolved
+--fields key,summary,priority,status,assignee,reporter,created,resolved
 
 # Sprint report
---fields key,summary,status,assignee,Story Points,sprint
+--fields key,summary,status,assignee,reporter,Story Points,sprint
 
 # Time tracking
 --fields key,summary,Time Spent,Original Estimate,Remaining Estimate
 
 # Release report
---fields key,summary,fixVersion,status,priority,assignee
+--fields key,summary,fixVersion,status,priority,assignee,reporter
 ```
 
 ### Large Dataset Export
@@ -832,7 +832,7 @@ python export_results.py \
 python export_results.py \
   "sprint = 'Sprint 42'" \
   --output sprint-42-all.csv \
-  --fields key,summary,status,Story Points,assignee,created,resolved
+  --fields key,summary,status,Story Points,assignee,reporter,created,resolved
 ```
 
 **Bug analysis:**
@@ -848,7 +848,7 @@ python export_results.py \
 python export_results.py \
   "fixVersion = 'v2.0' AND status NOT IN (Done, Closed)" \
   --output release-2.0-remaining.csv \
-  --fields key,summary,priority,status,assignee,Story Points
+  --fields key,summary,priority,status,assignee,reporter,Story Points
 ```
 
 ### Scheduled Exports

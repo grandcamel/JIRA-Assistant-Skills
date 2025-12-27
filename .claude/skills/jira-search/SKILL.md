@@ -352,7 +352,7 @@ python streaming_export.py --resume export-20231215-143022
 
 # Export specific fields only
 python streaming_export.py "project = PROJ" --output report.csv \
-  --fields key,summary,status,priority,assignee
+  --fields key,summary,status,priority,assignee,reporter
 
 # Disable progress bar (for scripting)
 python streaming_export.py "project = PROJ" --output report.csv --no-progress
@@ -442,7 +442,7 @@ at 2:00 AM <<< 'python export_results.py "project = PROJ" --output nightly-expor
 
 **CSV Format** (default):
 ```csv
-key,summary,status,priority,issuetype,assignee,created,updated
+key,summary,status,priority,issuetype,assignee,reporter,created,updated
 PROJ-123,Fix login bug,Done,High,Bug,john.doe,2025-01-15,2025-01-20
 PROJ-124,Add dark mode,In Progress,Medium,Story,jane.smith,2025-01-16,2025-01-21
 ```

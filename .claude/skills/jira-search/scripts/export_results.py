@@ -37,7 +37,7 @@ def export_results(jql: str, output_file: str, format_type: str = 'csv',
     jql = validate_jql(jql)
 
     if fields is None:
-        fields = ['key', 'summary', 'status', 'priority', 'issuetype', 'assignee', 'created', 'updated']
+        fields = ['key', 'summary', 'status', 'priority', 'issuetype', 'assignee', 'reporter', 'created', 'updated']
 
     client = get_jira_client(profile)
     results = client.search_issues(jql, fields=fields, max_results=max_results, start_at=0)

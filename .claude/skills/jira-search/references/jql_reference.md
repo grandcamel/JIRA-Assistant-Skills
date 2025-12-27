@@ -17,14 +17,18 @@ field1 = value1 AND NOT field2 = value2
 
 ## Common Fields
 
-- `project` - Project key
-- `issuetype` / `type` - Issue type
-- `status` - Current status
+### Core Issue Fields (Returned by Default)
+- `key` - Issue key (e.g., PROJ-123)
+- `summary` - Issue summary/title
+- `status` - Current workflow status
 - `priority` - Priority level
-- `assignee` - Assigned user
-- `reporter` - Reporter user
-- `creator` - User who created issue
-- `summary` - Issue summary
+- `issuetype` / `type` - Issue type (Bug, Story, Task, etc.)
+- `assignee` - Currently assigned user
+- `reporter` - **User who created the issue** (critical for tracking issue origin)
+
+### Additional Common Fields
+- `project` - Project key
+- `creator` - User who created issue (same as reporter in most cases)
 - `description` - Issue description
 - `labels` - Labels/tags
 - `component` - Component
@@ -71,6 +75,13 @@ assignee = currentUser()
 assignee = "user@example.com"
 assignee is EMPTY
 assignee was currentUser()
+```
+
+### By Reporter
+```jql
+reporter = currentUser()
+reporter = "user@example.com"
+reporter != currentUser() AND assignee = currentUser()
 ```
 
 ### By Date
