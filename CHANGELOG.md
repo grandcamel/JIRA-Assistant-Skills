@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/grandcamel/jira-assistant-skills/compare/v1.0.2...v1.0.3) (2025-12-28)
+
+
+### Bug Fixes
+
+* **ci:** skip broken test_get_blockers.py tests temporarily ([31c1959](https://github.com/grandcamel/jira-assistant-skills/commit/31c195914c098108473b1b7b53c14e8706120487))
+
 ## [1.0.2](https://github.com/grandcamel/jira-assistant-skills/compare/v1.0.1...v1.0.2) (2025-12-28)
 
 
