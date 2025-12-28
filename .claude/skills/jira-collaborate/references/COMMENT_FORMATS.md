@@ -44,7 +44,7 @@ python add_comment.py PROJ-123 --format markdown --body "**Bold** and *italic*"
 | Heading 1 | `# Heading` | Heading |
 | Heading 2 | `## Heading` | Heading |
 | Heading 3 | `### Heading` | Heading |
-| Link | `[text](url)` | [text](url) |
+| Link | `[text](https://...)` | clickable link |
 | Bullet list | `- item` | bullet item |
 | Numbered list | `1. item` | numbered item |
 | Code block | ` ```code``` ` | code block |

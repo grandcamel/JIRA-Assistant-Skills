@@ -491,7 +491,7 @@ Our `adf_helper.py` library supports converting Markdown to ADF:
 - Bold: `**text**`
 - Italic: `*text*`
 - Code: `` `code` ``
-- Links: `[text](url)`
+- Links: `[text](https://...)`
 - Bullet lists: `- item`
 - Numbered lists: `1. item`
 - Code blocks: ` ```code``` `
