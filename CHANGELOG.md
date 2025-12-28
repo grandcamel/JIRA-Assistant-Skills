@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/grandcamel/jira-assistant-skills/compare/v1.0.0...v1.0.1) (2025-12-28)
+
+
+### Bug Fixes
+
+* **ci:** resolve pytest import path conflicts in release workflow ([edfae9c](https://github.com/grandcamel/jira-assistant-skills/commit/edfae9c3a5e73780f50fea7c7934dbfb1b013f80))
+
 ## 1.0.0 (2025-12-28)
 
 
