@@ -52,7 +52,7 @@ EOF
 - Bold: `**text**`
 - Italic: `*text*`
 - Code: `` `code` ``
-- Links: `[text](url)`
+- Links: `[text](https://...)`
 - Bullet lists: `- item`
 - Numbered lists: `1. item`
 - Code blocks: ` ```code``` `

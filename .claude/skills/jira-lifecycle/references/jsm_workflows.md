@@ -1,6 +1,14 @@
 # JIRA Service Management Workflows
 
-This guide covers workflows specific to JIRA Service Management (JSM), including request workflows, incident management, and problem tracking.
+**Use this guide when:** Managing customer requests, tracking incidents, implementing ITIL processes.
+
+**Not for:** Standard JIRA software workflows (see [workflow_guide.md](workflow_guide.md)).
+
+**Prerequisites:** JIRA Service Management license.
+
+**Audience:** Service desk agents, SRE teams, IT operations.
+
+---
 
 ## Overview
 

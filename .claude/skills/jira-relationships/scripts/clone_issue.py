@@ -2,6 +2,24 @@
 """
 Clone a JIRA issue with optional link handling.
 
+WHEN TO USE THIS SCRIPT:
+- Multi-platform features: Clone IOS-100 to ANDROID project
+- Recurring workflows: Clone sprint template epics
+- Environment promotion: Clone dev issue to staging/prod
+- Team replication: Clone for another squad
+
+CLONING STRATEGIES:
+- Default: Clone fields only, create "clones" link to original
+- --include-links: Preserve dependency structure (use for parallel implementations)
+- --include-subtasks: Clone entire hierarchy (use for epic templates)
+- --no-link: Fresh start without clone relationship
+- --to-project: Cross-project cloning
+
+POST-CLONE CHECKLIST:
+- Clear sprint assignment (will be planned separately)
+- Reset story points (re-estimate for new context)
+- Update assignee (may be different team)
+
 Usage:
     python clone_issue.py PROJ-123
     python clone_issue.py PROJ-123 --include-subtasks

@@ -1,11 +1,26 @@
 ---
 name: "JIRA Collaboration"
-description: "Collaboration features for JIRA issues - comments, attachments, watchers, notifications. Use when adding comments, uploading/downloading attachments, managing watchers, or sending notifications."
+description: |
+  Collaborate on issues: add/edit comments, share attachments, notify users,
+  track activity. For team communication and coordination on JIRA issues.
+keywords:
+  - comments
+  - attachments
+  - notifications
+  - watchers
+  - activity history
+use_when:
+  - "starting work on an issue (add comment)"
+  - "sharing screenshots or error logs (upload attachment)"
+  - "progress is blocked and needs escalation (comment + notify)"
+  - "handing off work to teammate (comment + reassign + notify)"
+  - "reviewing what changed on an issue (get activity)"
+  - "need to add team visibility (manage watchers)"
 ---
 
 # jira-collaborate
 
-Collaboration features for JIRA issues - comments, attachments, watchers, and custom fields.
+Collaboration features for JIRA issues - comments, attachments, watchers, and notifications.
 
 ## When to use this skill
 
@@ -13,136 +28,94 @@ Use this skill when you need to:
 - Add, update, or delete comments on issues
 - Upload or download attachments
 - Manage watchers (add/remove)
-- Update custom fields
-- Collaborate on issues with team members
+- Send notifications to users or groups
+- View issue activity and changelog
 
 ## What this skill does
 
-This skill provides collaboration and communication operations:
-
-1. **Comments**: Manage issue comments
-   - Add comments with rich text (ADF) or Markdown
-   - Add internal comments (visible to specific roles/groups)
-   - Update existing comments
-   - Delete comments with confirmation
-   - View and search comment history
-
-2. **Notifications**: Send notifications to users
-   - Notify watchers, assignees, reporters, voters
-   - Send to specific users or groups
-   - Custom subject and body messages
-   - Dry-run mode to preview recipients
-
-3. **Activity History**: View issue changelog
-   - Track all field changes over time
-   - Filter by change type (status, assignee, priority, etc.)
-   - See who made changes and when
-   - Export activity history
-
-4. **Attachments**: Handle file attachments
-   - Upload files to issues
-   - Download attachments by ID or filename
-   - Download all attachments at once
-   - List attachments on issues with metadata
-
-5. **Watchers**: Manage issue watchers
-   - Add watchers to issues
-   - Remove watchers
-   - List current watchers
-
+1. **Comments**: Add/edit/delete comments with rich text support
+2. **Attachments**: Upload and download files
+3. **Watchers**: Manage who tracks the issue
+4. **Notifications**: Send targeted notifications
+5. **Activity History**: View issue changelog
 6. **Custom Fields**: Update custom field values
-   - Set custom field values by type
-   - Handle different custom field formats
-   - Update multiple custom fields at once
 
-## Available scripts
+## Available Scripts
 
 ### Comments
-- `add_comment.py` - Add comment to issue with visibility controls
-- `update_comment.py` - Update existing comment
-- `delete_comment.py` - Delete comment with confirmation/dry-run
-- `get_comments.py` - List and search comments
-
-### Notifications & Activity
-- `send_notification.py` - Send notifications to users/groups
-- `get_activity.py` - View issue changelog and field changes
+| Script | Description |
+|--------|-------------|
+| `add_comment.py` | Add comment with visibility controls |
+| `update_comment.py` | Update existing comment |
+| `delete_comment.py` | Delete comment (with confirmation) |
+| `get_comments.py` | List and search comments |
 
 ### Attachments
-- `upload_attachment.py` - Upload file to issue
-- `download_attachment.py` - Download attachments from issue
-  - `--list` - List all attachments with ID, filename, size, type, author
-  - `--id <ID>` - Download specific attachment by ID
-  - `--name <filename>` - Download specific attachment by filename
-  - `--all` - Download all attachments from the issue
-  - `--output-dir <path>` - Directory to save downloaded files
-  - `--output text|json` - Output format for `--list` (default: text)
+| Script | Description |
+|--------|-------------|
+| `upload_attachment.py` | Upload file to issue |
+| `download_attachment.py` | Download or list attachments |
 
-### Watchers & Custom Fields
-- `manage_watchers.py` - Add/remove watchers
-- `update_custom_fields.py` - Update custom fields
+### Notifications & Activity
+| Script | Description |
+|--------|-------------|
+| `send_notification.py` | Send notifications to users/groups |
+| `get_activity.py` | View issue changelog |
+
+### Watchers & Fields
+| Script | Description |
+|--------|-------------|
+| `manage_watchers.py` | Add/remove watchers |
+| `update_custom_fields.py` | Update custom fields |
+
+## Quick Start Examples
+
+```bash
+# Add a comment
+python add_comment.py PROJ-123 --body "Starting work on this now"
+
+# Rich text comment
+python add_comment.py PROJ-123 --body "**Bold** text" --format markdown
+
+# Internal comment (role-restricted)
+python add_comment.py PROJ-123 --body "Internal note" --visibility-role Administrators
+
+# Upload attachment
+python upload_attachment.py PROJ-123 --file screenshot.png
+
+# List attachments
+python download_attachment.py PROJ-123 --list
+
+# Download all attachments
+python download_attachment.py PROJ-123 --all --output-dir ./downloads
+
+# Add watcher
+python manage_watchers.py PROJ-123 --add user@example.com
+
+# Send notification (preview first)
+python send_notification.py PROJ-123 --watchers --dry-run
+python send_notification.py PROJ-123 --watchers --subject "Update" --body "Issue resolved"
+
+# View activity history
+python get_activity.py PROJ-123 --format table
+```
 
 ## Common Options
 
-All scripts support these common options:
+All scripts support:
 
 | Option | Description |
 |--------|-------------|
-| `--profile <name>` | JIRA profile to use (default: from config) |
-| `--help`, `-h` | Show help message and exit |
+| `--profile <name>` | JIRA profile to use |
+| `--help`, `-h` | Show detailed help |
 
-### Comment Scripts
-| Option | Description |
-|--------|-------------|
-| `--format text\|markdown\|adf` | Input format for comment body |
-| `--visibility-role <role>` | Restrict visibility to role (e.g., Administrators) |
-| `--visibility-group <group>` | Restrict visibility to group |
-
-### Notification Scripts
-| Option | Description |
-|--------|-------------|
-| `--dry-run` | Preview recipients without sending |
-| `--watchers` | Notify all watchers |
-| `--assignee` | Notify assignee |
-| `--reporter` | Notify reporter |
-| `--users <ids>` | Notify specific users by account ID |
-| `--groups <names>` | Notify specific groups |
-
-## Examples
-
+For script-specific options, use `--help` on any script:
 ```bash
-# Comments
-python add_comment.py PROJ-123 --body "Working on this now"
-python add_comment.py PROJ-123 --body "## Update\nFixed the issue" --format markdown
-python add_comment.py PROJ-123 --body "Internal note" --visibility-role Administrators
-python update_comment.py PROJ-123 --comment-id 10001 --body "Updated comment"
-python delete_comment.py PROJ-123 --comment-id 10001 --dry-run
-python get_comments.py PROJ-123 --format table
-
-# Notifications
-python send_notification.py PROJ-123 --watchers --subject "Update" --body "Issue updated"
-python send_notification.py PROJ-123 --users accountId1 accountId2 --body "Please review"
-python send_notification.py PROJ-123 --assignee --reporter --dry-run
-
-# Activity History
-python get_activity.py PROJ-123 --format table
-python get_activity.py PROJ-123 --filter status --format json
-
-# Attachments - Upload
-python upload_attachment.py PROJ-123 --file screenshot.png
-
-# Attachments - Download
-python download_attachment.py PROJ-123 --list
-python download_attachment.py PROJ-123 --list --output json
-python download_attachment.py PROJ-123 --name screenshot.png
-python download_attachment.py PROJ-123 --id 12345
-python download_attachment.py PROJ-123 --all --output-dir ./downloads
-
-# Watchers
-python manage_watchers.py PROJ-123 --add user@example.com
-
-# Custom Fields
-python update_custom_fields.py PROJ-123 --field customfield_10001 --value "Production"
+python add_comment.py --help
+python send_notification.py --help
 ```
+
+See [references/SCRIPT_OPTIONS.md](references/SCRIPT_OPTIONS.md) for full option matrix.
 
 ## Exit Codes
 
@@ -151,59 +124,38 @@ python update_custom_fields.py PROJ-123 --field customfield_10001 --value "Produ
 | 0 | Success |
 | 1 | General error (validation, API error, network issue) |
 
-Error details are printed to stderr with troubleshooting hints when available.
-
 ## Troubleshooting
 
-### Common Issues
+| Error | Solution |
+|-------|----------|
+| "Comment not found" | Verify comment ID with `get_comments.py` |
+| "Attachment not found" | Use `--list` to see available attachments |
+| "Permission denied" | Check visibility role/group permissions |
+| "User not found" | Use account ID (not email) for watchers |
+| "Notification not received" | Use `--dry-run` to verify recipients |
 
-**"Comment not found" error**
-- Verify the comment ID exists on the issue using `get_comments.py`
-- Comment IDs are numeric (e.g., 10001)
-- Comments may have been deleted by another user
+For debug mode: `export JIRA_DEBUG=1`
 
-**"Attachment not found" error**
-- Use `download_attachment.py PROJ-123 --list` to see available attachments
-- Verify the attachment ID or filename is correct
-- Filenames are case-sensitive
+## Documentation Structure
 
-**"Permission denied" when adding internal comments**
-- Internal comments require appropriate JIRA permissions
-- Verify the visibility role/group exists in your JIRA instance
-- Check that your user has the "Browse projects" permission for internal comments
+**Getting Started:** [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) - First 5 minutes
 
-**"User not found" when adding watchers**
-- Use the account ID (not email) for programmatic access
-- Verify the user has access to the project
-- External users may not be able to watch issues
+**Common Scenarios:** [docs/scenarios/](docs/scenarios/) - Workflow examples
+- [Starting work](docs/scenarios/starting_work.md)
+- [Progress update](docs/scenarios/progress_update.md)
+- [Escalation](docs/scenarios/blocker_escalation.md)
+- [Handoff](docs/scenarios/handoff.md)
+- [Sharing evidence](docs/scenarios/sharing_evidence.md)
 
-**Notification not received**
-- Check notification scheme settings in JIRA
-- Verify recipients have email notifications enabled
-- Use `--dry-run` to preview recipient list before sending
+**Reference:** [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md) - Commands and JQL
 
-**Large file upload fails**
-- JIRA Cloud has a 10MB attachment limit by default
-- Check your instance's attachment settings
-- Consider compressing files before upload
+**Templates:** [docs/TEMPLATES.md](docs/TEMPLATES.md) - Copy-paste ready
 
-### Debug Mode
+**Advanced Topics:** [docs/DEEP_DIVES/](docs/DEEP_DIVES/) - Deep dive guides
 
-For additional debugging information, set the environment variable:
-```bash
-export JIRA_DEBUG=1
-```
+**Format Reference:** [references/adf_guide.md](references/adf_guide.md) - Markdown to ADF
 
-## Configuration
-
-Uses shared configuration from `.claude/settings.json` and `.claude/settings.local.json`.
-Requires JIRA credentials via environment variables or settings files.
-
-## Best Practices
-
-For comprehensive guidance on effective commenting, attachment management, and notification strategies, see [Best Practices Guide](docs/BEST_PRACTICES.md).
-
-## Related skills
+## Related Skills
 
 - **jira-issue**: For creating and updating issue fields
 - **jira-lifecycle**: For transitioning with comments

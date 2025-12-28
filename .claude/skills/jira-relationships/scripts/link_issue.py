@@ -2,6 +2,19 @@
 """
 Create a link between two JIRA issues.
 
+WHEN TO USE THIS SCRIPT:
+- Creating dependencies: --blocks for sequential work
+- Marking duplicates: --duplicates then close the duplicate issue
+- Cross-team awareness: --relates-to for related work
+- Cloning relationships: --clones for issue templates
+
+LINK DIRECTION:
+- --blocks PROJ-2: This issue blocks PROJ-2 (PROJ-2 waits for this)
+- --is-blocked-by PROJ-2: This issue is blocked by PROJ-2 (this waits for PROJ-2)
+
+IMPORTANT: Issue links are labels only - they do NOT enforce workflow rules.
+Combine with workflow validators or team discipline for enforcement.
+
 Usage:
     python link_issue.py PROJ-1 --blocks PROJ-2
     python link_issue.py PROJ-1 --duplicates PROJ-2

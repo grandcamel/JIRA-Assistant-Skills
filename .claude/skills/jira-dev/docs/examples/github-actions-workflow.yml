@@ -1,0 +1,122 @@
+# GitHub Actions Workflow with JIRA Integration
+# Full example for build and deployment tracking
+
+name: JIRA Integration
+
+on:
+  push:
+    branches: [ main, develop, 'feature/*' ]
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for commit parsing
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Extract JIRA issues
+        id: extract-issues
+        run: |
+          ISSUES=$(git log --format=%B -n 1 | grep -oE '[A-Z]+-[0-9]+' | sort -u | tr '\n' ',')
+          echo "issues=${ISSUES%,}" >> $GITHUB_OUTPUT
+
+      - name: Send build info to JIRA
+        if: steps.extract-issues.outputs.issues != ''
+        uses: HighwayThree/jira-upload-build-info@v1
+        with:
+          cloud-instance-base-url: ${{ secrets.JIRA_BASE_URL }}
+          client-id: ${{ secrets.JIRA_CLIENT_ID }}
+          client-secret: ${{ secrets.JIRA_CLIENT_SECRET }}
+          pipeline-id: '${{ github.repository }} ${{ github.workflow }}'
+          build-number: ${{ github.run_number }}
+          build-display-name: 'Build #${{ github.run_number }}'
+          build-state: 'successful'
+          build-url: '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          update-sequence-number: '${{ github.run_id }}'
+          issue-keys: ${{ steps.extract-issues.outputs.issues }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Deploy to Staging
+        if: github.ref == 'refs/heads/develop'
+        run: npm run deploy:staging
+
+      - name: Send staging deployment to JIRA
+        if: github.ref == 'refs/heads/develop'
+        uses: HighwayThree/jira-upload-deployment-info@v1
+        with:
+          cloud-instance-base-url: ${{ secrets.JIRA_BASE_URL }}
+          client-id: ${{ secrets.JIRA_CLIENT_ID }}
+          client-secret: ${{ secrets.JIRA_CLIENT_SECRET }}
+          deployment-sequence-number: '${{ github.run_id }}'
+          update-sequence-number: '${{ github.run_id }}'
+          issue-keys: ${{ steps.extract-issues.outputs.issues }}
+          environment-id: 'staging'
+          environment-name: 'Staging'
+          environment-type: 'staging'
+          state: 'successful'
+
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/main'
+        run: npm run deploy:production
+
+      - name: Send production deployment to JIRA
+        if: github.ref == 'refs/heads/main'
+        uses: HighwayThree/jira-upload-deployment-info@v1
+        with:
+          cloud-instance-base-url: ${{ secrets.JIRA_BASE_URL }}
+          client-id: ${{ secrets.JIRA_CLIENT_ID }}
+          client-secret: ${{ secrets.JIRA_CLIENT_SECRET }}
+          deployment-sequence-number: '${{ github.run_id }}'
+          update-sequence-number: '${{ github.run_id }}'
+          issue-keys: ${{ steps.extract-issues.outputs.issues }}
+          environment-id: 'production'
+          environment-name: 'Production'
+          environment-type: 'production'
+          state: 'successful'
+
+  # Separate job for PR comments
+  pr-jira-comment:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract JIRA issue from branch
+        id: issue
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          ISSUE=$(echo "$BRANCH" | grep -oE '[A-Z]+-[0-9]+' | head -n 1)
+          echo "key=$ISSUE" >> $GITHUB_OUTPUT
+
+      - name: Comment on JIRA
+        if: steps.issue.outputs.key != ''
+        uses: atlassian/gajira-comment@v3
+        with:
+          issue: ${{ steps.issue.outputs.key }}
+          comment: |
+            PR created: ${{ github.event.pull_request.html_url }}
+            Title: ${{ github.event.pull_request.title }}
+            Author: @${{ github.actor }}
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}

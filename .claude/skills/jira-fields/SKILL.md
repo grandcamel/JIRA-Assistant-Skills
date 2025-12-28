@@ -9,12 +9,25 @@ Manage custom fields and screen configurations in JIRA for Agile and other workf
 
 ## When to use this skill
 
-Use this skill when you need to:
-- **List available custom fields** in a JIRA instance
-- **Check Agile field availability** for a specific project
-- **Create custom fields** (requires admin permissions)
-- **Configure projects for Agile** workflows (Story Points, Epic Link, Sprint)
-- **Diagnose field configuration issues** when fields aren't visible
+**Use when you need to:**
+- List available custom fields in a JIRA instance
+- Check Agile field availability for a specific project
+- Create custom fields (requires admin permissions)
+- Configure projects for Agile workflows (Story Points, Epic Link, Sprint)
+- Diagnose field configuration issues when fields aren't visible
+
+**Use when troubleshooting:**
+- "Field not found" or "field not available" errors
+- Agile board shows "Story Points field not configured"
+- Missing fields on issue create screen
+- Setting up Scrum in a company-managed project
+- Understanding why team-managed projects behave differently
+
+**Use when planning:**
+- Migrating from team-managed to company-managed projects
+- Setting up a new Scrum/Kanban board
+- Discovering instance field configuration
+- Auditing or cleaning up custom fields
 
 ## What this skill does
 
@@ -166,14 +179,9 @@ All scripts use consistent exit codes:
 
 ### Common Agile Field IDs
 
-These are typical IDs but may vary by instance:
-- **Sprint**: `customfield_10020`
-- **Story Points**: `customfield_10016` or `customfield_10040`
-- **Epic Link**: `customfield_10014`
-- **Epic Name**: `customfield_10011`
-- **Rank**: `customfield_10019`
+See [Agile Field IDs Reference](assets/agile-field-ids.md) for the complete list.
 
-Always use `list_fields.py --agile` to find the correct IDs for your instance.
+Always run `python list_fields.py --agile` to verify IDs for your instance.
 
 ## Examples
 
@@ -269,6 +277,13 @@ python check_project_fields.py PROJ --check-agile
 3. Generate a new API token at https://id.atlassian.com/manage-profile/security/api-tokens
 4. Try a different profile: `--profile development`
 
-## Best Practices
+## Documentation
 
-For comprehensive guidance on custom field management, Agile field configuration, and project field strategies, see [Best Practices Guide](docs/BEST_PRACTICES.md).
+| Guide | Purpose |
+|-------|---------|
+| [Quick Start](docs/QUICK_START.md) | Get started in 5 minutes |
+| [Field Types Reference](docs/FIELD_TYPES_REFERENCE.md) | Complete field type guide |
+| [Agile Field Guide](docs/AGILE_FIELD_GUIDE.md) | Agile board configuration |
+| [Governance Guide](docs/GOVERNANCE_GUIDE.md) | Field management at scale |
+| [Best Practices](docs/BEST_PRACTICES.md) | Design principles and guidelines |
+| [Agile Field IDs](assets/agile-field-ids.md) | Field ID lookup reference |

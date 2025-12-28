@@ -9,155 +9,70 @@ Complete ITSM (IT Service Management) and ITIL workflow support for Jira Service
 
 ## When to use this skill
 
-Use this skill when you need to:
-- Create and manage service desk requests (incidents, service requests, changes)
-- Track and monitor SLA compliance and breach detection
-- Manage customers, organizations, and participants
-- Handle approval workflows (approve/decline requests)
-- Work with queues and request types
-- Link and manage IT assets (requires JSM Assets license)
-- Search and suggest knowledge base articles
-- Implement ITIL processes (Incident, Problem, Change, Service Request Management)
+Use jira-jsm when you encounter:
 
-**JSM vs Standard JIRA**: Use jira-jsm for service desk operations (customer-facing requests, SLAs, approvals). Use jira-issue for standard issue CRUD operations (create, update, delete).
+### Problem Indicators
+- Keywords: "SLA", "service level", "breach", "approval", "change request", "incident"
+- Issue keys like: `SD-123`, `INC-456` (service desk format vs standard `PROJ-123`)
+- Workflow needs: customer-facing requests, ITIL processes, service catalogs
+- User questions about: incidents, problems, changes, service requests (not bugs/stories)
+
+### Feature Triggers
+- Need to track SLA compliance or generate SLA reports
+- Managing approval workflows or CAB (Change Advisory Board) decisions
+- Working with knowledge base integration for customer self-service
+- Linking IT assets to requests or impact analysis
+- Multi-tier support structure (agents, managers, customers)
+
+### Integration Scenarios
+- Created a request and want to update it: Use **jira-issue** for standard updates
+- Transitioning through approval workflow: Use **jira-jsm** for JSM-specific transitions
+- Searching for requests with complex criteria: Use **jira-search** for JQL
+
+### NOT This Skill
+- Creating bugs/stories in Agile: Use **jira-issue**
+- Sprint planning or backlog management: Use **jira-agile**
+- Developer workflow integration: Use **jira-dev**
+- Standard issue lifecycle management: Use **jira-lifecycle**
+
+**Still unsure?** Check the [decision tree](references/DECISION_TREE.md)
 
 ## What this skill does
 
-This skill provides comprehensive JSM operations organized into key ITSM capabilities:
+This skill provides comprehensive JSM operations organized into 6 key ITSM capabilities:
 
-### 1. Service Desk Core
+| Capability | Description | Key Scripts |
+|------------|-------------|-------------|
+| **Service Desk Core** | Manage service desks, portals, request types | `list_service_desks.py`, `get_request_type_fields.py` |
+| **Request Management** | Create and manage customer-facing requests | `create_request.py`, `get_request.py`, `transition_request.py` |
+| **Customer & Organization** | Manage customers, organizations, participants | `create_customer.py`, `add_participant.py` |
+| **SLA & Queue** | Track SLAs, manage queues | `get_sla.py`, `sla_report.py`, `list_queues.py` |
+| **Comments & Approvals** | Collaboration and approval workflows | `add_request_comment.py`, `approve_request.py` |
+| **Knowledge Base & Assets** | KB search, asset management | `search_kb.py`, `suggest_kb.py`, `create_asset.py` |
 
-Manage JSM service desks and portals:
-- **Create Service Desks**: Initialize new service desks for different teams
-- **List Service Desks**: View all available service desks
-- **Get Service Desk Details**: Retrieve metadata, portal settings, and configuration
-- **Request Types**: List available request types (Incident, Service Request, Change)
-- **Request Type Fields**: Get custom fields for specific request types
-
-### 2. Request Management
-
-Create and manage customer-facing service requests:
-- **Create Requests**: Submit new incidents, service requests, or changes
-  - Support for request-type-specific fields
-  - On-behalf-of customer creation
-  - Participant management from creation
-- **Get Request Details**: View request status, fields, and metadata
-- **Get Request Status**: Track request lifecycle and current state
-- **Transition Requests**: Move requests through workflow states
-- **List Requests**: View all requests for a service desk with filtering
-
-### 3. Customer & Organization Management
-
-Manage service desk customers and organizational structure:
-- **Create Customers**: Add users as service desk customers
-- **List Customers**: View all customers for a service desk
-- **Add Customers**: Associate existing users with service desks
-- **Remove Customers**: Disassociate customers from service desks
-- **Create Organizations**: Define customer organizations (departments, companies)
-- **List Organizations**: View all organizations
-- **Get Organization Details**: Retrieve organization metadata and members
-- **Delete Organizations**: Remove organizations
-- **Add to Organization**: Associate customers with organizations
-- **Remove from Organization**: Disassociate customers from organizations
-- **Participants**: Manage request participants (CC list)
-  - Add participants to requests
-  - Remove participants
-  - List all participants
-
-### 4. SLA & Queue Management
-
-Track service level agreements and manage queues:
-- **Get SLA Information**: View SLA metrics for requests
-  - Time to first response
-  - Time to resolution
-  - Remaining time and breach warnings
-- **Check SLA Breach**: Detect SLA violations and at-risk requests
-- **SLA Reporting**: Generate SLA compliance reports
-- **List Queues**: View all queues for a service desk
-- **Get Queue Details**: Retrieve queue configuration
-- **Get Queue Issues**: View requests in specific queues with JQL filtering
-
-### 5. Comments & Approvals
-
-Collaboration and approval workflows:
-- **Add Request Comments**: Comment on requests
-  - Public comments (visible to customers)
-  - Internal comments (agent-only visibility)
-- **Get Request Comments**: View comment history with filtering
-- **Approval Management**: Handle approval workflows
-  - Get approval status for requests
-  - List pending approvals (by user or service desk)
-  - Approve requests with comments
-  - Decline requests with reasons
-
-### 6. Knowledge Base & Assets
-
-Knowledge management and asset tracking:
-- **Knowledge Base**:
-  - Search knowledge base articles
-  - Get article details
-  - Suggest articles for requests (AI-powered)
-- **Assets** (requires JSM Assets/Insight license):
-  - Create assets (laptops, servers, licenses)
-  - List assets by object schema
-  - Get asset details
-  - Update asset attributes
-  - Link assets to requests
-  - Find affected assets for requests
-
-## Common Options
-
-All scripts in this skill support the following common options:
-
-| Option | Description | Example |
-|--------|-------------|---------|
-| `--help` | Show help message and exit | `python script.py --help` |
-| `--profile PROFILE` | Use specific JIRA profile from settings | `--profile production` |
-| `--output FORMAT` | Output format: text, json, table | `--output json` |
-| `--service-desk ID` | Service desk ID (numeric) | `--service-desk 1` |
-
-### Script-Specific Options
-
-| Script | Key Options |
-|--------|-------------|
-| `create_request.py` | `--request-type`, `--summary`, `--description`, `--on-behalf-of`, `--field` |
-| `get_request.py` | `--show-sla`, `--show-comments`, `--show-participants` |
-| `list_requests.py` | `--filter`, `--max-results`, `--start` |
-| `add_request_comment.py` | `--body`, `--internal` (for agent-only comments) |
-| `get_sla.py` | `--sla-id` (for specific SLA metric) |
-| `list_customers.py` | `--filter`, `--max-results` |
-| `create_asset.py` | `--object-schema`, `--object-type`, `--attributes` |
-
-## Exit Codes
-
-All scripts use consistent exit codes:
-
-| Code | Meaning | Description |
-|------|---------|-------------|
-| 0 | Success | Operation completed successfully |
-| 1 | General Error | Unspecified error occurred |
-| 2 | Validation Error | Invalid input parameters (bad issue key, missing required field) |
-| 3 | Authentication Error | Invalid or expired API token |
-| 4 | Permission Error | User lacks required JIRA permissions |
-| 5 | Not Found | Service desk, request, customer, or resource not found |
-| 6 | Conflict Error | Operation conflicts with current state (e.g., duplicate customer) |
-| 7 | Rate Limit Error | API rate limit exceeded (after retries exhausted) |
-
-### Exit Code Examples
+## Quick Start
 
 ```bash
-# Check exit code after command
-python get_request.py SD-123
-echo $?  # 0 = success, non-zero = error
+# 1. List service desks to find your ID
+python list_service_desks.py
 
-# Handle errors in scripts
-python create_request.py --service-desk 1 --request-type 10 --summary "Test"
-if [ $? -eq 3 ]; then
-    echo "Authentication failed - check API token"
-elif [ $? -eq 5 ]; then
-    echo "Service desk not found"
-fi
+# 2. List request types for your service desk
+python list_request_types.py --service-desk 1
+
+# 3. Create an incident
+python create_request.py \
+  --service-desk 1 \
+  --request-type 10 \
+  --summary "Email service down"
+
+# 4. Check SLA status
+python get_sla.py SD-123
+
+# 5. Approve a pending request
+python approve_request.py SD-124 --comment "Approved"
 ```
+
+For detailed setup instructions, see [docs/QUICK_START.md](docs/QUICK_START.md).
 
 ## Available Scripts (45 total)
 
@@ -220,561 +135,35 @@ fi
 - `link_asset.py` - Link asset to request
 - `find_affected_assets.py` - Find assets affected by request
 
-## Quick Start (5 minutes)
-
-### 1. List Available Service Desks
-```bash
-# View all service desks
-python list_service_desks.py
-
-# Example output:
-# ID  Key   Name          Project Key
-# 1   ITS   IT Support    ITS
-# 2   HR    HR Services   HR
-# 3   FAC   Facilities    FAC
-```
-
-### 2. View Request Types
-```bash
-# List request types for IT Support
-python list_request_types.py --service-desk 1
-
-# Example output:
-# ID   Name                Description
-# 10   Incident            Report a system issue
-# 11   Service Request     Request IT services
-# 12   Change Request      Request system changes
-```
-
-### 3. Create Your First Request
-```bash
-# Create an incident
-python create_request.py \
-  --service-desk 1 \
-  --request-type 10 \
-  --summary "Email service down" \
-  --description "Cannot send or receive emails since 9am"
-
-# Output: Created request SD-123
-```
-
-### 4. Track SLA Compliance
-```bash
-# Check SLA status
-python get_sla.py SD-123
-
-# Example output:
-# Request: SD-123
-# SLA: Time to First Response
-#   Status: ✓ Completed
-#   Goal: 4h
-#   Elapsed: 45m
-#   Remaining: N/A
-#
-# SLA: Time to Resolution
-#   Status: ⚠ At Risk
-#   Goal: 8h
-#   Elapsed: 6h 30m
-#   Remaining: 1h 30m
-```
-
-### 5. Manage Approvals
-```bash
-# List pending approvals
-python list_pending_approvals.py --user self
-
-# Approve a request
-python approve_request.py SD-124 --comment "Approved for deployment"
-```
-
-## Usage Examples
-
-### Service Desk Operations
-
-```bash
-# Create new service desk
-python create_service_desk.py --project-key FAC --name "Facilities Services"
-
-# Get service desk details
-python get_service_desk.py --service-desk 1
-python get_service_desk.py --project-key ITS  # By project key
-
-# List request types
-python list_request_types.py --service-desk 1
-
-# Get request type fields
-python get_request_type_fields.py --service-desk 1 --request-type 10
-```
-
-### Creating and Managing Requests
-
-```bash
-# Create basic incident
-python create_request.py \
-  --service-desk 1 \
-  --request-type 10 \
-  --summary "Network outage in Building A"
-
-# Create with description and priority
-python create_request.py \
-  --service-desk 1 \
-  --request-type 10 \
-  --summary "VPN connection failing" \
-  --description "## Issue\nCannot connect to VPN since morning" \
-  --field priority=High
-
-# Create on behalf of customer
-python create_request.py \
-  --service-desk 1 \
-  --request-type 11 \
-  --summary "New laptop request" \
-  --on-behalf-of user@example.com
-
-# Get request details
-python get_request.py SD-123
-python get_request.py SD-123 --output json
-
-# Get request status
-python get_request_status.py SD-123
-
-# Transition request
-python transition_request.py SD-123 --status "In Progress"
-
-# List all requests
-python list_requests.py --service-desk 1
-python list_requests.py --service-desk 1 --filter "status='Waiting for support'"
-```
-
-### Customer Management
-
-```bash
-# Create customer
-python create_customer.py \
-  --service-desk 1 \
-  --email user@example.com \
-  --name "John Doe"
-
-# List customers
-python list_customers.py --service-desk 1
-python list_customers.py --service-desk 1 --filter "john"
-
-# Add existing user as customer
-python add_customer.py --service-desk 1 --user user@example.com
-
-# Remove customer
-python remove_customer.py --service-desk 1 --user user@example.com
-
-# Manage participants (CC list)
-python add_participant.py SD-123 --users "user1@example.com,user2@example.com"
-python get_participants.py SD-123
-python remove_participant.py SD-123 --users "user1@example.com"
-```
-
-### Organization Management
-
-```bash
-# Create organization
-python create_organization.py --service-desk 1 --name "Engineering Team"
-
-# List organizations
-python list_organizations.py --service-desk 1
-
-# Get organization details
-python get_organization.py 100
-
-# Add customers to organization
-python add_to_organization.py \
-  --organization 100 \
-  --users "user1@example.com,user2@example.com"
-
-# Remove from organization
-python remove_from_organization.py \
-  --organization 100 \
-  --users "user1@example.com"
-
-# Delete organization
-python delete_organization.py 100
-```
-
-### SLA Monitoring
-
-```bash
-# Get SLA information
-python get_sla.py SD-123
-python get_sla.py SD-123 --output json
-
-# Get specific SLA metric
-python get_sla.py SD-123 --sla-id 1
-
-# Check for SLA breaches
-python check_sla_breach.py SD-123
-
-# Generate SLA report
-python sla_report.py --service-desk 1
-python sla_report.py --service-desk 1 --start-date 2025-01-01 --end-date 2025-01-31
-python sla_report.py --service-desk 1 --group-by priority
-```
-
-Example SLA report output:
-```
-SLA Report: IT Support (Jan 2025)
-Total Requests: 145
-
-By Priority:
-  Critical: 12 requests
-    - Breached: 1 (8%)
-    - At Risk: 2 (17%)
-    - On Track: 9 (75%)
-  High: 45 requests
-    - Breached: 3 (7%)
-    - At Risk: 8 (18%)
-    - On Track: 34 (76%)
-  Medium: 88 requests
-    - Breached: 5 (6%)
-    - At Risk: 12 (14%)
-    - On Track: 71 (81%)
-
-Average Resolution Time: 4h 35m
-SLA Compliance: 94%
-```
-
-### Queue Management
-
-```bash
-# List queues
-python list_queues.py --service-desk 1
-
-# Get queue details
-python get_queue.py 500
-
-# Get issues in queue
-python get_queue_issues.py 500
-python get_queue_issues.py 500 --max-results 50
-python get_queue_issues.py 500 --filter "priority=High"
-```
-
-### Comments and Approvals
-
-```bash
-# Add public comment (visible to customer)
-python add_request_comment.py SD-123 --body "We're investigating the issue"
-
-# Add internal comment (agent-only)
-python add_request_comment.py SD-123 \
-  --body "Root cause: DNS server failure" \
-  --internal
-
-# Get comments
-python get_request_comments.py SD-123
-python get_request_comments.py SD-123 --public-only
-python get_request_comments.py SD-123 --internal-only
-
-# Get approval status
-python get_approvals.py SD-124
-
-# List pending approvals
-python list_pending_approvals.py --user self
-python list_pending_approvals.py --service-desk 1
-
-# Approve request
-python approve_request.py SD-124 --comment "Approved for production deployment"
-
-# Decline request
-python decline_request.py SD-124 --comment "Insufficient budget allocation"
-```
-
-### Knowledge Base
-
-```bash
-# Search knowledge base
-python search_kb.py --query "password reset"
-python search_kb.py --query "VPN" --service-desk 1
-
-# Get article details
-python get_kb_article.py 1234567
-
-# Get AI-powered article suggestions for request
-python suggest_kb.py SD-123
-python suggest_kb.py SD-123 --max-results 5
-```
-
-Example KB suggestion output:
-```
-Knowledge Base Suggestions for SD-123
-
-1. How to Reset Your Password
-   Confidence: 95%
-   URL: https://example.atlassian.net/wiki/spaces/KB/pages/123
-
-2. VPN Connection Troubleshooting
-   Confidence: 87%
-   URL: https://example.atlassian.net/wiki/spaces/KB/pages/456
-
-3. Common Network Issues
-   Confidence: 72%
-   URL: https://example.atlassian.net/wiki/spaces/KB/pages/789
-```
-
-### Asset Management (requires JSM Assets license)
-
-```bash
-# Create asset
-python create_asset.py \
-  --object-schema 1 \
-  --object-type Laptop \
-  --name "MacBook Pro M3" \
-  --attributes '{"Serial Number": "C02XY123FVH6", "Owner": "john.doe@example.com"}'
-
-# List assets
-python list_assets.py --object-schema 1
-python list_assets.py --object-schema 1 --object-type Laptop
-
-# Get asset details
-python get_asset.py AST-123
-
-# Update asset
-python update_asset.py AST-123 \
-  --attributes '{"Status": "In Use", "Location": "Office 3A"}'
-
-# Link asset to request
-python link_asset.py SD-123 --assets AST-123,AST-456
-
-# Find affected assets
-python find_affected_assets.py SD-123
-```
-
-## Common ITIL Workflows
-
-### Incident Management
-
-Complete incident lifecycle from creation to resolution:
-
-```bash
-# 1. Customer reports incident
-python create_request.py \
-  --service-desk 1 \
-  --request-type 10 \
-  --summary "Cannot access shared drive" \
-  --description "Error: Network path not found" \
-  --field priority=High
-
-# Output: Created SD-125
-
-# 2. Auto-assign via queue or manually assign (use jira-issue skill)
-
-# 3. Agent adds internal note
-python add_request_comment.py SD-125 \
-  --body "Checking network connectivity" \
-  --internal
-
-# 4. Add public update for customer
-python add_request_comment.py SD-125 \
-  --body "Our team is investigating. Expected resolution: 2 hours"
-
-# 5. Link affected assets
-python link_asset.py SD-125 --assets AST-789
-
-# 6. Monitor SLA
-python get_sla.py SD-125
-
-# 7. Suggest knowledge base articles
-python suggest_kb.py SD-125
-
-# 8. Transition to resolved
-python transition_request.py SD-125 --status Resolved
-
-# 9. Verify SLA compliance
-python check_sla_breach.py SD-125
-```
-
-### Service Request Fulfillment
-
-```bash
-# 1. Create service request (new laptop)
-python create_request.py \
-  --service-desk 1 \
-  --request-type 11 \
-  --summary "New laptop for new hire" \
-  --description "Start date: 2025-02-01\nName: Jane Smith"
-
-# Output: Created SD-130
-
-# 2. Request requires approval
-python get_approvals.py SD-130
-
-# 3. Manager approves
-python approve_request.py SD-130 \
-  --comment "Approved. Standard MacBook Pro configuration."
-
-# 4. Procurement team adds participants
-python add_participant.py SD-130 --users "procurement@example.com"
-
-# 5. Create asset when laptop received
-python create_asset.py \
-  --object-schema 1 \
-  --object-type Laptop \
-  --name "MacBook Pro - Jane Smith" \
-  --attributes '{"Serial": "C02XY456FVH7", "Owner": "jane.smith@example.com"}'
-
-# 6. Link asset to request
-python link_asset.py SD-130 --assets AST-200
-
-# 7. Complete request
-python transition_request.py SD-130 --status Completed
-```
-
-### Change Management with Approvals
-
-```bash
-# 1. Submit change request
-python create_request.py \
-  --service-desk 1 \
-  --request-type 12 \
-  --summary "Database upgrade to PostgreSQL 15" \
-  --description "## Change Details\n- Scheduled: 2025-02-15 02:00-04:00\n- Impact: 2hr downtime" \
-  --field priority=Critical
-
-# Output: Created SD-140
-
-# 2. Add CAB (Change Advisory Board) as participants
-python add_participant.py SD-140 \
-  --users "cab-manager@example.com,tech-lead@example.com,ops-manager@example.com"
-
-# 3. Monitor approval status
-python get_approvals.py SD-140
-
-# List pending approvals for CAB members
-python list_pending_approvals.py --service-desk 1
-
-# 4. CAB members approve
-python approve_request.py SD-140 --comment "Approved. Risk assessment completed."
-
-# 5. Link affected assets
-python find_affected_assets.py SD-140
-python link_asset.py SD-140 --assets AST-300,AST-301
-
-# 6. Implement change
-python transition_request.py SD-140 --status "In Progress"
-
-# 7. Add implementation notes
-python add_request_comment.py SD-140 \
-  --body "## Implementation Log\n- 02:00: Backup completed\n- 02:15: Upgrade started" \
-  --internal
-
-# 8. Complete change
-python transition_request.py SD-140 --status Completed
-```
-
-### Problem Management
-
-```bash
-# 1. Create problem record from recurring incidents
-python create_request.py \
-  --service-desk 1 \
-  --request-type 13 \
-  --summary "Root Cause: Intermittent network outages Building A" \
-  --description "## Related Incidents\n- SD-100, SD-105, SD-112, SD-120"
-
-# 2. Link related incidents (use jira-relationships skill)
-
-# 3. Add analysis notes
-python add_request_comment.py SD-145 \
-  --body "## Analysis\nSwitch in closet 3A showing packet loss" \
-  --internal
-
-# 4. Find affected assets
-python find_affected_assets.py SD-145
-
-# 5. Create change request for permanent fix
-python create_request.py \
-  --service-desk 1 \
-  --request-type 12 \
-  --summary "Replace network switch Building A closet 3A" \
-  --description "Permanent fix for problem SD-145"
-
-# 6. Link problem to change (use jira-relationships skill)
-
-# 7. Close problem after change implemented
-python transition_request.py SD-145 --status Closed
-```
-
-## Integration with Other Skills
-
-### jira-issue
-Standard issue operations for JSM requests:
-```bash
-# Create request (jira-jsm)
-python create_request.py --service-desk 1 --request-type 10 --summary "Issue"
-
-# Update fields (jira-issue)
-python update_issue.py SD-123 --priority Critical --assignee self
-
-# Add labels (jira-issue)
-python update_issue.py SD-123 --labels outage,network
-```
-
-### jira-lifecycle
-Workflow transitions for JSM requests:
-```bash
-# Get available transitions (jira-lifecycle)
-python get_transitions.py SD-123
-
-# Transition with comment (jira-lifecycle)
-python transition_issue.py SD-123 --status "In Progress" \
-  --comment "Started investigating"
-```
-
-### jira-search
-Find JSM requests with JQL:
-```bash
-# Find high-priority incidents (jira-search)
-python jql_search.py "project=SD AND type='Service Request' AND priority=High"
-
-# Find SLA-breached requests (jira-search)
-python jql_search.py "project=SD AND 'Time to resolution' breached"
-
-# Find requests in specific queue
-python jql_search.py "project=SD AND status='Waiting for support'"
-```
-
-### jira-relationships
-Link JSM requests:
-```bash
-# Link incident to problem (jira-relationships)
-python link_issues.py SD-100 SD-145 --type "relates to"
-
-# Link change to problem (jira-relationships)
-python link_issues.py SD-150 SD-145 --type "fixes"
-```
-
-### jira-collaborate
-Advanced collaboration features:
-```bash
-# Add rich formatted comment (jira-collaborate)
-python add_comment.py SD-123 \
-  --body "## Update\n- Fixed DNS\n- Verified connectivity" \
-  --format markdown
-
-# Notify specific users (jira-collaborate)
-python send_notification.py SD-123 \
-  --users "manager@example.com" \
-  --subject "Request Completed" \
-  --body "Your request has been resolved"
-
-# Upload attachments (jira-collaborate)
-python upload_attachment.py SD-123 --file error-log.txt
-```
+## Common Options
+
+All scripts support these common options:
+
+| Option | Description | Example |
+|--------|-------------|---------|
+| `--help` | Show help and exit | `python script.py --help` |
+| `--profile PROFILE` | Use specific JIRA profile | `--profile production` |
+| `--output FORMAT` | Output format: text, json, table | `--output json` |
+| `--service-desk ID` | Service desk ID (numeric) | `--service-desk 1` |
+
+## Exit Codes
+
+| Code | Meaning | Description |
+|------|---------|-------------|
+| 0 | Success | Operation completed |
+| 1 | General Error | Unspecified error |
+| 2 | Validation Error | Invalid input parameters |
+| 3 | Authentication Error | Invalid or expired API token |
+| 4 | Permission Error | User lacks permissions |
+| 5 | Not Found | Resource not found |
+| 6 | Conflict Error | Duplicate or state conflict |
+| 7 | Rate Limit Error | API limit exceeded |
 
 ## Configuration
 
-### Settings Files
-JSM scripts use shared configuration from:
-- `.claude/settings.json` - Global settings
-- `.claude/settings.local.json` - Local overrides (gitignored)
-
 ### Environment Variables
+
 ```bash
-# JIRA connection
 export JIRA_URL="https://your-domain.atlassian.net"
 export JIRA_EMAIL="your-email@example.com"
 export JIRA_API_TOKEN="your-api-token"
@@ -784,370 +173,88 @@ export JSM_DEFAULT_SERVICE_DESK="1"
 ```
 
 ### Profile Support
-All scripts support `--profile` flag for managing multiple JIRA instances:
+
 ```bash
 # Use production profile
 python create_request.py --profile prod --service-desk 1 --request-type 10 --summary "Issue"
-
-# Use staging profile
-python create_request.py --profile staging --service-desk 1 --request-type 10 --summary "Test"
 ```
+
+For full configuration options, see [references/CONFIG_REFERENCE.md](references/CONFIG_REFERENCE.md).
 
 ## Finding Service Desk IDs
 
-Service desk IDs are numeric identifiers required by most JSM API calls. Here are several ways to find them:
-
-### Method 1: List All Service Desks (Recommended)
+Service desk IDs are numeric identifiers required by most scripts.
 
 ```bash
-# List all service desks with their IDs
+# Method 1: List all service desks
 python list_service_desks.py
 
-# Example output:
-# ID  Key   Name              Project Key
-# 1   ITS   IT Support        ITS
-# 2   HR    HR Services       HR
-# 3   FAC   Facilities        FAC
-```
-
-### Method 2: From Project Key
-
-```bash
-# Get service desk by project key
+# Method 2: Get by project key
 python get_service_desk.py --project-key ITS
-
-# Example output:
-# Service Desk: IT Support
-# ID: 1
-# Project Key: ITS
-# Project ID: 10000
 ```
 
-### Method 3: From JIRA URL
-
-The service desk ID is often visible in JIRA URLs:
-- Customer Portal: `https://your-domain.atlassian.net/servicedesk/customer/portal/1`
-- Agent View: `https://your-domain.atlassian.net/jira/servicedesk/projects/ITS/queues/custom/1`
-
-In these URLs, the number after `/portal/` is the service desk ID.
-
-### Method 4: From Issue Key
-
-If you have a JSM issue key, you can retrieve its service desk:
-```bash
-python get_request.py SD-123 --output json | jq '.serviceDeskId'
-```
-
-### Service Desk ID vs Project Key
-
-| Concept | Example | Usage |
-|---------|---------|-------|
-| Service Desk ID | `1`, `2`, `3` | Numeric ID for JSM API calls |
-| Project Key | `ITS`, `HR`, `FAC` | Short text identifier for the JIRA project |
-| Project ID | `10000` | Numeric JIRA project ID |
-
-**Tip**: Store frequently used service desk IDs in environment variables:
+**Tip**: Store frequently used IDs in environment variables:
 ```bash
 export IT_SERVICE_DESK=1
 export HR_SERVICE_DESK=2
-
-python create_request.py --service-desk $IT_SERVICE_DESK --request-type 10 --summary "Issue"
 ```
 
-## Rate Limiting Considerations
+## Integration with Other Skills
 
-JSM Cloud has API rate limits that may affect high-volume operations. Here's how to handle them:
+JSM requests (SD-* keys) are standard JIRA issues and work with all skills:
 
-### JIRA Cloud Rate Limits
-
-| Tier | Requests/Minute | Notes |
-|------|-----------------|-------|
-| Standard | ~100-200 | Varies by endpoint and instance |
-| Concurrent | ~10 | Simultaneous requests |
-
-### Built-in Rate Limit Handling
-
-The shared JIRA client automatically handles rate limits:
-- **HTTP 429 Response**: Automatically retries with exponential backoff
-- **Retry Attempts**: Up to 3 retries per request
-- **Backoff Strategy**: Exponential delay (1s, 2s, 4s)
-
-### Best Practices for High-Volume Operations
-
-**1. Batch Requests When Possible**
-```bash
-# Add multiple participants in one call (preferred)
-python add_participant.py SD-123 --users "user1@example.com,user2@example.com,user3@example.com"
-
-# Instead of multiple calls
-# python add_participant.py SD-123 --users "user1@example.com"
-# python add_participant.py SD-123 --users "user2@example.com"
-```
-
-**2. Add Delays for Bulk Operations**
-```bash
-# When processing many requests, add delays between operations
-for issue in SD-{100..200}; do
-    python transition_request.py $issue --status "Resolved"
-    sleep 0.5  # 500ms delay
-done
-```
-
-**3. Use Pagination for Large Result Sets**
-```bash
-# Limit results per request
-python list_requests.py --service-desk 1 --max-results 50 --start 0
-python list_requests.py --service-desk 1 --max-results 50 --start 50
-```
-
-**4. Cache Static Data**
-Data that rarely changes (service desk IDs, request types) can be cached:
-```bash
-# Cache request types for reuse
-python list_request_types.py --service-desk 1 --output json > /tmp/request-types.json
-```
-
-### Monitoring Rate Limit Status
-
-Check response headers for rate limit information:
-- `X-RateLimit-Remaining`: Requests remaining in window
-- `X-RateLimit-Reset`: Timestamp when limit resets
-- `Retry-After`: Seconds to wait (on 429 response)
-
-### Error Handling
-
-If you encounter rate limit errors despite retries:
-```
-Error: HTTP 429 Too Many Requests
-Hint: Wait and retry after the rate limit window resets (usually 1 minute)
-```
-
-**Solutions:**
-1. Reduce request frequency
-2. Implement longer delays between operations
-3. Spread operations over time
-4. Contact Atlassian support for rate limit increases (enterprise)
-
-## JSM API Endpoints Reference
-
-### Service Desk APIs
-- `GET /rest/servicedeskapi/servicedesk` - List service desks
-- `GET /rest/servicedeskapi/servicedesk/{serviceDeskId}` - Get service desk
-- `POST /rest/servicedeskapi/servicedesk` - Create service desk
-
-### Request APIs
-- `POST /rest/servicedeskapi/request` - Create request
-- `GET /rest/servicedeskapi/request/{issueKey}` - Get request
-- `GET /rest/servicedeskapi/request/{issueKey}/status` - Get request status
-- `POST /rest/servicedeskapi/request/{issueKey}/transition` - Transition request
-
-### Customer APIs
-- `POST /rest/servicedeskapi/servicedesk/{serviceDeskId}/customer` - Add customer
-- `GET /rest/servicedeskapi/servicedesk/{serviceDeskId}/customer` - List customers
-- `DELETE /rest/servicedeskapi/servicedesk/{serviceDeskId}/customer` - Remove customer
-
-### Organization APIs
-- `POST /rest/servicedeskapi/organization` - Create organization
-- `GET /rest/servicedeskapi/servicedesk/{serviceDeskId}/organization` - List organizations
-- `POST /rest/servicedeskapi/organization/{organizationId}/user` - Add user to org
-
-### SLA APIs
-- `GET /rest/servicedeskapi/request/{issueKey}/sla` - Get SLA information
-- `GET /rest/servicedeskapi/request/{issueKey}/sla/{slaId}` - Get specific SLA
-
-### Approval APIs
-- `GET /rest/servicedeskapi/request/{issueKey}/approval` - Get approvals
-- `POST /rest/servicedeskapi/request/{issueKey}/approval/{approvalId}` - Approve/decline
-
-### Queue APIs
-- `GET /rest/servicedeskapi/servicedesk/{serviceDeskId}/queue` - List queues
-- `GET /rest/servicedeskapi/servicedesk/{serviceDeskId}/queue/{queueId}/issue` - Get queue issues
-
-### Assets APIs (requires JSM Assets/Insight license)
-- `POST /rest/insight/1.0/object/create` - Create asset
-- `GET /rest/insight/1.0/object/{objectId}` - Get asset
-- `PUT /rest/insight/1.0/object/{objectId}` - Update asset
+| Skill | Integration | Example |
+|-------|-------------|---------|
+| jira-issue | CRUD operations | Update priority, assignee, labels |
+| jira-lifecycle | Workflow transitions | Transition through approval workflow |
+| jira-search | Query and filter | Find high-priority incidents, SLA breaches |
+| jira-relationships | Link requests | Link incident to problem |
+| jira-collaborate | Comments, attachments | Add rich comments, attach files |
 
 ## Troubleshooting
 
 ### "Service desk not found"
-**Problem**: Service desk ID or key is incorrect
-**Solution**:
 ```bash
-# List all service desks to find correct ID
-python list_service_desks.py
+python list_service_desks.py  # Find correct ID
 ```
 
-### "Request type not found"
-**Problem**: Request type ID doesn't exist for service desk
-**Solution**:
-```bash
-# List request types for service desk
-python list_request_types.py --service-desk 1
-```
-
-### "Customer does not have permission"
-**Problem**: User is not a customer of the service desk
-**Solution**:
-```bash
-# Add user as customer first
-python add_customer.py --service-desk 1 --user user@example.com
-```
+### "Authentication failed"
+Verify environment variables and API token. See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
 ### "SLA information not available"
-**Problem**: Request doesn't have SLA configured or SLA feature disabled
-**Solution**:
-- Verify SLA is configured in JSM project settings
-- Check request type has SLA goals defined
-- Ensure JSM license includes SLA features
+Verify SLA is configured in JSM project settings.
 
-### "Assets API not available" (403 Forbidden)
-**Problem**: JSM Assets/Insight app not installed or licensed
-**Solution**:
-- Install "Assets - For Jira Service Management" app from Atlassian Marketplace
-- Verify Assets license is active
-- Alternative: Use standard JIRA custom fields for asset tracking
+For all troubleshooting scenarios, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
-### "Approval not found"
-**Problem**: Request doesn't have approval workflow configured
-**Solution**:
-- Verify request type has approval step in workflow
-- Check automation rules for approval creation
-- Manually add approvers if needed
+## License Requirements
 
-### Cloud vs Data Center API Differences
+| Tier | Features |
+|------|----------|
+| **JSM Standard** | Service desks, requests, customers, SLAs, approvals, queues, KB |
+| **JSM Premium** | Advanced SLA reporting, change management, problem management, CMDB |
+| **JSM Assets** | Asset management, discovery, linking (free for up to 100 assets) |
 
-This skill is designed for **JSM Cloud**. When working with JSM Data Center, be aware of the following differences:
+## Version Compatibility
 
-#### API Endpoint Differences
+- **JIRA Cloud**: Fully supported (primary target)
+- **JIRA Data Center 9.0+**: Supported with minor differences
+- **JIRA Data Center 8.x**: Partial support
 
-| Feature | Cloud Endpoint | Data Center Endpoint |
-|---------|----------------|---------------------|
-| Service Desk API | `/rest/servicedeskapi/*` | `/rest/servicedesk/1/*` |
-| Customer API | Uses email addresses | May use usernames |
-| Assets/Insight | Separate app required | Built-in (version dependent) |
-| Request create | `/rest/servicedeskapi/request` | `/rest/servicedesk/1/request` |
+For Data Center specifics, see [references/DATACENTER_GUIDE.md](references/DATACENTER_GUIDE.md).
 
-#### Customer/User Identification
+## Detailed Documentation
 
-**Cloud**:
-```bash
-# Uses email addresses for customer identification
-python add_customer.py --service-desk 1 --user user@example.com
-python create_request.py --on-behalf-of user@example.com
-```
-
-**Data Center**:
-```bash
-# May require usernames instead of email addresses
-python add_customer.py --service-desk 1 --user jdoe
-python create_request.py --on-behalf-of jdoe
-```
-
-#### Assets/Insight Integration
-
-**Cloud**:
-- Requires separate "Assets - For Jira Service Management" app
-- API: `/rest/insight/1.0/*` or newer `/gateway/api/jsm/assets/*`
-- Free tier available (up to 100 assets)
-
-**Data Center**:
-- May be built-in depending on version (8.x vs 9.x)
-- API paths may differ: `/rest/insight/1.0/*`
-- Full functionality included with JSM license
-
-#### Migration Considerations
-
-When migrating scripts between Cloud and Data Center:
-
-1. **Update API endpoint paths** in shared library configuration
-2. **Change customer identifiers** from email to username (or vice versa)
-3. **Verify Assets API availability** and endpoint paths
-4. **Test SLA APIs** as response formats may differ slightly
-5. **Check approval workflow APIs** for any differences in approval state handling
-
-#### Version-Specific Notes
-
-| Version | Notes |
-|---------|-------|
-| Data Center 8.x | Limited JSM API support, some endpoints differ |
-| Data Center 9.0+ | Better API parity with Cloud |
-| Cloud | Primary target, all features supported |
-
-**Tip**: Use the `--profile` flag to maintain separate configurations for Cloud and Data Center instances:
-```bash
-# Cloud instance
-python list_service_desks.py --profile cloud-prod
-
-# Data Center instance
-python list_service_desks.py --profile dc-prod
-```
-
-## Best Practices
-
-### 1. SLA Management
-- Monitor SLA compliance regularly with `sla_report.py`
-- Set up alerts for at-risk requests using `check_sla_breach.py`
-- Use queues to prioritize SLA-critical requests
-
-### 2. Customer Experience
-- Always add meaningful comments when transitioning requests
-- Use public comments for customer communication
-- Use internal comments for agent collaboration
-- Suggest knowledge base articles to help customers self-serve
-
-### 3. Approval Workflows
-- Add all approvers as participants for visibility
-- Include clear justification in approval requests
-- Use `list_pending_approvals.py` to track approval bottlenecks
-
-### 4. Asset Management
-- Link assets to requests for complete audit trail
-- Keep asset attributes up-to-date
-- Use `find_affected_assets.py` for impact analysis
-
-### 5. Organization Structure
-- Group customers by department/team using organizations
-- Use organizations for bulk notifications
-- Maintain organization membership regularly
-
-For comprehensive JSM guidance including ITIL workflows, SLA strategies, and customer management patterns, see [Best Practices Guide](docs/BEST_PRACTICES.md).
-
-## Performance Tips
-
-### Bulk Operations
-```bash
-# Add multiple participants at once
-python add_participant.py SD-123 --users "user1@example.com,user2@example.com,user3@example.com"
-
-# Link multiple assets
-python link_asset.py SD-123 --assets AST-1,AST-2,AST-3
-
-# Filter large result sets
-python list_requests.py --service-desk 1 --filter "created >= -7d"
-```
-
-### Pagination
-```bash
-# Limit results for better performance
-python list_customers.py --service-desk 1 --max-results 50
-
-# Use start index for pagination
-python list_customers.py --service-desk 1 --start 50 --max-results 50
-```
-
-### Caching
-```bash
-# Cache service desk and request type lookups
-# Store frequently used IDs in environment variables
-export ITS_SERVICE_DESK=1
-export INCIDENT_REQUEST_TYPE=10
-
-python create_request.py \
-  --service-desk $ITS_SERVICE_DESK \
-  --request-type $INCIDENT_REQUEST_TYPE \
-  --summary "Issue"
-```
+| Topic | Location | When to Read |
+|-------|----------|--------------|
+| Getting started | [docs/QUICK_START.md](docs/QUICK_START.md) | First time using jira-jsm |
+| Usage examples | [docs/USAGE_EXAMPLES.md](docs/USAGE_EXAMPLES.md) | Looking for code examples |
+| ITIL workflows | [docs/ITIL_WORKFLOWS.md](docs/ITIL_WORKFLOWS.md) | Incident/change/problem workflows |
+| Troubleshooting | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Encountering errors |
+| Best practices | [docs/BEST_PRACTICES.md](docs/BEST_PRACTICES.md) | Improve service desk operations |
+| Rate limits | [references/RATE_LIMITS.md](references/RATE_LIMITS.md) | HTTP 429 errors |
+| API reference | [references/API_REFERENCE.md](references/API_REFERENCE.md) | Building integrations |
+| Configuration | [references/CONFIG_REFERENCE.md](references/CONFIG_REFERENCE.md) | Multi-instance setup |
+| Decision tree | [references/DECISION_TREE.md](references/DECISION_TREE.md) | Choosing the right skill |
 
 ## Related Skills
 
@@ -1155,49 +262,15 @@ python create_request.py \
 - **jira-lifecycle** - Workflow transitions and status management
 - **jira-search** - JQL searches and filters
 - **jira-collaborate** - Comments, attachments, watchers, notifications
-- **jira-relationships** - Issue linking (incidents to problems, changes to problems)
-- **shared** - Common utilities, authentication, error handling, formatters
-
-## License Requirements
-
-### JSM Features by License Tier
-
-**JSM Standard** (included):
-- Service desks and portals
-- Request management
-- Customers and organizations
-- SLA tracking
-- Basic approvals
-- Queues
-- Knowledge base integration
-
-**JSM Premium** (additional):
-- Advanced SLA reporting
-- Enhanced approval workflows
-- Change management workflows
-- Problem management
-- CMDB integration
-
-**JSM Assets/Insight** (separate app):
-- Asset and configuration management
-- Asset discovery
-- Asset linking to requests
-- Impact analysis
-- Note: Free for up to 100 assets in Cloud
-
-## Version Compatibility
-
-- **JIRA Cloud**: Fully supported (primary target)
-- **JIRA Data Center 9.0+**: Supported with minor API endpoint differences
-- **JIRA Data Center 8.x**: Partial support (some JSM APIs may differ)
+- **jira-relationships** - Issue linking (incidents to problems)
+- **shared** - Common utilities, authentication, error handling
 
 ## References
 
 - [JSM Cloud REST API Documentation](https://developer.atlassian.com/cloud/jira/service-desk/rest/intro/)
 - [JSM Assets REST API](https://developer.atlassian.com/cloud/insight/rest/intro/)
 - [ITIL Framework](https://www.axelos.com/certifications/itil-service-management)
-- [JSM Automation Rules](https://support.atlassian.com/jira-service-management-cloud/docs/automation-rules/)
 
 ---
 
-**Note**: All scripts support `--help` flag for detailed usage information and parameter descriptions.
+**Note**: All scripts support `--help` flag for detailed usage information.

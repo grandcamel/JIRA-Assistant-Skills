@@ -97,88 +97,71 @@ All scripts support these common options:
 
 ## Examples
 
-```bash
-# View available link types
-python get_link_types.py
-python get_link_types.py --filter "block"
+### Quick Start - Common Operations
 
-# Create links (semantic flags)
+```bash
+# View available link types in your JIRA instance
+python get_link_types.py
+
+# Create links using semantic flags
 python link_issue.py PROJ-1 --blocks PROJ-2
 python link_issue.py PROJ-1 --duplicates PROJ-2
 python link_issue.py PROJ-1 --relates-to PROJ-2
-python link_issue.py PROJ-1 --clones PROJ-2
 
-# Create links (explicit type)
-python link_issue.py PROJ-1 --type "Blocks" --to PROJ-2 --comment "Dependency"
-
-# View links
+# View and remove links
 python get_links.py PROJ-123
-python get_links.py PROJ-123 --inward
-python get_links.py PROJ-123 --type blocks
-
-# Remove links
 python unlink_issue.py PROJ-1 --from PROJ-2
-python unlink_issue.py PROJ-1 --type blocks --all
 
-# Find blockers
-python get_blockers.py PROJ-123
-python get_blockers.py PROJ-123 --recursive --depth 3
-python get_blockers.py PROJ-123 --output tree
-
-# Link statistics
-python link_stats.py PROJ-123                           # Single issue stats
-python link_stats.py --project PROJ                     # Project-wide stats
-python link_stats.py --jql "project = PROJ AND type = Epic"  # JQL-based stats
-python link_stats.py --project PROJ --top 10            # Show top 10 most connected
-python link_stats.py --project PROJ --output json       # JSON output
-
-# Bulk link
-python bulk_link.py --issues PROJ-1,PROJ-2,PROJ-3 --blocks PROJ-100
-python bulk_link.py --jql "project=PROJ AND fixVersion=1.0" --relates-to PROJ-500
-python bulk_link.py --issues PROJ-1,PROJ-2 --blocks PROJ-100 --dry-run
-python bulk_link.py --issues PROJ-1,PROJ-2 --blocks PROJ-100 --skip-existing
-
-# Clone issue
-python clone_issue.py PROJ-123
+# Clone an issue with its relationships
 python clone_issue.py PROJ-123 --include-subtasks --include-links
-python clone_issue.py PROJ-123 --to-project OTHER
-python clone_issue.py PROJ-123 --summary "Clone: Custom title" --no-link
-
-# Export dependency graphs
-python get_dependencies.py PROJ-123 --output mermaid
-python get_dependencies.py PROJ-123 --output dot > deps.dot
-python get_dependencies.py PROJ-123 --output plantuml > deps.puml
-python get_dependencies.py PROJ-123 --output d2 > deps.d2
 ```
 
-## Graph Output Formats
+### Advanced - Blocker Analysis & Statistics
 
-The `get_dependencies.py` script supports multiple diagram formats:
+```bash
+# Find blocker chains for sprint planning
+python get_blockers.py PROJ-123 --recursive --depth 3
 
-| Format | Description | Usage |
-|--------|-------------|-------|
-| `text` | Plain text tree view (default) | Human-readable console output |
-| `json` | JSON structure | Programmatic processing |
-| `mermaid` | Mermaid.js flowchart | GitHub/GitLab markdown, documentation |
-| `dot` | Graphviz DOT format | Render with `dot -Tpng deps.dot -o deps.png` |
-| `plantuml` | PlantUML diagram | Render with PlantUML server or CLI |
-| `d2` | D2 diagram (Terrastruct) | Render with `d2 deps.d2 deps.svg` |
+# Project-wide link statistics (find orphans, hubs)
+python link_stats.py --project PROJ --top 10
 
-All graph formats include:
-- Status-based node coloring (green=Done, yellow=In Progress, white=Open)
-- Link type labels on edges
-- Issue summaries in node labels
+# Bulk link issues from JQL query
+python bulk_link.py --jql "project=PROJ AND fixVersion=1.0" --relates-to PROJ-500 --dry-run
+```
+
+### Visualization - Dependency Graphs
+
+```bash
+# Export for documentation (Mermaid for GitHub/GitLab)
+python get_dependencies.py PROJ-123 --output mermaid
+
+# Export for publication (Graphviz)
+python get_dependencies.py PROJ-123 --output dot > deps.dot
+dot -Tpng deps.dot -o deps.png
+```
+
+## Exporting Dependency Graphs
+
+Use `get_dependencies.py` with `--output` flag to generate diagrams:
+- Formats: `text` (default), `json`, `mermaid` (GitHub docs), `dot` (Graphviz), `plantuml`, `d2`
+- All formats include status-based coloring and link type labels
+- Run `python get_dependencies.py --help` for rendering instructions
 
 ## Link Types
 
-Common JIRA link types:
+Standard JIRA link types and when to use them:
 
-| Name | Outward | Inward |
-|------|---------|--------|
-| Blocks | blocks | is blocked by |
-| Cloners | clones | is cloned by |
-| Duplicate | duplicates | is duplicated by |
-| Relates | relates to | relates to |
+| Link Type | Outward | Inward | When to Use |
+|-----------|---------|--------|-------------|
+| **Blocks** | blocks | is blocked by | Sequential dependencies: Task A must finish before B starts |
+| **Duplicate** | duplicates | is duplicated by | Mark redundant issues; close the duplicate |
+| **Relates** | relates to | relates to | General association; cross-team awareness |
+| **Cloners** | clones | is cloned by | Issue templates; multi-platform variants |
+
+**Link Direction:** When A blocks B, A is "outward" (blocks) and B is "inward" (is blocked by).
+Use `--blocks` when source issue blocks target; use `--is-blocked-by` when source is blocked by target.
+
+**Note:** Issue links are labels only - they do not enforce workflow rules. Combine with automation or team discipline.
 
 ## Exit Codes
 
@@ -223,9 +206,9 @@ Common JIRA link types:
 Uses shared configuration from `.claude/settings.json` and `.claude/settings.local.json`.
 Requires JIRA credentials via environment variables or settings files.
 
-## Best Practices
+## Architecture Patterns
 
-For comprehensive guidance on linking patterns, dependency management, and clone workflows, see [Best Practices Guide](docs/BEST_PRACTICES.md).
+For strategic guidance on blocker chains, circular dependencies, cross-project linking, and visualization strategies, see [Patterns Guide](docs/PATTERNS.md).
 
 ## Related skills
 

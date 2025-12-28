@@ -1,0 +1,148 @@
+# GitLab CI/CD with JIRA Integration
+# Full example for build and deployment tracking
+
+stages:
+  - build
+  - test
+  - deploy
+  - notify
+
+variables:
+  JIRA_URL: "https://your-company.atlassian.net"
+
+# Build stage
+build:
+  stage: build
+  image: node:20
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
+  cache:
+    paths:
+      - node_modules/
+
+# Test stage
+test:
+  stage: test
+  image: node:20
+  script:
+    - npm ci
+    - npm test
+  dependencies:
+    - build
+
+# Deploy to staging
+deploy:staging:
+  stage: deploy
+  image: node:20
+  script:
+    - npm run deploy:staging
+  environment:
+    name: staging
+    url: https://staging.example.com
+  only:
+    - develop
+  dependencies:
+    - build
+
+# Deploy to production
+deploy:production:
+  stage: deploy
+  image: node:20
+  script:
+    - npm run deploy:production
+  environment:
+    name: production
+    url: https://production.example.com
+  only:
+    - main
+  when: manual
+  dependencies:
+    - build
+
+# Notify JIRA of staging deployment
+notify:staging:
+  stage: notify
+  image: curlimages/curl:latest
+  script:
+    - |
+      ISSUES=$(git log -1 --pretty=%B | grep -oE '[A-Z]+-[0-9]+' | sort -u)
+      for issue in $ISSUES; do
+        curl -X POST \
+          -H "Authorization: Basic $(echo -n ${JIRA_EMAIL}:${JIRA_TOKEN} | base64)" \
+          -H "Content-Type: application/json" \
+          -d "{
+            \"body\": \"Deployed to Staging: ${CI_PIPELINE_URL}\"
+          }" \
+          "${JIRA_URL}/rest/api/3/issue/${issue}/comment"
+      done
+  only:
+    - develop
+  needs:
+    - deploy:staging
+
+# Notify JIRA of production deployment
+notify:production:
+  stage: notify
+  image: curlimages/curl:latest
+  script:
+    - |
+      ISSUES=$(git log -1 --pretty=%B | grep -oE '[A-Z]+-[0-9]+' | sort -u)
+      for issue in $ISSUES; do
+        # Add comment
+        curl -X POST \
+          -H "Authorization: Basic $(echo -n ${JIRA_EMAIL}:${JIRA_TOKEN} | base64)" \
+          -H "Content-Type: application/json" \
+          -d "{
+            \"body\": \"Deployed to Production: ${CI_PIPELINE_URL}\"
+          }" \
+          "${JIRA_URL}/rest/api/3/issue/${issue}/comment"
+      done
+  only:
+    - main
+  needs:
+    - deploy:production
+
+# Comment on JIRA for merge requests
+notify:mr:
+  stage: notify
+  image: curlimages/curl:latest
+  script:
+    - |
+      ISSUE=$(echo "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" | grep -oE '[A-Z]+-[0-9]+' | head -n 1)
+      if [ -n "$ISSUE" ]; then
+        curl -X POST \
+          -H "Authorization: Basic $(echo -n ${JIRA_EMAIL}:${JIRA_TOKEN} | base64)" \
+          -H "Content-Type: application/json" \
+          -d "{
+            \"body\": \"Merge Request created: ${CI_MERGE_REQUEST_PROJECT_URL}/-/merge_requests/${CI_MERGE_REQUEST_IID}\"
+          }" \
+          "${JIRA_URL}/rest/api/3/issue/${ISSUE}/comment"
+      fi
+  only:
+    - merge_requests
+
+# Notify JIRA of failed pipelines
+notify:failure:
+  stage: notify
+  image: curlimages/curl:latest
+  script:
+    - |
+      ISSUES=$(git log -1 --pretty=%B | grep -oE '[A-Z]+-[0-9]+' | sort -u)
+      for issue in $ISSUES; do
+        curl -X POST \
+          -H "Authorization: Basic $(echo -n ${JIRA_EMAIL}:${JIRA_TOKEN} | base64)" \
+          -H "Content-Type: application/json" \
+          -d "{
+            \"body\": \"Pipeline FAILED: ${CI_PIPELINE_URL}\n\nPlease investigate.\"
+          }" \
+          "${JIRA_URL}/rest/api/3/issue/${issue}/comment"
+      done
+  when: on_failure
+  only:
+    - main
+    - develop

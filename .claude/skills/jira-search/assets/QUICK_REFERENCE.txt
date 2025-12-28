@@ -1,0 +1,76 @@
+JIRA SEARCH - QUICK REFERENCE
+==============================
+
+FIND MY WORK:
+  assignee = currentUser() AND status != Done
+
+FIND BUGS THIS WEEK:
+  type = Bug AND created >= -7d
+
+FIND UNASSIGNED ISSUES:
+  assignee IS EMPTY AND status = Open
+
+FIND OVERDUE:
+  duedate < now() AND status != Done
+
+FIND HIGH PRIORITY:
+  priority IN (Highest, High) AND status != Done
+
+FIND IN SPRINT:
+  sprint IN openSprints()
+
+-------------------------------
+COMMON OPERATORS:
+  =, !=        Equals, not equals
+  ~, !~        Contains, not contains (text)
+  IN, NOT IN   List membership
+  IS EMPTY     No value set
+  >=, <=       Date comparisons
+  WAS          Historical value
+
+-------------------------------
+DATE FUNCTIONS:
+  now()            Current time
+  startOfDay()     Today 00:00
+  startOfWeek()    Monday 00:00
+  startOfMonth()   First of month
+  -7d              7 days ago
+  -2w              2 weeks ago
+
+USER FUNCTIONS:
+  currentUser()           Logged-in user
+  membersOf("group")      Group members
+
+-------------------------------
+SCRIPTS:
+  jql_search.py "query"             Search issues
+  jql_validate.py "query"           Validate syntax
+  export_results.py "query" -o FILE Export to CSV
+  create_filter.py "name" "query"   Save filter
+  run_filter.py --name "name"       Run saved filter
+  streaming_export.py "query" -o F  Large export
+
+-------------------------------
+VALIDATE & DEBUG:
+  python jql_validate.py "query"
+  python jql_fields.py              List fields
+  python jql_suggest.py status      Get values
+
+-------------------------------
+QUICK EXAMPLES:
+
+  # My open bugs
+  python jql_search.py "assignee = currentUser() AND type = Bug AND status != Done"
+
+  # Export sprint issues
+  python export_results.py "sprint IN openSprints()" -o sprint.csv
+
+  # Save a filter
+  python create_filter.py "My Bugs" "type = Bug AND assignee = currentUser()"
+
+-------------------------------
+LEARN MORE:
+  docs/QUICK_START.md         Getting started
+  docs/SCRIPT_REFERENCE.md    All scripts
+  references/jql_reference.md JQL syntax
+  references/BEST_PRACTICES.md Expert guide

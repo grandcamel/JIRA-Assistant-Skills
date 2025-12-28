@@ -1,6 +1,23 @@
 #!/usr/bin/env python3
 """
-Find all dependencies for a JIRA issue.
+Find all dependencies for a JIRA issue and export as diagrams.
+
+WHEN TO USE THIS SCRIPT:
+- Stakeholder communication: Generate visual dependency diagrams
+- Release planning: Create dependency graphs for release scope
+- Technical documentation: Export diagrams for wiki/confluence
+- Architecture review: Visualize component relationships
+- Sprint review: Generate dependency visuals for presentations
+- Vs. get_blockers.py: Use this for visualization; use blockers for chain analysis
+- Vs. link_stats.py: Use this for diagrams; use stats for metrics/patterns
+
+OUTPUT FORMATS:
+- mermaid: GitHub/GitLab markdown (renders in-browser)
+- dot: Graphviz (use: dot -Tpng deps.dot -o deps.png)
+- plantuml: PlantUML server or CLI
+- d2: D2/Terrastruct (use: d2 deps.d2 deps.svg)
+- text: Terminal tree view
+- json: Programmatic processing
 
 Usage:
     python get_dependencies.py PROJ-123

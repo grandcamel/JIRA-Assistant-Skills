@@ -1,0 +1,175 @@
+{
+  "version": "1.0",
+  "description": "Script selector decision tree for jira-search skill",
+  "goals": [
+    {
+      "goal": "Find issues matching criteria",
+      "script": "jql_search.py",
+      "example": "python jql_search.py \"project = PROJ AND status = Open\"",
+      "time": "instant",
+      "category": "search"
+    },
+    {
+      "goal": "Save a search I use often",
+      "script": "create_filter.py",
+      "example": "python create_filter.py \"My Open Issues\" \"assignee = currentUser()\" --favourite",
+      "time": "1 minute",
+      "category": "filters"
+    },
+    {
+      "goal": "Run a saved filter",
+      "script": "run_filter.py",
+      "example": "python run_filter.py --name \"Sprint Issues\"",
+      "time": "instant",
+      "category": "filters"
+    },
+    {
+      "goal": "Export results to CSV",
+      "script": "export_results.py",
+      "example": "python export_results.py \"project = PROJ\" --output report.csv",
+      "time": "depends on size",
+      "category": "export"
+    },
+    {
+      "goal": "Export results to JSON",
+      "script": "export_results.py",
+      "example": "python export_results.py \"project = PROJ\" --output data.json --format json",
+      "time": "depends on size",
+      "category": "export"
+    },
+    {
+      "goal": "Export large dataset (>5000 issues)",
+      "script": "streaming_export.py",
+      "example": "python streaming_export.py \"project = PROJ\" --output report.csv --enable-checkpoint",
+      "time": "2-20 minutes",
+      "category": "export"
+    },
+    {
+      "goal": "Resume interrupted export",
+      "script": "streaming_export.py",
+      "example": "python streaming_export.py --resume export-20251226-143022",
+      "time": "depends on remaining",
+      "category": "export"
+    },
+    {
+      "goal": "Check if my JQL is valid",
+      "script": "jql_validate.py",
+      "example": "python jql_validate.py \"project = PROJ AND status = Open\"",
+      "time": "instant",
+      "category": "builder"
+    },
+    {
+      "goal": "Build a JQL query step-by-step",
+      "script": "jql_interactive.py",
+      "example": "python jql_interactive.py",
+      "time": "2-5 minutes",
+      "category": "builder"
+    },
+    {
+      "goal": "See what fields I can search on",
+      "script": "jql_fields.py",
+      "example": "python jql_fields.py",
+      "time": "instant",
+      "category": "builder"
+    },
+    {
+      "goal": "Get valid values for a field",
+      "script": "jql_suggest.py",
+      "example": "python jql_suggest.py status",
+      "time": "instant",
+      "category": "builder"
+    },
+    {
+      "goal": "See JQL functions I can use",
+      "script": "jql_functions.py",
+      "example": "python jql_functions.py",
+      "time": "instant",
+      "category": "builder"
+    },
+    {
+      "goal": "Build query from templates",
+      "script": "jql_build.py",
+      "example": "python jql_build.py --project PROJ --status Open --type Bug",
+      "time": "instant",
+      "category": "builder"
+    },
+    {
+      "goal": "Save a query for later",
+      "script": "jql_history.py",
+      "example": "python jql_history.py --add \"project = PROJ\" --name my-query",
+      "time": "instant",
+      "category": "history"
+    },
+    {
+      "goal": "List my saved queries",
+      "script": "jql_history.py",
+      "example": "python jql_history.py --list",
+      "time": "instant",
+      "category": "history"
+    },
+    {
+      "goal": "Run a saved query",
+      "script": "jql_history.py",
+      "example": "python jql_history.py --run my-query",
+      "time": "instant",
+      "category": "history"
+    },
+    {
+      "goal": "List my saved filters",
+      "script": "get_filters.py",
+      "example": "python get_filters.py --mine",
+      "time": "instant",
+      "category": "filters"
+    },
+    {
+      "goal": "Update a filter",
+      "script": "update_filter.py",
+      "example": "python update_filter.py 10042 --jql \"new query\"",
+      "time": "instant",
+      "category": "filters"
+    },
+    {
+      "goal": "Delete a filter",
+      "script": "delete_filter.py",
+      "example": "python delete_filter.py 10042",
+      "time": "instant",
+      "category": "filters"
+    },
+    {
+      "goal": "Share filter with team",
+      "script": "share_filter.py",
+      "example": "python share_filter.py 10042 --project PROJ",
+      "time": "instant",
+      "category": "filters"
+    },
+    {
+      "goal": "Add/remove filter from favourites",
+      "script": "favourite_filter.py",
+      "example": "python favourite_filter.py 10042 --add",
+      "time": "instant",
+      "category": "filters"
+    },
+    {
+      "goal": "See who subscribes to a filter",
+      "script": "filter_subscriptions.py",
+      "example": "python filter_subscriptions.py 10042",
+      "time": "instant",
+      "category": "filters"
+    },
+    {
+      "goal": "Bulk update issues from search",
+      "script": "bulk_update.py",
+      "example": "python bulk_update.py \"project = PROJ AND labels = old\" --add-labels new",
+      "time": "depends on count",
+      "category": "bulk"
+    }
+  ],
+  "categories": {
+    "search": "Finding and viewing issues",
+    "builder": "Building and validating JQL queries",
+    "history": "Local query management",
+    "filters": "Saved filters (JIRA server-side)",
+    "export": "Exporting data to files",
+    "bulk": "Bulk operations on multiple issues"
+  }
+}

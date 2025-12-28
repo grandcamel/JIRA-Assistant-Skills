@@ -2,6 +2,15 @@
 """
 Analyze link statistics for JIRA issues.
 
+WHEN TO USE THIS SCRIPT:
+- Dependency audits: Review linking patterns across a project
+- Find orphans: Identify issues with no links (--project PROJ)
+- Find hubs/bottlenecks: Identify most-connected issues (--top 10)
+- Process metrics: Generate link distribution stats for retrospectives
+- Health checks: Single issue link breakdown (PROJ-123)
+- Vs. get_blockers.py: Use this for patterns/metrics; use blockers for dependency chains
+- Vs. get_dependencies.py: Use this for statistics; use dependencies for visualization
+
 Usage:
     python link_stats.py PROJ-123
     python link_stats.py --project PROJ

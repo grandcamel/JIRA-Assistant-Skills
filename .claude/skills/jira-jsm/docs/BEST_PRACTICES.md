@@ -1,5 +1,13 @@
 # Jira Service Management (JSM) Best Practices Guide
 
+**Quick Navigation**:
+- Need to get started? See [QUICK_START.md](QUICK_START.md)
+- Looking for examples? See [USAGE_EXAMPLES.md](USAGE_EXAMPLES.md)
+- Have an error? See [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- ITIL workflow patterns? See [ITIL_WORKFLOWS.md](ITIL_WORKFLOWS.md)
+
+---
+
 Comprehensive guide to Jira Service Management best practices for effective IT service management, ITIL compliance, and customer support excellence.
 
 ---
@@ -658,7 +666,7 @@ Title: How to Reset Your Password
 5. Click link, set new password
 
 ## Need Help?
-If these steps don't work, [submit a request](link-to-request-type).
+If these steps don't work, submit a request via the portal.
 
 Labels: password, account, access
 ```
@@ -1044,7 +1052,7 @@ IT Support Knowledge Base
 **Solution:** [How to fix]
 
 ## Still need help?
-If these steps don't work, [submit a request](link).
+If these steps don't work, submit a request via the portal.
 
 ---
 Labels: password, account, access, windows

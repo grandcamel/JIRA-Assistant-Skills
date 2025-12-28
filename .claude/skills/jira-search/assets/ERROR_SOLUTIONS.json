@@ -1,0 +1,177 @@
+{
+  "version": "1.0",
+  "description": "Error catalog with solutions for jira-search skill",
+  "errors": [
+    {
+      "message": "401 Unauthorized",
+      "pattern": "401|Unauthorized|Authentication failed",
+      "cause": "API token invalid, expired, or wrong email",
+      "solutions": [
+        "Regenerate token at https://id.atlassian.com/manage-profile/security/api-tokens",
+        "Verify JIRA_EMAIL matches the email for your API token",
+        "Check JIRA_SITE_URL format: https://company.atlassian.net"
+      ],
+      "debug_command": "python jql_search.py \"project = PROJ\" --max-results 1",
+      "severity": "high"
+    },
+    {
+      "message": "403 Forbidden",
+      "pattern": "403|Forbidden|permission",
+      "cause": "No access to the requested resource",
+      "solutions": [
+        "Request project access from your JIRA administrator",
+        "Verify API access is enabled for your account",
+        "Check if IP restrictions apply"
+      ],
+      "debug_command": "python jql_search.py \"project = PROJ\" --max-results 1",
+      "severity": "high"
+    },
+    {
+      "message": "No issues found",
+      "pattern": "No issues found|0 results|empty",
+      "cause": "JQL returns no matches - syntax error or too restrictive",
+      "solutions": [
+        "Validate syntax: python jql_validate.py \"your query\"",
+        "Check field names: python jql_fields.py --filter \"fieldname\"",
+        "Quote values with spaces: status = \"In Progress\"",
+        "Verify project access: python jql_search.py \"project = PROJ\" --max-results 1"
+      ],
+      "debug_command": "python jql_validate.py \"your query\"",
+      "severity": "medium"
+    },
+    {
+      "message": "Field does not exist",
+      "pattern": "Field.*does not exist|Unknown field|field not found",
+      "cause": "Invalid field name in JQL query",
+      "solutions": [
+        "List available fields: python jql_fields.py",
+        "Search for field: python jql_fields.py --filter \"partial-name\"",
+        "Custom fields need quotes: \"Story Points\" > 5"
+      ],
+      "debug_command": "python jql_fields.py",
+      "severity": "medium"
+    },
+    {
+      "message": "Value does not exist",
+      "pattern": "Value.*does not exist|Invalid value",
+      "cause": "Invalid value for a field",
+      "solutions": [
+        "Get valid values: python jql_suggest.py fieldname",
+        "Check for typos in the value",
+        "Quote values with spaces"
+      ],
+      "debug_command": "python jql_suggest.py status",
+      "severity": "medium"
+    },
+    {
+      "message": "Filter not found",
+      "pattern": "Filter.*not found|No filter|404.*filter",
+      "cause": "Filter ID does not exist or no access",
+      "solutions": [
+        "List your filters: python get_filters.py --mine",
+        "Search by name: python get_filters.py --search \"name\"",
+        "Verify filter ID is correct"
+      ],
+      "debug_command": "python get_filters.py --mine",
+      "severity": "medium"
+    },
+    {
+      "message": "Rate limiting",
+      "pattern": "429|Too Many Requests|rate limit",
+      "cause": "Too many API requests in short time",
+      "solutions": [
+        "Reduce page size: --page-size 50",
+        "Run during off-peak hours",
+        "Split large exports into date ranges"
+      ],
+      "debug_command": "python streaming_export.py \"JQL\" --output report.csv --page-size 50",
+      "severity": "medium"
+    },
+    {
+      "message": "Query history file not found",
+      "pattern": "history.*not found|jql_history.json",
+      "cause": "First use of history feature",
+      "solutions": [
+        "Run first save: python jql_history.py --add \"project = PROJ\" --name first-query",
+        "History file created at ~/.jira-skills/jql_history.json"
+      ],
+      "debug_command": "python jql_history.py --add \"project = PROJ\" --name first",
+      "severity": "low"
+    },
+    {
+      "message": "Export interrupted",
+      "pattern": "interrupted|timeout|connection.*reset",
+      "cause": "Network issue or timeout during export",
+      "solutions": [
+        "Use checkpoints: python streaming_export.py \"JQL\" -o file.csv --enable-checkpoint",
+        "Resume: python streaming_export.py --resume operation-id",
+        "List pending: python streaming_export.py --list-checkpoints"
+      ],
+      "debug_command": "python streaming_export.py --list-checkpoints",
+      "severity": "medium"
+    },
+    {
+      "message": "Invalid arguments",
+      "pattern": "Invalid argument|unrecognized argument|required",
+      "cause": "Wrong command-line arguments",
+      "solutions": [
+        "Check usage: python script.py --help",
+        "Verify required arguments are provided",
+        "Quote arguments with spaces"
+      ],
+      "debug_command": "python jql_search.py --help",
+      "severity": "low"
+    },
+    {
+      "message": "Operator not supported",
+      "pattern": "Operator.*not supported|invalid operator",
+      "cause": "Using wrong operator for field type",
+      "solutions": [
+        "Text fields: ~ (contains), !~ (not contains)",
+        "Select fields: =, !=, IN, NOT IN",
+        "Date fields: =, !=, >, >=, <, <=",
+        "Check field: python jql_fields.py --filter \"fieldname\""
+      ],
+      "debug_command": "python jql_fields.py --filter \"fieldname\"",
+      "severity": "medium"
+    },
+    {
+      "message": "Cannot share filter",
+      "pattern": "Cannot share|sharing.*failed|permission.*share",
+      "cause": "Not filter owner or target does not exist",
+      "solutions": [
+        "Only filter owners can share",
+        "Verify project/group exists",
+        "Check your permissions"
+      ],
+      "debug_command": "python get_filters.py --mine",
+      "severity": "low"
+    }
+  ],
+  "quick_fixes": {
+    "unquoted_spaces": {
+      "wrong": "status = In Progress",
+      "correct": "status = \"In Progress\""
+    },
+    "null_check": {
+      "wrong": "assignee = null",
+      "correct": "assignee IS EMPTY"
+    },
+    "date_equals": {
+      "wrong": "created = -7d",
+      "correct": "created >= -7d"
+    },
+    "lowercase_operator": {
+      "wrong": "status = Open and priority = High",
+      "correct": "status = Open AND priority = High"
+    },
+    "wrong_contains": {
+      "wrong": "summary contains \"error\"",
+      "correct": "summary ~ \"error\""
+    },
+    "custom_field_quotes": {
+      "wrong": "Story Points > 5",
+      "correct": "\"Story Points\" > 5"
+    }
+  }
+}

@@ -2,6 +2,14 @@
 """
 Find blocker chain for a JIRA issue.
 
+WHEN TO USE THIS SCRIPT:
+- Sprint planning: Identify all blockers before committing to work
+- Daily standups: Review blockers for current sprint issues
+- Critical path analysis: Use --recursive to find full dependency chains
+- Impact analysis: Use --direction outward to find issues THIS issue blocks
+- Vs. link_stats.py: Use this for dependency chains; use link_stats for patterns/metrics
+- Vs. get_dependencies.py: Use this for blockers only; use dependencies for visualization
+
 Usage:
     python get_blockers.py PROJ-123
     python get_blockers.py PROJ-123 --recursive

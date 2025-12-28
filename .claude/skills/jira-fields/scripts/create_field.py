@@ -23,57 +23,73 @@ from config_manager import get_jira_client
 from error_handler import print_error, JiraError, ValidationError
 from formatters import format_json, print_success
 
-# Field type mappings
-FIELD_TYPES = {
-    'text': {
-        'type': 'com.atlassian.jira.plugin.system.customfieldtypes:textfield',
-        'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:textsearcher'
-    },
-    'textarea': {
-        'type': 'com.atlassian.jira.plugin.system.customfieldtypes:textarea',
-        'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:textsearcher'
-    },
-    'number': {
-        'type': 'com.atlassian.jira.plugin.system.customfieldtypes:float',
-        'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:exactnumber'
-    },
-    'date': {
-        'type': 'com.atlassian.jira.plugin.system.customfieldtypes:datepicker',
-        'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:daterange'
-    },
-    'datetime': {
-        'type': 'com.atlassian.jira.plugin.system.customfieldtypes:datetime',
-        'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:datetimerange'
-    },
-    'select': {
-        'type': 'com.atlassian.jira.plugin.system.customfieldtypes:select',
-        'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher'
-    },
-    'multiselect': {
-        'type': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselect',
-        'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher'
-    },
-    'checkbox': {
-        'type': 'com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes',
-        'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher'
-    },
-    'radio': {
-        'type': 'com.atlassian.jira.plugin.system.customfieldtypes:radiobuttons',
-        'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher'
-    },
-    'url': {
-        'type': 'com.atlassian.jira.plugin.system.customfieldtypes:url',
-        'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:exacttextsearcher'
-    },
-    'user': {
-        'type': 'com.atlassian.jira.plugin.system.customfieldtypes:userpicker',
-        'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:userpickergroupsearcher'
-    },
-    'labels': {
-        'type': 'com.atlassian.jira.plugin.system.customfieldtypes:labels',
-        'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:labelsearcher'
-    }
-}
+# Field type mappings sourced from assets/field-types-reference.json
+# See that file for complete documentation, examples, and use cases
+def _load_field_types() -> Dict[str, Dict[str, str]]:
+    """Load field types from JSON reference file with fallback to hardcoded values."""
+    ref_file = Path(__file__).parent.parent / 'assets' / 'field-types-reference.json'
+    try:
+        with open(ref_file) as f:
+            data = json.load(f)
+            # Extract only type and searcher for API calls
+            return {
+                key: {'type': val['type'], 'searcher': val['searcher']}
+                for key, val in data['field_types'].items()
+            }
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        # Fallback to hardcoded values if reference file unavailable
+        return {
+            'text': {
+                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:textfield',
+                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:textsearcher'
+            },
+            'textarea': {
+                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:textarea',
+                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:textsearcher'
+            },
+            'number': {
+                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:float',
+                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:exactnumber'
+            },
+            'date': {
+                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:datepicker',
+                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:daterange'
+            },
+            'datetime': {
+                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:datetime',
+                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:datetimerange'
+            },
+            'select': {
+                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:select',
+                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher'
+            },
+            'multiselect': {
+                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselect',
+                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher'
+            },
+            'checkbox': {
+                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes',
+                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher'
+            },
+            'radio': {
+                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:radiobuttons',
+                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher'
+            },
+            'url': {
+                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:url',
+                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:exacttextsearcher'
+            },
+            'user': {
+                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:userpicker',
+                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:userpickergroupsearcher'
+            },
+            'labels': {
+                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:labels',
+                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:labelsearcher'
+            }
+        }
+
+FIELD_TYPES = _load_field_types()
 
 
 def create_field(name: str,

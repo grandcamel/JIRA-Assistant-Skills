@@ -1,6 +1,12 @@
 # JIRA Workflow Guide
 
-This guide explains how to work with JIRA workflows, transitions, and issue lifecycle management.
+**Use this guide when:** Understanding standard JIRA workflows, designing transitions, managing resolution.
+
+**Not for:** Service Management workflows (see [jsm_workflows.md](jsm_workflows.md)).
+
+**Audience:** Developers, team leads, anyone working with standard JIRA.
+
+---
 
 ## Overview
 

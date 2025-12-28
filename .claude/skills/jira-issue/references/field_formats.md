@@ -2,6 +2,24 @@
 
 This document describes the format requirements for common JIRA fields when creating or updating issues.
 
+---
+
+## Quick Index
+
+Jump to field category:
+
+| Category | Fields | Section |
+|----------|--------|---------|
+| **Rich Text** | Description, Environment, Comments | [Atlassian Document Format](#atlassian-document-format-adf) |
+| **Identity** | Project, Issue Type | [Standard Fields](#standard-field-formats) |
+| **Assignment** | Assignee, Reporter | [User Assignment](#user-assignment) |
+| **Categorization** | Priority, Labels, Components | [Standard Fields](#standard-field-formats) |
+| **Time** | Due Date, Time Tracking | [Standard Fields](#standard-field-formats) |
+| **Versions** | Fix Versions | [Standard Fields](#standard-field-formats) |
+| **Custom** | Text, Number, Select, User Picker, etc. | [Custom Fields](#custom-fields) |
+
+---
+
 ## Atlassian Document Format (ADF)
 
 JIRA Cloud uses ADF for rich text fields like `description`, `environment`, and comments.
@@ -473,7 +491,7 @@ Our `adf_helper.py` library supports converting Markdown to ADF:
 - Bold: `**text**`
 - Italic: `*text*`
 - Code: `` `code` ``
-- Links: `[text](url)`
+- Links: `[text](https://...)`
 - Bullet lists: `- item`
 - Numbered lists: `1. item`
 - Code blocks: ` ```code``` `
@@ -502,6 +520,11 @@ adf = markdown_to_adf(description)
 
 ## References
 
+### Internal
+- [API Examples](EXAMPLES.md) - Complete request/response examples
+- [API Reference](api_reference.md) - Endpoint documentation
+
+### External
 - [ADF Specification](https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/)
 - [ADF Builder](https://developer.atlassian.com/cloud/jira/platform/apis/document/playground/)
 - [Field Types Reference](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-fields/)

@@ -1,6 +1,6 @@
 ---
 name: "JIRA Time Tracking"
-description: "Time tracking and worklog management - log time, manage estimates, generate reports, export timesheets. Use when logging work, setting estimates, or generating time reports."
+description: "Time tracking and worklog management with estimation, reporting, and billing integration. Use for logging work, managing estimates, generating reports, bulk operations, and team time tracking policies."
 ---
 
 # JIRA Time Tracking Skill
@@ -188,7 +188,16 @@ The following scripts support `--dry-run` for previewing changes without making 
 | `bulk_log_time.py` | Shows which issues would receive worklogs and the time that would be logged |
 | `delete_worklog.py` | Shows worklog details that would be deleted and estimate impact |
 
-Always use `--dry-run` first when performing bulk operations or deleting worklogs to verify the operation before execution.
+**Dry-Run Pattern**: Always use `--dry-run` first when performing bulk operations or deleting worklogs. This preview-before-execute workflow prevents accidental data changes:
+
+```bash
+# Step 1: Preview the operation
+python bulk_log_time.py --jql "sprint = 456" --time 15m --dry-run
+
+# Step 2: Review the output carefully
+# Step 3: Execute only after confirming the preview is correct
+python bulk_log_time.py --jql "sprint = 456" --time 15m --comment "Daily standup"
+```
 
 ## Time format
 
@@ -257,12 +266,85 @@ To use time tracking features, you typically need:
 - **Edit All Worklogs** - Modify/delete any user's worklogs (admin)
 - **Delete All Worklogs** - Delete any user's worklogs (admin)
 
+For detailed permission matrix, see [Permission Matrix](docs/reference/permission-matrix.md).
+
+### Advanced Troubleshooting
+
+#### API rate limits
+When performing bulk operations on large result sets, scripts automatically retry with exponential backoff on 429 errors. To reduce load:
+- Use smaller date ranges for reports
+- Filter JQL to limit results before bulk operations
+
+#### Timezone issues
+Worklogs use UTC internally. If time appears on wrong date:
+- Check your JIRA timezone settings
+- Use explicit `--started` date when needed
+
+#### Bulk operation timeouts
+Large JQL result sets may timeout:
+```bash
+# Use smaller batches instead of one large query
+python bulk_log_time.py --issues PROJ-1,PROJ-2,PROJ-3 --time 15m
+```
+
+#### Worklog visibility issues
+If worklogs are logged but others cannot see them:
+- Check worklog visibility settings
+- Verify issue security scheme permissions
+
+For complete error code reference, see [Error Codes](docs/reference/error-codes.md).
+
+## Common Questions
+
+**Why is my estimate not updating?**
+JIRA Cloud bug (JRACLOUD-67539). Set both estimates together:
+```bash
+python set_estimate.py PROJ-123 --original "2d" --remaining "1d 4h"
+```
+
+**How do I log time for someone else?**
+You need "Edit All Worklogs" permission. Most users can only log their own time.
+
+**Can I bill partial hours?**
+Yes. Use minutes for precision: `1h 45m` (not `1.75h`). JIRA doesn't support decimal hours.
+
+**How does --adjust-estimate work?**
+
+| Mode | Effect |
+|------|--------|
+| `auto` | Reduces remaining by time logged |
+| `leave` | No change to remaining estimate |
+| `new` | Sets remaining to a new value |
+| `manual` | Reduces remaining by specified amount |
+
+## Advanced Guides
+
+For specific roles and use cases, see:
+
+| Guide | Audience | Topics |
+|-------|----------|--------|
+| [IC Time Logging](docs/ic-time-logging.md) | Developers, QA | Daily habits, comment templates, special cases |
+| [Estimation Guide](docs/estimation-guide.md) | PMs, Team Leads | Approaches, accuracy metrics, buffers |
+| [Team Policies](docs/team-policies.md) | Managers, Admins | Policy templates, onboarding, compliance |
+| [Billing Integration](docs/billing-integration.md) | Finance, PMs | Invoicing, billable tracking, exports |
+| [Reporting Guide](docs/reporting-guide.md) | Analysts, PMs | Reports, dashboards, JQL queries |
+
+### Quick Reference
+
+| Reference | Content |
+|-----------|---------|
+| [Time Format](docs/reference/time-format-quick-ref.md) | Format syntax, common values |
+| [JQL Snippets](docs/reference/jql-snippets.md) | Copy-paste queries for time tracking |
+| [Permission Matrix](docs/reference/permission-matrix.md) | Role-based permissions |
+| [Error Codes](docs/reference/error-codes.md) | Troubleshooting guide |
+
 ## Best Practices
 
-For comprehensive guidance on time logging workflows, estimate management, and reporting patterns, see [Best Practices Guide](docs/BEST_PRACTICES.md).
+For comprehensive guidance on time logging workflows, estimate management, and reporting patterns, see [Best Practices Guide](docs/BEST_PRACTICES.md) (navigation hub to all guides).
 
 ## Related skills
 
 - **jira-issue**: Create and manage issues (can set estimates on creation)
 - **jira-search**: Search issues and view time tracking fields
 - **jira-agile**: Sprint management with time tracking integration
+- **jira-bulk**: Bulk operations at scale with dry-run support

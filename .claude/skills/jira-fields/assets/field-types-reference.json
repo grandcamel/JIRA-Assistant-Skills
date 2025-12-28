@@ -1,0 +1,139 @@
+{
+  "_description": "JIRA custom field type mappings with Atlassian plugin identifiers",
+  "_source": "Atlassian JIRA REST API - Custom Field Types",
+  "_last_updated": "2025-12",
+  "field_types": {
+    "text": {
+      "display_name": "Text Field",
+      "type": "com.atlassian.jira.plugin.system.customfieldtypes:textfield",
+      "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:textsearcher",
+      "description": "Single-line text input (max 255 characters)",
+      "storage": "String (255 chars)",
+      "searchable": true,
+      "use_cases": ["Product name", "Ticket number", "Customer ID", "External reference"],
+      "examples": ["API-123", "Feature Request", "CUST-2025-001"],
+      "validation_options": ["max_length", "regex_pattern"]
+    },
+    "textarea": {
+      "display_name": "Text Area",
+      "type": "com.atlassian.jira.plugin.system.customfieldtypes:textarea",
+      "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:textsearcher",
+      "description": "Multi-line text input (unlimited characters)",
+      "storage": "Text (unlimited)",
+      "searchable": true,
+      "use_cases": ["Description", "Notes", "Requirements", "Technical details"],
+      "examples": ["Detailed bug steps", "Acceptance criteria", "Release notes"],
+      "validation_options": ["none"]
+    },
+    "number": {
+      "display_name": "Number Field",
+      "type": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+      "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:exactnumber",
+      "description": "Numeric value (float)",
+      "storage": "Float",
+      "searchable": true,
+      "use_cases": ["Story points", "Budget", "Count", "Score", "Effort estimate"],
+      "examples": [1, 3, 5, 8, 13, 21],
+      "validation_options": ["min_value", "max_value"]
+    },
+    "date": {
+      "display_name": "Date Picker",
+      "type": "com.atlassian.jira.plugin.system.customfieldtypes:datepicker",
+      "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:daterange",
+      "description": "Date only (no time component)",
+      "storage": "Date",
+      "searchable": true,
+      "use_cases": ["Target date", "Deadline", "Review date", "Start date"],
+      "examples": ["2025-01-15", "2025-03-31"],
+      "validation_options": ["min_date", "max_date"]
+    },
+    "datetime": {
+      "display_name": "Date Time Picker",
+      "type": "com.atlassian.jira.plugin.system.customfieldtypes:datetime",
+      "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:datetimerange",
+      "description": "Date and time value",
+      "storage": "DateTime",
+      "searchable": true,
+      "use_cases": ["Scheduled deployment", "Meeting time", "Incident timestamp"],
+      "examples": ["2025-01-15T14:30:00", "2025-03-31T09:00:00"],
+      "validation_options": ["min_datetime", "max_datetime"]
+    },
+    "select": {
+      "display_name": "Select List (Single)",
+      "type": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+      "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher",
+      "description": "Dropdown with single selection",
+      "storage": "String",
+      "searchable": true,
+      "use_cases": ["Priority", "Severity", "Environment", "Category"],
+      "examples": ["High", "Medium", "Low"],
+      "validation_options": ["options_list", "default_value"]
+    },
+    "multiselect": {
+      "display_name": "Select List (Multiple)",
+      "type": "com.atlassian.jira.plugin.system.customfieldtypes:multiselect",
+      "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher",
+      "description": "Multi-select dropdown",
+      "storage": "Array",
+      "searchable": true,
+      "use_cases": ["Affected components", "Target platforms", "Required skills"],
+      "examples": [["iOS", "Android"], ["Frontend", "Backend"]],
+      "validation_options": ["options_list", "min_selections", "max_selections"]
+    },
+    "checkbox": {
+      "display_name": "Checkboxes",
+      "type": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes",
+      "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher",
+      "description": "Multiple checkbox options",
+      "storage": "Array",
+      "searchable": true,
+      "use_cases": ["Features included", "Compliance flags", "Test types"],
+      "examples": [["Unit Tests", "Integration Tests"], ["GDPR", "SOC2"]],
+      "validation_options": ["options_list"]
+    },
+    "radio": {
+      "display_name": "Radio Buttons",
+      "type": "com.atlassian.jira.plugin.system.customfieldtypes:radiobuttons",
+      "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher",
+      "description": "Single selection as radio buttons",
+      "storage": "String",
+      "searchable": true,
+      "use_cases": ["Approval status", "Yes/No choice", "T-shirt size"],
+      "examples": ["Yes", "No", "N/A"],
+      "validation_options": ["options_list", "default_value"]
+    },
+    "url": {
+      "display_name": "URL Field",
+      "type": "com.atlassian.jira.plugin.system.customfieldtypes:url",
+      "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:exacttextsearcher",
+      "description": "Web link (clickable URL)",
+      "storage": "String",
+      "searchable": true,
+      "use_cases": ["Documentation link", "External ticket", "Design file"],
+      "examples": ["https://docs.example.com/feature", "https://jira.example.com/PROJ-123"],
+      "validation_options": ["url_pattern"]
+    },
+    "user": {
+      "display_name": "User Picker (Single)",
+      "type": "com.atlassian.jira.plugin.system.customfieldtypes:userpicker",
+      "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:userpickergroupsearcher",
+      "description": "Single user selection",
+      "storage": "User object",
+      "searchable": true,
+      "use_cases": ["Approver", "Reviewer", "Technical lead", "Product owner"],
+      "examples": ["john.doe@example.com"],
+      "validation_options": ["user_groups"]
+    },
+    "labels": {
+      "display_name": "Labels",
+      "type": "com.atlassian.jira.plugin.system.customfieldtypes:labels",
+      "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:labelsearcher",
+      "description": "Free-form tags (autocomplete from existing)",
+      "storage": "String array",
+      "searchable": true,
+      "use_cases": ["Tags", "Categories", "Keywords", "Technologies"],
+      "examples": [["backend", "api"], ["react", "typescript"]],
+      "validation_options": ["none"]
+    }
+  }
+}

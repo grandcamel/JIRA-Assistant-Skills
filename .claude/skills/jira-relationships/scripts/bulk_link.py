@@ -2,6 +2,18 @@
 """
 Bulk link multiple issues to a target issue.
 
+WHEN TO USE THIS SCRIPT:
+- Shared dependencies: Many issues blocked by one platform upgrade
+- Release tracking: Link all issues in a version to release issue
+- Cross-team coordination: Link multiple teams' issues to shared blocker
+- Retrospective prep: Link all sprint issues to retrospective
+
+STRATEGIES:
+- --jql: Find issues dynamically (e.g., fixVersion, sprint, labels)
+- --issues: Explicit list for known issues
+- --dry-run: Preview before creating links
+- --skip-existing: Avoid duplicating links
+
 Usage:
     python bulk_link.py --issues PROJ-1,PROJ-2,PROJ-3 --blocks PROJ-100
     python bulk_link.py --jql "project=PROJ AND fixVersion=1.0" --relates-to PROJ-RELEASE
