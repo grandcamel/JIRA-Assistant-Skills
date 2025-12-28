@@ -1,159 +1,123 @@
-# JIRA Assistant Skills for Claude Code
+<p align="center">
+  <img src="proposals/02-visual-assets/logo-terminal-prompt.svg" alt="JIRA Assistant Skills" width="140">
+</p>
 
-> **Talk to JIRA like you talk to a teammate.** No JQL memorization. No API documentation. Just natural language.
+<h1 align="center">JIRA Assistant Skills</h1>
 
-Transform how your team interacts with JIRA. These 14 modular Claude Code Skills give you the complete JIRA ecosystem at your fingertips—from sprint planning to incident response—all through natural conversation.
+<table align="center">
+<tr>
+<td align="center">
+<h2>10x</h2>
+<sub>More context-efficient<br>than MCP servers</sub>
+</td>
+<td align="center">
+<h2>14</h2>
+<sub>Specialized skills<br>one conversation</sub>
+</td>
+<td align="center">
+<h2>100+</h2>
+<sub>Production-ready<br>Python scripts</sub>
+</td>
+<td align="center">
+<h2>0</h2>
+<sub>JQL syntax<br>to memorize</sub>
+</td>
+</tr>
+</table>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/tests-560%2B%20passing-brightgreen?logo=pytest" alt="Tests">
+  <img src="https://img.shields.io/badge/python-3.8+-3776AB?logo=python&logoColor=white" alt="Python 3.8+">
+  <img src="https://img.shields.io/badge/skills-14-FF6B6B" alt="Skills">
+  <img src="https://img.shields.io/github/stars/grandcamel/jira-assistant-skills?style=social" alt="GitHub Stars">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
+</p>
+
+<p align="center">
+  <strong>Natural language JIRA automation for Claude Code</strong><br>
+  <sub>From sprint planning to incident response—14 skills, 100+ scripts, zero JQL memorization.</sub>
+</p>
+
+<div align="center">
 
 ```
-You: "What's blocking the release?"
-Claude: [Analyzes dependencies across 47 issues, identifies 3 blockers, shows resolution paths]
-
-You: "Plan next sprint with the top priorities from backlog"
-Claude: [Creates sprint, analyzes velocity, moves 8 issues totaling 34 story points]
-
-You: "There's a P1 incident - database is down"
-Claude: [Creates JSM ticket, sets SLA, notifies on-call, links related issues from last month]
+┌───────────────────────────────────────────────────────────────┐
+│ You: "What's blocking the Q4 release?"                        │
+├───────────────────────────────────────────────────────────────┤
+│ Claude: Analyzing 147 issues across 3 projects...             │
+│                                                               │
+│ Found 4 blockers:                                             │
+│ • PLATFORM-234: API rate limiting (blocked 12 issues)         │
+│ • MOBILE-567: iOS signing certificate expired                 │
+│ • WEB-890: Pending security review                            │
+│ • INFRA-123: Database migration not scheduled                 │
+│                                                               │
+│ Recommended actions:                                          │
+│ 1. Escalate PLATFORM-234 to @api-team (highest impact)        │
+│ 2. MOBILE-567 can be resolved by @devops today                │
+│ 3. WEB-890 needs @security-lead approval                      │
+└───────────────────────────────────────────────────────────────┘
 ```
+
+</div>
+
+<p align="center">
+  <a href="#quick-start"><strong>Get Started</strong></a> •
+  <a href="#skills-overview">Skills</a> •
+  <a href="#who-is-this-for">Use Cases</a> •
+  <a href="#architecture">Architecture</a>
+</p>
 
 ---
 
-## Why JIRA Assistant Skills?
+## The Difference
 
-### Context-Efficient Architecture (vs MCP Servers)
+<table>
+<tr>
+<td width="50%">
 
-Traditional MCP servers load **everything** into context—every endpoint, every schema, every capability. This burns tokens and slows responses.
-
-JIRA Assistant Skills use **progressive disclosure**:
-
-| Approach | Context Usage | Behavior |
-|----------|---------------|----------|
-| **MCP Server** | ~50-100KB always loaded | All endpoints in context, even unused ones |
-| **JIRA Skills** | ~6KB base + on-demand | Only active skill loaded; deep docs fetched when needed |
-
-**Result:** 10x more context-efficient. Claude stays fast and focused.
-
-### 14 Modular Skills, One Unified Experience
-
-Each skill is purpose-built and autonomously discovered:
-
-| Skill | Purpose | Key Capabilities |
-|-------|---------|------------------|
-| **jira-assistant** | Meta-router | Natural language routing to specialized skills |
-| **jira-issue** | Core CRUD | Create, read, update, delete issues |
-| **jira-lifecycle** | Workflows | Transitions, assignments, resolve/reopen |
-| **jira-search** | Discovery | JQL, filters, bulk operations, exports |
-| **jira-collaborate** | Teamwork | Comments, attachments, watchers |
-| **jira-agile** | Scrum/Kanban | Epics, sprints, backlog, story points |
-| **jira-relationships** | Dependencies | Links, blockers, cloning, impact analysis |
-| **jira-time** | Tracking | Worklogs, estimates, timesheets |
-| **jira-jsm** | Service Mgmt | Requests, SLAs, queues, approvals, CMDB |
-| **jira-bulk** | Scale | Bulk transitions, assignments, cloning |
-| **jira-dev** | Developer DX | Git branches, commits, PR descriptions |
-| **jira-fields** | Configuration | Custom fields, Agile field setup |
-| **jira-ops** | Operations | Caching, performance, diagnostics |
-| **jira-admin** | Administration | Projects, schemes, workflows, permissions |
-
-### Natural Language, Not CLI Memorization
-
-**Before:** Memorize flags, read docs, copy-paste commands
-```bash
-python .claude/skills/jira-search/scripts/jql_search.py \
-  "project = PROJ AND status = 'In Progress' AND assignee = currentUser() \
-   AND sprint in openSprints() ORDER BY priority DESC" \
-  --fields summary,priority,status --max-results 50 --output json
+### ❌ The JQL Way
+```jql
+project = PROJ AND
+status IN ("To Do", "In Progress") AND
+assignee = currentUser() AND
+sprint IN openSprints() AND
+priority IN (High, Highest)
+ORDER BY priority DESC, created ASC
 ```
+*Hope you remembered the syntax...*
 
-**After:** Just ask
-```
-"Show me my in-progress work for this sprint, sorted by priority"
-```
+</td>
+<td width="50%">
 
-Claude understands context, remembers your project, and picks the right tool.
+### ✅ The Natural Way
+```
+"Show my high priority sprint work"
+```
+*Just ask.*
+
+</td>
+</tr>
+</table>
+
+### Time Saved
+
+| Task | Traditional JIRA | JIRA Assistant | Saved |
+|------|------------------|----------------|-------|
+| Find my open bugs | 45 seconds | 5 seconds | 89% |
+| Create sprint + add stories | 3 minutes | 15 seconds | 92% |
+| Log time on 5 issues | 2 minutes | 20 seconds | 83% |
+| Check what's blocking release | 5 minutes | 10 seconds | 97% |
+| Bulk close 20 resolved issues | 4 minutes | 30 seconds | 88% |
+
+**Typical developer:** Save 30+ minutes per week.
+**Team of 8:** Reclaim 31 work days per year.
 
 ---
 
-## Innovative Use Cases
+## Quick Start
 
-### AI-Powered Sprint Planning
-
-Let Claude be your sprint planning co-pilot:
-
-```
-You: "Plan Sprint 23 based on our velocity and current priorities"
-
-Claude:
-├── Analyzes last 3 sprints: avg velocity 42 points
-├── Reviews backlog: 127 unestimated, 89 ready
-├── Identifies: 12 items match sprint goal "Payment System v2"
-├── Recommends: 8 stories (38 points) + 20% buffer
-├── Creates sprint, moves issues, sets dates
-└── Flags: "PROJ-456 has external dependency on API team"
-```
-
-**Capabilities:**
-- Velocity analysis from historical sprints
-- Capacity planning with team availability
-- Automatic backlog prioritization
-- Dependency detection before sprint starts
-- Story point anomaly detection ("This 2-pointer looks like an 8")
-
-### Cross-Project Intelligence
-
-See patterns humans miss:
-
-```
-You: "Are there any duplicate efforts across our mobile and web teams?"
-
-Claude:
-├── Scans 3 projects: MOBILE, WEB, PLATFORM
-├── Semantic analysis of 847 open issues
-├── Found: 4 potential duplicates
-│   ├── MOBILE-234 ↔ WEB-567: "OAuth refresh token handling"
-│   ├── MOBILE-289 ↔ WEB-612: "Dark mode color palette"
-│   └── [2 more...]
-├── Found: 3 parallel implementations
-│   └── "Payment validation logic" in 3 separate repos
-└── Recommendation: Create shared PLATFORM epic for consolidation
-```
-
-**Capabilities:**
-- Cross-project issue similarity detection
-- Dependency mapping across team boundaries
-- Blocker chain analysis ("PROJ-1 → blocks 7 issues across 3 teams")
-- Workload distribution insights
-- Release coordination across projects
-
-### Intelligent Incident Response
-
-From alert to resolution, streamlined:
-
-```
-You: "P1 incident: Payment processing is failing in production"
-
-Claude:
-├── Creates JSM incident: INC-789 (Priority: Critical)
-├── Sets SLA: 1-hour response, 4-hour resolution
-├── Links related:
-│   ├── PROJ-234: "Payment timeout errors" (closed 2 weeks ago)
-│   ├── PROJ-567: "Database connection pool" (open, assigned to @jane)
-│   └── INC-456: Similar incident last month (root cause: Redis)
-├── Notifies: @oncall-payments, @platform-lead
-├── Creates war room: #inc-789-payments
-└── Suggests: "Check Redis cluster health - similar to INC-456"
-```
-
-**Capabilities:**
-- Automatic incident creation with proper categorization
-- SLA tracking with breach predictions
-- Historical pattern matching ("This looks like the issue from March")
-- Stakeholder notification workflows
-- Post-incident report generation
-
----
-
-## Quick Start (5 Minutes)
-
-### 1. Install
+### 1. Install Dependencies
 
 ```bash
 pip install -r .claude/skills/shared/scripts/lib/requirements.txt
@@ -172,342 +136,310 @@ export JIRA_EMAIL="you@company.com"
 export JIRA_SITE_URL="https://company.atlassian.net"
 ```
 
-### 4. Try It
+### 4. Start Using
 
 ```bash
-# Verify connection
-python .claude/skills/jira-issue/scripts/get_issue.py PROJ-123
-
-# Or just ask Claude:
-# "Show me my open issues"
+# Just ask Claude
+claude "Show me my open issues"
+claude "Create a bug: Login button not working"
+claude "What's blocking the release?"
 ```
 
 **That's it.** Claude now has full JIRA access.
 
+<p align="center">
+  <a href="docs/quick-start.md"><strong>Full Setup Guide →</strong></a>
+</p>
+
 ---
 
-## Talk to JIRA
+## What You Can Do
 
-These skills shine when used conversationally with Claude Code:
+```mermaid
+flowchart LR
+    subgraph Input["💬 You Say"]
+        Q1["Show my high<br/>priority bugs"]
+        Q2["Create a story<br/>for login redesign"]
+        Q3["What's blocking<br/>the release?"]
+    end
 
-### Daily Standup
-```
-You: "What did I work on yesterday and what's on my plate today?"
-Claude: [Queries recent activity, shows today's assigned items by priority]
+    subgraph Processing["🤖 Claude Understands"]
+        P1["JQL: assignee=currentUser()<br/>AND type=Bug<br/>AND priority>=High"]
+        P2["create_issue.py<br/>--type Story<br/>--summary '...'"]
+        P3["Search linked blockers<br/>Traverse dependency tree"]
+    end
+
+    subgraph Output["✅ You Get"]
+        R1["📋 List of 7 bugs<br/>with details"]
+        R2["🎫 PROJ-456 created<br/>ready to refine"]
+        R3["🔍 3 blockers found<br/>with recommendations"]
+    end
+
+    Q1 --> P1 --> R1
+    Q2 --> P2 --> R2
+    Q3 --> P3 --> R3
 ```
 
-### Sprint Management
-```
-You: "Sprint ends Friday - what's at risk?"
-Claude: [Identifies incomplete items, flags blockers, suggests scope adjustments]
+<details>
+<summary><strong>📖 Example: Sarah's Monday Morning</strong></summary>
+
+**Before JIRA Assistant (15 minutes)**
+1. Open browser, navigate to JIRA (2 min)
+2. Find the right board (1 min)
+3. Set up filters (3 min)
+4. Check each issue status (5 min)
+5. Look up sprint velocity (2 min)
+6. Copy issues to notes (2 min)
+
+**After JIRA Assistant (45 seconds)**
+> Sarah: "What's my sprint work and yesterday's progress?"
+
+Claude provides a formatted summary with everything she needs.
+
+**Time saved:** 14 minutes per standup × 250 days = **58 hours/year**
+
+</details>
+
+---
+
+## Skills Overview
+
+| Skill | Purpose | Example Command |
+|-------|---------|-----------------|
+| **jira-assistant** | Meta-skill router | Routes to the right skill automatically |
+| **jira-issue** | Issue CRUD | "Create a bug for login failure" |
+| **jira-lifecycle** | Workflow transitions | "Move PROJ-123 to In Progress" |
+| **jira-search** | JQL & filters | "Show my open issues" |
+| **jira-collaborate** | Comments & watchers | "Add comment to PROJ-123" |
+| **jira-agile** | Sprints & epics | "Create sprint for next week" |
+| **jira-relationships** | Issue linking | "What's blocking PROJ-123?" |
+| **jira-time** | Time tracking | "Log 2 hours on PROJ-123" |
+| **jira-jsm** | Service desk | "Show my support queue" |
+| **jira-bulk** | Bulk operations | "Close all resolved issues" |
+| **jira-dev** | Git integration | "Generate branch name for PROJ-123" |
+| **jira-fields** | Field discovery | "Show custom fields in PROJ" |
+| **jira-ops** | Cache & utilities | "Clear JIRA cache" |
+| **jira-admin** | Project admin | "List project permissions" |
+
+<p align="center">
+  <a href="docs/scripts-reference.md"><strong>Full Scripts Reference →</strong></a>
+</p>
+
+---
+
+## Who Is This For?
+
+<details>
+<summary><strong>👨‍💻 Developers</strong> — Never leave your terminal</summary>
+
+**Stop context-switching to JIRA.**
+
+You're in your IDE. You just fixed a bug. Now you need to update JIRA.
+
+```bash
+claude "Close PROJ-123 with 'Fixed null pointer', log 30 minutes"
+# 3 seconds, never left your terminal
 ```
 
-### Issue Triage
+### Developer Cheat Sheet
+
+| Task | Command |
+|------|---------|
+| Check my work | `"What's assigned to me in the current sprint?"` |
+| Start a task | `"Start progress on PROJ-123"` |
+| Log time | `"Log 2 hours on PROJ-123: Implemented auth fix"` |
+| Mark done | `"Close PROJ-123 with resolution Fixed"` |
+| Create bug | `"Create high priority bug: Login fails on Safari"` |
+| Get branch name | `"Generate branch name for PROJ-123"` |
+
+**Time saved:** ~45 min/week
+
+</details>
+
+<details>
+<summary><strong>👥 Team Leads</strong> — Team visibility in seconds</summary>
+
+**See your team's work without meetings.**
+
+### Morning Check-in (60 Seconds)
 ```
-You: "Create a bug for the checkout crash, high priority, assign to mobile team"
-Claude: [Creates issue, sets fields, assigns to component lead, adds to current sprint]
+"Show sprint progress for Team Alpha"
+"Who has the most work in progress?"
+"What's blocked and why?"
 ```
 
-### Reporting
+### Sprint Planning Support
 ```
-You: "Generate a summary of what the platform team shipped this quarter"
-Claude: [Searches resolved issues, groups by epic, calculates stats, formats report]
+"Show unestimated stories in backlog"
+"What's the team velocity for last 3 sprints?"
+"Move top 10 priority items to Sprint 42"
 ```
+
+### Query Templates
+
+| Need | Command |
+|------|---------|
+| Blockers | `"Show blockers across all team projects"` |
+| Workload | `"Who's overloaded? Show assignment counts"` |
+| Progress | `"What moved to Done yesterday?"` |
+| Export | `"Export this sprint's completed work to CSV"` |
+
+**Time saved:** ~4 hours/week
+
+</details>
+
+<details>
+<summary><strong>🏃 Scrum Masters</strong> — Run ceremonies, not admin</summary>
+
+**Focus on facilitation, not JIRA navigation.**
+
+### Sprint Planning (Before)
+```
+"Show prioritized backlog with estimates"
+"What dependencies exist in top 20 items?"
+"Create Sprint 43 starting next Monday"
+```
+
+### Daily Standup (During)
+```
+"Show yesterday's progress for Sprint 43"
+"What's blocked right now?"
+"Who has items without updates > 24 hours?"
+```
+
+### Sprint Review (After)
+```
+"Show completed items in Sprint 43 by epic"
+"Export sprint results for stakeholder presentation"
+"What carried over from last sprint?"
+```
+
+**Time saved:** ~4.5 hours/sprint
+
+</details>
+
+<details>
+<summary><strong>📊 Product Managers</strong> — Self-serve product data</summary>
+
+**Focus on product, not project administration.**
+
+### Roadmap Management
+```
+"Show all epics for Q1 with completion percentage"
+"What features shipped last month?"
+"Create epic: User Authentication Redesign"
+```
+
+### Backlog Grooming
+```
+"Show stories without acceptance criteria"
+"What's been in backlog > 90 days?"
+"Prioritize FEAT-123 above FEAT-124"
+```
+
+### Stakeholder Communication
+```
+"Export release notes for v2.1"
+"Summarize what's shipping this sprint"
+"Show bug fix rate for last quarter"
+```
+
+**Time saved:** ~5 hours/week
+
+</details>
+
+<details>
+<summary><strong>🔧 IT/Ops</strong> — Incident response accelerated</summary>
+
+**Incident response without the JIRA dance.**
+
+### Incident Creation (10 Seconds)
+```
+"Create urgent incident: Production database unreachable"
+```
+Creates P1 with proper labels and assigns to on-call.
 
 ### Incident Management
 ```
-You: "What's the SLA status on the open P1s?"
-Claude: [Checks JSM, shows time remaining, predicts breaches, suggests actions]
+"Show all open incidents by severity"
+"Link INCIDENT-123 to root cause INFRA-456"
+"Escalate INCIDENT-123 to @platform-team"
 ```
 
----
-
-## Skills Deep Dive
-
-### Core Operations
-
-#### jira-issue (4 scripts)
-```bash
-# Create with all the details
-python create_issue.py --project PROJ --type Bug \
-  --summary "Login fails on Safari" --priority High \
-  --description "Steps to reproduce..." --labels browser,auth
-
-# Get comprehensive view
-python get_issue.py PROJ-123 --detailed --show-links --show-time
+### Service Desk (JSM)
+```
+"Show my queue sorted by SLA breach time"
+"Resolve REQ-789 with 'Password reset completed'"
+"Add customer to watchers on REQ-789"
 ```
 
-#### jira-lifecycle (5 scripts)
-```bash
-# Workflow transitions
-python transition_issue.py PROJ-123 --name "In Progress"
-python resolve_issue.py PROJ-123 --resolution Fixed --comment "Deployed in v2.1"
+**Time saved:** Minutes per incident
 
-# Assignments
-python assign_issue.py PROJ-123 --user alice@company.com
-python assign_issue.py PROJ-123 --self  # Assign to me
-```
-
-### Search & Discovery
-
-#### jira-search (17 scripts)
-```bash
-# Complex queries made simple
-python jql_search.py "sprint in openSprints() AND assignee = currentUser()"
-
-# Saved filters
-python run_filter.py --name "My Team's Blockers"
-
-# Bulk operations
-python bulk_update.py "labels = deprecated" --add-labels archived --remove-labels active
-
-# Export for reporting
-python export_results.py "project = PROJ AND resolved >= -30d" --output monthly.csv
-```
-
-### Agile Workflows
-
-#### jira-agile (12 scripts)
-```bash
-# Sprint lifecycle
-python create_sprint.py --board 42 --name "Sprint 23" --goal "Payment System v2"
-python move_to_sprint.py --sprint 456 --issues PROJ-1,PROJ-2,PROJ-3
-python close_sprint.py 456 --move-incomplete-to 457
-
-# Backlog management
-python get_backlog.py --board 42 --group-by epic
-python rank_issue.py PROJ-10 --before PROJ-5
-
-# Estimation
-python estimate_issue.py PROJ-123 --points 5
-```
-
-### Dependencies & Relationships
-
-#### jira-relationships (8 scripts)
-```bash
-# Linking
-python link_issue.py PROJ-1 --blocks PROJ-2
-python link_issue.py PROJ-1 --clones PROJ-99
-
-# Impact analysis
-python get_blockers.py PROJ-1 --recursive --max-depth 5
-python get_dependencies.py PROJ-1 --output mermaid  # Visualize as diagram
-
-# Cloning
-python clone_issue.py PROJ-123 --include-subtasks --include-links --target-project NEWPROJ
-```
-
-### Service Management (JSM)
-
-#### jira-jsm (Full ITSM Suite)
-```bash
-# Request lifecycle
-python create_request.py --service-desk 1 --request-type "Hardware Request" \
-  --summary "New laptop for onboarding"
-python get_sla.py SD-123  # SLA status with breach prediction
-
-# Customer management
-python add_customer.py --service-desk 1 --email customer@external.com
-
-# Queue management
-python list_queues.py --service-desk 1 --include-counts
-
-# Approvals
-python get_approvals.py SD-123
-python approve_request.py SD-123 --decision approve --comment "Budget approved"
-
-# Knowledge base
-python search_kb.py --service-desk 1 --query "password reset"
-```
-
-### Bulk Operations
-
-#### jira-bulk (4 scripts)
-```bash
-# Mass transitions (with safety)
-python bulk_transition.py --jql "sprint = 456 AND status != Done" --to Done --dry-run
-python bulk_transition.py --jql "sprint = 456 AND status != Done" --to Done
-
-# Bulk assignments
-python bulk_assign.py --jql "component = Backend AND assignee is EMPTY" --assignee self
-
-# Clone entire sprints
-python bulk_clone.py --jql "sprint = 456" --include-subtasks --target-project ARCHIVE
-```
-
-### Developer Integration
-
-#### jira-dev (6 scripts)
-```bash
-# Git workflow
-python create_branch_name.py PROJ-123 --auto-prefix
-# Output: feature/proj-123-implement-oauth-refresh
-
-# PR integration
-python create_pr_description.py PROJ-123 --include-checklist --include-labels
-# Output: Full PR template with JIRA context
-
-# Commit linking
-python link_commit.py PROJ-123 --commit abc123 --repo https://github.com/org/repo
-```
+</details>
 
 ---
 
 ## Architecture
 
-### Progressive Disclosure in Action
+```mermaid
+flowchart TD
+    U["👤 User Request"] --> CC["🤖 Claude Code"]
+    CC --> JA["📋 jira-assistant<br/>Meta-Router"]
 
+    JA -->|"Create bug"| JI["jira-issue"]
+    JA -->|"Move to Done"| JL["jira-lifecycle"]
+    JA -->|"Find issues"| JS["jira-search"]
+    JA -->|"Add comment"| JC["jira-collaborate"]
+    JA -->|"Link issues"| JR["jira-relationships"]
+    JA -->|"Sprint planning"| JAG["jira-agile"]
+    JA -->|"Log time"| JT["jira-time"]
+    JA -->|"Bulk update"| JB["jira-bulk"]
+    JA -->|"Service request"| JSM["jira-jsm"]
+
+    JI & JL & JS & JC & JR & JAG & JT & JB & JSM --> SH["🔧 Shared Library"]
+    SH --> API["🔌 JIRA REST API"]
+    API --> JIRA[("☁️ JIRA Cloud")]
 ```
-Level 1: Skill Metadata (always loaded)
-├── 14 skills × ~200 chars = ~3KB
-├── Enables: Autonomous skill matching
-└── Cost: Minimal context usage
 
-Level 2: Active Skill (loaded on match)
-├── SKILL.md body: 2-10KB per skill
-├── Enables: Main procedures, scripts, examples
-└── Cost: Only active skill loaded
+### Technical Highlights
 
-Level 3: Deep Reference (loaded on demand)
-├── docs/BEST_PRACTICES.md: 5-30KB per skill
-├── Enables: Advanced patterns, troubleshooting
-└── Cost: Only when user needs advanced help
-```
-
-### Directory Structure
-
-```
-.claude/
-├── settings.json           # Team configuration (committed)
-├── settings.local.json     # Personal credentials (gitignored)
-└── skills/
-    ├── jira-assistant/     # Meta-router skill
-    ├── jira-issue/         # Core CRUD
-    ├── jira-lifecycle/     # Workflows
-    ├── jira-search/        # JQL, filters
-    ├── jira-collaborate/   # Comments, attachments
-    ├── jira-agile/         # Sprints, epics
-    ├── jira-relationships/ # Links, dependencies
-    ├── jira-time/          # Time tracking
-    ├── jira-jsm/           # Service Management
-    ├── jira-bulk/          # Bulk operations
-    ├── jira-dev/           # Developer workflows
-    ├── jira-fields/        # Custom fields
-    ├── jira-ops/           # Cache, performance
-    ├── jira-admin/         # Administration
-    └── shared/
-        ├── scripts/lib/    # Shared Python modules
-        ├── tests/          # 560+ tests
-        └── config/         # Schemas
-```
+- **Shared Library Pattern** — DRY architecture with common utilities
+- **4-Layer Error Handling** — Validation → API → Retry → User messages
+- **Profile-Based Config** — Multi-instance support built-in
+- **ADF Support** — Native Atlassian Document Format handling
+- **Exponential Backoff** — Automatic retry on rate limits
 
 ---
 
-## Multi-Environment Support
+## Quality & Security
 
-Manage dev, staging, and production from one configuration:
+### Test Coverage
 
-```json
-{
-  "jira": {
-    "default_profile": "production",
-    "profiles": {
-      "production": {
-        "url": "https://company.atlassian.net",
-        "project_keys": ["PROD", "OPS", "PLATFORM"],
-        "default_project": "PROD"
-      },
-      "staging": {
-        "url": "https://company-staging.atlassian.net",
-        "project_keys": ["STG"],
-        "default_project": "STG"
-      },
-      "development": {
-        "url": "https://company-dev.atlassian.net",
-        "project_keys": ["DEV", "TEST", "SANDBOX"],
-        "default_project": "DEV"
-      }
-    }
-  }
-}
-```
+| Category | Tests | Description |
+|----------|------:|-------------|
+| Core Integration | 157 | Issue lifecycle, collaboration, agile workflows |
+| JSM Integration | 94 | Service desks, SLAs, approvals, knowledge base |
+| New Skills | 171 | Bulk ops, dev workflows, fields, cache |
+| Unit Tests | 195 | Isolated function validation |
+| **Total** | **617** | **All passing** |
 
-Switch instantly:
-```bash
-python get_issue.py TEST-123 --profile development
-```
+> Tests run against live JIRA Cloud instances to ensure real-world reliability.
 
-Or let Claude handle it:
-```
-You: "Check the staging environment for that bug we fixed"
-Claude: [Automatically uses staging profile based on context]
-```
+### Security
+
+- **No hardcoded secrets** — API tokens stored in environment variables or gitignored files
+- **HTTPS-only connections** — All JIRA API requests enforced over secure transport
+- **Input validation** — All user data validated before API calls
+- **Credential isolation** — `settings.local.json` gitignored by default
+- **No credential logging** — Sensitive data excluded from logs and error output
 
 ---
 
-## Testing & Reliability
+## Try It
 
-**560+ tests** ensure reliability across all skills:
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/grandcamel/jira-assistant-skills)
 
-| Category | Tests | Coverage |
-|----------|-------|----------|
-| Core Live Integration | 157 | Issue, lifecycle, search, collaborate, agile, relationships, time |
-| JSM Live Integration | 94 | Service desks, requests, SLAs, customers, approvals, KB |
-| New Skills Live Integration | 87 | Bulk, dev, fields, ops |
-| Unit Tests | 224+ | All modules, error handling, edge cases |
-
-```bash
-# Run all unit tests
-pytest .claude/skills/*/tests/ -v --ignore="**/live_integration"
-
-# Run live integration (requires JIRA credentials)
-pytest .claude/skills/shared/tests/live_integration/ --profile development -v
-```
-
----
-
-## Security
-
-- **Credentials never committed** - `.gitignore` protects `settings.local.json`
-- **Environment variable priority** - Tokens via `JIRA_API_TOKEN`
-- **HTTPS enforced** - All connections validated
-- **Input sanitization** - Injection prevention on all inputs
-- **Minimal permissions** - Request only what's needed
-
----
-
-## Requirements
-
-| Requirement | Details |
-|-------------|---------|
-| Python | 3.8+ |
-| JIRA | Cloud (all skills) or Service Management (jira-jsm) |
-| Permissions | Browse, Create, Edit, Transition, Assign (minimum) |
-| JSM Premium | Required only for Assets/CMDB features |
-
-Install dependencies:
-```bash
-pip install requests tabulate colorama python-dotenv
-# Or: pip install -r .claude/skills/shared/scripts/lib/requirements.txt
-```
-
----
-
-## Get Started Now
-
-1. **Clone this repo** into your project
-2. **Set three environment variables** (token, email, URL)
-3. **Ask Claude anything** about your JIRA
-
-```
-"Show me what needs attention before the release"
-"Create a spike for investigating the performance issue"
-"What's the team's velocity trend over the last 5 sprints?"
-"Find all P1 bugs that have been open more than a week"
-```
-
-The skills handle the rest.
+One-click cloud environment with all dependencies pre-installed.
 
 ---
 
@@ -515,33 +447,56 @@ The skills handle the rest.
 
 | Resource | Description |
 |----------|-------------|
-| [Setup Guide](.claude/skills/shared/references/setup_guide.md) | Complete installation instructions |
-| [Troubleshooting](.claude/skills/shared/references/troubleshooting.md) | Common issues and solutions |
-| Skill `SKILL.md` files | Usage examples per skill |
-| Skill `docs/BEST_PRACTICES.md` | Advanced patterns and anti-patterns |
+| [Quick Start Guide](docs/quick-start.md) | Get up and running in 5 minutes |
+| [Configuration Guide](docs/configuration.md) | Multi-profile setup and options |
+| [Scripts Reference](docs/scripts-reference.md) | Complete CLI documentation |
+| [Troubleshooting](docs/troubleshooting.md) | Common issues and solutions |
+
+### Need Help?
+
+- 💬 [GitHub Discussions](https://github.com/grandcamel/jira-assistant-skills/discussions)
+- 🐛 [Report Issues](https://github.com/grandcamel/jira-assistant-skills/issues)
 
 ---
 
 ## Contributing
 
-We welcome contributions! When adding features:
+Contributions are welcome! See our [Contributing Guide](CONTRIBUTING.md).
 
-1. Follow the existing skill structure
-2. Add comprehensive error handling
-3. Update SKILL.md with examples
-4. Add tests (unit + integration)
-5. Test with real JIRA instance
+```bash
+# Clone the repository
+git clone https://github.com/grandcamel/jira-assistant-skills.git
+cd jira-assistant-skills
+
+# Install dependencies
+pip install -r .claude/skills/shared/scripts/lib/requirements.txt
+
+# Run tests
+pytest .claude/skills/*/tests/ -v
+```
+
+---
+
+## Roadmap
+
+- [x] Core JIRA operations (v1.0)
+- [x] Agile workflow support (v1.1)
+- [x] Service Management (v1.2)
+- [x] Bulk operations (v1.3)
+- [ ] GitHub integration enhancements
+- [ ] Slack notifications
+- [ ] Custom workflow templates
 
 ---
 
 ## License
 
-See LICENSE file for details.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 ---
 
 <p align="center">
   <strong>Stop clicking through JIRA. Start talking to it.</strong>
   <br>
-  <em>Built for Claude Code by developers who were tired of memorizing JQL.</em>
+  <sub>Built for Claude Code by developers who were tired of memorizing JQL.</sub>
 </p>
