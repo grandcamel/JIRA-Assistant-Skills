@@ -45,9 +45,16 @@ jobs:
       - name: Run tests
         run: |
           pip install pytest pytest-asyncio
-          python -m pytest .claude/skills/*/tests/ -v \
-            --ignore=.claude/skills/*/tests/live_integration \
-            --import-mode=importlib
+          # Run tests per skill to avoid conftest.py conflicts
+          for skill_dir in .claude/skills/*/tests/; do
+            if [ -d "$skill_dir" ]; then
+              skill_name=$(basename $(dirname $skill_dir))
+              echo "Testing $skill_name..."
+              python -m pytest "$skill_dir" -v \
+                --ignore="${skill_dir}live_integration" \
+                || exit 1
+            fi
+          done
 
       - name: Create release archive
         run: |
