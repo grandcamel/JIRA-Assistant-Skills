@@ -16,11 +16,10 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError
-from formatters import format_table, format_json, print_info
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError
+from jira_assistant_skills_lib import format_table, format_json, print_info
 
 # Known Agile field name patterns
 AGILE_PATTERNS = ['epic', 'sprint', 'story', 'point', 'rank', 'velocity', 'backlog']

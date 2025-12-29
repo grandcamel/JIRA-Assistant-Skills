@@ -23,13 +23,12 @@ import argparse
 import json
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client, get_agile_fields, get_project_defaults, has_project_context
-from error_handler import print_error, JiraError, PermissionError, NotFoundError
-from validators import validate_project_key, validate_issue_key
-from formatters import format_issue, print_success
-from adf_helper import markdown_to_adf, text_to_adf
+from jira_assistant_skills_lib import get_jira_client, get_agile_fields, get_project_defaults, has_project_context
+from jira_assistant_skills_lib import print_error, JiraError, PermissionError, NotFoundError
+from jira_assistant_skills_lib import validate_project_key, validate_issue_key
+from jira_assistant_skills_lib import format_issue, print_success
+from jira_assistant_skills_lib import markdown_to_adf, text_to_adf
 
 
 def load_template(template_name: str) -> dict:

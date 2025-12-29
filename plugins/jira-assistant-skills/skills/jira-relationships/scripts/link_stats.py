@@ -25,12 +25,11 @@ from pathlib import Path
 from collections import defaultdict
 from typing import Dict, Any, List, Optional
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError
-from validators import validate_issue_key, validate_jql
-from formatters import format_table
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError
+from jira_assistant_skills_lib import validate_issue_key, validate_jql
+from jira_assistant_skills_lib import format_table
 
 
 def get_issue_link_stats(issue_key: str, profile: str = None) -> Dict[str, Any]:

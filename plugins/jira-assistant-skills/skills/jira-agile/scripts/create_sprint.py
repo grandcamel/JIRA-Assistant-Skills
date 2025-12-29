@@ -16,13 +16,12 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 # Imports from shared library
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError, ValidationError
-from formatters import print_success
-from time_utils import parse_date_to_iso
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError
+from jira_assistant_skills_lib import print_success
+from jira_assistant_skills_lib import parse_date_to_iso
 
 
 def create_sprint(board_id: int, name: str,

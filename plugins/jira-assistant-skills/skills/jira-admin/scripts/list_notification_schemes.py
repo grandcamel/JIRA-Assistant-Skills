@@ -18,11 +18,10 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError, handle_errors
-from formatters import format_table, print_info
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError, handle_errors
+from jira_assistant_skills_lib import format_table, print_info
 
 
 def list_notification_schemes(

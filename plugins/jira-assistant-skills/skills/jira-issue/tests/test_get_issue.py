@@ -27,7 +27,7 @@ if scripts_path not in sys.path:
 
 # Import after path setup
 import get_issue as get_issue_module
-from formatters import format_issue, format_json
+from jira_assistant_skills_lib import format_issue, format_json
 
 
 @pytest.mark.unit

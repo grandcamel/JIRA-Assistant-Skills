@@ -13,10 +13,9 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 
 # Add shared library to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import JiraError, print_error
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import JiraError, print_error
 
 
 def build_project_permission(project_id: str) -> Dict[str, Any]:

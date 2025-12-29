@@ -18,7 +18,6 @@ import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Callable, TypedDict
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 # Optional tqdm support
 try:
@@ -27,9 +26,9 @@ try:
 except ImportError:
     TQDM_AVAILABLE = False
 
-from error_handler import ValidationError
-from validators import validate_issue_key, validate_jql
-from formatters import print_success, print_warning, print_info
+from jira_assistant_skills_lib import ValidationError
+from jira_assistant_skills_lib import validate_issue_key, validate_jql
+from jira_assistant_skills_lib import print_success, print_warning, print_info
 
 
 class BulkResult(TypedDict, total=False):

@@ -12,11 +12,10 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError, NotFoundError
-from formatters import format_json, print_success
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError, NotFoundError
+from jira_assistant_skills_lib import format_json, print_success
 
 
 def add_field_to_screen(screen_id: int,

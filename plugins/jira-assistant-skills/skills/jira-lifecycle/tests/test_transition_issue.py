@@ -11,7 +11,7 @@ from unittest.mock import patch
 # Import the module under test
 import transition_issue
 from transition_issue import find_transition_by_name, transition_issue as do_transition
-from error_handler import ValidationError
+from jira_assistant_skills_lib import ValidationError
 
 
 @pytest.mark.lifecycle

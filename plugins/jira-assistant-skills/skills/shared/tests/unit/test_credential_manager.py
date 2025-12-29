@@ -20,7 +20,7 @@ import pytest
 LIB_PATH = Path(__file__).parent.parent.parent / 'scripts' / 'lib'
 sys.path.insert(0, str(LIB_PATH))
 
-from credential_manager import (
+from jira_assistant_skills_lib import (
     CredentialManager,
     CredentialBackend,
     CredentialNotFoundError,
@@ -29,7 +29,7 @@ from credential_manager import (
     store_credentials,
     validate_credentials,
 )
-from error_handler import ValidationError, AuthenticationError
+from jira_assistant_skills_lib import ValidationError, AuthenticationError
 
 
 class TestCredentialBackend:

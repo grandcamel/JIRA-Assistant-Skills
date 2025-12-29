@@ -11,14 +11,13 @@ import sys
 import argparse
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError, ValidationError
-from validators import validate_issue_key
-from formatters import print_success, format_transitions
-from adf_helper import text_to_adf
-from transition_helpers import find_transition_by_keywords
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError
+from jira_assistant_skills_lib import validate_issue_key
+from jira_assistant_skills_lib import print_success, format_transitions
+from jira_assistant_skills_lib import text_to_adf
+from jira_assistant_skills_lib import find_transition_by_keywords
 
 
 # Keywords that indicate a resolution/completion transition

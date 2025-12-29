@@ -22,7 +22,7 @@ shared_lib_path = str(Path(__file__).resolve().parent.parent.parent / 'shared' /
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
-from request_batcher import RequestBatcher, BatchResult, BatchError
+from jira_assistant_skills_lib import RequestBatcher, BatchResult, BatchError
 
 
 @pytest.mark.ops

@@ -13,12 +13,11 @@ import json
 from pathlib import Path
 from typing import Dict, Any
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError
-from validators import validate_issue_key
-from adf_helper import markdown_to_adf, text_to_adf, adf_to_text
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError
+from jira_assistant_skills_lib import validate_issue_key
+from jira_assistant_skills_lib import markdown_to_adf, text_to_adf, adf_to_text
 
 
 def update_comment(issue_key: str, comment_id: str, body: str,

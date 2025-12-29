@@ -12,13 +12,12 @@ import argparse
 import json
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError
-from validators import validate_issue_key
-from formatters import print_success
-from adf_helper import markdown_to_adf, text_to_adf
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError
+from jira_assistant_skills_lib import validate_issue_key
+from jira_assistant_skills_lib import print_success
+from jira_assistant_skills_lib import markdown_to_adf, text_to_adf
 
 
 def add_comment(issue_key: str, body: str, format_type: str = 'text',

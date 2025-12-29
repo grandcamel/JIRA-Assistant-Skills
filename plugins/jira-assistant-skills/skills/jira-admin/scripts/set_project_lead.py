@@ -22,11 +22,10 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import JiraError, ValidationError, print_error
-from validators import validate_project_key
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import JiraError, ValidationError, print_error
+from jira_assistant_skills_lib import validate_project_key
 
 
 def set_project_lead(

@@ -20,12 +20,11 @@ from typing import Optional, Dict, Any, List
 from urllib.parse import urlparse
 
 # Add shared lib path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError
-from validators import validate_issue_key
-from adf_helper import wiki_markup_to_adf
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError
+from jira_assistant_skills_lib import validate_issue_key
+from jira_assistant_skills_lib import wiki_markup_to_adf
 
 # Import parse_commit_issues for --from-message functionality
 from parse_commit_issues import parse_issue_keys

@@ -18,7 +18,6 @@ import json
 
 # Ensure paths are set up for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts'))
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 
 # ========== Test list_screens.py ==========

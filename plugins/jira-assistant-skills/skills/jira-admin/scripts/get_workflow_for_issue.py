@@ -14,10 +14,9 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError, NotFoundError, ValidationError, PermissionError
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError, NotFoundError, ValidationError, PermissionError
 
 
 def validate_issue_key(issue_key: str) -> bool:

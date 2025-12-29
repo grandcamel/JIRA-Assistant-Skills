@@ -19,10 +19,9 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_automation_client
-from error_handler import print_error, JiraError, AutomationError
+from jira_assistant_skills_lib import get_automation_client
+from jira_assistant_skills_lib import print_error, JiraError, AutomationError
 
 
 def update_automation_rule(

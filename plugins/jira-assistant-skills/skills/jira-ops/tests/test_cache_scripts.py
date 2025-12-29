@@ -23,7 +23,7 @@ scripts_path = str(Path(__file__).resolve().parent.parent / 'scripts')
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
-from cache import JiraCache
+from jira_assistant_skills_lib import JiraCache
 
 
 @pytest.mark.ops

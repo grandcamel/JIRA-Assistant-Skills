@@ -13,9 +13,8 @@ from typing import Dict, Any
 
 # Add scripts to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts'))
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from cache import JiraCache
+from jira_assistant_skills_lib import JiraCache
 from cache_warm import warm_projects, warm_fields, warm_issue_types, warm_priorities, warm_statuses
 
 

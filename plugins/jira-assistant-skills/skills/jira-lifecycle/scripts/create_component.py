@@ -14,11 +14,10 @@ import argparse
 from pathlib import Path
 from typing import Optional, Dict, Any
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError
-from formatters import print_success
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError
+from jira_assistant_skills_lib import print_success
 
 
 def create_component(project: str, name: str, description: str = None,

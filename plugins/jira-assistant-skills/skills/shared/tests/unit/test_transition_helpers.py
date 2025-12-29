@@ -14,12 +14,12 @@ shared_lib_path = str(Path(__file__).parent.parent.parent / 'scripts' / 'lib')
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
-from transition_helpers import (
+from jira_assistant_skills_lib import (
     find_transition_by_name,
     find_transition_by_keywords,
     format_transition_list
 )
-from error_handler import ValidationError
+from jira_assistant_skills_lib import ValidationError
 
 
 @pytest.fixture

@@ -19,7 +19,6 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 import get_sla

@@ -13,11 +13,10 @@ import argparse
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError
-from validators import validate_issue_key
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError
+from jira_assistant_skills_lib import validate_issue_key
 
 
 def send_notification(issue_key: str, subject: str = None, body: str = None,

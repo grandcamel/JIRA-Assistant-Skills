@@ -8,7 +8,6 @@ from unittest.mock import patch
 import pytest
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 
 def pytest_configure(config):

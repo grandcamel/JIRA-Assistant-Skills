@@ -18,15 +18,14 @@ import argparse
 import json
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client, has_project_context, get_project_context
-from error_handler import print_error, JiraError, ValidationError
-from validators import validate_issue_key, validate_transition_id
-from formatters import print_success, print_info, format_transitions
-from adf_helper import text_to_adf
-from transition_helpers import find_transition_by_name
-from project_context import get_valid_transitions, get_statuses_for_issue_type
+from jira_assistant_skills_lib import get_jira_client, has_project_context, get_project_context
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError
+from jira_assistant_skills_lib import validate_issue_key, validate_transition_id
+from jira_assistant_skills_lib import print_success, print_info, format_transitions
+from jira_assistant_skills_lib import text_to_adf
+from jira_assistant_skills_lib import find_transition_by_name
+from jira_assistant_skills_lib import get_valid_transitions, get_statuses_for_issue_type
 
 
 def get_context_workflow_hint(project_key: str, issue_type: str, current_status: str, profile: str = None) -> str:

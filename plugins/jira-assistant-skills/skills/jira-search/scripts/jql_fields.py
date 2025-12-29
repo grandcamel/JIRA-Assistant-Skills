@@ -16,12 +16,11 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 # Add shared library to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import JiraError, print_error
-from formatters import format_table
-from autocomplete_cache import get_autocomplete_cache
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import JiraError, print_error
+from jira_assistant_skills_lib import format_table
+from jira_assistant_skills_lib import get_autocomplete_cache
 
 
 def get_fields(client, name_filter: Optional[str] = None,

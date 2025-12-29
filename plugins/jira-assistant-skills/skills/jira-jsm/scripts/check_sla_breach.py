@@ -16,12 +16,11 @@ import json
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError, NotFoundError
-from formatters import print_success
-from jsm_utils import (
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError, NotFoundError
+from jira_assistant_skills_lib import print_success
+from jira_assistant_skills_lib import (
     format_sla_time, format_duration, get_sla_status_emoji,
     get_sla_status_text, is_sla_at_risk
 )

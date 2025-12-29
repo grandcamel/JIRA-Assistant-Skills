@@ -12,13 +12,12 @@ import sys
 import argparse
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError, ValidationError
-from validators import validate_issue_key
-from formatters import print_success, format_table
-from user_helpers import resolve_user_to_account_id, UserNotFoundError
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError
+from jira_assistant_skills_lib import validate_issue_key
+from jira_assistant_skills_lib import print_success, format_table
+from jira_assistant_skills_lib import resolve_user_to_account_id, UserNotFoundError
 
 
 def list_watchers(issue_key: str, profile: str = None) -> list:

@@ -12,10 +12,9 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 # Add shared library to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import JiraError, print_error
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import JiraError, print_error
 
 
 def update_filter(client, filter_id: str,

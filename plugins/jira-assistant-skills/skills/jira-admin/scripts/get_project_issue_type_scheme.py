@@ -13,10 +13,9 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import JiraError, NotFoundError, print_error
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import JiraError, NotFoundError, print_error
 
 
 def get_project_issue_type_scheme(

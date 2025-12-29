@@ -13,10 +13,9 @@ from pathlib import Path
 from datetime import datetime
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import handle_errors
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import handle_errors
 
 
 def get_jira_client(profile=None):

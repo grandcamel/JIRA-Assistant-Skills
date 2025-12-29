@@ -16,7 +16,6 @@ from datetime import datetime, timedelta
 
 # Add paths for imports
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'scripts'))
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 
 @pytest.fixture

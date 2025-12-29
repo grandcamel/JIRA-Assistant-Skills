@@ -16,12 +16,11 @@ from pathlib import Path
 from typing import Optional, List
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client, get_agile_field
-from error_handler import print_error, JiraError, ValidationError
-from validators import validate_issue_key
-from formatters import print_success
+from jira_assistant_skills_lib import get_jira_client, get_agile_field
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError
+from jira_assistant_skills_lib import validate_issue_key
+from jira_assistant_skills_lib import print_success
 
 FIBONACCI_SEQUENCE = [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]
 

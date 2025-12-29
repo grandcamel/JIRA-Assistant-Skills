@@ -21,8 +21,8 @@ from pathlib import Path
 # Add shared lib to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError, NotFoundError
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError, NotFoundError
 
 
 def list_test_projects(client, prefix='INT'):

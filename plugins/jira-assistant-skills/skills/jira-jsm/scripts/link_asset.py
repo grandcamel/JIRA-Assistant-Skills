@@ -19,7 +19,7 @@ shared_lib_path = str(Path(__file__).parent.parent.parent.parent / 'shared' / 's
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
-from config_manager import get_jira_client
+from jira_assistant_skills_lib import get_jira_client
 
 
 def link_asset(asset_id: int, issue_key: str, comment: str = None):

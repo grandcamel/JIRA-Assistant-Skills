@@ -25,7 +25,6 @@ import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Callable
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 try:
     from tqdm import tqdm
@@ -33,10 +32,10 @@ try:
 except ImportError:
     TQDM_AVAILABLE = False
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError, ValidationError, sanitize_error_message
-from validators import validate_issue_key, validate_jql, validate_project_key
-from formatters import print_success, print_warning, print_info
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError, sanitize_error_message
+from jira_assistant_skills_lib import validate_issue_key, validate_jql, validate_project_key
+from jira_assistant_skills_lib import print_success, print_warning, print_info
 
 from bulk_utils import confirm_bulk_operation
 

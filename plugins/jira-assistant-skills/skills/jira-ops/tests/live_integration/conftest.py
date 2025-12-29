@@ -15,12 +15,11 @@ from pathlib import Path
 from typing import Generator, Dict, Any
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts'))
 
-from config_manager import get_jira_client
-from jira_client import JiraClient
-from cache import JiraCache
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import JiraClient
+from jira_assistant_skills_lib import JiraCache
 
 
 def pytest_addoption(parser):

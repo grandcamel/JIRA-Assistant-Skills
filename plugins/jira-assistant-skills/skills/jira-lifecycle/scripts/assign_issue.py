@@ -23,12 +23,11 @@ import sys
 import argparse
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError, ValidationError
-from validators import validate_issue_key
-from formatters import print_success, print_info
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError
+from jira_assistant_skills_lib import validate_issue_key
+from jira_assistant_skills_lib import print_success, print_info
 
 
 def assign_issue(issue_key: str, user: str = None, assign_to_self: bool = False,

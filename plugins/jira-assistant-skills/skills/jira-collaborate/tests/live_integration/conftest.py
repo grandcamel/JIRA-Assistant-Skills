@@ -31,12 +31,8 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "watchers: mark test as watcher test")
 
 
-# Add shared lib to path
-skills_dir = Path(__file__).parent.parent.parent.parent
-sys.path.insert(0, str(skills_dir / 'shared' / 'scripts' / 'lib'))
-
-from config_manager import get_jira_client
-from jira_client import JiraClient
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import JiraClient
 
 
 def pytest_addoption(parser):

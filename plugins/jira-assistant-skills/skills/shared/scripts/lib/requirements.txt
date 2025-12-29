@@ -1,19 +1,8 @@
 # JIRA Assistant Skills - Python Dependencies
 
-# HTTP client for JIRA API
-requests>=2.31.0
-
-# Table formatting for console output
-tabulate>=0.9.0
-
-# Colored terminal output
-colorama>=0.4.6
-
-# Optional: .env file support
-python-dotenv>=1.0.0
-
-# Progress bar for bulk operations
-tqdm>=4.66.0
+# Shared library for JIRA API interaction
+# Includes: requests, tabulate, colorama, python-dotenv, tqdm
+jira-assistant-skills-lib>=0.1.0
 
 # Secure credential storage (system keychain)
 # Optional: graceful fallback to JSON if unavailable

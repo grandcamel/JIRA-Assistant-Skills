@@ -14,14 +14,13 @@ import json
 from pathlib import Path
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 # Imports from shared library
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError, ValidationError
-from validators import validate_issue_key
-from formatters import print_success
-from adf_helper import markdown_to_adf, text_to_adf
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError
+from jira_assistant_skills_lib import validate_issue_key
+from jira_assistant_skills_lib import print_success
+from jira_assistant_skills_lib import markdown_to_adf, text_to_adf
 
 
 def create_subtask(parent_key: str, summary: str, description: str = None,

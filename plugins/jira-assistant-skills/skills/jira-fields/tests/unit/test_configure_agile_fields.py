@@ -26,7 +26,7 @@ from configure_agile_fields import (
     find_project_screens,
     add_field_to_screen
 )
-from error_handler import JiraError, AuthenticationError, ValidationError
+from jira_assistant_skills_lib import JiraError, AuthenticationError, ValidationError
 
 
 @pytest.mark.fields

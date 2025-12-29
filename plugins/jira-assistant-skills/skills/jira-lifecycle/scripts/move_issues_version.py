@@ -14,7 +14,6 @@ import argparse
 from pathlib import Path
 from typing import List, Dict, Any
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 try:
     from tqdm import tqdm
@@ -22,9 +21,9 @@ try:
 except ImportError:
     TQDM_AVAILABLE = False
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError, ValidationError
-from formatters import print_success, print_warning
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError
+from jira_assistant_skills_lib import print_success, print_warning
 
 
 def move_issues_to_version(jql: str, target_version: str, field: str = 'fixVersions',

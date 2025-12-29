@@ -12,12 +12,11 @@ import argparse
 import json
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError
-from validators import validate_jql
-from formatters import export_csv, get_csv_string, format_json, print_success
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError
+from jira_assistant_skills_lib import validate_jql
+from jira_assistant_skills_lib import export_csv, get_csv_string, format_json, print_success
 
 
 def export_results(jql: str, output_file: str, format_type: str = 'csv',

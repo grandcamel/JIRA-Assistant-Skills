@@ -31,8 +31,8 @@ def pytest_configure(config):
 # Add shared lib to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from jira_client import JiraClient
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import JiraClient
 
 
 def pytest_addoption(parser):

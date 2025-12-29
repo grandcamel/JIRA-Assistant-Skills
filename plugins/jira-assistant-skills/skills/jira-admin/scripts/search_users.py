@@ -19,10 +19,9 @@ from io import StringIO
 from typing import List, Dict, Any, Optional
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError
 
 
 def search_users(client, query: str, start_at: int = 0, max_results: int = 50,

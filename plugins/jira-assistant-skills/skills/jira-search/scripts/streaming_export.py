@@ -26,7 +26,6 @@ from typing import List, Dict, Any, Optional, Iterator, Callable
 from dataclasses import dataclass, asdict
 from datetime import datetime
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 try:
     from tqdm import tqdm
@@ -34,10 +33,10 @@ try:
 except ImportError:
     TQDM_AVAILABLE = False
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError, ValidationError
-from validators import validate_jql
-from formatters import print_success, print_warning, print_info
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError
+from jira_assistant_skills_lib import validate_jql
+from jira_assistant_skills_lib import print_success, print_warning, print_info
 
 # Default configuration
 DEFAULT_PAGE_SIZE = 100

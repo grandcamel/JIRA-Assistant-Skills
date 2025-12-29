@@ -12,7 +12,7 @@ from pathlib import Path
 # Add lib path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts' / 'lib'))
 
-from adf_helper import wiki_markup_to_adf, _parse_wiki_inline
+from jira_assistant_skills_lib import wiki_markup_to_adf, _parse_wiki_inline
 
 
 @pytest.mark.unit

@@ -16,7 +16,7 @@ from unittest.mock import patch, MagicMock
 # Add lib path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts' / 'lib'))
 
-from project_context import (
+from jira_assistant_skills_lib import (
     ProjectContext,
     get_project_context,
     clear_context_cache,

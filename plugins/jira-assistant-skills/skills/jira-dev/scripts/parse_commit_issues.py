@@ -21,7 +21,6 @@ from pathlib import Path
 from typing import List, Optional
 
 # Add shared lib path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 # Issue key pattern: PROJECT-NUMBER
 # Matches: PROJ-123, ABC-1, MYPROJECT-99999

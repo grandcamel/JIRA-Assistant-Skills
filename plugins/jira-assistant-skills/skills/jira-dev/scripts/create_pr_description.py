@@ -20,12 +20,11 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 # Add shared lib path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client, ConfigManager
-from error_handler import print_error, JiraError
-from validators import validate_issue_key
-from adf_helper import adf_to_text
+from jira_assistant_skills_lib import get_jira_client, ConfigManager
+from jira_assistant_skills_lib import print_error, JiraError
+from jira_assistant_skills_lib import validate_issue_key
+from jira_assistant_skills_lib import adf_to_text
 
 
 def get_jira_base_url(profile: Optional[str] = None) -> str:

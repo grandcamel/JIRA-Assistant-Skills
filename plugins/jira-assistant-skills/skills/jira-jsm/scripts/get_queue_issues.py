@@ -15,10 +15,9 @@ import json
 from pathlib import Path
 from typing import Optional, Dict, Any
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError
 
 
 def get_queue_issues(service_desk_id: int, queue_id: int,

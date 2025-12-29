@@ -23,7 +23,7 @@ shared_lib_path = str(Path(__file__).parent.parent.parent.parent / 'shared' / 's
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
-from config_manager import get_jira_client
+from jira_assistant_skills_lib import get_jira_client
 
 
 def list_assets(object_type: str = None, iql: str = None, max_results: int = 100):

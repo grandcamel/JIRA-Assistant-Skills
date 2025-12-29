@@ -14,13 +14,12 @@ from pathlib import Path
 from typing import List, Optional, Dict
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
 # Imports from shared library
-from config_manager import get_jira_client, get_agile_field
-from error_handler import print_error, JiraError, ValidationError
-from validators import validate_issue_key
-from formatters import print_success, print_warning
+from jira_assistant_skills_lib import get_jira_client, get_agile_field
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError
+from jira_assistant_skills_lib import validate_issue_key
+from jira_assistant_skills_lib import print_success, print_warning
 
 
 def add_to_epic(epic_key: Optional[str] = None,

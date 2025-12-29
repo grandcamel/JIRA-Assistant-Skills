@@ -12,12 +12,11 @@ import argparse
 import json
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))
 
-from config_manager import get_jira_client
-from error_handler import print_error, JiraError
-from validators import validate_jql
-from formatters import print_success, print_warning, print_info
+from jira_assistant_skills_lib import get_jira_client
+from jira_assistant_skills_lib import print_error, JiraError
+from jira_assistant_skills_lib import validate_jql
+from jira_assistant_skills_lib import print_success, print_warning, print_info
 
 
 def bulk_update(jql: str, add_labels: list = None, remove_labels: list = None,
