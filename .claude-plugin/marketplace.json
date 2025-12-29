@@ -12,8 +12,8 @@
   },
   "plugins": [
     {
-      "name": "jira-skills-marketplace",
-      "source": "./plugins/jira-skills-marketplace",
+      "name": "jira-assistant-skills",
+      "source": "./plugins/jira-assistant-skills",
       "description": "Complete JIRA automation suite with 14 specialized skills - issue management, agile workflows, time tracking, service management, bulk operations, and more",
       "version": "1.1.0",
       "category": "productivity",
