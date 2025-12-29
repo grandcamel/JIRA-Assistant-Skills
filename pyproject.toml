@@ -1,11 +1,12 @@
 [tool.pytest.ini_options]
 minversion = "7.0"
 pythonpath = ["."]
-testpaths = [".claude/skills"]
+testpaths = ["plugins/jira-assistant-skills/skills"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
+import_mode = "importlib"
 markers = [
     "unit: Unit tests (fast, no external dependencies)",
     "integration: Integration tests (may hit external services)",
@@ -27,7 +28,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = [".claude/skills"]
+source = ["plugins/jira-assistant-skills/skills"]
 omit = ["*/tests/*", "*/conftest.py", "*/__init__.py"]
 
 [tool.coverage.report]
