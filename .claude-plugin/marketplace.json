@@ -9,7 +9,7 @@
     "homepage": "https://github.com/grandcamel/jira-assistant-skills",
     "repository": "https://github.com/grandcamel/jira-assistant-skills",
     "license": "MIT",
-    "pluginRoot": ".claude/skills"
+    "pluginRoot": "../.claude/skills"
   },
   "plugins": [
     {
