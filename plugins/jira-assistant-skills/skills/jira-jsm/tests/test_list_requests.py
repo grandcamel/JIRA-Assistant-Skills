@@ -150,7 +150,7 @@ class TestListRequestsApiErrors:
 
     def test_authentication_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.search_issues.side_effect = AuthenticationError("Invalid token")
 
@@ -159,7 +159,7 @@ class TestListRequestsApiErrors:
 
     def test_permission_error(self, mock_jira_client):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.search_issues.side_effect = PermissionError("Access denied")
 
@@ -168,7 +168,7 @@ class TestListRequestsApiErrors:
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.search_issues.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
@@ -180,7 +180,7 @@ class TestListRequestsApiErrors:
 
     def test_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.search_issues.side_effect = JiraError(
             "Internal server error", status_code=500

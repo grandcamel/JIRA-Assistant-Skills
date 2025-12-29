@@ -135,7 +135,7 @@ class TestGetUserNotFound:
 
     def test_get_user_not_found_raises_error(self, mock_jira_client):
         """Test handling user not found error."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.get_user.side_effect = NotFoundError("User", "unknown-id")
 
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
@@ -189,7 +189,7 @@ class TestGetUserPermissionError:
 
     def test_get_user_permission_denied(self, mock_jira_client):
         """Test handling insufficient permissions error."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_jira_client.get_user.side_effect = PermissionError(
             "Browse users and groups permission required"
         )

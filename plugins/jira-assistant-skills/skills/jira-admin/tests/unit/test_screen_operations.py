@@ -169,7 +169,7 @@ class TestGetScreen:
 
     def test_get_screen_not_found(self, mock_jira_client):
         """Test error handling for invalid screen ID."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.get_screen.side_effect = NotFoundError("Screen with ID 999 not found")
 
         from get_screen import get_screen
@@ -254,7 +254,7 @@ class TestListScreenTabs:
 
     def test_screen_not_found(self, mock_jira_client):
         """Test error handling for invalid screen ID."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.get_screen_tabs.side_effect = NotFoundError("Screen 999 not found")
 
         from list_screen_tabs import list_screen_tabs
@@ -384,7 +384,7 @@ class TestAddFieldToScreen:
 
     def test_add_field_already_exists(self, mock_jira_client):
         """Test error handling when field already on screen."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         mock_jira_client.add_field_to_screen_tab.side_effect = ValidationError(
             "Field already exists on this screen"
         )
@@ -400,7 +400,7 @@ class TestAddFieldToScreen:
 
     def test_add_field_invalid_field_id(self, mock_jira_client):
         """Test error handling for invalid field ID."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         mock_jira_client.add_field_to_screen_tab.side_effect = ValidationError(
             "Field does not exist"
         )
@@ -501,7 +501,7 @@ class TestRemoveFieldFromScreen:
         ]
 
         from remove_field_from_screen import remove_field_from_screen
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         with pytest.raises(NotFoundError):
             remove_field_from_screen(

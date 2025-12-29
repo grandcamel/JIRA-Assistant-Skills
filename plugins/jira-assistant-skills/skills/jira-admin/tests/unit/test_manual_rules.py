@@ -198,7 +198,7 @@ class TestInvokeManualRuleErrors:
     def test_invoke_manual_rule_invalid_context(self, mock_automation_client):
         """Test error for invalid context."""
         from invoke_manual_rule import invoke_manual_rule
-        from error_handler import AutomationValidationError
+        from jira_assistant_skills_lib import AutomationValidationError
 
         # Setup mock
         mock_automation_client.invoke_manual_rule.side_effect = AutomationValidationError(
@@ -216,7 +216,7 @@ class TestInvokeManualRuleErrors:
     def test_invoke_manual_rule_not_found(self, mock_automation_client):
         """Test error for invalid rule ID."""
         from invoke_manual_rule import invoke_manual_rule
-        from error_handler import AutomationNotFoundError
+        from jira_assistant_skills_lib import AutomationNotFoundError
 
         # Setup mock
         mock_automation_client.invoke_manual_rule.side_effect = AutomationNotFoundError(
@@ -234,7 +234,7 @@ class TestInvokeManualRuleErrors:
     def test_invoke_manual_rule_permission_denied(self, mock_automation_client):
         """Test permission error."""
         from invoke_manual_rule import invoke_manual_rule
-        from error_handler import AutomationPermissionError
+        from jira_assistant_skills_lib import AutomationPermissionError
 
         # Setup mock
         mock_automation_client.invoke_manual_rule.side_effect = AutomationPermissionError(

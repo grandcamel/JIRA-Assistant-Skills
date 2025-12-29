@@ -102,7 +102,7 @@ class TestAddToEpic:
         """Test error when epic doesn't exist."""
         # Arrange
         from add_to_epic import add_to_epic
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         # Simulate 404 when fetching epic
         mock_jira_client.get_issue.side_effect = JiraError(
@@ -124,7 +124,7 @@ class TestAddToEpic:
         """Test error when issue doesn't exist."""
         # Arrange
         from add_to_epic import add_to_epic
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         # Epic exists, but issue update fails
         mock_jira_client.get_issue.return_value = sample_epic_response
@@ -149,7 +149,7 @@ class TestAddToEpic:
         """Test error when target is not an Epic issue type."""
         # Arrange
         from add_to_epic import add_to_epic
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         # Return a Story instead of Epic
         mock_jira_client.get_issue.return_value = sample_issue_response
@@ -217,7 +217,7 @@ class TestAddToEpicErrorHandling:
 
     def test_authentication_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
         from add_to_epic import add_to_epic
 
         mock_jira_client.get_issue.side_effect = AuthenticationError(
@@ -233,7 +233,7 @@ class TestAddToEpicErrorHandling:
 
     def test_forbidden_error(self, mock_jira_client, sample_epic_response):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         from add_to_epic import add_to_epic
 
         mock_jira_client.get_issue.return_value = sample_epic_response
@@ -251,7 +251,7 @@ class TestAddToEpicErrorHandling:
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         from add_to_epic import add_to_epic
 
         mock_jira_client.get_issue.side_effect = JiraError(
@@ -269,7 +269,7 @@ class TestAddToEpicErrorHandling:
 
     def test_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         from add_to_epic import add_to_epic
 
         mock_jira_client.get_issue.side_effect = JiraError(

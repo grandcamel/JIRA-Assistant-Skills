@@ -78,7 +78,7 @@ class TestUpdateAsset:
 
     def test_update_asset_error(self, mock_jira_client):
         """Test error when update fails."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_jira_client.has_assets_license.return_value = True
         mock_jira_client.update_asset.side_effect = JiraError("Update failed")
 

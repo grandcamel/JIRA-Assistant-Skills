@@ -80,7 +80,7 @@ class TestGetPermissionScheme:
 
     def test_scheme_not_found_by_id(self, mock_jira_client):
         """Test error when scheme ID doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.get_permission_scheme.side_effect = NotFoundError(
             "Permission scheme 99999 not found"
         )
@@ -95,7 +95,7 @@ class TestGetPermissionScheme:
         mock_jira_client.get_permission_schemes.return_value = permission_schemes_response
 
         from get_permission_scheme import get_permission_scheme
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             get_permission_scheme(mock_jira_client, 'Nonexistent Scheme')
@@ -309,7 +309,7 @@ class TestGetPermissionSchemeCLI:
 
     def test_cli_error_handling(self, mock_jira_client, capsys):
         """Test CLI handles errors gracefully."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.get_permission_scheme.side_effect = NotFoundError("Scheme not found")
 
         with patch('get_permission_scheme.get_jira_client', return_value=mock_jira_client):

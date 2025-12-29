@@ -72,7 +72,7 @@ class TestDeleteIssueType:
     def test_delete_issue_type_not_found(self, mock_jira_client):
         """Should raise NotFoundError for invalid ID."""
         # Arrange
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.delete_issue_type.side_effect = NotFoundError(
             "Issue type", "10999"
@@ -90,7 +90,7 @@ class TestDeleteIssueType:
     def test_delete_issue_type_in_use(self, mock_jira_client):
         """Should raise error if type is in use and no alternative given."""
         # Arrange
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.delete_issue_type.side_effect = JiraError(
             "Cannot delete issue type. Issues exist that use this issue type.",
@@ -111,7 +111,7 @@ class TestDeleteIssueType:
     def test_delete_issue_type_requires_admin(self, mock_jira_client):
         """Should raise PermissionError without admin rights."""
         # Arrange
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.delete_issue_type.side_effect = PermissionError(
             "Administer Jira global permission required"
@@ -129,7 +129,7 @@ class TestDeleteIssueType:
     def test_delete_issue_type_invalid_alternative(self, mock_jira_client):
         """Should raise error for invalid alternative issue type."""
         # Arrange
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.delete_issue_type.side_effect = JiraError(
             "The alternative issue type does not exist",

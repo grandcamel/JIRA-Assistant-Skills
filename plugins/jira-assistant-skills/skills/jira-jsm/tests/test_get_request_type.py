@@ -97,7 +97,7 @@ def test_format_json_output(mock_jira_client):
 def test_request_type_not_found(mock_jira_client):
     """Test error when request type doesn't exist."""
     from get_request_type import get_request_type
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
 
     mock_jira_client.get_request_type.side_effect = JiraError("Request type not found")
 

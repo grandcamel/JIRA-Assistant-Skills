@@ -198,7 +198,7 @@ class TestBulkTransitionPartialFailure:
     def test_bulk_transition_partial_failure(self, mock_jira_client, sample_transitions):
         """Test handling when some issues fail to transition."""
         from bulk_transition import bulk_transition
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         # Setup mock - fail on second issue
         mock_jira_client.get_transitions.return_value = sample_transitions
@@ -362,7 +362,7 @@ class TestBulkTransitionApiErrors:
     def test_authentication_error(self, mock_jira_client, sample_transitions):
         """Test handling of 401 unauthorized error."""
         from bulk_transition import bulk_transition
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get_transitions.return_value = sample_transitions
         mock_jira_client.transition_issue.side_effect = AuthenticationError("Invalid token")
@@ -381,7 +381,7 @@ class TestBulkTransitionApiErrors:
     def test_permission_denied_error(self, mock_jira_client, sample_transitions):
         """Test handling of 403 forbidden error."""
         from bulk_transition import bulk_transition
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_transitions.return_value = sample_transitions
         mock_jira_client.transition_issue.side_effect = JiraError(
@@ -402,7 +402,7 @@ class TestBulkTransitionApiErrors:
     def test_not_found_error(self, mock_jira_client):
         """Test handling of 404 not found error."""
         from bulk_transition import bulk_transition
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_transitions.side_effect = JiraError(
             "Issue not found", status_code=404
@@ -421,7 +421,7 @@ class TestBulkTransitionApiErrors:
     def test_rate_limit_error(self, mock_jira_client, sample_transitions):
         """Test handling of 429 rate limit error."""
         from bulk_transition import bulk_transition
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_transitions.return_value = sample_transitions
         mock_jira_client.transition_issue.side_effect = JiraError(
@@ -441,7 +441,7 @@ class TestBulkTransitionApiErrors:
     def test_server_error(self, mock_jira_client, sample_transitions):
         """Test handling of 500 internal server error."""
         from bulk_transition import bulk_transition
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_transitions.return_value = sample_transitions
         mock_jira_client.transition_issue.side_effect = JiraError(

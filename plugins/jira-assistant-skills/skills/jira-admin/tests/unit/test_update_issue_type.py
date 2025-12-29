@@ -128,7 +128,7 @@ class TestUpdateIssueType:
     def test_update_issue_type_not_found(self, mock_jira_client):
         """Should raise NotFoundError for invalid ID."""
         # Arrange
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.update_issue_type.side_effect = NotFoundError(
             "Issue type", "10999"
@@ -146,7 +146,7 @@ class TestUpdateIssueType:
 
     def test_update_issue_type_name_too_long(self, mock_jira_client):
         """Should raise ValidationError for name > 60 chars."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         from update_issue_type import update_issue_type
 
         # Act & Assert
@@ -163,7 +163,7 @@ class TestUpdateIssueType:
     def test_update_issue_type_requires_admin(self, mock_jira_client):
         """Should raise PermissionError without admin rights."""
         # Arrange
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.update_issue_type.side_effect = PermissionError(
             "Administer Jira global permission required"
@@ -181,7 +181,7 @@ class TestUpdateIssueType:
 
     def test_update_issue_type_no_changes(self, mock_jira_client, story_response):
         """Should handle update with no fields specified."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         from update_issue_type import update_issue_type
 
         # Act & Assert - should require at least one field

@@ -167,7 +167,7 @@ class TestSendNotificationErrorHandling:
     @patch('send_notification.get_jira_client')
     def test_authentication_error(self, mock_get_client, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.notify_issue.side_effect = AuthenticationError("Invalid API token")
@@ -186,7 +186,7 @@ class TestSendNotificationErrorHandling:
     @patch('send_notification.get_jira_client')
     def test_permission_error(self, mock_get_client, mock_jira_client):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.notify_issue.side_effect = PermissionError("No permission to send notifications")
@@ -205,7 +205,7 @@ class TestSendNotificationErrorHandling:
     @patch('send_notification.get_jira_client')
     def test_not_found_error(self, mock_get_client, mock_jira_client):
         """Test handling of 404 not found."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.notify_issue.side_effect = NotFoundError("Issue PROJ-999 not found")
@@ -224,7 +224,7 @@ class TestSendNotificationErrorHandling:
     @patch('send_notification.get_jira_client')
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.notify_issue.side_effect = JiraError("Rate limit exceeded", status_code=429)
@@ -244,7 +244,7 @@ class TestSendNotificationErrorHandling:
     @patch('send_notification.get_jira_client')
     def test_server_error(self, mock_get_client, mock_jira_client):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.notify_issue.side_effect = JiraError("Internal server error", status_code=500)

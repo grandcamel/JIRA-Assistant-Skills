@@ -93,7 +93,7 @@ class TestUpdateWorklogErrors:
 
     def test_update_worklog_not_found(self, mock_jira_client):
         """Test error when worklog doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.update_worklog.side_effect = NotFoundError(
             "Worklog 99999 not found"
@@ -106,7 +106,7 @@ class TestUpdateWorklogErrors:
 
     def test_update_worklog_not_author(self, mock_jira_client):
         """Test error when not the worklog author."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.update_worklog.side_effect = JiraError(
             "You do not have permission to edit this worklog"
@@ -119,7 +119,7 @@ class TestUpdateWorklogErrors:
 
     def test_update_worklog_authentication_error_401(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.update_worklog.side_effect = AuthenticationError("Invalid token")
 
@@ -130,7 +130,7 @@ class TestUpdateWorklogErrors:
 
     def test_update_worklog_rate_limit_error_429(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.update_worklog.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
@@ -144,7 +144,7 @@ class TestUpdateWorklogErrors:
 
     def test_update_worklog_server_error_500(self, mock_jira_client):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.update_worklog.side_effect = JiraError(
             "Internal server error", status_code=500

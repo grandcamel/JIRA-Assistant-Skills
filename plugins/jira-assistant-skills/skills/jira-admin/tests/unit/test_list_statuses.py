@@ -204,7 +204,7 @@ class TestListStatusesErrorHandling:
     def test_list_statuses_api_error(self, mock_jira_client):
         """Test handling of API errors."""
         from list_statuses import list_statuses
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_all_statuses.side_effect = JiraError("API Error")
 

@@ -69,7 +69,7 @@ class TestGetAsset:
 
     def test_get_asset_error(self, mock_jira_client):
         """Test error when asset doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.has_assets_license.return_value = True
         mock_jira_client.get_asset.side_effect = NotFoundError("Asset not found")
 

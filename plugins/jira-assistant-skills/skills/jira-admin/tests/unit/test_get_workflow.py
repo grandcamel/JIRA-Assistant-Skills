@@ -33,7 +33,7 @@ class TestGetWorkflowByName:
     def test_get_workflow_name_not_found(self, mock_jira_client):
         """Test error when workflow name not found."""
         from get_workflow import get_workflow
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.search_workflows.return_value = {
             'values': [],
@@ -66,7 +66,7 @@ class TestGetWorkflowByEntityId:
     def test_get_workflow_invalid_entity_id(self, mock_jira_client):
         """Test error for invalid entity ID."""
         from get_workflow import get_workflow
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get_workflow_bulk.return_value = {
             'workflows': []
@@ -287,7 +287,7 @@ class TestGetWorkflowErrorHandling:
     def test_get_workflow_missing_parameters(self, mock_jira_client):
         """Test error when no name or entity_id provided."""
         from get_workflow import get_workflow
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             get_workflow(client=mock_jira_client)
@@ -297,7 +297,7 @@ class TestGetWorkflowErrorHandling:
     def test_get_workflow_no_permission(self, mock_jira_client):
         """Test error handling when user lacks admin permission."""
         from get_workflow import get_workflow
-        from error_handler import PermissionError as JiraPermissionError
+        from jira_assistant_skills_lib import PermissionError as JiraPermissionError
 
         mock_jira_client.search_workflows.side_effect = JiraPermissionError(
             "Requires 'Administer Jira' global permission."

@@ -190,7 +190,7 @@ class TestMoveToSprintErrorHandling:
 
     def test_authentication_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
         from move_to_sprint import move_to_sprint
 
         mock_jira_client.move_issues_to_sprint.side_effect = AuthenticationError(
@@ -206,7 +206,7 @@ class TestMoveToSprintErrorHandling:
 
     def test_forbidden_error(self, mock_jira_client):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         from move_to_sprint import move_to_sprint
 
         mock_jira_client.move_issues_to_sprint.side_effect = PermissionError(
@@ -222,7 +222,7 @@ class TestMoveToSprintErrorHandling:
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         from move_to_sprint import move_to_sprint
 
         mock_jira_client.move_issues_to_sprint.side_effect = JiraError(
@@ -240,7 +240,7 @@ class TestMoveToSprintErrorHandling:
 
     def test_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         from move_to_sprint import move_to_sprint
 
         mock_jira_client.move_issues_to_sprint.side_effect = JiraError(
@@ -258,7 +258,7 @@ class TestMoveToSprintErrorHandling:
 
     def test_sprint_not_found(self, mock_jira_client):
         """Test error when sprint doesn't exist."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         from move_to_sprint import move_to_sprint
 
         mock_jira_client.move_issues_to_sprint.side_effect = JiraError(

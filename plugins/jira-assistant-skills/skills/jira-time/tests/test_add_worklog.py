@@ -165,7 +165,7 @@ class TestAddWorklogValidation:
     def test_add_worklog_invalid_time_format(self, mock_jira_client):
         """Test validation of time format."""
         from add_worklog import add_worklog
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             add_worklog(mock_jira_client, 'PROJ-123', 'invalid')
@@ -175,7 +175,7 @@ class TestAddWorklogValidation:
     def test_add_worklog_empty_time(self, mock_jira_client):
         """Test validation rejects empty time."""
         from add_worklog import add_worklog
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             add_worklog(mock_jira_client, 'PROJ-123', '')
@@ -188,7 +188,7 @@ class TestAddWorklogErrors:
 
     def test_add_worklog_issue_not_found(self, mock_jira_client):
         """Test error when issue doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.add_worklog.side_effect = NotFoundError(
             "Issue PROJ-999 not found"
@@ -201,7 +201,7 @@ class TestAddWorklogErrors:
 
     def test_add_worklog_time_tracking_disabled(self, mock_jira_client):
         """Test error when time tracking is disabled."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.add_worklog.side_effect = JiraError(
             "Time Tracking is not enabled for this issue"
@@ -216,7 +216,7 @@ class TestAddWorklogErrors:
 
     def test_add_worklog_authentication_error_401(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.add_worklog.side_effect = AuthenticationError("Invalid token")
 
@@ -227,7 +227,7 @@ class TestAddWorklogErrors:
 
     def test_add_worklog_permission_denied_403(self, mock_jira_client):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.add_worklog.side_effect = PermissionError(
             "You do not have permission to log work on this issue"
@@ -240,7 +240,7 @@ class TestAddWorklogErrors:
 
     def test_add_worklog_rate_limit_error_429(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.add_worklog.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
@@ -254,7 +254,7 @@ class TestAddWorklogErrors:
 
     def test_add_worklog_server_error_500(self, mock_jira_client):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.add_worklog.side_effect = JiraError(
             "Internal server error", status_code=500
@@ -275,7 +275,7 @@ class TestAddWorklogTimeValidationEdgeCases:
     def test_add_worklog_zero_time(self, mock_jira_client):
         """Test validation rejects zero time."""
         from add_worklog import add_worklog
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             add_worklog(mock_jira_client, 'PROJ-123', '0h')
@@ -284,7 +284,7 @@ class TestAddWorklogTimeValidationEdgeCases:
     def test_add_worklog_negative_time(self, mock_jira_client):
         """Test validation rejects negative time."""
         from add_worklog import add_worklog
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         # Negative time should be rejected by validation
         # Note: If the implementation doesn't validate this,
@@ -310,7 +310,7 @@ class TestAddWorklogTimeValidationEdgeCases:
     def test_add_worklog_whitespace_only(self, mock_jira_client):
         """Test validation rejects whitespace-only time."""
         from add_worklog import add_worklog
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             add_worklog(mock_jira_client, 'PROJ-123', '   ')

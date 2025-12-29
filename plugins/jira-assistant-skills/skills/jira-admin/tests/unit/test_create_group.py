@@ -75,7 +75,7 @@ class TestCreateGroupDuplicate:
 
     def test_create_group_duplicate_raises_conflict(self, mock_jira_client):
         """Test that creating duplicate group raises ConflictError."""
-        from error_handler import ConflictError
+        from jira_assistant_skills_lib import ConflictError
         mock_jira_client.create_group.side_effect = ConflictError(
             "Group name 'jira-developers' is already used"
         )
@@ -96,7 +96,7 @@ class TestCreateGroupValidation:
         """Test that empty group name raises validation error."""
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
             from create_group import validate_group_name, create_group
-            from error_handler import ValidationError
+            from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError):
                 validate_group_name("")
@@ -117,7 +117,7 @@ class TestCreateGroupPermissionError:
 
     def test_create_group_permission_denied(self, mock_jira_client):
         """Test handling insufficient permissions error."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_jira_client.create_group.side_effect = PermissionError(
             "Site administration permission required"
         )

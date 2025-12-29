@@ -99,7 +99,7 @@ class TestDeleteProject:
     def test_delete_project_not_found(self, mock_jira_client):
         """Test error when project doesn't exist."""
         from delete_project import delete_project
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.delete_project.side_effect = JiraError(
             "Project NOTFOUND not found",
@@ -118,7 +118,7 @@ class TestDeleteProject:
     def test_delete_project_no_permission(self, mock_jira_client):
         """Test error when user lacks admin permission."""
         from delete_project import delete_project
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.delete_project.side_effect = JiraError(
             "You don't have permission to delete this project",
@@ -137,7 +137,7 @@ class TestDeleteProject:
     def test_delete_project_invalid_key(self, mock_jira_client):
         """Test validation of project key format."""
         from delete_project import delete_project
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             delete_project(

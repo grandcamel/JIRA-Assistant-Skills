@@ -72,7 +72,7 @@ class TestCreateAsset:
 
     def test_create_asset_error(self, mock_jira_client):
         """Test error when creation fails."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_jira_client.has_assets_license.return_value = True
         mock_jira_client.create_asset.side_effect = JiraError("Creation failed")
 

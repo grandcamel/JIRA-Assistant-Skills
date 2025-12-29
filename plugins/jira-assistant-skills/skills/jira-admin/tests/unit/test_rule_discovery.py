@@ -179,7 +179,7 @@ class TestListAutomationRulesErrors:
     def test_list_automation_rules_authentication_error(self, mock_automation_client):
         """Test authentication failure handling."""
         from list_automation_rules import list_automation_rules
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         # Setup mock to raise auth error
         mock_automation_client.get_rules.side_effect = AuthenticationError("Invalid credentials")
@@ -191,7 +191,7 @@ class TestListAutomationRulesErrors:
     def test_list_automation_rules_permission_denied(self, mock_automation_client):
         """Test permission error handling."""
         from list_automation_rules import list_automation_rules
-        from error_handler import AutomationPermissionError
+        from jira_assistant_skills_lib import AutomationPermissionError
 
         # Setup mock to raise permission error
         mock_automation_client.get_rules.side_effect = AutomationPermissionError("Admin access required")
@@ -294,7 +294,7 @@ class TestGetAutomationRuleErrors:
     def test_get_automation_rule_not_found(self, mock_automation_client):
         """Test invalid rule ID error."""
         from get_automation_rule import get_automation_rule
-        from error_handler import AutomationNotFoundError
+        from jira_assistant_skills_lib import AutomationNotFoundError
 
         # Setup mock
         mock_automation_client.get_rule.side_effect = AutomationNotFoundError(
@@ -311,7 +311,7 @@ class TestGetAutomationRuleErrors:
     def test_get_automation_rule_permission_denied(self, mock_automation_client):
         """Test permission error."""
         from get_automation_rule import get_automation_rule
-        from error_handler import AutomationPermissionError
+        from jira_assistant_skills_lib import AutomationPermissionError
 
         # Setup mock
         mock_automation_client.get_rule.side_effect = AutomationPermissionError(

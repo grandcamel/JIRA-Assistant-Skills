@@ -419,7 +419,7 @@ class TestGetIssueCommits:
     def test_get_commits_handles_api_error(self, mock_jira_client):
         """Test graceful handling of API errors."""
         from get_issue_commits import get_issue_commits
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get.side_effect = NotFoundError("Issue", "PROJ-999")
 
@@ -440,7 +440,7 @@ class TestCreateBranchNameErrors:
     def test_create_branch_name_auth_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
         from create_branch_name import create_branch_name
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get_issue.side_effect = AuthenticationError("Invalid token")
 
@@ -451,7 +451,7 @@ class TestCreateBranchNameErrors:
     def test_create_branch_name_permission_error(self, mock_jira_client):
         """Test handling of 403 permission denied."""
         from create_branch_name import create_branch_name
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.get_issue.side_effect = PermissionError("Access denied")
 
@@ -462,7 +462,7 @@ class TestCreateBranchNameErrors:
     def test_create_branch_name_not_found_error(self, mock_jira_client):
         """Test handling of 404 issue not found."""
         from create_branch_name import create_branch_name
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get_issue.side_effect = NotFoundError("Issue", "PROJ-999")
 
@@ -473,7 +473,7 @@ class TestCreateBranchNameErrors:
     def test_create_branch_name_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
         from create_branch_name import create_branch_name
-        from error_handler import RateLimitError
+        from jira_assistant_skills_lib import RateLimitError
 
         mock_jira_client.get_issue.side_effect = RateLimitError(retry_after=60)
 
@@ -484,7 +484,7 @@ class TestCreateBranchNameErrors:
     def test_create_branch_name_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
         from create_branch_name import create_branch_name
-        from error_handler import ServerError
+        from jira_assistant_skills_lib import ServerError
 
         mock_jira_client.get_issue.side_effect = ServerError("Internal server error")
 
@@ -501,7 +501,7 @@ class TestLinkCommitErrors:
     def test_link_commit_auth_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
         from link_commit import link_commit
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.post.side_effect = AuthenticationError("Invalid token")
 
@@ -516,7 +516,7 @@ class TestLinkCommitErrors:
     def test_link_commit_permission_error(self, mock_jira_client):
         """Test handling of 403 permission denied."""
         from link_commit import link_commit
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.post.side_effect = PermissionError("Access denied")
 
@@ -531,7 +531,7 @@ class TestLinkCommitErrors:
     def test_link_commit_not_found_error(self, mock_jira_client):
         """Test handling of 404 issue not found."""
         from link_commit import link_commit
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.post.side_effect = NotFoundError("Issue", "PROJ-999")
 
@@ -546,7 +546,7 @@ class TestLinkCommitErrors:
     def test_link_commit_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
         from link_commit import link_commit
-        from error_handler import RateLimitError
+        from jira_assistant_skills_lib import RateLimitError
 
         mock_jira_client.post.side_effect = RateLimitError(retry_after=60)
 
@@ -561,7 +561,7 @@ class TestLinkCommitErrors:
     def test_link_commit_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
         from link_commit import link_commit
-        from error_handler import ServerError
+        from jira_assistant_skills_lib import ServerError
 
         mock_jira_client.post.side_effect = ServerError("Internal server error")
 
@@ -582,7 +582,7 @@ class TestGetIssueCommitsErrors:
     def test_get_commits_auth_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
         from get_issue_commits import get_issue_commits
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get.side_effect = AuthenticationError("Invalid token")
 
@@ -593,7 +593,7 @@ class TestGetIssueCommitsErrors:
     def test_get_commits_permission_error(self, mock_jira_client):
         """Test handling of 403 permission denied."""
         from get_issue_commits import get_issue_commits
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.get.side_effect = PermissionError("Access denied")
 
@@ -604,7 +604,7 @@ class TestGetIssueCommitsErrors:
     def test_get_commits_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
         from get_issue_commits import get_issue_commits
-        from error_handler import RateLimitError
+        from jira_assistant_skills_lib import RateLimitError
 
         mock_jira_client.get.side_effect = RateLimitError(retry_after=60)
 
@@ -615,7 +615,7 @@ class TestGetIssueCommitsErrors:
     def test_get_commits_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
         from get_issue_commits import get_issue_commits
-        from error_handler import ServerError
+        from jira_assistant_skills_lib import ServerError
 
         mock_jira_client.get.side_effect = ServerError("Internal server error")
 

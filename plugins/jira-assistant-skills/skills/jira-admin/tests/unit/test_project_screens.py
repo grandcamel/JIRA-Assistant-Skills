@@ -145,7 +145,7 @@ class TestGetProjectScreens:
 
     def test_project_not_found(self, mock_jira_client):
         """Test error handling for invalid project key."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.get_project.side_effect = NotFoundError("Project INVALID not found")
 
         from get_project_screens import get_project_screens

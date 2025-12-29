@@ -98,7 +98,7 @@ def test_add_participants_success_message(mock_jira_client, sample_add_participa
 
 def test_add_participants_network_error(mock_jira_client, capsys):
     """Test handling network/API errors."""
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
     mock_jira_client.add_request_participants.side_effect = JiraError("Network error")
 
     with patch('add_participant.get_jira_client', return_value=mock_jira_client):

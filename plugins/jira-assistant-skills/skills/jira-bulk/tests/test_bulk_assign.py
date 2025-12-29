@@ -181,7 +181,7 @@ class TestBulkAssignInvalidUser:
     def test_bulk_assign_invalid_user(self, mock_jira_client):
         """Test error handling when assignee cannot be found."""
         from bulk_assign import bulk_assign
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         # Setup mock - user lookup returns empty, script treats email as account ID
         mock_jira_client.get.return_value = []  # No user found
@@ -212,7 +212,7 @@ class TestBulkAssignPartialFailure:
     def test_bulk_assign_partial_failure(self, mock_jira_client):
         """Test partial failure handling."""
         from bulk_assign import bulk_assign
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         # Setup mock - fail on second issue
         def assign_side_effect(issue_key, account_id):
@@ -279,7 +279,7 @@ class TestBulkAssignApiErrors:
     def test_authentication_error(self, mock_jira_client):
         """Test handling of 401 unauthorized error."""
         from bulk_assign import bulk_assign
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.assign_issue.side_effect = AuthenticationError("Invalid token")
 
@@ -297,7 +297,7 @@ class TestBulkAssignApiErrors:
     def test_permission_denied_error(self, mock_jira_client):
         """Test handling of 403 forbidden error."""
         from bulk_assign import bulk_assign
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.assign_issue.side_effect = JiraError(
             "You do not have permission", status_code=403
@@ -317,7 +317,7 @@ class TestBulkAssignApiErrors:
     def test_not_found_error(self, mock_jira_client):
         """Test handling of 404 not found error."""
         from bulk_assign import bulk_assign
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.assign_issue.side_effect = JiraError(
             "Issue not found", status_code=404
@@ -336,7 +336,7 @@ class TestBulkAssignApiErrors:
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit error."""
         from bulk_assign import bulk_assign
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.assign_issue.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
@@ -355,7 +355,7 @@ class TestBulkAssignApiErrors:
     def test_server_error(self, mock_jira_client):
         """Test handling of 500 internal server error."""
         from bulk_assign import bulk_assign
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.assign_issue.side_effect = JiraError(
             "Internal server error", status_code=500

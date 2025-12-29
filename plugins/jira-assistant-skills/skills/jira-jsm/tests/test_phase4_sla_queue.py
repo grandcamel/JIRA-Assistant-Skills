@@ -552,7 +552,7 @@ def test_get_queue_with_count():
 
 def test_get_queue_not_found():
     """Test handling queue not found."""
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
     mock_client = Mock()
     mock_client.get_queue.side_effect = JiraError("Queue not found")
 

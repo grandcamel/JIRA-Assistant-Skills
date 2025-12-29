@@ -53,7 +53,7 @@ class TestLinkAsset:
 
     def test_link_asset_invalid_request(self, mock_jira_client):
         """Test error when request doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.has_assets_license.return_value = True
         mock_jira_client.link_asset_to_request.side_effect = NotFoundError("Request not found")
 
@@ -63,7 +63,7 @@ class TestLinkAsset:
 
     def test_link_asset_invalid_asset(self, mock_jira_client):
         """Test error when asset doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.has_assets_license.return_value = True
         mock_jira_client.link_asset_to_request.side_effect = NotFoundError("Asset not found")
 
@@ -73,7 +73,7 @@ class TestLinkAsset:
 
     def test_link_asset_error(self, mock_jira_client):
         """Test error handling during link operation."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_jira_client.has_assets_license.return_value = True
         mock_jira_client.link_asset_to_request.side_effect = JiraError("Link failed")
 

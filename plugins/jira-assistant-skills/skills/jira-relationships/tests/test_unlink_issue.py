@@ -50,7 +50,7 @@ class TestUnlinkIssue:
         mock_jira_client.get_issue_links.return_value = sample_issue_links
 
         import unlink_issue
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError) as exc_info:
@@ -81,7 +81,7 @@ class TestUnlinkIssue:
     def test_unlink_requires_target_or_all(self, mock_jira_client):
         """Test error when neither target nor --all specified."""
         import unlink_issue
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError) as exc_info:
@@ -99,7 +99,7 @@ class TestUnlinkIssueErrorHandling:
 
     def test_authentication_error(self, mock_jira_client, sample_issue_links):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get_issue_links.return_value = sample_issue_links
         mock_jira_client.delete_link.side_effect = AuthenticationError("Invalid token")
@@ -111,7 +111,7 @@ class TestUnlinkIssueErrorHandling:
 
     def test_forbidden_error(self, mock_jira_client, sample_issue_links):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.get_issue_links.return_value = sample_issue_links
         mock_jira_client.delete_link.side_effect = PermissionError("Insufficient permissions")
@@ -123,7 +123,7 @@ class TestUnlinkIssueErrorHandling:
 
     def test_link_not_found_error(self, mock_jira_client, sample_issue_links):
         """Test handling of 404 link not found."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get_issue_links.return_value = sample_issue_links
         mock_jira_client.delete_link.side_effect = NotFoundError("Link not found")
@@ -135,7 +135,7 @@ class TestUnlinkIssueErrorHandling:
 
     def test_rate_limit_error(self, mock_jira_client, sample_issue_links):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_issue_links.return_value = sample_issue_links
         mock_jira_client.delete_link.side_effect = JiraError(
@@ -150,7 +150,7 @@ class TestUnlinkIssueErrorHandling:
 
     def test_server_error(self, mock_jira_client, sample_issue_links):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_issue_links.return_value = sample_issue_links
         mock_jira_client.delete_link.side_effect = JiraError(

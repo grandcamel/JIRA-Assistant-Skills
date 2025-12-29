@@ -39,7 +39,7 @@ def add_field_to_screen(screen_id: int,
         Added field object or dry-run status
     """
     if client is None:
-        from config_manager import get_jira_client
+        from jira_assistant_skills_lib import get_jira_client
         client = get_jira_client()
 
     # If neither tab_id nor tab_name specified, use first tab

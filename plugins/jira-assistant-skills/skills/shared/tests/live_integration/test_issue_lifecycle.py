@@ -202,7 +202,7 @@ class TestIssueDelete:
         jira_client.delete_issue(issue['key'])
 
         # Verify it's gone
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         with pytest.raises(NotFoundError):
             jira_client.get_issue(issue['key'])
 
@@ -227,7 +227,7 @@ class TestIssueDelete:
         jira_client.delete_issue(parent['key'])
 
         # Verify both are gone
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         with pytest.raises(NotFoundError):
             jira_client.get_issue(parent['key'])
         with pytest.raises(NotFoundError):

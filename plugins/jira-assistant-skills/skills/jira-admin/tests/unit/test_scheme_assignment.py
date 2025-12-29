@@ -52,7 +52,7 @@ class TestGetProjectScheme:
         }
 
         from get_project_issue_type_scheme import get_project_issue_type_scheme
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         with pytest.raises(NotFoundError):
             get_project_issue_type_scheme(
@@ -100,7 +100,7 @@ class TestAssignScheme:
 
     def test_assign_scheme_team_managed_fails(self, mock_jira_client):
         """Should fail for team-managed projects."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.assign_issue_type_scheme.side_effect = JiraError(
             "Issue type scheme can only be associated with company-managed projects",
@@ -179,7 +179,7 @@ class TestAddIssueTypesToScheme:
     def test_add_issue_types_empty_list(self, mock_jira_client):
         """Should raise ValidationError for empty list."""
         from add_issue_types_to_scheme import add_issue_types_to_scheme
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             add_issue_types_to_scheme(
@@ -214,7 +214,7 @@ class TestRemoveIssueTypeFromScheme:
 
     def test_remove_default_issue_type_fails(self, mock_jira_client):
         """Should fail when removing default issue type."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.remove_issue_type_from_scheme.side_effect = JiraError(
             "Cannot remove the default issue type from the scheme",
@@ -232,7 +232,7 @@ class TestRemoveIssueTypeFromScheme:
 
     def test_remove_last_issue_type_fails(self, mock_jira_client):
         """Should fail when removing last issue type."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.remove_issue_type_from_scheme.side_effect = JiraError(
             "Cannot remove the last issue type from the scheme",

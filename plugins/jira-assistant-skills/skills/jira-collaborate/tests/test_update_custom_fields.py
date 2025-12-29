@@ -67,7 +67,7 @@ class TestUpdateCustomFields:
 
     def test_update_no_fields_specified(self):
         """Test error when no fields specified."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         from update_custom_fields import update_custom_fields
 
@@ -76,7 +76,7 @@ class TestUpdateCustomFields:
 
     def test_update_invalid_issue_key(self):
         """Test error for invalid issue key."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         from update_custom_fields import update_custom_fields
 
@@ -92,7 +92,7 @@ class TestUpdateCustomFieldsErrorHandling:
     @patch('update_custom_fields.get_jira_client')
     def test_authentication_error(self, mock_get_client, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.update_issue.side_effect = AuthenticationError("Invalid API token")
@@ -105,7 +105,7 @@ class TestUpdateCustomFieldsErrorHandling:
     @patch('update_custom_fields.get_jira_client')
     def test_permission_error(self, mock_get_client, mock_jira_client):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.update_issue.side_effect = PermissionError("No permission to update issue")
@@ -118,7 +118,7 @@ class TestUpdateCustomFieldsErrorHandling:
     @patch('update_custom_fields.get_jira_client')
     def test_not_found_error(self, mock_get_client, mock_jira_client):
         """Test handling of 404 not found."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.update_issue.side_effect = NotFoundError("Issue PROJ-999 not found")
@@ -131,7 +131,7 @@ class TestUpdateCustomFieldsErrorHandling:
     @patch('update_custom_fields.get_jira_client')
     def test_field_not_found(self, mock_get_client, mock_jira_client):
         """Test error when field doesn't exist."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.update_issue.side_effect = JiraError("Field 'customfield_99999' does not exist", status_code=400)
@@ -144,7 +144,7 @@ class TestUpdateCustomFieldsErrorHandling:
     @patch('update_custom_fields.get_jira_client')
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.update_issue.side_effect = JiraError("Rate limit exceeded", status_code=429)
@@ -158,7 +158,7 @@ class TestUpdateCustomFieldsErrorHandling:
     @patch('update_custom_fields.get_jira_client')
     def test_server_error(self, mock_get_client, mock_jira_client):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.update_issue.side_effect = JiraError("Internal server error", status_code=500)

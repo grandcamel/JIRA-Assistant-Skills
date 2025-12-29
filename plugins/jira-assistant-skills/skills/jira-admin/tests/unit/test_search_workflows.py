@@ -258,7 +258,7 @@ class TestSearchWorkflowsErrorHandling:
     def test_search_workflows_api_error(self, mock_jira_client):
         """Test handling of API errors."""
         from search_workflows import search_workflows
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.search_workflows.side_effect = JiraError("API Error")
 

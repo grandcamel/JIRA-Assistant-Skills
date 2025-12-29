@@ -411,7 +411,7 @@ class TestBulkOperationEdgeCases:
 
     def test_empty_issue_list(self, jira_client, test_project):
         """Test with empty issue list raises ValidationError."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError, match="Either --issues or --jql must be provided"):
             bulk_transition(

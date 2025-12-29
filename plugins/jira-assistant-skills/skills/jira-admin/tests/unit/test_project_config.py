@@ -96,7 +96,7 @@ class TestSetAvatar:
     def test_upload_avatar_invalid_format(self, mock_jira_client):
         """Test error for unsupported file format."""
         from set_avatar import upload_avatar
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         import tempfile
         import os
 
@@ -117,7 +117,7 @@ class TestSetAvatar:
     def test_set_avatar_project_not_found(self, mock_jira_client):
         """Test error when project doesn't exist."""
         from set_avatar import set_avatar
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.set_project_avatar.side_effect = JiraError(
             "Project not found",
@@ -195,7 +195,7 @@ class TestSetProjectLead:
     def test_set_lead_user_not_found(self, mock_jira_client):
         """Test error when user doesn't exist."""
         from set_project_lead import set_project_lead
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         mock_jira_client.search_users.return_value = []
 
@@ -211,7 +211,7 @@ class TestSetProjectLead:
     def test_set_lead_no_permission(self, mock_jira_client):
         """Test error when user lacks permission."""
         from set_project_lead import set_project_lead
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.update_project.side_effect = JiraError(
             "You don't have permission to update project lead",
@@ -230,7 +230,7 @@ class TestSetProjectLead:
     def test_set_lead_requires_email_or_account_id(self, mock_jira_client):
         """Test error when neither email nor account ID provided."""
         from set_project_lead import set_project_lead
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             set_project_lead(
@@ -298,7 +298,7 @@ class TestSetDefaultAssignee:
     def test_invalid_assignee_type(self, mock_jira_client):
         """Test error for invalid assignee type."""
         from set_default_assignee import set_default_assignee
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             set_default_assignee(
@@ -310,7 +310,7 @@ class TestSetDefaultAssignee:
     def test_set_assignee_no_permission(self, mock_jira_client):
         """Test error when user lacks permission."""
         from set_default_assignee import set_default_assignee
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.update_project.side_effect = JiraError(
             "You don't have permission to update project",
@@ -380,7 +380,7 @@ class TestGetConfig:
     def test_get_config_project_not_found(self, mock_jira_client):
         """Test error when project doesn't exist."""
         from get_config import get_project_config
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_project.side_effect = JiraError(
             "Project not found",

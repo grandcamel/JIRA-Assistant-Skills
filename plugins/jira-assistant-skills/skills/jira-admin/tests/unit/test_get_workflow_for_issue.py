@@ -33,7 +33,7 @@ class TestGetWorkflowForIssueBasic:
     def test_get_workflow_for_issue_not_found(self, mock_jira_client):
         """Test error when issue not found."""
         from get_workflow_for_issue import get_workflow_for_issue
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get_issue.side_effect = NotFoundError("Issue not found")
 
@@ -165,7 +165,7 @@ class TestGetWorkflowForIssueErrorHandling:
     def test_get_workflow_for_issue_invalid_key(self, mock_jira_client):
         """Test error for invalid issue key format."""
         from get_workflow_for_issue import get_workflow_for_issue
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             get_workflow_for_issue(client=mock_jira_client, issue_key='invalid-key')
@@ -173,7 +173,7 @@ class TestGetWorkflowForIssueErrorHandling:
     def test_get_workflow_for_issue_no_permission(self, mock_jira_client):
         """Test error when user lacks permission."""
         from get_workflow_for_issue import get_workflow_for_issue
-        from error_handler import PermissionError as JiraPermissionError
+        from jira_assistant_skills_lib import PermissionError as JiraPermissionError
 
         mock_jira_client.get_issue.side_effect = JiraPermissionError("No access")
 

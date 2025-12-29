@@ -216,7 +216,7 @@ class TestBulkClonePartialFailure:
     def test_bulk_clone_partial_failure(self, mock_jira_client, sample_issues):
         """Test partial failure handling."""
         from bulk_clone import bulk_clone
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         # Setup mock
         mock_jira_client.get_issue.side_effect = lambda key, **kwargs: next(
@@ -319,7 +319,7 @@ class TestBulkCloneApiErrors:
     def test_authentication_error(self, mock_jira_client, sample_issues):
         """Test handling of 401 unauthorized error."""
         from bulk_clone import bulk_clone
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get_issue.return_value = sample_issues[0]
         mock_jira_client.create_issue.side_effect = AuthenticationError("Invalid token")
@@ -337,7 +337,7 @@ class TestBulkCloneApiErrors:
     def test_permission_denied_error(self, mock_jira_client, sample_issues):
         """Test handling of 403 forbidden error."""
         from bulk_clone import bulk_clone
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_issue.return_value = sample_issues[0]
         mock_jira_client.create_issue.side_effect = JiraError(
@@ -357,7 +357,7 @@ class TestBulkCloneApiErrors:
     def test_not_found_error(self, mock_jira_client):
         """Test handling of 404 not found error during issue fetch."""
         from bulk_clone import bulk_clone
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         # 404 during initial issue fetch is handled gracefully
         mock_jira_client.get_issue.side_effect = JiraError(
@@ -379,7 +379,7 @@ class TestBulkCloneApiErrors:
     def test_rate_limit_error(self, mock_jira_client, sample_issues):
         """Test handling of 429 rate limit error."""
         from bulk_clone import bulk_clone
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_issue.return_value = sample_issues[0]
         mock_jira_client.create_issue.side_effect = JiraError(
@@ -398,7 +398,7 @@ class TestBulkCloneApiErrors:
     def test_server_error(self, mock_jira_client, sample_issues):
         """Test handling of 500 internal server error."""
         from bulk_clone import bulk_clone
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_issue.return_value = sample_issues[0]
         mock_jira_client.create_issue.side_effect = JiraError(

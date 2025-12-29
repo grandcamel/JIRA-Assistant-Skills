@@ -348,7 +348,7 @@ class TestUpdateIssueValidation:
 
     def test_update_issue_invalid_key_raises_error(self, mock_jira_client):
         """Test that invalid issue key raises ValidationError."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with patch.object(update_issue_module, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError):
@@ -359,7 +359,7 @@ class TestUpdateIssueValidation:
 
     def test_update_issue_empty_key_raises_error(self, mock_jira_client):
         """Test that empty issue key raises ValidationError."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with patch.object(update_issue_module, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError):
@@ -383,7 +383,7 @@ class TestUpdateIssueErrors:
 
     def test_update_issue_not_found(self, mock_jira_client):
         """Test handling issue not found error."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.update_issue.side_effect = NotFoundError(
             "Issue", "PROJ-999"
         )
@@ -399,7 +399,7 @@ class TestUpdateIssueErrors:
 
     def test_update_issue_permission_denied(self, mock_jira_client):
         """Test handling permission denied error."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_jira_client.update_issue.side_effect = PermissionError(
             "You do not have permission to edit this issue"
         )
@@ -415,7 +415,7 @@ class TestUpdateIssueErrors:
 
     def test_update_issue_authentication_error(self, mock_jira_client):
         """Test handling authentication error."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
         mock_jira_client.update_issue.side_effect = AuthenticationError(
             "Authentication failed"
         )
@@ -429,7 +429,7 @@ class TestUpdateIssueErrors:
 
     def test_update_issue_validation_error_from_api(self, mock_jira_client):
         """Test handling validation error from API."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         mock_jira_client.update_issue.side_effect = ValidationError(
             "Priority 'InvalidPriority' is not valid"
         )

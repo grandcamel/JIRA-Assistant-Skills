@@ -135,7 +135,7 @@ class TestCreateFromTemplate:
     def test_template_file_not_found(self):
         """Test error when template file doesn't exist."""
         from create_permission_scheme import load_template
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises((ValidationError, FileNotFoundError)):
             load_template('/nonexistent/path/template.json')
@@ -148,7 +148,7 @@ class TestCreateFromTemplate:
             f.write("not valid json")
 
         from create_permission_scheme import load_template
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises((ValidationError, json.JSONDecodeError)):
             load_template(str(template_file))
@@ -181,7 +181,7 @@ class TestCloneScheme:
 
     def test_clone_source_not_found(self, mock_jira_client):
         """Test error when source scheme doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.get_permission_scheme.side_effect = NotFoundError(
             "Scheme not found"
         )
@@ -264,7 +264,7 @@ class TestValidation:
     def test_empty_name_rejected(self, mock_jira_client):
         """Test that empty name is rejected."""
         from create_permission_scheme import create_permission_scheme
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             create_permission_scheme(
@@ -275,7 +275,7 @@ class TestValidation:
     def test_invalid_grant_format(self, mock_jira_client):
         """Test that invalid grant format is rejected."""
         from create_permission_scheme import parse_grants
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             parse_grants(['INVALID_GRANT_FORMAT'])
@@ -283,7 +283,7 @@ class TestValidation:
     def test_invalid_holder_type(self, mock_jira_client):
         """Test that invalid holder type is rejected."""
         from create_permission_scheme import parse_grants
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             parse_grants(['BROWSE_PROJECTS:invalid_holder_type'])
@@ -359,7 +359,7 @@ class TestCreatePermissionSchemeCLI:
 
     def test_cli_error_handling(self, mock_jira_client, capsys):
         """Test CLI handles errors gracefully."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_jira_client.create_permission_scheme.side_effect = JiraError("API Error", status_code=500)
 
         with patch('create_permission_scheme.get_jira_client', return_value=mock_jira_client):

@@ -96,7 +96,7 @@ class TestLinkIssue:
         mock_jira_client.get_link_types.return_value = sample_link_types
 
         import link_issue
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError) as exc_info:
@@ -110,7 +110,7 @@ class TestLinkIssue:
 
     def test_link_invalid_issue(self, mock_jira_client, sample_link_types):
         """Test error when issue key is invalid."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         import link_issue
         with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
@@ -122,7 +122,7 @@ class TestLinkIssue:
 
     def test_link_self_reference(self, mock_jira_client, sample_link_types):
         """Test validation preventing linking issue to itself."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         import link_issue
         with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
@@ -175,7 +175,7 @@ class TestLinkIssueErrorHandling:
 
     def test_authentication_error(self, mock_jira_client, sample_link_types):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get_link_types.return_value = sample_link_types
         mock_jira_client.create_link.side_effect = AuthenticationError("Invalid token")
@@ -187,7 +187,7 @@ class TestLinkIssueErrorHandling:
 
     def test_forbidden_error(self, mock_jira_client, sample_link_types):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.get_link_types.return_value = sample_link_types
         mock_jira_client.create_link.side_effect = PermissionError("Insufficient permissions")
@@ -199,7 +199,7 @@ class TestLinkIssueErrorHandling:
 
     def test_issue_not_found_error(self, mock_jira_client, sample_link_types):
         """Test handling of 404 issue not found."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get_link_types.return_value = sample_link_types
         mock_jira_client.create_link.side_effect = NotFoundError("Issue PROJ-2 not found")
@@ -211,7 +211,7 @@ class TestLinkIssueErrorHandling:
 
     def test_rate_limit_error(self, mock_jira_client, sample_link_types):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_link_types.return_value = sample_link_types
         mock_jira_client.create_link.side_effect = JiraError(
@@ -226,7 +226,7 @@ class TestLinkIssueErrorHandling:
 
     def test_server_error(self, mock_jira_client, sample_link_types):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_link_types.return_value = sample_link_types
         mock_jira_client.create_link.side_effect = JiraError(

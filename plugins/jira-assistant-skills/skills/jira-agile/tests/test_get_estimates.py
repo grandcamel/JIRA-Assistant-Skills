@@ -164,7 +164,7 @@ class TestGetEstimatesErrorHandling:
 
     def test_authentication_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
         from get_estimates import get_estimates
 
         mock_jira_client.get_sprint_issues.side_effect = AuthenticationError(
@@ -179,7 +179,7 @@ class TestGetEstimatesErrorHandling:
 
     def test_forbidden_error(self, mock_jira_client):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         from get_estimates import get_estimates
 
         mock_jira_client.get_sprint_issues.side_effect = PermissionError(
@@ -194,7 +194,7 @@ class TestGetEstimatesErrorHandling:
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         from get_estimates import get_estimates
 
         mock_jira_client.get_sprint_issues.side_effect = JiraError(
@@ -211,7 +211,7 @@ class TestGetEstimatesErrorHandling:
 
     def test_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         from get_estimates import get_estimates
 
         mock_jira_client.get_sprint_issues.side_effect = JiraError(
@@ -228,7 +228,7 @@ class TestGetEstimatesErrorHandling:
 
     def test_sprint_not_found(self, mock_jira_client):
         """Test error when sprint doesn't exist."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         from get_estimates import get_estimates
 
         mock_jira_client.get_sprint_issues.side_effect = JiraError(

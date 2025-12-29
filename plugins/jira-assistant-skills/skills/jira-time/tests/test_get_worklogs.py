@@ -139,7 +139,7 @@ class TestGetWorklogsErrors:
 
     def test_get_worklogs_issue_not_found(self, mock_jira_client):
         """Test error when issue doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get_worklogs.side_effect = NotFoundError(
             "Issue PROJ-999 not found"
@@ -152,7 +152,7 @@ class TestGetWorklogsErrors:
 
     def test_get_worklogs_authentication_error_401(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get_worklogs.side_effect = AuthenticationError("Invalid token")
 
@@ -163,7 +163,7 @@ class TestGetWorklogsErrors:
 
     def test_get_worklogs_permission_denied_403(self, mock_jira_client):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.get_worklogs.side_effect = PermissionError(
             "You do not have permission to view worklogs"
@@ -176,7 +176,7 @@ class TestGetWorklogsErrors:
 
     def test_get_worklogs_rate_limit_error_429(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_worklogs.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
@@ -190,7 +190,7 @@ class TestGetWorklogsErrors:
 
     def test_get_worklogs_server_error_500(self, mock_jira_client):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_worklogs.side_effect = JiraError(
             "Internal server error", status_code=500

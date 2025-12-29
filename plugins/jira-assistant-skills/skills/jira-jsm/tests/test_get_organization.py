@@ -68,7 +68,7 @@ def test_get_organization_json_format(mock_jira_client, sample_organization_deta
 
 def test_get_organization_not_found(mock_jira_client, capsys):
     """Test error when organization doesn't exist."""
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
     mock_jira_client.get_organization.side_effect = JiraError("Organization not found")
 
     with patch('get_organization.get_jira_client', return_value=mock_jira_client):
@@ -96,7 +96,7 @@ def test_get_organization_verbose_output(mock_jira_client, sample_organization_d
 
 def test_get_organization_network_error(mock_jira_client, capsys):
     """Test handling network/API errors."""
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
     mock_jira_client.get_organization.side_effect = JiraError("Network error")
 
     with patch('get_organization.get_jira_client', return_value=mock_jira_client):

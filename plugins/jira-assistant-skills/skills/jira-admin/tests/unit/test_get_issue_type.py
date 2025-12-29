@@ -48,7 +48,7 @@ class TestGetIssueType:
     def test_get_issue_type_not_found(self, mock_jira_client):
         """Should raise NotFoundError for invalid ID."""
         # Arrange
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get_issue_type.side_effect = NotFoundError(
             "Issue type", "10999"
@@ -127,7 +127,7 @@ class TestGetIssueType:
     def test_get_issue_type_api_error(self, mock_jira_client):
         """Should propagate API errors."""
         # Arrange
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_issue_type.side_effect = JiraError(
             "Server error",

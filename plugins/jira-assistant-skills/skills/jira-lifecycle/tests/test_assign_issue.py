@@ -54,7 +54,7 @@ class TestAssignIssue:
 
     def test_assign_requires_one_option(self):
         """Test error when no assignment option specified."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         from assign_issue import assign_issue
 
         with pytest.raises(ValidationError, match="Specify exactly one"):
@@ -62,7 +62,7 @@ class TestAssignIssue:
 
     def test_assign_rejects_multiple_options(self):
         """Test error when multiple assignment options specified."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         from assign_issue import assign_issue
 
         with pytest.raises(ValidationError, match="Specify exactly one"):
@@ -70,7 +70,7 @@ class TestAssignIssue:
 
     def test_assign_rejects_user_and_unassign(self):
         """Test error when user and unassign both specified."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         from assign_issue import assign_issue
 
         with pytest.raises(ValidationError, match="Specify exactly one"):
@@ -78,7 +78,7 @@ class TestAssignIssue:
 
     def test_assign_rejects_all_options(self):
         """Test error when all assignment options specified."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         from assign_issue import assign_issue
 
         with pytest.raises(ValidationError, match="Specify exactly one"):
@@ -86,7 +86,7 @@ class TestAssignIssue:
 
     def test_assign_invalid_issue_key(self):
         """Test error on invalid issue key."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         from assign_issue import assign_issue
 
         with pytest.raises(ValidationError):
@@ -112,7 +112,7 @@ class TestAssignIssueErrorHandling:
     @patch('assign_issue.get_jira_client')
     def test_issue_not_found(self, mock_get_client, mock_jira_client):
         """Test handling of 404 when issue doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.assign_issue.side_effect = NotFoundError("Issue", "PROJ-999")
 
@@ -124,7 +124,7 @@ class TestAssignIssueErrorHandling:
     @patch('assign_issue.get_jira_client')
     def test_permission_denied(self, mock_get_client, mock_jira_client):
         """Test handling of 403 when not allowed to assign."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.assign_issue.side_effect = PermissionError("Cannot assign")
 
@@ -136,7 +136,7 @@ class TestAssignIssueErrorHandling:
     @patch('assign_issue.get_jira_client')
     def test_authentication_error(self, mock_get_client, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.assign_issue.side_effect = AuthenticationError("Invalid token")
 
@@ -148,7 +148,7 @@ class TestAssignIssueErrorHandling:
     @patch('assign_issue.get_jira_client')
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.assign_issue.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
@@ -163,7 +163,7 @@ class TestAssignIssueErrorHandling:
     @patch('assign_issue.get_jira_client')
     def test_server_error(self, mock_get_client, mock_jira_client):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.assign_issue.side_effect = JiraError(
             "Internal server error", status_code=500
@@ -178,7 +178,7 @@ class TestAssignIssueErrorHandling:
     @patch('assign_issue.get_jira_client')
     def test_user_not_found(self, mock_get_client, mock_jira_client):
         """Test handling when assignee user is not found."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.assign_issue.side_effect = ValidationError("User not found")
 

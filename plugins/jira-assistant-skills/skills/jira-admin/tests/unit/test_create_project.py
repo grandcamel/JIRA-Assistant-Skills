@@ -142,7 +142,7 @@ class TestCreateProject:
     def test_create_project_invalid_key(self, mock_jira_client):
         """Test validation of project key (uppercase, starts with letter)."""
         from create_project import create_project
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         # Test with invalid characters (contains hyphen which is not allowed)
         with pytest.raises(ValidationError) as exc_info:
@@ -165,7 +165,7 @@ class TestCreateProject:
     def test_create_project_duplicate_key(self, mock_jira_client):
         """Test error when key already exists."""
         from create_project import create_project
-        from error_handler import ConflictError, JiraError
+        from jira_assistant_skills_lib import ConflictError, JiraError
 
         # Simulate 409 conflict error
         mock_jira_client.create_project.side_effect = JiraError(
@@ -187,7 +187,7 @@ class TestCreateProject:
     def test_create_project_invalid_type(self, mock_jira_client):
         """Test error for invalid project type."""
         from create_project import create_project
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             create_project(
@@ -202,7 +202,7 @@ class TestCreateProject:
     def test_create_project_no_permission(self, mock_jira_client):
         """Test error when user lacks admin permission."""
         from create_project import create_project
-        from error_handler import PermissionError, JiraError
+        from jira_assistant_skills_lib import PermissionError, JiraError
 
         # Simulate 403 permission error
         mock_jira_client.create_project.side_effect = JiraError(

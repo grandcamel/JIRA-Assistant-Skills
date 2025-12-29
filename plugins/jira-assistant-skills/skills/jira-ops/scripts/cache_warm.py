@@ -32,13 +32,13 @@ if shared_lib_path not in sys.path:
 from jira_assistant_skills_lib import JiraCache
 
 try:
-    from config_manager import get_jira_client
+    from jira_assistant_skills_lib import get_jira_client
     HAS_CONFIG_MANAGER = True
 except ImportError:
     HAS_CONFIG_MANAGER = False
 
 try:
-    from error_handler import AuthenticationError, RateLimitError, ServerError
+    from jira_assistant_skills_lib import AuthenticationError, RateLimitError, ServerError
     HAS_ERROR_HANDLER = True
 except ImportError:
     HAS_ERROR_HANDLER = False

@@ -129,13 +129,13 @@ class AutomationClient:
                 data = response.json()
                 return data['cloudId']
             else:
-                from error_handler import AutomationError
+                from jira_assistant_skills_lib import AutomationError
                 raise AutomationError(
                     f"Failed to fetch cloud ID: HTTP {response.status_code}",
                     status_code=response.status_code
                 )
         except requests.RequestException as e:
-            from error_handler import AutomationError
+            from jira_assistant_skills_lib import AutomationError
             raise AutomationError(f"Failed to fetch cloud ID: {str(e)}")
 
     def _handle_response(self, response: requests.Response, operation: str) -> Dict[str, Any]:
@@ -161,7 +161,7 @@ class AutomationClient:
                 return {}
 
         # Import error classes here to avoid circular imports
-        from error_handler import (
+        from jira_assistant_skills_lib import (
             AutomationError, AutomationNotFoundError,
             AutomationPermissionError, AutomationValidationError
         )
@@ -180,14 +180,14 @@ class AutomationClient:
         if status_code == 400:
             raise AutomationValidationError(message, status_code=status_code, response_data=error_data)
         elif status_code == 401:
-            from error_handler import AuthenticationError
+            from jira_assistant_skills_lib import AuthenticationError
             raise AuthenticationError(message, status_code=status_code, response_data=error_data)
         elif status_code == 403:
             raise AutomationPermissionError(message, status_code=status_code, response_data=error_data)
         elif status_code == 404:
             raise AutomationNotFoundError("Automation resource", message, status_code=status_code, response_data=error_data)
         elif status_code == 429:
-            from error_handler import RateLimitError
+            from jira_assistant_skills_lib import RateLimitError
             retry_after = response.headers.get('Retry-After')
             raise RateLimitError(
                 retry_after=int(retry_after) if retry_after else None,
@@ -195,7 +195,7 @@ class AutomationClient:
                 response_data=error_data
             )
         elif status_code >= 500:
-            from error_handler import ServerError
+            from jira_assistant_skills_lib import ServerError
             raise ServerError(message, status_code=status_code, response_data=error_data)
         else:
             raise AutomationError(message, status_code=status_code, response_data=error_data)

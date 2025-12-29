@@ -129,7 +129,7 @@ class TestGetAutomationTemplateErrors:
     def test_get_template_not_found(self, mock_automation_client):
         """Test invalid template ID error."""
         from get_automation_template import get_automation_template
-        from error_handler import AutomationNotFoundError
+        from jira_assistant_skills_lib import AutomationNotFoundError
 
         # Setup mock
         mock_automation_client.get_template.side_effect = AutomationNotFoundError(
@@ -226,7 +226,7 @@ class TestCreateRuleFromTemplateErrors:
     def test_create_rule_from_template_invalid_template(self, mock_automation_client):
         """Test error for invalid template ID."""
         from create_rule_from_template import create_rule_from_template
-        from error_handler import AutomationNotFoundError
+        from jira_assistant_skills_lib import AutomationNotFoundError
 
         # Setup mock
         mock_automation_client.create_rule_from_template.side_effect = AutomationNotFoundError(
@@ -244,7 +244,7 @@ class TestCreateRuleFromTemplateErrors:
     def test_create_rule_from_template_missing_params(self, mock_automation_client):
         """Test validation of required parameters."""
         from create_rule_from_template import create_rule_from_template
-        from error_handler import AutomationValidationError
+        from jira_assistant_skills_lib import AutomationValidationError
 
         # Setup mock
         mock_automation_client.create_rule_from_template.side_effect = AutomationValidationError(
@@ -372,7 +372,7 @@ class TestUpdateAutomationRuleErrors:
     def test_update_rule_not_found(self, mock_automation_client):
         """Test error for invalid rule ID."""
         from update_automation_rule import update_automation_rule
-        from error_handler import AutomationNotFoundError
+        from jira_assistant_skills_lib import AutomationNotFoundError
 
         # Setup mock
         mock_automation_client.update_rule.side_effect = AutomationNotFoundError(
@@ -390,7 +390,7 @@ class TestUpdateAutomationRuleErrors:
     def test_update_rule_permission_denied(self, mock_automation_client):
         """Test permission error."""
         from update_automation_rule import update_automation_rule
-        from error_handler import AutomationPermissionError
+        from jira_assistant_skills_lib import AutomationPermissionError
 
         # Setup mock
         mock_automation_client.update_rule.side_effect = AutomationPermissionError(

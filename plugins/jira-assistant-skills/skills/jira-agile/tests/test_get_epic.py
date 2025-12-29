@@ -169,7 +169,7 @@ class TestGetEpic:
         """Test error when epic doesn't exist."""
         # Arrange
         from get_epic import get_epic
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         # Simulate 404
         mock_jira_client.get_issue.side_effect = JiraError(
@@ -217,7 +217,7 @@ class TestGetEpicErrorHandling:
 
     def test_authentication_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
         from get_epic import get_epic
 
         mock_jira_client.get_issue.side_effect = AuthenticationError(
@@ -232,7 +232,7 @@ class TestGetEpicErrorHandling:
 
     def test_forbidden_error(self, mock_jira_client):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         from get_epic import get_epic
 
         mock_jira_client.get_issue.side_effect = PermissionError(
@@ -247,7 +247,7 @@ class TestGetEpicErrorHandling:
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         from get_epic import get_epic
 
         mock_jira_client.get_issue.side_effect = JiraError(
@@ -264,7 +264,7 @@ class TestGetEpicErrorHandling:
 
     def test_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         from get_epic import get_epic
 
         mock_jira_client.get_issue.side_effect = JiraError(

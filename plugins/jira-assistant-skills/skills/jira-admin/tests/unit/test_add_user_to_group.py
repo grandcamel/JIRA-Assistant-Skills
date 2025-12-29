@@ -73,7 +73,7 @@ class TestAddUserByEmail:
 
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
             from add_user_to_group import add_user_by_email
-            from error_handler import NotFoundError
+            from jira_assistant_skills_lib import NotFoundError
 
             with pytest.raises(NotFoundError) as exc_info:
                 add_user_by_email(
@@ -110,7 +110,7 @@ class TestAddUserGroupNotFound:
 
     def test_add_user_group_not_found(self, mock_jira_client):
         """Test error when group does not exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.add_user_to_group.side_effect = NotFoundError("Group", "nonexistent-group")
 
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
@@ -129,7 +129,7 @@ class TestAddUserNotFound:
 
     def test_add_user_account_not_found(self, mock_jira_client):
         """Test error when account ID does not exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.add_user_to_group.side_effect = NotFoundError("User", "invalid-account-id")
 
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
@@ -148,7 +148,7 @@ class TestAddUserPermissionError:
 
     def test_add_user_permission_denied(self, mock_jira_client):
         """Test handling insufficient permissions error."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_jira_client.add_user_to_group.side_effect = PermissionError(
             "Site administration permission required"
         )

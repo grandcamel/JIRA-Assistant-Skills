@@ -44,7 +44,7 @@ def get_project_screens(project_key: str,
         Project screen configuration
     """
     if client is None:
-        from config_manager import get_jira_client
+        from jira_assistant_skills_lib import get_jira_client
         client = get_jira_client()
 
     # Get project info

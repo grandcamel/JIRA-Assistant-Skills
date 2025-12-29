@@ -16,7 +16,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-from error_handler import ValidationError
+from jira_assistant_skills_lib import ValidationError
 from validators import validate_url, validate_email
 from jira_client import JiraClient
 from automation_client import AutomationClient

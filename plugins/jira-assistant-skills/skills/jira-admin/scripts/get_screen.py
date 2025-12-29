@@ -35,7 +35,7 @@ def get_screen(screen_id: int,
         Screen object with optional tabs and fields
     """
     if client is None:
-        from config_manager import get_jira_client
+        from jira_assistant_skills_lib import get_jira_client
         client = get_jira_client()
 
     screen = client.get_screen(screen_id)

@@ -26,6 +26,7 @@
 </table>
 
 <p align="center">
+  <a href="https://pypi.org/project/jira-assistant-skills-lib/"><img src="https://img.shields.io/pypi/v/jira-assistant-skills-lib?logo=pypi&logoColor=white" alt="PyPI"></a>
   <img src="https://img.shields.io/badge/tests-617%20passing-brightgreen?logo=pytest" alt="Tests">
   <img src="https://img.shields.io/badge/python-3.8+-3776AB?logo=python&logoColor=white" alt="Python 3.8+">
   <img src="https://img.shields.io/badge/skills-14-FF6B6B" alt="Skills">
@@ -127,7 +128,7 @@ cd jira-assistant-skills
 ### 2. Install Dependencies
 
 ```bash
-pip install -r .claude/skills/shared/scripts/lib/requirements.txt
+pip install jira-assistant-skills-lib
 ```
 
 ### 3. Get API Token
@@ -475,11 +476,11 @@ Contributions are welcome! See our [Contributing Guide](CONTRIBUTING.md).
 git clone https://github.com/grandcamel/jira-assistant-skills.git
 cd jira-assistant-skills
 
-# Install dependencies
-pip install -r .claude/skills/shared/scripts/lib/requirements.txt
+# Install the shared library
+pip install jira-assistant-skills-lib
 
 # Run tests
-pytest .claude/skills/*/tests/ -v
+pytest plugins/jira-assistant-skills/skills/*/tests/ -v
 ```
 
 ---

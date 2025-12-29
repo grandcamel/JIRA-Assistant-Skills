@@ -35,7 +35,7 @@ def get_screen_fields(screen_id: int,
         List of field objects
     """
     if client is None:
-        from config_manager import get_jira_client
+        from jira_assistant_skills_lib import get_jira_client
         client = get_jira_client()
 
     fields = []

@@ -91,7 +91,7 @@ def test_create_organization_dry_run(capsys):
 
 def test_create_organization_network_error(mock_jira_client, capsys):
     """Test handling API errors gracefully."""
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
     mock_jira_client.create_organization.side_effect = JiraError("Network error")
 
     with patch('create_organization.get_jira_client', return_value=mock_jira_client):

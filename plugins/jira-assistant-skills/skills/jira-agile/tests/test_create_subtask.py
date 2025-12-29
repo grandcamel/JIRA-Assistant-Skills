@@ -150,7 +150,7 @@ class TestCreateSubtask:
         """Test error when parent doesn't exist."""
         # Arrange
         from create_subtask import create_subtask
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         # Simulate 404 when fetching parent
         mock_jira_client.get_issue.side_effect = JiraError(
@@ -172,7 +172,7 @@ class TestCreateSubtask:
         """Test validation that some issue types can't have subtasks."""
         # Arrange
         from create_subtask import create_subtask
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         # Return a subtask as the parent (subtasks can't have subtasks)
         mock_jira_client.get_issue.return_value = sample_subtask_response
@@ -218,7 +218,7 @@ class TestCreateSubtaskErrorHandling:
 
     def test_authentication_error(self, mock_jira_client, sample_issue_response):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
         from create_subtask import create_subtask
 
         mock_jira_client.get_issue.return_value = sample_issue_response
@@ -235,7 +235,7 @@ class TestCreateSubtaskErrorHandling:
 
     def test_forbidden_error(self, mock_jira_client, sample_issue_response):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         from create_subtask import create_subtask
 
         mock_jira_client.get_issue.return_value = sample_issue_response
@@ -252,7 +252,7 @@ class TestCreateSubtaskErrorHandling:
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         from create_subtask import create_subtask
 
         mock_jira_client.get_issue.side_effect = JiraError(
@@ -270,7 +270,7 @@ class TestCreateSubtaskErrorHandling:
 
     def test_server_error(self, mock_jira_client, sample_issue_response):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         from create_subtask import create_subtask
 
         mock_jira_client.get_issue.return_value = sample_issue_response

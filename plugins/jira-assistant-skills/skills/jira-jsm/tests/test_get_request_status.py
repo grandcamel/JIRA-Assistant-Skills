@@ -79,7 +79,7 @@ class TestGetRequestStatus:
 
     def test_status_history_request_not_found(self, mock_jira_client):
         """Test error when request doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get_request_status.side_effect = NotFoundError("Request not found")
 

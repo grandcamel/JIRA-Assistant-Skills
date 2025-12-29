@@ -88,7 +88,7 @@ Fix: Increased timeout to 30s."""
 
 def test_add_comment_issue_not_found(mock_jira_client):
     """Test error when request doesn't exist."""
-    from error_handler import NotFoundError
+    from jira_assistant_skills_lib import NotFoundError
 
     mock_jira_client.add_request_comment.side_effect = NotFoundError("Request not found")
 
@@ -102,7 +102,7 @@ def test_add_comment_issue_not_found(mock_jira_client):
 
 def test_add_comment_not_service_desk(mock_jira_client):
     """Test error when issue is not a JSM request."""
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
 
     mock_jira_client.add_request_comment.side_effect = JiraError(
         "Issue is not a JSM request"

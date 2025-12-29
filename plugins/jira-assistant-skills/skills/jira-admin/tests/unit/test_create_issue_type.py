@@ -97,7 +97,7 @@ class TestCreateIssueType:
 
     def test_create_issue_type_name_too_long(self, mock_jira_client):
         """Should raise ValidationError for name > 60 chars."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         from create_issue_type import create_issue_type
 
         # Act & Assert
@@ -112,7 +112,7 @@ class TestCreateIssueType:
 
     def test_create_issue_type_name_empty(self, mock_jira_client):
         """Should raise ValidationError for empty name."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         from create_issue_type import create_issue_type
 
         # Act & Assert
@@ -127,7 +127,7 @@ class TestCreateIssueType:
     def test_create_issue_type_requires_admin(self, mock_jira_client):
         """Should raise PermissionError without admin rights."""
         # Arrange
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.create_issue_type.side_effect = PermissionError(
             "Administer Jira global permission required"
@@ -144,7 +144,7 @@ class TestCreateIssueType:
 
     def test_create_issue_type_invalid_type(self, mock_jira_client):
         """Should raise ValidationError for invalid type."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         from create_issue_type import create_issue_type
 
         # Act & Assert
@@ -160,7 +160,7 @@ class TestCreateIssueType:
     def test_create_issue_type_api_error(self, mock_jira_client):
         """Should propagate API errors."""
         # Arrange
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.create_issue_type.side_effect = JiraError(
             "Failed to create issue type",

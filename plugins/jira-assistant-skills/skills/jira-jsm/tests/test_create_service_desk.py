@@ -108,7 +108,7 @@ def test_list_available_templates(mock_jira_client, capsys):
 def test_admin_permission_required(mock_jira_client):
     """Test that admin permission is required."""
     from create_service_desk import create_service_desk
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
 
     mock_jira_client.create_service_desk.side_effect = JiraError("Insufficient permissions")
 

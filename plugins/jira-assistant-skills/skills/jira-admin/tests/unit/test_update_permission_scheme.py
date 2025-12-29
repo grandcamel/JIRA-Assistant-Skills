@@ -80,7 +80,7 @@ class TestUpdateSchemeMetadata:
 
     def test_scheme_not_found(self, mock_jira_client):
         """Test error when scheme doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.update_permission_scheme.side_effect = NotFoundError(
             "Scheme not found"
         )
@@ -197,7 +197,7 @@ class TestRemoveGrants:
         mock_jira_client.get_permission_scheme.return_value = permission_scheme_detail
 
         from update_permission_scheme import find_and_remove_grant
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             find_and_remove_grant(
@@ -303,7 +303,7 @@ class TestUpdatePermissionSchemeCLI:
 
     def test_cli_error_handling(self, mock_jira_client, capsys):
         """Test CLI handles errors gracefully."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.update_permission_scheme.side_effect = NotFoundError("Scheme not found")
 
         with patch('update_permission_scheme.get_jira_client', return_value=mock_jira_client):

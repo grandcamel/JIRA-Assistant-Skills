@@ -101,7 +101,7 @@ class TestJqlFieldsErrorHandling:
 
     def test_authentication_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
         mock_jira_client.get_jql_autocomplete.side_effect = AuthenticationError(
             "Invalid API token"
         )
@@ -113,7 +113,7 @@ class TestJqlFieldsErrorHandling:
 
     def test_forbidden_error(self, mock_jira_client):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_jira_client.get_jql_autocomplete.side_effect = PermissionError(
             "You don't have permission to access this resource"
         )
@@ -125,7 +125,7 @@ class TestJqlFieldsErrorHandling:
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_jira_client.get_jql_autocomplete.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
         )
@@ -138,7 +138,7 @@ class TestJqlFieldsErrorHandling:
 
     def test_server_error(self, mock_jira_client):
         """Test handling of 500 internal server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_jira_client.get_jql_autocomplete.side_effect = JiraError(
             "Internal server error", status_code=500
         )

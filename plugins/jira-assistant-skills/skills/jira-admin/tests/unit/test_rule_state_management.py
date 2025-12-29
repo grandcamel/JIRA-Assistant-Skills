@@ -88,7 +88,7 @@ class TestEnableAutomationRuleErrors:
     def test_enable_rule_invalid_id(self, mock_automation_client):
         """Test error for invalid rule ID."""
         from enable_automation_rule import enable_automation_rule
-        from error_handler import AutomationNotFoundError
+        from jira_assistant_skills_lib import AutomationNotFoundError
 
         # Setup mock
         mock_automation_client.enable_rule.side_effect = AutomationNotFoundError(
@@ -105,7 +105,7 @@ class TestEnableAutomationRuleErrors:
     def test_enable_rule_permission_denied(self, mock_automation_client):
         """Test permission error handling."""
         from enable_automation_rule import enable_automation_rule
-        from error_handler import AutomationPermissionError
+        from jira_assistant_skills_lib import AutomationPermissionError
 
         # Setup mock
         mock_automation_client.enable_rule.side_effect = AutomationPermissionError(
@@ -218,7 +218,7 @@ class TestDisableAutomationRuleErrors:
     def test_disable_rule_invalid_id(self, mock_automation_client):
         """Test error for invalid rule ID."""
         from disable_automation_rule import disable_automation_rule
-        from error_handler import AutomationNotFoundError
+        from jira_assistant_skills_lib import AutomationNotFoundError
 
         # Setup mock
         mock_automation_client.disable_rule.side_effect = AutomationNotFoundError(
@@ -235,7 +235,7 @@ class TestDisableAutomationRuleErrors:
     def test_disable_rule_permission_denied(self, mock_automation_client):
         """Test permission error handling."""
         from disable_automation_rule import disable_automation_rule
-        from error_handler import AutomationPermissionError
+        from jira_assistant_skills_lib import AutomationPermissionError
 
         # Setup mock
         mock_automation_client.disable_rule.side_effect = AutomationPermissionError(

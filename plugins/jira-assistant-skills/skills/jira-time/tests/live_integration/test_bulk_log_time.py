@@ -180,7 +180,7 @@ class TestBulkLogTimeValidation:
 
     def test_bulk_log_time_invalid_format(self, jira_client, multiple_issues):
         """Test bulk logging with invalid time format."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         issue_keys = [i['key'] for i in multiple_issues]
 

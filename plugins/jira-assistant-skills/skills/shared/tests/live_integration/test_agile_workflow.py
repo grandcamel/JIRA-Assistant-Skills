@@ -103,7 +103,7 @@ class TestSprintLifecycle:
         jira_client.delete_sprint(sprint['id'])
 
         # Verify it's gone (should raise error)
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         with pytest.raises(NotFoundError):
             jira_client.get_sprint(sprint['id'])
 

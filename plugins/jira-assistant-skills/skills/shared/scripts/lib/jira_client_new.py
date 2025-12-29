@@ -11,7 +11,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
-from error_handler import handle_jira_error
+from jira_assistant_skills_lib import handle_jira_error
 
 
 class JiraClient:
@@ -2303,7 +2303,7 @@ class JiraClient:
             if sd.get('projectKey') == project_key:
                 return sd
 
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         raise JiraError(f"No service desk found for project key: {project_key}")
 
     # ========== JSM Customer Management (/rest/servicedeskapi/customer) ==========
@@ -4374,7 +4374,7 @@ class JiraClient:
             JiraError or subclass on failure
         """
         if not account_id and not email:
-            from error_handler import ValidationError
+            from jira_assistant_skills_lib import ValidationError
             raise ValidationError("Either account_id or email must be provided")
 
         params = {}
@@ -4547,7 +4547,7 @@ class JiraClient:
             JiraError or subclass on failure
         """
         if not group_name and not group_id:
-            from error_handler import ValidationError
+            from jira_assistant_skills_lib import ValidationError
             raise ValidationError("Either group_name or group_id must be provided")
 
         params = {}
@@ -4597,7 +4597,7 @@ class JiraClient:
             JiraError or subclass on failure
         """
         if not group_name and not group_id:
-            from error_handler import ValidationError
+            from jira_assistant_skills_lib import ValidationError
             raise ValidationError("Either group_name or group_id must be provided")
 
         params = {}
@@ -4637,7 +4637,7 @@ class JiraClient:
             JiraError or subclass on failure
         """
         if not group_name and not group_id:
-            from error_handler import ValidationError
+            from jira_assistant_skills_lib import ValidationError
             raise ValidationError("Either group_name or group_id must be provided")
 
         params = {
@@ -4678,7 +4678,7 @@ class JiraClient:
             will not cause an error.
         """
         if not group_name and not group_id:
-            from error_handler import ValidationError
+            from jira_assistant_skills_lib import ValidationError
             raise ValidationError("Either group_name or group_id must be provided")
 
         params = {}
@@ -4716,7 +4716,7 @@ class JiraClient:
             will not cause an error.
         """
         if not group_name and not group_id:
-            from error_handler import ValidationError
+            from jira_assistant_skills_lib import ValidationError
             raise ValidationError("Either group_name or group_id must be provided")
 
         params = {'accountId': account_id}
@@ -5195,7 +5195,7 @@ class JiraClient:
             start_at += 100
 
         # Screen not found
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         raise NotFoundError(f"Screen with ID {screen_id} not found")
 
     def get_screen_tabs(self, screen_id: int) -> list:
@@ -5350,7 +5350,7 @@ class JiraClient:
         if values:
             return values[0]
 
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         raise NotFoundError(f"Screen scheme with ID {scheme_id} not found")
 
     # ========== Issue Type API Methods (/rest/api/3/issuetype) ==========
@@ -5672,7 +5672,7 @@ class JiraClient:
             ValidationError: If more than 100 project IDs
             JiraError or subclass on failure
         """
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         if len(project_ids) > 100:
             raise ValidationError("Maximum 100 project IDs allowed")
@@ -5838,7 +5838,7 @@ class JiraClient:
         if values:
             return values[0]
 
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         raise NotFoundError(f"Issue type screen scheme with ID {scheme_id} not found")
 
     def get_issue_type_screen_scheme_mappings(self, scheme_ids: list = None,

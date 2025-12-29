@@ -118,7 +118,7 @@ class TestComments:
         jira_client.delete_comment(test_issue['key'], comment_id)
 
         # Verify it's gone
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         with pytest.raises(NotFoundError):
             jira_client.get_comment(test_issue['key'], comment_id)
 

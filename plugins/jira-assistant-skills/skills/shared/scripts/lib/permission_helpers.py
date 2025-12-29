@@ -7,7 +7,7 @@ Provides functions for parsing, formatting, and validating permission grants.
 import re
 from typing import Dict, Any, Optional, List, Tuple
 
-from error_handler import ValidationError
+from jira_assistant_skills_lib import ValidationError
 
 
 # Valid holder types for permission grants

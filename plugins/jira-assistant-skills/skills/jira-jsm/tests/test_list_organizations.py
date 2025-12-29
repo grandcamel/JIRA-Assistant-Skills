@@ -127,7 +127,7 @@ def test_list_organizations_count_only(mock_jira_client, sample_organizations_re
 
 def test_list_organizations_network_error(mock_jira_client, capsys):
     """Test handling network/API errors."""
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
     mock_jira_client.get_organizations.side_effect = JiraError("Network error")
 
     with patch('list_organizations.get_jira_client', return_value=mock_jira_client):

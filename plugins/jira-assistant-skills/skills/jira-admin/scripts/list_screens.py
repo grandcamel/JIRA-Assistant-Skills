@@ -37,7 +37,7 @@ def list_screens(client=None,
         List of screen objects
     """
     if client is None:
-        from config_manager import get_jira_client
+        from jira_assistant_skills_lib import get_jira_client
         client = get_jira_client()
 
     screens = []

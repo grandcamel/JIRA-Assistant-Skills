@@ -110,7 +110,7 @@ class TestCreateFilter:
 
     def test_create_filter_invalid_jql(self, mock_jira_client):
         """Test error handling for invalid JQL."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         mock_jira_client.create_filter.side_effect = ValidationError(
             "JQL parse error: Field 'projct' does not exist"
         )
@@ -148,7 +148,7 @@ class TestCreateFilterErrorHandling:
 
     def test_authentication_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
         mock_jira_client.create_filter.side_effect = AuthenticationError(
             "Invalid API token"
         )
@@ -160,7 +160,7 @@ class TestCreateFilterErrorHandling:
 
     def test_forbidden_error(self, mock_jira_client):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_jira_client.create_filter.side_effect = PermissionError(
             "You don't have permission to create filters"
         )
@@ -172,7 +172,7 @@ class TestCreateFilterErrorHandling:
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_jira_client.create_filter.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
         )
@@ -185,7 +185,7 @@ class TestCreateFilterErrorHandling:
 
     def test_server_error(self, mock_jira_client):
         """Test handling of 500 internal server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_jira_client.create_filter.side_effect = JiraError(
             "Internal server error", status_code=500
         )

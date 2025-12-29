@@ -223,7 +223,7 @@ class TestLinkPRErrors:
     def test_link_pr_auth_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
         from link_pr import link_pr
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.post.side_effect = AuthenticationError("Invalid token")
 
@@ -237,7 +237,7 @@ class TestLinkPRErrors:
     def test_link_pr_permission_error(self, mock_jira_client):
         """Test handling of 403 permission denied."""
         from link_pr import link_pr
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.post.side_effect = PermissionError("Access denied")
 
@@ -251,7 +251,7 @@ class TestLinkPRErrors:
     def test_link_pr_not_found_error(self, mock_jira_client):
         """Test handling of 404 issue not found."""
         from link_pr import link_pr
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.post.side_effect = NotFoundError("Issue", "PROJ-999")
 
@@ -265,7 +265,7 @@ class TestLinkPRErrors:
     def test_link_pr_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
         from link_pr import link_pr
-        from error_handler import RateLimitError
+        from jira_assistant_skills_lib import RateLimitError
 
         mock_jira_client.post.side_effect = RateLimitError(retry_after=60)
 
@@ -279,7 +279,7 @@ class TestLinkPRErrors:
     def test_link_pr_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
         from link_pr import link_pr
-        from error_handler import ServerError
+        from jira_assistant_skills_lib import ServerError
 
         mock_jira_client.post.side_effect = ServerError("Internal server error")
 
@@ -299,7 +299,7 @@ class TestCreatePRDescriptionErrors:
     def test_create_pr_description_auth_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
         from create_pr_description import create_pr_description
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get_issue.side_effect = AuthenticationError("Invalid token")
 
@@ -310,7 +310,7 @@ class TestCreatePRDescriptionErrors:
     def test_create_pr_description_permission_error(self, mock_jira_client):
         """Test handling of 403 permission denied."""
         from create_pr_description import create_pr_description
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.get_issue.side_effect = PermissionError("Access denied")
 
@@ -321,7 +321,7 @@ class TestCreatePRDescriptionErrors:
     def test_create_pr_description_not_found_error(self, mock_jira_client):
         """Test handling of 404 issue not found."""
         from create_pr_description import create_pr_description
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get_issue.side_effect = NotFoundError("Issue", "PROJ-999")
 
@@ -332,7 +332,7 @@ class TestCreatePRDescriptionErrors:
     def test_create_pr_description_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
         from create_pr_description import create_pr_description
-        from error_handler import RateLimitError
+        from jira_assistant_skills_lib import RateLimitError
 
         mock_jira_client.get_issue.side_effect = RateLimitError(retry_after=60)
 
@@ -343,7 +343,7 @@ class TestCreatePRDescriptionErrors:
     def test_create_pr_description_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
         from create_pr_description import create_pr_description
-        from error_handler import ServerError
+        from jira_assistant_skills_lib import ServerError
 
         mock_jira_client.get_issue.side_effect = ServerError("Internal server error")
 

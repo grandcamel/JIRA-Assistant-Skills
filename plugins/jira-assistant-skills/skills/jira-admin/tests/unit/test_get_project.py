@@ -109,7 +109,7 @@ class TestGetProject:
     def test_get_project_not_found(self, mock_jira_client):
         """Test error when project doesn't exist."""
         from get_project import get_project
-        from error_handler import NotFoundError, JiraError
+        from jira_assistant_skills_lib import NotFoundError, JiraError
 
         mock_jira_client.get_project.side_effect = JiraError(
             "Project NOTFOUND not found",
@@ -127,7 +127,7 @@ class TestGetProject:
     def test_get_project_invalid_key(self, mock_jira_client):
         """Test validation of project key format."""
         from get_project import get_project
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             get_project(
@@ -138,7 +138,7 @@ class TestGetProject:
     def test_get_project_no_permission(self, mock_jira_client):
         """Test error when user lacks browse permission."""
         from get_project import get_project
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_project.side_effect = JiraError(
             "You don't have permission to browse this project",

@@ -73,7 +73,7 @@ class TestRemoveUserByEmail:
 
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
             from remove_user_from_group import remove_user_by_email
-            from error_handler import NotFoundError
+            from jira_assistant_skills_lib import NotFoundError
 
             with pytest.raises(NotFoundError) as exc_info:
                 remove_user_by_email(
@@ -112,7 +112,7 @@ class TestRemoveUserConfirmation:
         """Test that removal requires confirmation."""
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
             from remove_user_from_group import remove_user_from_group
-            from error_handler import ValidationError
+            from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:
                 remove_user_from_group(
@@ -174,7 +174,7 @@ class TestRemoveUserPermissionError:
 
     def test_remove_user_permission_denied(self, mock_jira_client):
         """Test handling insufficient permissions error."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_jira_client.remove_user_from_group.side_effect = PermissionError(
             "Site administration permission required"
         )

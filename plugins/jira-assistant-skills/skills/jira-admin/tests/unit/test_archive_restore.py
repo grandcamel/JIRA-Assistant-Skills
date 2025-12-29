@@ -66,7 +66,7 @@ class TestArchiveProject:
     def test_archive_project_already_archived(self, mock_jira_client):
         """Test error when project is already archived."""
         from archive_project import archive_project
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.archive_project.side_effect = JiraError(
             "Project is already archived",
@@ -84,7 +84,7 @@ class TestArchiveProject:
     def test_archive_project_not_found(self, mock_jira_client):
         """Test error when project doesn't exist."""
         from archive_project import archive_project
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.archive_project.side_effect = JiraError(
             "Project not found",
@@ -102,7 +102,7 @@ class TestArchiveProject:
     def test_archive_project_no_permission(self, mock_jira_client):
         """Test error when user lacks admin permission."""
         from archive_project import archive_project
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.archive_project.side_effect = JiraError(
             "You don't have permission to archive projects",
@@ -120,7 +120,7 @@ class TestArchiveProject:
     def test_archive_project_invalid_key(self, mock_jira_client):
         """Test error for invalid project key."""
         from archive_project import archive_project
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             archive_project(
@@ -168,7 +168,7 @@ class TestRestoreProject:
     def test_restore_active_project_error(self, mock_jira_client):
         """Test error when trying to restore an active project."""
         from restore_project import restore_project
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.restore_project.side_effect = JiraError(
             "Project is not archived or deleted",
@@ -186,7 +186,7 @@ class TestRestoreProject:
     def test_restore_project_not_found(self, mock_jira_client):
         """Test error when project doesn't exist."""
         from restore_project import restore_project
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.restore_project.side_effect = JiraError(
             "Project not found",
@@ -204,7 +204,7 @@ class TestRestoreProject:
     def test_restore_project_no_permission(self, mock_jira_client):
         """Test error when user lacks admin permission."""
         from restore_project import restore_project
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.restore_project.side_effect = JiraError(
             "You don't have permission to restore projects",
@@ -222,7 +222,7 @@ class TestRestoreProject:
     def test_restore_project_expired(self, mock_jira_client):
         """Test error when project has expired from trash."""
         from restore_project import restore_project
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.restore_project.side_effect = JiraError(
             "Project has been permanently deleted",
@@ -240,7 +240,7 @@ class TestRestoreProject:
     def test_restore_project_invalid_key(self, mock_jira_client):
         """Test error for invalid project key."""
         from restore_project import restore_project
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError):
             restore_project(

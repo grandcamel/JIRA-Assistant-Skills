@@ -260,7 +260,7 @@ class TestListPermissionsCLI:
 
     def test_cli_error_handling(self, mock_jira_client, capsys):
         """Test CLI handles errors gracefully."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_jira_client.get_all_permissions.side_effect = JiraError("API Error", status_code=500)
 
         with patch('list_permissions.get_jira_client', return_value=mock_jira_client):

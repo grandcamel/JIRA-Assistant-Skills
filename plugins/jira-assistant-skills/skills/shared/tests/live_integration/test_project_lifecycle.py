@@ -138,7 +138,7 @@ class TestProjectDeletion:
         jira_client.delete_project(project_key, enable_undo=True)
 
         # Verify project is gone (from active projects)
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         with pytest.raises(NotFoundError):
             jira_client.get_project(project_key)
 
@@ -174,7 +174,7 @@ class TestProjectDeletion:
         jira_client.delete_project(project_key, enable_undo=True)
 
         # Verify issue is gone
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         with pytest.raises(NotFoundError):
             jira_client.get_issue(issue['key'])
 

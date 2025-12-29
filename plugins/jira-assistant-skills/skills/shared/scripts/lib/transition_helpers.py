@@ -26,7 +26,7 @@ def find_transition_by_name(transitions: List[Dict[str, Any]], name: str) -> Dic
     Raises:
         ValidationError: If transition not found or ambiguous
     """
-    from error_handler import ValidationError
+    from jira_assistant_skills_lib import ValidationError
 
     if not transitions:
         raise ValidationError(f"No transitions available to match '{name}'")

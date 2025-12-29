@@ -141,7 +141,7 @@ class TestListIssueTypes:
     def test_list_issue_types_api_error(self, mock_jira_client):
         """Should propagate API errors."""
         # Arrange
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_issue_types.side_effect = JiraError(
             "Failed to get issue types",

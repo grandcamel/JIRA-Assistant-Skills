@@ -307,7 +307,7 @@ class TestCreateIssueLinks:
 
     def test_create_issue_link_failure_continues(self, mock_jira_client, sample_created_issue):
         """Test that recoverable link creation failure does not fail issue creation."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.create_issue.return_value = deepcopy(sample_created_issue)
         mock_jira_client.create_link = Mock(side_effect=NotFoundError("Issue", "PROJ-999"))
 
@@ -328,7 +328,7 @@ class TestCreateIssueLinks:
 
     def test_create_issue_link_failure_reraises_auth_error(self, mock_jira_client, sample_created_issue):
         """Test that non-recoverable errors are re-raised during link creation."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
         mock_jira_client.create_issue.return_value = deepcopy(sample_created_issue)
         mock_jira_client.create_link = Mock(side_effect=AuthenticationError("Token expired"))
 
@@ -348,7 +348,7 @@ class TestCreateIssueValidation:
 
     def test_create_issue_invalid_project_key_raises_error(self, mock_jira_client):
         """Test that invalid project key raises ValidationError."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with patch.object(create_issue_module, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError):
@@ -360,7 +360,7 @@ class TestCreateIssueValidation:
 
     def test_create_issue_empty_project_key_raises_error(self, mock_jira_client):
         """Test that empty project key raises ValidationError."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with patch.object(create_issue_module, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError):
@@ -372,7 +372,7 @@ class TestCreateIssueValidation:
 
     def test_create_issue_invalid_epic_key_raises_error(self, mock_jira_client):
         """Test that invalid epic key raises ValidationError."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with patch.object(create_issue_module, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError):
@@ -390,7 +390,7 @@ class TestCreateIssueErrors:
 
     def test_create_issue_permission_denied(self, mock_jira_client):
         """Test handling permission denied error."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_jira_client.create_issue.side_effect = PermissionError(
             "You do not have permission to create issues in this project"
         )
@@ -407,7 +407,7 @@ class TestCreateIssueErrors:
 
     def test_create_issue_authentication_error(self, mock_jira_client):
         """Test handling authentication error."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
         mock_jira_client.create_issue.side_effect = AuthenticationError(
             "Authentication failed"
         )
@@ -422,7 +422,7 @@ class TestCreateIssueErrors:
 
     def test_create_issue_validation_error_from_api(self, mock_jira_client):
         """Test handling validation error from API."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         mock_jira_client.create_issue.side_effect = ValidationError(
             "Issue type 'InvalidType' is not valid for project 'PROJ'"
         )

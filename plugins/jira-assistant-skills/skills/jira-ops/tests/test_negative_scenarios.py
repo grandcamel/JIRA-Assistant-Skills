@@ -37,7 +37,7 @@ class TestInvalidCredentials:
 
     def test_authentication_error_401(self, mock_jira_client):
         """Test handling 401 Unauthorized response."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get.side_effect = AuthenticationError(
             "Invalid authentication credentials"
@@ -56,7 +56,7 @@ class TestInvalidCredentials:
 
     def test_invalid_token_format(self, mock_jira_client):
         """Test handling of malformed API token."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get.side_effect = AuthenticationError(
             "Invalid API token format"
@@ -74,7 +74,7 @@ class TestInvalidCredentials:
 
     def test_expired_token(self, mock_jira_client):
         """Test handling of expired API token."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get.side_effect = AuthenticationError(
             "Token has expired"
@@ -158,7 +158,7 @@ class TestRateLimiting:
 
     def test_rate_limit_429(self, mock_jira_client):
         """Test handling 429 Too Many Requests."""
-        from error_handler import RateLimitError
+        from jira_assistant_skills_lib import RateLimitError
 
         mock_jira_client.get.side_effect = RateLimitError(retry_after=60)
 
@@ -174,7 +174,7 @@ class TestRateLimiting:
 
     def test_rate_limit_with_retry_after(self, mock_jira_client):
         """Test rate limit error includes retry-after info."""
-        from error_handler import RateLimitError
+        from jira_assistant_skills_lib import RateLimitError
 
         error = RateLimitError(retry_after=120)
 
@@ -189,7 +189,7 @@ class TestServerErrors:
 
     def test_internal_server_error_500(self, mock_jira_client):
         """Test handling 500 Internal Server Error."""
-        from error_handler import ServerError
+        from jira_assistant_skills_lib import ServerError
 
         mock_jira_client.get.side_effect = ServerError("Internal server error")
 
@@ -205,7 +205,7 @@ class TestServerErrors:
 
     def test_bad_gateway_502(self, mock_jira_client):
         """Test handling 502 Bad Gateway."""
-        from error_handler import ServerError
+        from jira_assistant_skills_lib import ServerError
 
         mock_jira_client.get.side_effect = ServerError("Bad gateway")
 
@@ -221,7 +221,7 @@ class TestServerErrors:
 
     def test_service_unavailable_503(self, mock_jira_client):
         """Test handling 503 Service Unavailable."""
-        from error_handler import ServerError
+        from jira_assistant_skills_lib import ServerError
 
         mock_jira_client.get.side_effect = ServerError("Service unavailable")
 
@@ -237,7 +237,7 @@ class TestServerErrors:
 
     def test_gateway_timeout_504(self, mock_jira_client):
         """Test handling 504 Gateway Timeout."""
-        from error_handler import ServerError
+        from jira_assistant_skills_lib import ServerError
 
         mock_jira_client.get.side_effect = ServerError("Gateway timeout")
 
@@ -259,7 +259,7 @@ class TestCacheErrors:
 
     def test_invalid_cache_directory_permissions(self):
         """Test handling invalid cache directory permissions."""
-        from cache import JiraCache
+        from jira_assistant_skills_lib import JiraCache
 
         # Try to use a directory we can't write to (if not root)
         if os.getuid() != 0:  # Not running as root
@@ -269,7 +269,7 @@ class TestCacheErrors:
 
     def test_corrupted_cache_file_handling(self, temp_cache_dir):
         """Test handling corrupted cache file."""
-        from cache import JiraCache
+        from jira_assistant_skills_lib import JiraCache
 
         # Create cache and add data
         cache = JiraCache(cache_dir=temp_cache_dir)
@@ -291,7 +291,7 @@ class TestCacheErrors:
 
     def test_cache_full_disk_simulation(self, temp_cache_dir):
         """Test handling when disk is full."""
-        from cache import JiraCache
+        from jira_assistant_skills_lib import JiraCache
 
         cache = JiraCache(cache_dir=temp_cache_dir, max_size_mb=0.001)  # Very small
 
@@ -313,7 +313,7 @@ class TestCacheRecovery:
 
     def test_recovery_after_invalid_json(self, temp_cache_dir):
         """Test cache recovery after encountering invalid JSON."""
-        from cache import JiraCache
+        from jira_assistant_skills_lib import JiraCache
 
         # Create cache with valid data
         cache = JiraCache(cache_dir=temp_cache_dir)
@@ -333,7 +333,7 @@ class TestCacheRecovery:
 
     def test_recovery_after_process_crash(self, temp_cache_dir):
         """Test cache recovery after simulated crash (incomplete write)."""
-        from cache import JiraCache
+        from jira_assistant_skills_lib import JiraCache
 
         cache = JiraCache(cache_dir=temp_cache_dir)
         cache.set("key1", {"value": "test"}, category="issue")

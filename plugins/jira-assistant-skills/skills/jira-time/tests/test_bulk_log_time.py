@@ -115,7 +115,7 @@ class TestBulkLogTimeErrors:
 
     def test_bulk_log_partial_failure(self, mock_jira_client, sample_worklog):
         """Test handling when some logs fail."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         # First call succeeds, second fails, third succeeds
         mock_jira_client.add_worklog.side_effect = [
@@ -138,7 +138,7 @@ class TestBulkLogTimeErrors:
 
     def test_bulk_log_authentication_error_401(self, mock_jira_client):
         """Test handling of 401 unauthorized - captured in failures."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.add_worklog.side_effect = AuthenticationError("Invalid token")
 
@@ -156,7 +156,7 @@ class TestBulkLogTimeErrors:
 
     def test_bulk_log_rate_limit_error_429(self, mock_jira_client):
         """Test handling of 429 rate limit - captured in failures."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.add_worklog.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
@@ -176,7 +176,7 @@ class TestBulkLogTimeErrors:
 
     def test_bulk_log_server_error_500(self, mock_jira_client):
         """Test handling of 500 server error - captured in failures."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.add_worklog.side_effect = JiraError(
             "Internal server error", status_code=500

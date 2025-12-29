@@ -104,7 +104,7 @@ class TestValidateSchemeExists:
     def test_validate_scheme_exists(self, mock_jira_client):
         """Test error when scheme doesn't exist."""
         from update_notification_scheme import update_notification_scheme
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         # Setup mock to raise NotFoundError
         mock_jira_client.get_notification_scheme.side_effect = NotFoundError(
@@ -224,7 +224,7 @@ class TestNoChangesError:
     def test_no_changes_error(self, mock_jira_client, sample_notification_scheme_detail):
         """Test error when no changes provided."""
         from update_notification_scheme import update_notification_scheme
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         # Setup mock
         mock_jira_client.get_notification_scheme.return_value = sample_notification_scheme_detail

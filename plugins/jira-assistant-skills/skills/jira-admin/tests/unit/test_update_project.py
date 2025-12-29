@@ -150,7 +150,7 @@ class TestUpdateProject:
     def test_update_project_not_found(self, mock_jira_client):
         """Test error when project doesn't exist."""
         from update_project import update_project
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.update_project.side_effect = JiraError(
             "Project not found",
@@ -169,7 +169,7 @@ class TestUpdateProject:
     def test_update_project_no_permission(self, mock_jira_client):
         """Test error when user lacks permission."""
         from update_project import update_project
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.update_project.side_effect = JiraError(
             "You don't have permission to edit this project",
@@ -188,7 +188,7 @@ class TestUpdateProject:
     def test_update_project_invalid_assignee_type(self, mock_jira_client):
         """Test error for invalid assignee type."""
         from update_project import update_project
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             update_project(
@@ -202,7 +202,7 @@ class TestUpdateProject:
     def test_update_project_no_changes(self, mock_jira_client):
         """Test behavior when no changes are provided."""
         from update_project import update_project
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         # Should either return early or raise an error
         with pytest.raises(ValidationError):

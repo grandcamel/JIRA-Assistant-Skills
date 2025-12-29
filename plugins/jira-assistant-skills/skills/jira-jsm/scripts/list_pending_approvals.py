@@ -21,7 +21,7 @@ from jira_assistant_skills_lib import handle_errors
 
 def get_jira_client(profile=None):
     """Get JIRA client (overridable for testing)."""
-    from config_manager import get_jira_client as _get_client
+    from jira_assistant_skills_lib import get_jira_client as _get_client
     return _get_client(profile)
 
 

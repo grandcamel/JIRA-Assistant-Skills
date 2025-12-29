@@ -89,7 +89,7 @@ class TestGetRequest:
 
     def test_get_request_not_found(self, mock_jira_client):
         """Test error when request doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get_request.side_effect = NotFoundError("Request not found")
 
@@ -104,7 +104,7 @@ class TestGetRequestApiErrors:
 
     def test_authentication_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get_request.side_effect = AuthenticationError("Invalid token")
 
@@ -113,7 +113,7 @@ class TestGetRequestApiErrors:
 
     def test_permission_error(self, mock_jira_client):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.get_request.side_effect = PermissionError("Access denied")
 
@@ -122,7 +122,7 @@ class TestGetRequestApiErrors:
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_request.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
@@ -134,7 +134,7 @@ class TestGetRequestApiErrors:
 
     def test_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_request.side_effect = JiraError(
             "Internal server error", status_code=500

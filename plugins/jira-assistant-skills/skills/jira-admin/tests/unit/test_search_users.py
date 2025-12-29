@@ -226,7 +226,7 @@ class TestSearchUsersPermissionError:
 
     def test_search_users_permission_denied(self, mock_jira_client):
         """Test handling insufficient permissions error."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_jira_client.search_users.side_effect = PermissionError(
             "Browse users and groups permission required"
         )

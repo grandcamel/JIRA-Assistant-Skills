@@ -63,7 +63,7 @@ class TestGetKBArticle:
 
     def test_get_kb_article_error(self, mock_jira_client):
         """Test error when article doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.get_kb_article.side_effect = NotFoundError("Article not found")
 
         with patch('get_kb_article.get_jira_client', return_value=mock_jira_client):

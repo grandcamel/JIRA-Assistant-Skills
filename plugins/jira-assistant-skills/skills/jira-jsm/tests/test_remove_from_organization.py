@@ -92,7 +92,7 @@ def test_remove_users_dry_run(capsys):
 
 def test_remove_users_network_error(mock_jira_client, capsys):
     """Test handling network/API errors."""
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
     mock_jira_client.remove_users_from_organization.side_effect = JiraError("Network error")
 
     with patch('remove_from_organization.get_jira_client', return_value=mock_jira_client):
@@ -121,7 +121,7 @@ def test_remove_users_empty_account_ids(capsys):
 
 def test_remove_users_permission_error(mock_jira_client, capsys):
     """Test handling insufficient permissions."""
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
     mock_jira_client.remove_users_from_organization.side_effect = JiraError("Permission denied")
 
     with patch('remove_from_organization.get_jira_client', return_value=mock_jira_client):

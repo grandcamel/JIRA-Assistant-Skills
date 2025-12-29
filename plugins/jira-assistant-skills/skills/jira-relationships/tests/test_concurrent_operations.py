@@ -106,7 +106,7 @@ class TestConcurrentLinkCreation:
     def test_concurrent_error_handling(self, mock_jira_client):
         """Test concurrent operations with intermittent errors."""
         import bulk_link
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         call_count = [0]
         lock = threading.Lock()
@@ -191,7 +191,7 @@ class TestRaceConditionPrevention:
     def test_duplicate_link_prevention(self, mock_jira_client):
         """Test that duplicate links are handled correctly under concurrent access."""
         import bulk_link
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         created_links = set()
         lock = threading.Lock()

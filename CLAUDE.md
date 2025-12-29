@@ -24,17 +24,22 @@ Each skill is designed for autonomous discovery and use by Claude Code.
 
 ### Shared Library Pattern
 
-All skills depend on a shared library at `.claude/skills/shared/scripts/lib/` containing:
+All skills depend on the `jira-assistant-skills-lib` PyPI package. Install with:
 
-- **jira_client.py**: HTTP client with automatic retry (3 attempts, exponential backoff on 429/5xx)
-- **config_manager.py**: Multi-source configuration merging (env vars > settings.local.json > settings.json > defaults)
-- **error_handler.py**: Exception hierarchy that maps HTTP status codes to domain exceptions (400→ValidationError, 401→AuthenticationError, etc.)
-- **validators.py**: Input validation (issue keys must match `^[A-Z][A-Z0-9]*-[0-9]+$`, URLs must be HTTPS)
-- **formatters.py**: Output formatting (tables via tabulate, JSON, CSV export)
-- **adf_helper.py**: Markdown to Atlassian Document Format conversion
-- **time_utils.py**: Time parsing (parse_time_string), formatting (format_seconds), and relative date handling
+```bash
+pip install jira-assistant-skills-lib
+```
 
-**Import pattern**: All scripts use `sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib'))` to access shared modules.
+The package provides:
+- **JiraClient**: HTTP client with automatic retry (3 attempts, exponential backoff on 429/5xx)
+- **ConfigManager**: Multi-source configuration merging (env vars > settings.local.json > settings.json > defaults)
+- **Error handling**: Exception hierarchy that maps HTTP status codes to domain exceptions (400→ValidationError, 401→AuthenticationError, etc.)
+- **Validators**: Input validation (issue keys must match `^[A-Z][A-Z0-9]*-[0-9]+$`, URLs must be HTTPS)
+- **Formatters**: Output formatting (tables via tabulate, JSON, CSV export)
+- **ADF helpers**: Markdown to Atlassian Document Format conversion
+- **Time utilities**: Time parsing (parse_time_string), formatting (format_seconds), and relative date handling
+
+**Import pattern**: All scripts use `from jira_assistant_skills_lib import ...` to access shared modules.
 
 ### Configuration System
 
@@ -69,19 +74,19 @@ All scripts are executable and support `--help`. Test with existing JIRA credent
 
 ```bash
 # Setup
-pip install -r .claude/skills/shared/scripts/lib/requirements.txt
+pip install jira-assistant-skills-lib
 export JIRA_API_TOKEN="token-from-id.atlassian.com"
 export JIRA_EMAIL="your@email.com"
 export JIRA_SITE_URL="https://your-company.atlassian.net"
 
 # Test basic connectivity
-python .claude/skills/jira-issue/scripts/get_issue.py EXISTING-ISSUE-KEY
+python plugins/jira-assistant-skills/skills/jira-issue/scripts/get_issue.py EXISTING-ISSUE-KEY
 
 # Test search
-python .claude/skills/jira-search/scripts/jql_search.py "project = PROJ"
+python plugins/jira-assistant-skills/skills/jira-search/scripts/jql_search.py "project = PROJ"
 
 # Test with specific profile
-python .claude/skills/jira-issue/scripts/get_issue.py PROJ-123 --profile development
+python plugins/jira-assistant-skills/skills/jira-issue/scripts/get_issue.py PROJ-123 --profile development
 ```
 
 ## Adding New Scripts
@@ -89,7 +94,7 @@ python .claude/skills/jira-issue/scripts/get_issue.py PROJ-123 --profile develop
 When adding scripts to existing skills:
 
 1. **Location**: Place in appropriate skill's `scripts/` directory
-2. **Imports**: Use the standard path injection pattern to import from shared lib
+2. **Imports**: Use `from jira_assistant_skills_lib import ...` to import shared modules
 3. **CLI**: Use argparse with descriptive help, examples in epilog
 4. **Error handling**: Catch JiraError, call print_error(), sys.exit(1)
 5. **Profile support**: Add `--profile` argument, pass to get_jira_client()

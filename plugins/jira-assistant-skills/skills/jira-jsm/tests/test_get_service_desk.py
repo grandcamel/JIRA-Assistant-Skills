@@ -97,7 +97,7 @@ def test_format_json_output(mock_jira_client):
 def test_service_desk_not_found(mock_jira_client):
     """Test error when service desk ID doesn't exist."""
     from get_service_desk import get_service_desk
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
 
     mock_jira_client.get_service_desk.side_effect = JiraError("Service desk not found")
 

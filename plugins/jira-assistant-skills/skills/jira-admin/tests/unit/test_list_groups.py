@@ -147,7 +147,7 @@ class TestListGroupsPermissionError:
 
     def test_list_groups_permission_denied(self, mock_jira_client):
         """Test handling insufficient permissions error."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_jira_client.find_groups.side_effect = PermissionError(
             "Browse users and groups permission required"
         )

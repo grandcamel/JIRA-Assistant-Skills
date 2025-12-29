@@ -8,7 +8,7 @@ and other inputs before making API calls.
 import re
 import os
 from typing import Optional
-from error_handler import ValidationError
+from jira_assistant_skills_lib import ValidationError
 
 
 def validate_issue_key(issue_key: str) -> str:

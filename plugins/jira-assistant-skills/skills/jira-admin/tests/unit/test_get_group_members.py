@@ -154,7 +154,7 @@ class TestGetGroupMembersNotFound:
 
     def test_get_members_group_not_found(self, mock_jira_client):
         """Test handling group not found error."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.get_group_members.side_effect = NotFoundError("Group", "nonexistent-group")
 
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
@@ -169,7 +169,7 @@ class TestGetGroupMembersPermissionError:
 
     def test_get_members_permission_denied(self, mock_jira_client):
         """Test handling insufficient permissions error."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_jira_client.get_group_members.side_effect = PermissionError(
             "Browse users and groups permission required"
         )

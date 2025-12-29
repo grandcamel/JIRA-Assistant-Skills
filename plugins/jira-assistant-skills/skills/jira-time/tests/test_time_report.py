@@ -228,7 +228,7 @@ class TestTimeReportErrors:
 
     def test_report_authentication_error_401(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.search_issues.side_effect = AuthenticationError("Invalid token")
 
@@ -239,7 +239,7 @@ class TestTimeReportErrors:
 
     def test_report_permission_denied_403(self, mock_jira_client):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.search_issues.side_effect = PermissionError(
             "You do not have permission to search issues"
@@ -252,7 +252,7 @@ class TestTimeReportErrors:
 
     def test_report_rate_limit_error_429(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.search_issues.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
@@ -266,7 +266,7 @@ class TestTimeReportErrors:
 
     def test_report_server_error_500(self, mock_jira_client):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.search_issues.side_effect = JiraError(
             "Internal server error", status_code=500

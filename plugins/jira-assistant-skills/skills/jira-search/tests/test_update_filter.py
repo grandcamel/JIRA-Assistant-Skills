@@ -75,7 +75,7 @@ class TestUpdateFilter:
 
     def test_update_not_owner(self, mock_jira_client):
         """Test error when not filter owner."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_jira_client.update_filter.side_effect = PermissionError(
             "You are not the owner of this filter"
         )
@@ -87,7 +87,7 @@ class TestUpdateFilter:
 
     def test_update_filter_not_found(self, mock_jira_client):
         """Test error when filter doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.update_filter.side_effect = NotFoundError(
             "Filter 99999 not found"
         )
@@ -100,7 +100,7 @@ class TestUpdateFilter:
     def test_validate_new_jql(self, mock_jira_client, sample_filter):
         """Test JQL validation on update."""
         # If JQL is invalid, JIRA returns an error
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         mock_jira_client.update_filter.side_effect = ValidationError(
             "JQL parse error"
         )
@@ -118,7 +118,7 @@ class TestUpdateFilterErrorHandling:
 
     def test_authentication_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
         mock_jira_client.update_filter.side_effect = AuthenticationError(
             "Invalid API token"
         )
@@ -130,7 +130,7 @@ class TestUpdateFilterErrorHandling:
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_jira_client.update_filter.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
         )
@@ -143,7 +143,7 @@ class TestUpdateFilterErrorHandling:
 
     def test_server_error(self, mock_jira_client):
         """Test handling of 500 internal server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_jira_client.update_filter.side_effect = JiraError(
             "Internal server error", status_code=500
         )

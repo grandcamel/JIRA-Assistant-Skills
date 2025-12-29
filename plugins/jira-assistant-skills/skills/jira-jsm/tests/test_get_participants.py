@@ -114,7 +114,7 @@ def test_get_participants_count_only(mock_jira_client, sample_participants_respo
 
 def test_get_participants_request_not_found(mock_jira_client, capsys):
     """Test error when request doesn't exist."""
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
     mock_jira_client.get_request_participants.side_effect = JiraError("Request not found")
 
     with patch('get_participants.get_jira_client', return_value=mock_jira_client):

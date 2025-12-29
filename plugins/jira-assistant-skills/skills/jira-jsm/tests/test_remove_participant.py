@@ -97,7 +97,7 @@ def test_remove_participants_dry_run(capsys):
 
 def test_remove_participants_network_error(mock_jira_client, capsys):
     """Test handling network/API errors."""
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
     mock_jira_client.remove_request_participants.side_effect = JiraError("Network error")
 
     with patch('remove_participant.get_jira_client', return_value=mock_jira_client):

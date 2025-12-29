@@ -539,7 +539,7 @@ class TestValidateCredentials:
 
         manager = CredentialManager()
 
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         with pytest.raises(JiraError) as exc_info:
             manager.validate_credentials(
                 'https://unreachable.atlassian.net',

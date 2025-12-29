@@ -112,7 +112,7 @@ class TestBulkLink:
 
     def test_bulk_link_partial_failure(self, mock_jira_client):
         """Test handling when some links fail."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         # First and third succeed, second fails
         def side_effect(link_type, inward_key, outward_key, comment=None):
@@ -207,7 +207,7 @@ class TestBulkLinkErrorHandling:
 
     def test_authentication_error_in_result(self, mock_jira_client):
         """Test that authentication errors are captured in result."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.create_link.side_effect = AuthenticationError("Invalid token")
 
@@ -227,7 +227,7 @@ class TestBulkLinkErrorHandling:
 
     def test_forbidden_error_in_result(self, mock_jira_client):
         """Test that permission errors are captured in result."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.create_link.side_effect = PermissionError("Insufficient permissions")
 
@@ -247,7 +247,7 @@ class TestBulkLinkErrorHandling:
 
     def test_rate_limit_error_in_result(self, mock_jira_client):
         """Test that rate limit errors are captured in result."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.create_link.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
@@ -269,7 +269,7 @@ class TestBulkLinkErrorHandling:
 
     def test_server_error_in_result(self, mock_jira_client):
         """Test that server errors are captured in result."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.create_link.side_effect = JiraError(
             "Internal server error", status_code=500

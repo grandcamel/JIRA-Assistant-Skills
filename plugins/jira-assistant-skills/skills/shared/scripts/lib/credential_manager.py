@@ -20,7 +20,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 
-from error_handler import JiraError, ValidationError, AuthenticationError, sanitize_error_message
+from jira_assistant_skills_lib import JiraError, ValidationError, AuthenticationError, sanitize_error_message
 from validators import validate_url, validate_email
 
 # Try to import keyring, gracefully handle if not installed

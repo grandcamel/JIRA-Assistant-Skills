@@ -37,7 +37,7 @@ def list_issue_type_screen_schemes(client=None,
         List of issue type screen scheme objects
     """
     if client is None:
-        from config_manager import get_jira_client
+        from jira_assistant_skills_lib import get_jira_client
         client = get_jira_client()
 
     schemes = []

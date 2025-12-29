@@ -39,7 +39,7 @@ class TestDeletePermissionScheme:
     def test_delete_without_confirm(self, mock_jira_client):
         """Test that deletion requires confirmation."""
         from delete_permission_scheme import delete_permission_scheme
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             delete_permission_scheme(mock_jira_client, scheme_id=10050, confirm=False)
@@ -49,7 +49,7 @@ class TestDeletePermissionScheme:
 
     def test_scheme_not_found(self, mock_jira_client):
         """Test error when scheme doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.delete_permission_scheme.side_effect = NotFoundError(
             "Permission scheme not found"
         )
@@ -61,7 +61,7 @@ class TestDeletePermissionScheme:
 
     def test_scheme_in_use(self, mock_jira_client):
         """Test error when scheme is in use by projects."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
         mock_jira_client.delete_permission_scheme.side_effect = ValidationError(
             "The permission scheme cannot be deleted because it is used by one or more projects."
         )
@@ -236,7 +236,7 @@ class TestDeletePermissionSchemeCLI:
 
     def test_cli_error_handling(self, mock_jira_client, capsys):
         """Test CLI handles errors gracefully."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.get_permission_scheme.side_effect = NotFoundError("Scheme not found")
 
         with patch('delete_permission_scheme.get_jira_client', return_value=mock_jira_client):

@@ -32,7 +32,7 @@ def test_approve_request_skip_confirmation(mock_jira_client, sample_approval_app
 
 def test_approve_request_not_pending(mock_jira_client, sample_approval_pending):
     """Test error when approval already completed."""
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
 
     mock_jira_client.get_request_approval.return_value = sample_approval_pending
     mock_jira_client.answer_approval.side_effect = JiraError("Approval is not pending")
@@ -48,7 +48,7 @@ def test_approve_request_not_pending(mock_jira_client, sample_approval_pending):
 
 def test_approve_request_not_approver(mock_jira_client, sample_approval_pending):
     """Test error when user is not an approver."""
-    from error_handler import PermissionError
+    from jira_assistant_skills_lib import PermissionError
 
     mock_jira_client.get_request_approval.return_value = sample_approval_pending
     mock_jira_client.answer_approval.side_effect = PermissionError("Not an approver")
@@ -64,7 +64,7 @@ def test_approve_request_not_approver(mock_jira_client, sample_approval_pending)
 
 def test_approve_request_not_found(mock_jira_client, sample_approval_pending):
     """Test error when approval doesn't exist."""
-    from error_handler import NotFoundError
+    from jira_assistant_skills_lib import NotFoundError
 
     mock_jira_client.get_request_approval.return_value = sample_approval_pending
     mock_jira_client.answer_approval.side_effect = NotFoundError("Approval not found")

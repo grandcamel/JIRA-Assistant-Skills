@@ -146,7 +146,7 @@ class TestSchemeNotFound:
     def test_scheme_not_found(self, mock_jira_client):
         """Test error when scheme ID doesn't exist."""
         from get_notification_scheme import get_notification_scheme
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         # Setup mock to raise NotFoundError
         mock_jira_client.get_notification_scheme.side_effect = NotFoundError(

@@ -30,7 +30,7 @@ class TestAssignWorkflowSchemeShowCurrent:
     def test_show_current_scheme_not_found(self, mock_jira_client):
         """Test handling when project has no custom scheme."""
         from assign_workflow_scheme import get_current_scheme
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get_workflow_scheme_for_project.side_effect = NotFoundError(
             "No workflow scheme found"
@@ -88,7 +88,7 @@ class TestAssignWorkflowSchemeExecution:
     def test_assign_scheme_requires_confirmation(self, mock_jira_client):
         """Test that assignment requires explicit confirmation."""
         from assign_workflow_scheme import assign_workflow_scheme
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             assign_workflow_scheme(
@@ -202,7 +202,7 @@ class TestAssignWorkflowSchemeByName:
     def test_assign_scheme_name_not_found(self, mock_jira_client, workflow_schemes_list_response):
         """Test error when scheme name not found."""
         from assign_workflow_scheme import assign_workflow_scheme
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get_workflow_schemes.return_value = workflow_schemes_list_response
 
@@ -221,7 +221,7 @@ class TestAssignWorkflowSchemeErrorHandling:
     def test_assign_scheme_missing_params(self, mock_jira_client):
         """Test error when neither scheme_id nor scheme_name provided."""
         from assign_workflow_scheme import assign_workflow_scheme
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             assign_workflow_scheme(
@@ -235,7 +235,7 @@ class TestAssignWorkflowSchemeErrorHandling:
     def test_assign_scheme_no_permission(self, mock_jira_client):
         """Test error when user lacks admin permission."""
         from assign_workflow_scheme import assign_workflow_scheme
-        from error_handler import PermissionError as JiraPermissionError
+        from jira_assistant_skills_lib import PermissionError as JiraPermissionError
 
         mock_jira_client.assign_workflow_scheme_to_project.side_effect = JiraPermissionError(
             "Requires admin permission"
@@ -252,7 +252,7 @@ class TestAssignWorkflowSchemeErrorHandling:
     def test_assign_scheme_project_not_found(self, mock_jira_client):
         """Test error when project not found."""
         from assign_workflow_scheme import assign_workflow_scheme
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.assign_workflow_scheme_to_project.side_effect = NotFoundError(
             "Project not found"

@@ -168,7 +168,7 @@ class TestFindTransitionByName:
 
     def test_find_not_found_raises(self, jira_client, test_issue):
         """Test that non-existent transition raises error."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         transitions = jira_client.get_transitions(test_issue['key'])
 

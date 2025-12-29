@@ -131,7 +131,7 @@ def test_show_issue_type_mapping(mock_jira_client, capsys):
 def test_service_desk_not_found(mock_jira_client):
     """Test error when service desk doesn't exist."""
     from list_request_types import list_request_types
-    from error_handler import JiraError
+    from jira_assistant_skills_lib import JiraError
 
     mock_jira_client.get_request_types.side_effect = JiraError("Service desk not found")
 

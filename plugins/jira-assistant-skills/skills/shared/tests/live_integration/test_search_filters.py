@@ -228,7 +228,7 @@ class TestFilterCRUD:
         jira_client.delete_filter(filter_id)
 
         # Verify it's gone
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         with pytest.raises(NotFoundError):
             jira_client.get_filter(filter_id)
 

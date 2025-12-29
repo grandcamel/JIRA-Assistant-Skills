@@ -234,7 +234,7 @@ class TestValidateRecipientType:
     def test_validate_recipient_type(self, mock_jira_client):
         """Test validation of notification type."""
         from add_notification import add_notification
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         # Execute with invalid recipient type
         with pytest.raises(ValidationError) as exc_info:
@@ -254,7 +254,7 @@ class TestValidateRequiredParameters:
     def test_validate_required_parameters(self, mock_jira_client):
         """Test validation of required parameters (group name, role ID, etc.)."""
         from add_notification import add_notification
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         # Execute with Group without parameter
         with pytest.raises(ValidationError) as exc_info:

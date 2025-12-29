@@ -54,7 +54,7 @@ class TestArchiveVersion:
     @patch('archive_version.get_jira_client')
     def test_archive_version_not_found(self, mock_get_client, mock_jira_client, sample_versions_list):
         """Test error when version name not found."""
-        from error_handler import ValidationError
+        from jira_assistant_skills_lib import ValidationError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_versions.return_value = sample_versions_list
@@ -91,7 +91,7 @@ class TestArchiveVersionErrorHandling:
     @patch('archive_version.get_jira_client')
     def test_authentication_error(self, mock_get_client, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from error_handler import AuthenticationError
+        from jira_assistant_skills_lib import AuthenticationError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.update_version.side_effect = AuthenticationError("Invalid token")
 
@@ -103,7 +103,7 @@ class TestArchiveVersionErrorHandling:
     @patch('archive_version.get_jira_client')
     def test_permission_error(self, mock_get_client, mock_jira_client):
         """Test handling of 403 forbidden."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.update_version.side_effect = PermissionError("Cannot archive version")
 
@@ -115,7 +115,7 @@ class TestArchiveVersionErrorHandling:
     @patch('archive_version.get_jira_client')
     def test_not_found_error(self, mock_get_client, mock_jira_client):
         """Test handling of 404 when version doesn't exist."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.update_version.side_effect = NotFoundError("Version", "99999")
 
@@ -127,7 +127,7 @@ class TestArchiveVersionErrorHandling:
     @patch('archive_version.get_jira_client')
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.update_version.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
@@ -142,7 +142,7 @@ class TestArchiveVersionErrorHandling:
     @patch('archive_version.get_jira_client')
     def test_server_error(self, mock_get_client, mock_jira_client):
         """Test handling of 500 server error."""
-        from error_handler import JiraError
+        from jira_assistant_skills_lib import JiraError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.update_version.side_effect = JiraError(
             "Internal server error", status_code=500

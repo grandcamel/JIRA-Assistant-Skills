@@ -62,7 +62,7 @@ class TestDeleteGroupConfirmation:
         """Test that deletion requires confirmation."""
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
             from delete_group import delete_group
-            from error_handler import ValidationError
+            from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:
                 delete_group(mock_jira_client, group_name="my-group", confirmed=False)
@@ -108,7 +108,7 @@ class TestDeleteGroupSystemProtection:
         """Test that system groups cannot be deleted."""
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
             from delete_group import check_system_group_protection
-            from error_handler import ValidationError
+            from jira_assistant_skills_lib import ValidationError
 
             for group_name in system_groups:
                 with pytest.raises(ValidationError) as exc_info:
@@ -147,7 +147,7 @@ class TestDeleteGroupNotFound:
 
     def test_delete_group_not_found(self, mock_jira_client):
         """Test handling group not found error."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.delete_group.side_effect = NotFoundError("Group", "nonexistent-group")
 
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
@@ -162,7 +162,7 @@ class TestDeleteGroupPermissionError:
 
     def test_delete_group_permission_denied(self, mock_jira_client):
         """Test handling insufficient permissions error."""
-        from error_handler import PermissionError
+        from jira_assistant_skills_lib import PermissionError
         mock_jira_client.delete_group.side_effect = PermissionError(
             "Site administration permission required"
         )

@@ -157,7 +157,7 @@ class TestGetScreenScheme:
 
     def test_get_screen_scheme_not_found(self, mock_jira_client):
         """Test error handling for invalid scheme ID."""
-        from error_handler import NotFoundError
+        from jira_assistant_skills_lib import NotFoundError
         mock_jira_client.get_screen_scheme.side_effect = NotFoundError("Screen scheme 999 not found")
 
         from get_screen_scheme import get_screen_scheme
