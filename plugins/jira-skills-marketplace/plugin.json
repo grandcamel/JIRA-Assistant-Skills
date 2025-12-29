@@ -2,27 +2,29 @@
   "name": "jira-skills-marketplace",
   "version": "1.1.0",
   "description": "Complete JIRA automation suite with 14 specialized skills - issue management, agile workflows, time tracking, service management, bulk operations, and more",
-  "author": "grandcamel",
+  "author": {
+    "name": "grandcamel"
+  },
   "repository": "https://github.com/grandcamel/jira-assistant-skills",
   "skills": [
-    "skills/jira-assistant/SKILL.md",
-    "skills/jira-issue/SKILL.md",
-    "skills/jira-lifecycle/SKILL.md",
-    "skills/jira-search/SKILL.md",
-    "skills/jira-collaborate/SKILL.md",
-    "skills/jira-agile/SKILL.md",
-    "skills/jira-relationships/SKILL.md",
-    "skills/jira-time/SKILL.md",
-    "skills/jira-jsm/SKILL.md",
-    "skills/jira-bulk/SKILL.md",
-    "skills/jira-dev/SKILL.md",
-    "skills/jira-fields/SKILL.md",
-    "skills/jira-ops/SKILL.md",
-    "skills/jira-admin/SKILL.md",
-    "skills/marketplace.md"
+    "./skills/jira-assistant/SKILL.md",
+    "./skills/jira-issue/SKILL.md",
+    "./skills/jira-lifecycle/SKILL.md",
+    "./skills/jira-search/SKILL.md",
+    "./skills/jira-collaborate/SKILL.md",
+    "./skills/jira-agile/SKILL.md",
+    "./skills/jira-relationships/SKILL.md",
+    "./skills/jira-time/SKILL.md",
+    "./skills/jira-jsm/SKILL.md",
+    "./skills/jira-bulk/SKILL.md",
+    "./skills/jira-dev/SKILL.md",
+    "./skills/jira-fields/SKILL.md",
+    "./skills/jira-ops/SKILL.md",
+    "./skills/jira-admin/SKILL.md",
+    "./skills/marketplace.md"
   ],
   "commands": [
-    "commands/browse-skills.md",
-    "commands/skill-info.md"
+    "./commands/browse-skills.md",
+    "./commands/skill-info.md"
   ]
 }
