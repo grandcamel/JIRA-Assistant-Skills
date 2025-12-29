@@ -26,7 +26,7 @@
 </table>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/tests-560%2B%20passing-brightgreen?logo=pytest" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-617%20passing-brightgreen?logo=pytest" alt="Tests">
   <img src="https://img.shields.io/badge/python-3.8+-3776AB?logo=python&logoColor=white" alt="Python 3.8+">
   <img src="https://img.shields.io/badge/skills-14-FF6B6B" alt="Skills">
   <img src="https://img.shields.io/github/stars/grandcamel/jira-assistant-skills?style=social" alt="GitHub Stars">
@@ -117,18 +117,25 @@ ORDER BY priority DESC, created ASC
 
 ## Quick Start
 
-### 1. Install Dependencies
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/grandcamel/jira-assistant-skills.git
+cd jira-assistant-skills
+```
+
+### 2. Install Dependencies
 
 ```bash
 pip install -r .claude/skills/shared/scripts/lib/requirements.txt
 ```
 
-### 2. Get API Token
+### 3. Get API Token
 
 1. Visit [Atlassian API Tokens](https://id.atlassian.com/manage-profile/security/api-tokens)
 2. Create token → Copy it
 
-### 3. Configure
+### 4. Configure
 
 ```bash
 export JIRA_API_TOKEN="your-token"
@@ -136,7 +143,7 @@ export JIRA_EMAIL="you@company.com"
 export JIRA_SITE_URL="https://company.atlassian.net"
 ```
 
-### 4. Start Using
+### 5. Start Using
 
 ```bash
 # Just ask Claude
