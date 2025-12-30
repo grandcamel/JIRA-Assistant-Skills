@@ -1,1 +1,1 @@
-"""jira-search tests package."""
+# Test package for jira-search

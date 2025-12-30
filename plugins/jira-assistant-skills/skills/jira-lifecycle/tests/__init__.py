@@ -1,1 +1,1 @@
-"""jira-lifecycle tests package."""
+# Test package for jira-lifecycle

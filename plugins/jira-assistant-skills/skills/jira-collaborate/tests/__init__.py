@@ -1,1 +1,1 @@
-"""jira-collaborate tests package."""
+# Test package for jira-collaborate

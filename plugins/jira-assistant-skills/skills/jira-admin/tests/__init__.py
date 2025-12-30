@@ -1,1 +1,1 @@
-"""Tests for jira-admin skill - Project Management."""
+# Test package for jira-admin

@@ -1,1 +1,1 @@
-"""Tests for jira-ops skill."""
+# Test package for jira-ops

@@ -1,1 +1,1 @@
-"""jira-jsm tests package."""
+# Test package for jira-jsm

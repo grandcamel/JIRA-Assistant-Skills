@@ -1,1 +1,1 @@
-# jira-bulk tests package
+# Test package for jira-bulk

@@ -1,1 +1,1 @@
-# jira-dev tests package
+# Test package for jira-dev

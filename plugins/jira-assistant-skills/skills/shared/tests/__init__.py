@@ -1,1 +1,1 @@
-"""shared tests package."""
+# Test package for shared

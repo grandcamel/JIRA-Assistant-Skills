@@ -1,1 +1,1 @@
-# Tests for jira-relationships skill
+# Test package for jira-relationships
