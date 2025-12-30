@@ -1,0 +1,12 @@
+# E2E Testing Dependencies
+pytest>=7.0.0
+pytest-timeout>=2.0.0
+pytest-html>=4.0.0
+pyyaml>=6.0
+pexpect>=4.8.0
+rich>=13.0.0
+junitparser>=3.0.0
+
+# Plugin dependencies (if needed)
+assistant-skills-lib>=0.1.0
+tabulate>=0.9.0

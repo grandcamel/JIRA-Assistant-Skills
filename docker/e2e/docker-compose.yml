@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  e2e-tests:
+    build:
+      context: ../..
+      dockerfile: docker/e2e/Dockerfile
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - E2E_TEST_TIMEOUT=${E2E_TEST_TIMEOUT:-120}
+      - E2E_TEST_MODEL=${E2E_TEST_MODEL:-claude-sonnet-4-20250514}
+      - E2E_VERBOSE=${E2E_VERBOSE:-false}
+      - CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+      - CLAUDE_CODE_SKIP_OOBE=1
+      - CI=true
+    volumes:
+      - ../../test-results/e2e:/workspace/test-results
+      - ${HOME}/.claude:/root/.claude:ro
+    working_dir: /workspace/plugin-source
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  e2e-shell:
+    build:
+      context: ../..
+      dockerfile: docker/e2e/Dockerfile
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+      - CLAUDE_CODE_SKIP_OOBE=1
+    volumes:
+      - ../..:/workspace/plugin-source
+      - ${HOME}/.claude:/root/.claude:ro
+    working_dir: /workspace/plugin-source
+    stdin_open: true
+    tty: true
+    entrypoint: /bin/bash
+    profiles:
+      - debug
