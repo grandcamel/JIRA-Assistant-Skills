@@ -57,5 +57,9 @@ htmlcov/
 # Claude Flow runtime artifacts (from accidental init)
 .claude-flow/
 .swarm/
+coordination/
 claude-flow
 *.egg-info/
+
+# Local plugin settings (user credentials)
+plugins/*/config/*.local.json

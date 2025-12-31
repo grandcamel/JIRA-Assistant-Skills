@@ -4,7 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Claude Code Skills project providing JIRA automation through fourteen modular skills:
+This is a Claude Code Plugin project providing JIRA automation through fourteen modular skills. The plugin is self-contained in `plugins/jira-assistant-skills/` and can be installed via the Claude Code plugin system.
+
+### Plugin Structure
+
+```
+plugins/jira-assistant-skills/
+├── plugin.json           # Plugin manifest
+├── commands/             # Slash commands
+├── config/               # Configuration examples
+└── skills/               # 14 JIRA automation skills
+```
+
+### Available Skills
 - **jira-issue**: Core CRUD operations on issues
 - **jira-lifecycle**: Workflow/transition management
 - **jira-search**: JQL queries, saved filters, JQL builder/validator, and bulk operations
@@ -56,13 +68,13 @@ The package provides:
 
 ### Configuration System
 
-Configuration is merged from 4 sources (priority order):
-1. Environment variables: `JIRA_API_TOKEN`, `JIRA_EMAIL`, `JIRA_SITE_URL`, `JIRA_PROFILE`
-2. `.claude/settings.local.json` (gitignored, personal credentials)
-3. `.claude/settings.json` (committed, team defaults with profiles)
-4. Hardcoded defaults in config_manager.py
+Configuration is loaded from environment variables (recommended):
+- `JIRA_API_TOKEN`: API token from id.atlassian.com/manage-profile/security/api-tokens
+- `JIRA_EMAIL`: Atlassian account email
+- `JIRA_SITE_URL`: JIRA instance URL (e.g., https://company.atlassian.net)
+- `JIRA_PROFILE`: Optional profile name for multi-instance support
 
-**Profile-based**: Supports multiple JIRA instances (dev/staging/prod). Profile contains: url, project_keys, default_project, use_service_management flag.
+See `plugins/jira-assistant-skills/config/settings.example.json` for profile-based configuration examples supporting multiple JIRA instances (dev/staging/prod).
 
 ### Error Handling Strategy
 
@@ -137,25 +149,14 @@ plugins/jira-assistant-skills/skills/new-skill/
 - "Available scripts" with descriptions
 - "Examples" with concrete bash commands
 
-## Configuration Changes
-
-When modifying configuration schema:
-
-1. Update `.claude/skills/shared/config/config.schema.json` (JSON Schema validation)
-2. Update `.claude/settings.json` with new structure/defaults
-3. Update `config.example.json` with documented example
-4. Test config merging in config_manager.py
-5. Update setup guide if user-facing
-
 ## Credentials Security
 
 **Never commit**:
-- `.claude/settings.local.json` (already in .gitignore)
 - API tokens in any file
 - Hardcoded URLs that expose internal infrastructure
 
 **Always**:
-- Use environment variables for tokens
+- Use environment variables for tokens (`JIRA_API_TOKEN`, `JIRA_EMAIL`, `JIRA_SITE_URL`)
 - Validate URLs are HTTPS-only (validators.validate_url)
 - Document required JIRA permissions in skill docs
 
