@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.1.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v2.0.1...v2.1.0) (2025-12-31)
+
+
+### Features
+
+* **ci:** add Docker image publishing to ghcr.io ([dd6ae87](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/dd6ae87e685a6c5cd39cc12ddd2bcbd9d09b8b6c))
+
+
+### Bug Fixes
+
+* **ci:** lowercase Docker image name for ghcr.io ([425edbc](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/425edbc87e061d8a583b2e67012145305864ee94))
+* **cli:** prevent Exit exception from being caught as error ([7269a13](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/7269a13b5a339a6d0509772d4073af0d222af715))
+* **jira-search:** handle cursor-based pagination in search results ([8e828ce](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/8e828ce4bfed5ed78fbbf6764dab1a193971bbb3))
+
 ## [2.0.1](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v2.0.0...v2.0.1) (2025-12-31)
 
 
