@@ -2,7 +2,7 @@
 Live Integration Test Configuration for jira-ops skill.
 
 Usage:
-    pytest .claude/skills/jira-ops/tests/live_integration/ --profile development -v
+    pytest plugins/jira-assistant-skills/skills/jira-ops/tests/live_integration/ --profile development -v
 """
 
 import os

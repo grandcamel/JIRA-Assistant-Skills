@@ -91,7 +91,7 @@ python link_pr.py PROJ-123 --pr https://github.com/org/repo/pull/456
 
 ## Configuration
 
-Uses shared configuration from `.claude/settings.json` and `.claude/settings.local.json`.
+Requires JIRA credentials via environment variables:
 
 | Setting | Description |
 |---------|-------------|

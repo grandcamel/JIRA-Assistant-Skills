@@ -5,7 +5,7 @@ Pytest fixtures for running integration tests against a real JIRA instance.
 Creates a temporary project, runs tests, and cleans up all resources.
 
 Usage:
-    pytest .claude/skills/shared/tests/live_integration/ --profile development -v
+    pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/ --profile development -v
 
 Environment:
     Requires JIRA admin permissions to create/delete projects.

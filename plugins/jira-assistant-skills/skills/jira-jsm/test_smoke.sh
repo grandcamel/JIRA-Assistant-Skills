@@ -3,11 +3,14 @@
 
 set -e
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 echo "Running JSM Smoke Tests..."
 echo ""
 
 source venv/bin/activate
-export PYTHONPATH="/Users/jasonkrueger/IdeaProjects/Jira-Assistant-Skills/.claude/skills/jira-jsm/scripts:/Users/jasonkrueger/IdeaProjects/Jira-Assistant-Skills/.claude/skills/shared/scripts/lib"
+export PYTHONPATH="${SCRIPT_DIR}/scripts:${SCRIPT_DIR}/../shared/scripts/lib"
 
 # Run only critical tests
 python3 -m pytest tests/ \

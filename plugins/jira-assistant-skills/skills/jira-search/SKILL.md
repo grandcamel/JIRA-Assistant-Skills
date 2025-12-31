@@ -182,8 +182,7 @@ For detailed troubleshooting, see [references/TROUBLESHOOTING.md](references/TRO
 
 ## Configuration
 
-Uses shared configuration from `.claude/settings.json` and `.claude/settings.local.json`.
-Requires JIRA credentials via environment variables or settings files.
+Requires JIRA credentials via environment variables (`JIRA_SITE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`).
 
 ## Documentation
 

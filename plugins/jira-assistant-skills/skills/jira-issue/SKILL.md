@@ -107,8 +107,7 @@ For credential setup, generate tokens at: `https://id.atlassian.com/manage-profi
 
 ## Configuration
 
-Uses shared configuration from `.claude/settings.json` and `.claude/settings.local.json`.
-Requires JIRA credentials via environment variables or settings files.
+Requires JIRA credentials via environment variables (`JIRA_SITE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`).
 
 ## Related Resources
 

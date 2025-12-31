@@ -1,10 +1,9 @@
 """
 Credential management for JIRA Assistant Skills.
 
-Provides secure credential storage with multiple backends:
-1. System keychain (via keyring library) - preferred
-2. settings.local.json - fallback
-3. Environment variables - always checked first for retrieval
+Provides secure credential retrieval from multiple sources:
+1. Environment variables (JIRA_API_TOKEN, JIRA_EMAIL, JIRA_SITE_URL) - primary
+2. System keychain (via keyring library) - fallback
 
 Security considerations:
 - Never logs or prints credentials

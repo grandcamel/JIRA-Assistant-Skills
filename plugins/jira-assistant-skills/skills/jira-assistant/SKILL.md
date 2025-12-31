@@ -121,9 +121,10 @@ For comprehensive guidance on issue organization, agile estimation, JSM usage, a
 
 ## Configuration
 
-All skills share configuration from:
-- Environment: `JIRA_API_TOKEN`, `JIRA_EMAIL`, `JIRA_SITE_URL`
-- Settings: `.claude/settings.local.json` or `.claude/settings.json`
-- Profiles: Support for multiple JIRA instances (dev/staging/prod)
+All skills share configuration via environment variables:
+- `JIRA_SITE_URL` - Your JIRA instance URL
+- `JIRA_EMAIL` - Your Atlassian account email
+- `JIRA_API_TOKEN` - Your API token ([generate here](https://id.atlassian.com/manage-profile/security/api-tokens))
+- `JIRA_PROFILE` - Optional profile for multi-instance support (dev/staging/prod)
 
 See individual skill documentation for detailed configuration options.

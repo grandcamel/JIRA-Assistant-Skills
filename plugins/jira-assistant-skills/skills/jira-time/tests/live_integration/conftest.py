@@ -5,7 +5,7 @@ Pytest fixtures for running time tracking integration tests against a real JIRA 
 Creates a temporary project, runs tests, and cleans up all resources.
 
 Usage:
-    pytest .claude/skills/jira-time/tests/live_integration/ --profile development -v
+    pytest plugins/jira-assistant-skills/skills/jira-time/tests/live_integration/ --profile development -v
 
 Environment:
     Requires JIRA admin permissions to create/delete projects.

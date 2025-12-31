@@ -5,7 +5,7 @@ Pytest fixtures for running relationship integration tests against a real JIRA i
 Creates a temporary project, runs tests, and cleans up all resources.
 
 Usage:
-    pytest .claude/skills/jira-relationships/tests/live_integration/ --profile development -v
+    pytest plugins/jira-assistant-skills/skills/jira-relationships/tests/live_integration/ --profile development -v
 
 Environment:
     Requires JIRA admin permissions to create/delete projects.

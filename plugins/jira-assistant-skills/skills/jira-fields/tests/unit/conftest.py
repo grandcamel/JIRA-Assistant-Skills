@@ -5,7 +5,7 @@ Provides mock JIRA API responses and client fixtures for testing
 custom field management operations.
 
 Usage:
-    pytest .claude/skills/jira-fields/tests/unit/ -v
+    pytest plugins/jira-assistant-skills/skills/jira-fields/tests/unit/ -v
 """
 
 import sys

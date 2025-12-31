@@ -4,7 +4,7 @@ Live Integration Test Configuration for jira-bulk skill.
 Reuses fixtures from shared live integration tests.
 
 Usage:
-    pytest .claude/skills/jira-bulk/tests/live_integration/ --profile development -v
+    pytest plugins/jira-assistant-skills/skills/jira-bulk/tests/live_integration/ --profile development -v
 """
 
 import os

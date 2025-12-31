@@ -55,13 +55,10 @@ If you prefer manual configuration, follow these steps:
 ### Step 1: Install Dependencies
 
 ```bash
-pip install -r .claude/skills/shared/scripts/lib/requirements.txt
+pip install jira-assistant-skills-lib
 ```
 
-Or install individually:
-```bash
-pip install requests tabulate colorama python-dotenv keyring
-```
+This installs all required dependencies including requests, tabulate, colorama, and python-dotenv.
 
 ### Step 2: Get JIRA API Token
 
@@ -70,75 +67,32 @@ pip install requests tabulate colorama python-dotenv keyring
 3. Give it a name (e.g., "Claude Code Skills")
 4. Copy the token (you won't see it again!)
 
-## Step 3: Configure Team Settings
+## Step 3: Configure Environment Variables
 
-Edit `.claude/settings.json` with your team's JIRA instances:
-
-```json
-{
-  "jira": {
-    "default_profile": "production",
-    "profiles": {
-      "production": {
-        "url": "https://your-company.atlassian.net",
-        "project_keys": ["PROD", "OPS"],
-        "default_project": "PROD",
-        "use_service_management": false
-      }
-    },
-    "api": {
-      "version": "3",
-      "timeout": 30,
-      "max_retries": 3,
-      "retry_backoff": 2.0
-    }
-  }
-}
-```
-
-## Step 4: Configure Personal Settings
-
-Create `.claude/settings.local.json` with your credentials:
-
-```json
-{
-  "jira": {
-    "credentials": {
-      "production": {
-        "email": "your-email@company.com"
-      }
-    }
-  }
-}
-```
-
-**Important:** Never commit this file! It's already in `.gitignore`.
-
-## Step 5: Set Environment Variables
-
-Add to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
+Set these environment variables in your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
 
 ```bash
-export JIRA_API_TOKEN="your-api-token-here"
-export JIRA_EMAIL="your-email@company.com"
 export JIRA_SITE_URL="https://your-company.atlassian.net"
+export JIRA_EMAIL="your-email@company.com"
+export JIRA_API_TOKEN="your-api-token-here"
 ```
 
-Or create a `.env` file (also gitignored):
+Or create a `.env` file:
 
 ```
-JIRA_API_TOKEN=your-api-token-here
+JIRA_SITE_URL=https://your-company.atlassian.net
 JIRA_EMAIL=your-email@company.com
+JIRA_API_TOKEN=your-api-token-here
 ```
 
-## Step 6: Test Your Setup
+## Step 4: Test Your Setup
 
 ```bash
 # Test getting an existing issue
-python .claude/skills/jira-issue/scripts/get_issue.py PROJ-123
+python get_issue.py PROJ-123
 
 # Test searching
-python .claude/skills/jira-search/scripts/jql_search.py "project = PROJ"
+python jql_search.py "project = PROJ"
 ```
 
 If these work, you're all set!
@@ -177,13 +131,11 @@ export JIRA_API_TOKEN_DEVELOPMENT="dev-token"
 
 ## Configuration Priority
 
-Settings are merged in this order (later overrides earlier):
+Settings are checked in this order (first found wins):
 
-1. Hardcoded defaults
-2. `.claude/settings.json` (team defaults)
-3. `.claude/settings.local.json` (personal settings)
-4. System keychain
-5. Environment variables (highest priority)
+1. Environment variables (highest priority)
+2. System keychain
+3. Hardcoded defaults
 
 ## Multiple Profiles
 

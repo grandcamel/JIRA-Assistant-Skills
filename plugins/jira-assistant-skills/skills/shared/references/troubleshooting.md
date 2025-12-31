@@ -31,17 +31,10 @@ Set the environment variable:
 export JIRA_API_TOKEN="your-token-here"
 ```
 
-Or add to `.claude/settings.local.json`:
-```json
-{
-  "jira": {
-    "credentials": {
-      "production": {
-        "email": "your@email.com"
-      }
-    }
-  }
-}
+Also set `JIRA_EMAIL` and `JIRA_SITE_URL`:
+```bash
+export JIRA_EMAIL="your@email.com"
+export JIRA_SITE_URL="https://your-company.atlassian.net"
 ```
 
 ## Permission Errors
@@ -80,7 +73,7 @@ Or add to `.claude/settings.local.json`:
 1. Verify `JIRA_SITE_URL` is correct
 2. Test in browser: https://your-company.atlassian.net
 3. Check VPN connection if required
-4. Try increasing timeout in `.claude/settings.json`
+4. The library has automatic retry with exponential backoff
 
 ### Error: "SSL Certificate verification failed"
 
@@ -95,25 +88,14 @@ export JIRA_SITE_URL="https://your-company.atlassian.net"
 ### Error: "Profile 'X' not found"
 
 **Solution:**
-Check profile exists in `.claude/settings.json`:
-```bash
-python -c "import json; print(json.load(open('.claude/settings.json'))['jira']['profiles'].keys())"
-```
+Verify `JIRA_PROFILE` environment variable is set to a valid profile name, or omit it to use the default.
 
 ### Error: "JIRA URL not configured"
 
 **Solution:**
-Add URL to profile in `.claude/settings.json`:
-```json
-{
-  "jira": {
-    "profiles": {
-      "production": {
-        "url": "https://your-company.atlassian.net"
-      }
-    }
-  }
-}
+Set the environment variable:
+```bash
+export JIRA_SITE_URL="https://your-company.atlassian.net"
 ```
 
 ## Validation Errors
@@ -200,9 +182,9 @@ python transition_issue.py PROJ-123 --id 31
 ### Error: "ModuleNotFoundError: No module named 'requests'"
 
 **Solution:**
-Install dependencies:
+Install the shared library:
 ```bash
-pip install -r .claude/skills/shared/scripts/lib/requirements.txt
+pip install jira-assistant-skills-lib
 ```
 
 ### Error: "File not found" for templates or references
@@ -210,9 +192,9 @@ pip install -r .claude/skills/shared/scripts/lib/requirements.txt
 **Cause:** Running script from wrong directory
 
 **Solution:**
-Scripts work from any directory - use absolute or relative paths:
+Scripts work from any directory when the library is installed:
 ```bash
-python .claude/skills/jira-issue/scripts/get_issue.py PROJ-123
+python get_issue.py PROJ-123
 ```
 
 ## Debugging
@@ -228,10 +210,7 @@ export JIRA_DEBUG=1
 
 ```python
 python -c "
-from sys import path
-from pathlib import Path
-path.insert(0, str(Path('.claude/skills/shared/scripts/lib')))
-from config_manager import ConfigManager
+from jira_assistant_skills_lib import ConfigManager
 config = ConfigManager()
 print('Profiles:', config.list_profiles())
 print('Default:', config.profile)
@@ -242,10 +221,7 @@ print('Default:', config.profile)
 
 ```python
 python -c "
-from sys import path
-from pathlib import Path
-path.insert(0, str(Path('.claude/skills/shared/scripts/lib')))
-from config_manager import get_jira_client
+from jira_assistant_skills_lib import get_jira_client
 client = get_jira_client()
 print('Testing connection...')
 result = client.get('/rest/api/3/myself')
@@ -258,7 +234,7 @@ print('Success! Logged in as:', result.get('emailAddress'))
 1. Check error message carefully - often contains solution
 2. Review relevant SKILL.md file
 3. Check reference documentation in skill's `references/` folder
-4. Verify configuration in `.claude/settings.json`
+4. Verify environment variables are set correctly
 5. Test with simple case first (e.g., get a known issue)
 6. Contact JIRA administrator for permission issues
 

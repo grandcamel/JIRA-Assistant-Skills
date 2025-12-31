@@ -3,6 +3,9 @@
 
 set -e
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 echo "========================================"
 echo "JSM Integration Test Suite"
 echo "========================================"
@@ -21,7 +24,7 @@ echo "Installing dependencies..."
 pip install -q pytest pytest-cov requests requests-mock jira
 
 # Set PYTHONPATH
-export PYTHONPATH="/Users/jasonkrueger/IdeaProjects/Jira-Assistant-Skills/.claude/skills/jira-jsm/scripts:/Users/jasonkrueger/IdeaProjects/Jira-Assistant-Skills/.claude/skills/shared/scripts/lib"
+export PYTHONPATH="${SCRIPT_DIR}/scripts:${SCRIPT_DIR}/../shared/scripts/lib"
 
 echo ""
 echo "Running test suite..."

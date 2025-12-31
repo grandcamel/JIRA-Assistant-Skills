@@ -95,7 +95,7 @@ See [Configuration Guide](docs/CONFIG.md) for details.
 
 ## Shared Libraries
 
-This skill uses shared infrastructure from `.claude/skills/shared/scripts/lib/`:
+This skill uses shared infrastructure from `jira-assistant-skills-lib`:
 
 | Library | Description |
 |---------|-------------|
@@ -117,7 +117,6 @@ See [API Reference](docs/API_REFERENCE.md) for programmatic usage.
 ## Testing
 
 ```bash
-cd /path/to/Jira-Assistant-Skills
-PYTHONPATH=".claude/skills/shared/scripts/lib:.claude/skills/jira-ops/scripts" \
-  python -m pytest .claude/skills/jira-ops/tests/ -v
+# Run tests (with jira-assistant-skills-lib installed)
+pytest plugins/jira-assistant-skills/skills/jira-ops/tests/ -v
 ```

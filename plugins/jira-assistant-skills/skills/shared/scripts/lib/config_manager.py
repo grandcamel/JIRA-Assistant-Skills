@@ -1,12 +1,10 @@
 """
 Configuration management for JIRA Assistant Skills.
 
-Handles loading and merging configuration from multiple sources:
-1. Environment variables (highest priority)
+Handles loading configuration from multiple sources:
+1. Environment variables (JIRA_SITE_URL, JIRA_EMAIL, JIRA_API_TOKEN) - primary method
 2. System keychain (if keyring available)
-3. .claude/settings.local.json (personal settings, gitignored)
-4. .claude/settings.json (team defaults, committed)
-5. Hardcoded defaults (fallbacks)
+3. Hardcoded defaults (fallbacks)
 
 Supports configurable Agile field IDs with automatic discovery fallback.
 """

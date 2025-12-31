@@ -29,38 +29,38 @@ The API user needs:
 
 ```bash
 # Using development profile
-pytest .claude/skills/shared/tests/live_integration/ --profile development -v
+pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/ --profile development -v
 
 # Using specific profile
-pytest .claude/skills/shared/tests/live_integration/ --profile staging -v
+pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/ --profile staging -v
 
 # Keep project after tests (for debugging)
-pytest .claude/skills/shared/tests/live_integration/ --profile development --keep-project -v
+pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/ --profile development --keep-project -v
 
 # Use existing project (no cleanup)
-pytest .claude/skills/shared/tests/live_integration/ --profile development --project-key EXISTING -v
+pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/ --profile development --project-key EXISTING -v
 ```
 
 ### Run Specific Test Modules
 
 ```bash
 # Issue lifecycle tests only
-pytest .claude/skills/shared/tests/live_integration/test_issue_lifecycle.py --profile development -v
+pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/test_issue_lifecycle.py --profile development -v
 
 # Agile workflow tests only
-pytest .claude/skills/shared/tests/live_integration/test_agile_workflow.py --profile development -v
+pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/test_agile_workflow.py --profile development -v
 
 # Relationship tests only
-pytest .claude/skills/shared/tests/live_integration/test_relationships.py --profile development -v
+pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/test_relationships.py --profile development -v
 
 # Collaboration tests only
-pytest .claude/skills/shared/tests/live_integration/test_collaboration.py --profile development -v
+pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/test_collaboration.py --profile development -v
 
 # Project lifecycle tests only
-pytest .claude/skills/shared/tests/live_integration/test_project_lifecycle.py --profile development -v
+pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/test_project_lifecycle.py --profile development -v
 
 # Time tracking tests only
-pytest .claude/skills/shared/tests/live_integration/test_time_tracking.py --profile development -v
+pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/test_time_tracking.py --profile development -v
 ```
 
 ### Cleanup Utility
@@ -69,16 +69,16 @@ For cleaning up orphaned test projects:
 
 ```bash
 # List all test projects (INT prefix)
-python .claude/skills/shared/tests/live_integration/cleanup.py --list --profile development
+python plugins/jira-assistant-skills/skills/shared/tests/live_integration/cleanup.py --list --profile development
 
 # Delete specific project
-python .claude/skills/shared/tests/live_integration/cleanup.py INT123ABC --profile development
+python plugins/jira-assistant-skills/skills/shared/tests/live_integration/cleanup.py INT123ABC --profile development
 
 # Delete all projects with prefix (with confirmation)
-python .claude/skills/shared/tests/live_integration/cleanup.py --prefix INT --profile development
+python plugins/jira-assistant-skills/skills/shared/tests/live_integration/cleanup.py --prefix INT --profile development
 
 # Dry run (show what would be deleted)
-python .claude/skills/shared/tests/live_integration/cleanup.py --prefix INT --dry-run --profile development
+python plugins/jira-assistant-skills/skills/shared/tests/live_integration/cleanup.py --prefix INT --dry-run --profile development
 ```
 
 ## Test Structure

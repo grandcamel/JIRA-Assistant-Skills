@@ -5,9 +5,7 @@ Project context loader for JIRA Assistant Skills.
 Provides lazy loading and caching of project-specific context including
 metadata, workflows, patterns, and defaults. Context is loaded from:
 1. Environment variables (highest priority)
-2. settings.local.json (personal overrides)
-3. Skill directories (.claude/skills/jira-project-PROJ/)
-4. Hardcoded defaults (fallback)
+2. Hardcoded defaults (fallback)
 """
 
 import json
