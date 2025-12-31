@@ -17,13 +17,18 @@ def blocker_chain_links():
     PROJ-50 blocks PROJ-101
     PROJ-101 blocks PROJ-123
     PROJ-100 blocks PROJ-123 (already done)
+
+    Note on JIRA link semantics:
+    When fetching links for issue B where "A blocks B":
+    - outwardIssue = A (the blocker, on the "blocks" side)
+    - No inwardIssue because B itself is the inward issue
     """
     return {
         'PROJ-123': [
             {
                 "id": "20001",
                 "type": {"id": "10000", "name": "Blocks", "inward": "is blocked by", "outward": "blocks"},
-                "inwardIssue": {
+                "outwardIssue": {
                     "id": "10100", "key": "PROJ-100",
                     "fields": {"summary": "Database schema", "status": {"name": "Done"}, "issuetype": {"name": "Story"}}
                 }
@@ -31,7 +36,7 @@ def blocker_chain_links():
             {
                 "id": "20002",
                 "type": {"id": "10000", "name": "Blocks", "inward": "is blocked by", "outward": "blocks"},
-                "inwardIssue": {
+                "outwardIssue": {
                     "id": "10101", "key": "PROJ-101",
                     "fields": {"summary": "API auth", "status": {"name": "In Progress"}, "issuetype": {"name": "Story"}}
                 }
@@ -41,7 +46,7 @@ def blocker_chain_links():
             {
                 "id": "20003",
                 "type": {"id": "10000", "name": "Blocks", "inward": "is blocked by", "outward": "blocks"},
-                "inwardIssue": {
+                "outwardIssue": {
                     "id": "10050", "key": "PROJ-50",
                     "fields": {"summary": "Security review", "status": {"name": "To Do"}, "issuetype": {"name": "Task"}}
                 }
@@ -54,27 +59,33 @@ def blocker_chain_links():
 
 @pytest.fixture
 def circular_links():
-    """Create circular dependency: 1 blocks 2, 2 blocks 3, 3 blocks 1."""
+    """
+    Create circular dependency: 3 blocks 1, 1 blocks 2, 2 blocks 3.
+
+    Note on JIRA link semantics:
+    When fetching links for issue B where "A blocks B":
+    - outwardIssue = A (the blocker)
+    """
     return {
         'PROJ-1': [
             {
                 "id": "30001",
                 "type": {"id": "10000", "name": "Blocks", "inward": "is blocked by", "outward": "blocks"},
-                "inwardIssue": {"id": "10001", "key": "PROJ-3", "fields": {"summary": "Task 3", "status": {"name": "To Do"}}}
+                "outwardIssue": {"id": "10003", "key": "PROJ-3", "fields": {"summary": "Task 3", "status": {"name": "To Do"}}}
             }
         ],
         'PROJ-2': [
             {
                 "id": "30002",
                 "type": {"id": "10000", "name": "Blocks", "inward": "is blocked by", "outward": "blocks"},
-                "inwardIssue": {"id": "10002", "key": "PROJ-1", "fields": {"summary": "Task 1", "status": {"name": "To Do"}}}
+                "outwardIssue": {"id": "10001", "key": "PROJ-1", "fields": {"summary": "Task 1", "status": {"name": "To Do"}}}
             }
         ],
         'PROJ-3': [
             {
                 "id": "30003",
                 "type": {"id": "10000", "name": "Blocks", "inward": "is blocked by", "outward": "blocks"},
-                "inwardIssue": {"id": "10003", "key": "PROJ-2", "fields": {"summary": "Task 2", "status": {"name": "To Do"}}}
+                "outwardIssue": {"id": "10002", "key": "PROJ-2", "fields": {"summary": "Task 2", "status": {"name": "To Do"}}}
             }
         ]
     }

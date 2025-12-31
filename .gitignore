@@ -58,3 +58,4 @@ htmlcov/
 .claude-flow/
 .swarm/
 claude-flow
+*.egg-info/
