@@ -161,6 +161,48 @@ claude "What's blocking the release?"
 
 ---
 
+## Setup (Assistant Skills)
+
+If you're using the [Assistant Skills](https://github.com/grandcamel/assistant-skills) plugin system, run the setup wizard:
+
+```bash
+/assistant-skills-setup
+```
+
+This configures:
+- Shared Python venv at `~/.assistant-skills-venv/`
+- Required dependencies from `requirements.txt`
+- Environment variables (prompts you to configure Jira credentials)
+- `claude-as` shell function for running Claude with dependencies
+
+After setup, use `claude-as` instead of `claude`:
+```bash
+claude-as  # Runs Claude with Assistant Skills venv activated
+```
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `JIRA_SITE_URL` | Yes | Jira instance base URL (e.g., `https://company.atlassian.net`) |
+| `JIRA_EMAIL` | Yes | Atlassian account email for authentication |
+| `JIRA_API_TOKEN` | Yes | Atlassian API token ([generate here](https://id.atlassian.com/manage-profile/security/api-tokens)) |
+| `JIRA_PROFILE` | No | Configuration profile for multi-instance support (defaults to `production`) |
+
+### Getting Your API Token
+
+1. Go to [Atlassian API Tokens](https://id.atlassian.com/manage-profile/security/api-tokens)
+2. Click "Create API token"
+3. Give it a descriptive label (e.g., "Claude Code Jira")
+4. Copy the token and add it to your shell config:
+   ```bash
+   export JIRA_API_TOKEN="your-token-here"
+   export JIRA_EMAIL="you@company.com"
+   export JIRA_SITE_URL="https://company.atlassian.net"
+   ```
+
+---
+
 ## What You Can Do
 
 ```mermaid
