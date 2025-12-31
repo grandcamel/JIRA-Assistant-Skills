@@ -93,90 +93,90 @@ All scripts return standard exit codes:
 
 ```bash
 # Log 2 hours of work
-python add_worklog.py PROJ-123 --time 2h
+jira time log PROJ-123 --time 2h
 
 # Log time with a comment
-python add_worklog.py PROJ-123 --time "1d 4h" --comment "Debugging authentication issue"
+jira time log PROJ-123 --time "1d 4h" --comment "Debugging authentication issue"
 
 # Log time for yesterday
-python add_worklog.py PROJ-123 --time 2h --started yesterday
+jira time log PROJ-123 --time 2h --started yesterday
 
 # Log time without adjusting estimate
-python add_worklog.py PROJ-123 --time 2h --adjust-estimate leave
+jira time log PROJ-123 --time 2h --adjust-estimate leave
 ```
 
 ### View worklogs
 
 ```bash
 # List all worklogs for an issue
-python get_worklogs.py PROJ-123
+jira time worklogs PROJ-123
 
 # Filter by author
-python get_worklogs.py PROJ-123 --author currentUser()
+jira time worklogs PROJ-123 --author currentUser()
 
 # Filter by date range
-python get_worklogs.py PROJ-123 --since 2025-01-01 --until 2025-01-31
+jira time worklogs PROJ-123 --since 2025-01-01 --until 2025-01-31
 
 # Output as JSON
-python get_worklogs.py PROJ-123 --output json
+jira time worklogs PROJ-123 --output json
 ```
 
 ### Manage estimates
 
 ```bash
 # Set original estimate
-python set_estimate.py PROJ-123 --original "2d"
+jira time estimate PROJ-123 --original "2d"
 
 # Set remaining estimate
-python set_estimate.py PROJ-123 --remaining "1d 4h"
+jira time estimate PROJ-123 --remaining "1d 4h"
 
 # View time tracking summary
-python get_time_tracking.py PROJ-123
+jira time tracking PROJ-123
 ```
 
 ### Generate reports
 
 ```bash
 # My time for last week
-python time_report.py --user currentUser() --period last-week
+jira time report --user currentUser() --period last-week
 
 # Project time for this month
-python time_report.py --project PROJ --period this-month
+jira time report --project PROJ --period this-month
 
 # Export to CSV for billing
-python time_report.py --project PROJ --period 2025-01 --output csv > timesheet.csv
+jira time report --project PROJ --period 2025-01 --output csv > timesheet.csv
 
 # Export detailed CSV with all fields
-python time_report.py --project PROJ --period this-month --output csv --include-issue-details
+jira time report --project PROJ --period this-month --output csv --include-issue-details
 ```
 
 ### Bulk operations
 
 ```bash
 # Preview bulk time logging (dry run)
-python bulk_log_time.py --issues PROJ-1,PROJ-2,PROJ-3 --time 15m --comment "Sprint planning" --dry-run
+jira time bulk-log --issues PROJ-1,PROJ-2,PROJ-3 --time 15m --comment "Sprint planning" --dry-run
 
 # Log standup time to multiple issues
-python bulk_log_time.py --issues PROJ-1,PROJ-2,PROJ-3 --time 15m --comment "Sprint planning"
+jira time bulk-log --issues PROJ-1,PROJ-2,PROJ-3 --time 15m --comment "Sprint planning"
 
 # Log time to JQL results with dry run
-python bulk_log_time.py --jql "sprint = 456" --time 15m --comment "Daily standup" --dry-run
+jira time bulk-log --jql "sprint = 456" --time 15m --comment "Daily standup" --dry-run
 
 # Execute after confirming dry run output
-python bulk_log_time.py --jql "sprint = 456" --time 15m --comment "Daily standup"
+jira time bulk-log --jql "sprint = 456" --time 15m --comment "Daily standup"
 ```
 
 ### Delete worklogs
 
 ```bash
 # Preview worklog deletion (dry run)
-python delete_worklog.py PROJ-123 --worklog-id 12345 --dry-run
+jira time delete-worklog PROJ-123 --worklog-id 12345 --dry-run
 
 # Delete with automatic estimate adjustment
-python delete_worklog.py PROJ-123 --worklog-id 12345 --adjust-estimate auto
+jira time delete-worklog PROJ-123 --worklog-id 12345 --adjust-estimate auto
 
 # Delete without modifying estimate
-python delete_worklog.py PROJ-123 --worklog-id 12345 --adjust-estimate leave
+jira time delete-worklog PROJ-123 --worklog-id 12345 --adjust-estimate leave
 ```
 
 ## Dry Run Support
@@ -192,11 +192,11 @@ The following scripts support `--dry-run` for previewing changes without making 
 
 ```bash
 # Step 1: Preview the operation
-python bulk_log_time.py --jql "sprint = 456" --time 15m --dry-run
+jira time bulk-log --jql "sprint = 456" --time 15m --dry-run
 
 # Step 2: Review the output carefully
 # Step 3: Execute only after confirming the preview is correct
-python bulk_log_time.py --jql "sprint = 456" --time 15m --comment "Daily standup"
+jira time bulk-log --jql "sprint = 456" --time 15m --comment "Daily standup"
 ```
 
 ## Time format
@@ -217,7 +217,7 @@ Time tracking must be enabled in your JIRA project. If you receive an error abou
 All scripts support the `--profile` flag:
 
 ```bash
-python add_worklog.py PROJ-123 --time 2h --profile production
+jira time log PROJ-123 --time 2h --profile production
 ```
 
 ## Troubleshooting
@@ -239,7 +239,7 @@ The worklog ID may be incorrect or the worklog was already deleted. Use `get_wor
 #### Estimates not updating correctly
 JIRA Cloud has a known bug (JRACLOUD-67539) where estimates may not update as expected. Workaround: Set both original and remaining estimates together using `set_estimate.py`:
 ```bash
-python set_estimate.py PROJ-123 --original "2d" --remaining "1d"
+jira time estimate PROJ-123 --original "2d" --remaining "1d"
 ```
 
 #### Time logged but not showing in reports
@@ -284,7 +284,7 @@ Worklogs use UTC internally. If time appears on wrong date:
 Large JQL result sets may timeout:
 ```bash
 # Use smaller batches instead of one large query
-python bulk_log_time.py --issues PROJ-1,PROJ-2,PROJ-3 --time 15m
+jira time bulk-log --issues PROJ-1,PROJ-2,PROJ-3 --time 15m
 ```
 
 #### Worklog visibility issues
@@ -299,7 +299,7 @@ For complete error code reference, see [Error Codes](docs/reference/error-codes.
 **Why is my estimate not updating?**
 JIRA Cloud bug (JRACLOUD-67539). Set both estimates together:
 ```bash
-python set_estimate.py PROJ-123 --original "2d" --remaining "1d 4h"
+jira time estimate PROJ-123 --original "2d" --remaining "1d 4h"
 ```
 
 **How do I log time for someone else?**

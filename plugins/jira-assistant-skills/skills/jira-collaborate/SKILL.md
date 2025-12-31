@@ -72,32 +72,32 @@ Use this skill when you need to:
 
 ```bash
 # Add a comment
-python add_comment.py PROJ-123 --body "Starting work on this now"
+jira collaborate comment add PROJ-123 --body "Starting work on this now"
 
 # Rich text comment
-python add_comment.py PROJ-123 --body "**Bold** text" --format markdown
+jira collaborate comment add PROJ-123 --body "**Bold** text" --format markdown
 
 # Internal comment (role-restricted)
-python add_comment.py PROJ-123 --body "Internal note" --visibility-role Administrators
+jira collaborate comment add PROJ-123 --body "Internal note" --visibility-role Administrators
 
 # Upload attachment
-python upload_attachment.py PROJ-123 --file screenshot.png
+jira collaborate attachment upload PROJ-123 --file screenshot.png
 
 # List attachments
-python download_attachment.py PROJ-123 --list
+jira collaborate attachment download PROJ-123 --list
 
 # Download all attachments
-python download_attachment.py PROJ-123 --all --output-dir ./downloads
+jira collaborate attachment download PROJ-123 --all --output-dir ./downloads
 
 # Add watcher
-python manage_watchers.py PROJ-123 --add user@example.com
+jira collaborate watchers PROJ-123 --add user@example.com
 
 # Send notification (preview first)
-python send_notification.py PROJ-123 --watchers --dry-run
-python send_notification.py PROJ-123 --watchers --subject "Update" --body "Issue resolved"
+jira collaborate notify PROJ-123 --watchers --dry-run
+jira collaborate notify PROJ-123 --watchers --subject "Update" --body "Issue resolved"
 
 # View activity history
-python get_activity.py PROJ-123 --format table
+jira collaborate activity PROJ-123 --format table
 ```
 
 ## Common Options
@@ -111,8 +111,8 @@ All scripts support:
 
 For script-specific options, use `--help` on any script:
 ```bash
-python add_comment.py --help
-python send_notification.py --help
+jira collaborate comment add --help
+jira collaborate notify --help
 ```
 
 See [references/SCRIPT_OPTIONS.md](references/SCRIPT_OPTIONS.md) for full option matrix.

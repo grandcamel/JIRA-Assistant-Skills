@@ -26,10 +26,10 @@ Use this skill when you need to:
 
 ```bash
 # Preview before making changes
-python bulk_transition.py --jql "project=PROJ AND status='In Progress'" --to "Done" --dry-run
+jira bulk transition --jql "project=PROJ AND status='In Progress'" --to "Done" --dry-run
 
 # Execute the transition
-python bulk_transition.py --jql "project=PROJ AND status='In Progress'" --to "Done"
+jira bulk transition --jql "project=PROJ AND status='In Progress'" --to "Done"
 ```
 
 For more patterns, see [Quick Start Guide](docs/QUICK_START.md).
@@ -64,42 +64,42 @@ All scripts support these options:
 
 ```bash
 # By issue keys
-python bulk_transition.py --issues PROJ-1,PROJ-2,PROJ-3 --to "Done"
+jira bulk transition --issues PROJ-1,PROJ-2,PROJ-3 --to "Done"
 
 # By JQL query
-python bulk_transition.py --jql "project=PROJ AND status='In Progress'" --to "Done"
+jira bulk transition --jql "project=PROJ AND status='In Progress'" --to "Done"
 
 # With resolution
-python bulk_transition.py --jql "type=Bug AND status='Verified'" --to "Closed" --resolution "Fixed"
+jira bulk transition --jql "type=Bug AND status='Verified'" --to "Closed" --resolution "Fixed"
 ```
 
 ### Bulk Assign
 
 ```bash
 # Assign to user
-python bulk_assign.py --jql "project=PROJ AND status=Open" --assignee "john.doe"
+jira bulk assign --jql "project=PROJ AND status=Open" --assignee "john.doe"
 
 # Assign to self
-python bulk_assign.py --jql "project=PROJ AND assignee IS EMPTY" --assignee self
+jira bulk assign --jql "project=PROJ AND assignee IS EMPTY" --assignee self
 
 # Unassign
-python bulk_assign.py --jql "assignee=john.leaving" --unassign
+jira bulk assign --jql "assignee=john.leaving" --unassign
 ```
 
 ### Bulk Set Priority
 
 ```bash
-python bulk_set_priority.py --jql "type=Bug AND labels=critical" --priority Highest
+jira bulk set-priority --jql "type=Bug AND labels=critical" --priority Highest
 ```
 
 ### Bulk Clone
 
 ```bash
 # Clone with subtasks and links
-python bulk_clone.py --jql "sprint='Sprint 42'" --include-subtasks --include-links
+jira bulk clone --jql "sprint='Sprint 42'" --include-subtasks --include-links
 
 # Clone to different project
-python bulk_clone.py --issues PROJ-1,PROJ-2 --target-project NEWPROJ --prefix "[Clone]"
+jira bulk clone --issues PROJ-1,PROJ-2 --target-project NEWPROJ --prefix "[Clone]"
 ```
 
 ## Parameter Tuning Guide

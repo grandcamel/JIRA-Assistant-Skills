@@ -96,7 +96,7 @@ Reach for this skill when you need to:
 
 ## 84 Available Scripts
 
-All scripts support `--help` for full documentation. Run `python script.py --help` for details.
+All scripts support `--help` for full documentation. Run `jira <command> --help` for details.
 
 ### Project Management (14 scripts)
 ```
@@ -183,13 +183,13 @@ list_statuses.py             get_workflow_for_issue.py
 
 ```bash
 # List all projects
-python list_projects.py
+jira admin project list
 
 # See project configuration
-python get_config.py PROJ
+jira admin config get PROJ
 
 # Check current user permissions
-python search_users.py --me --include-groups
+jira admin user search --me --include-groups
 ```
 
 ### Next Steps
@@ -206,20 +206,20 @@ python search_users.py --me --include-groups
 
 ### Preview Before Changing
 ```bash
-python delete_project.py PROJ --dry-run
-python assign_permission_scheme.py --project PROJ --scheme 10050 --dry-run
+jira admin project delete PROJ --dry-run
+jira admin permission-scheme assign --project PROJ --scheme 10050 --dry-run
 ```
 
 ### JSON Output for Scripting
 ```bash
-python list_projects.py --output json
-python get_workflow.py --name "Workflow" --output json
+jira admin project list --output json
+jira admin workflow get --name "Workflow" --output json
 ```
 
 ### Profile Selection
 ```bash
-python list_projects.py --profile production
-python get_project.py PROJ --profile development
+jira admin project list --profile production
+jira admin project get PROJ --profile development
 ```
 
 ---
@@ -255,20 +255,20 @@ python get_project.py PROJ --profile development
 
 ### Verify Permissions
 ```bash
-python search_users.py --me --include-groups
-python list_projects.py --type software
+jira admin user search --me --include-groups
+jira admin project list --type software
 ```
 
 ### Check Configuration
 ```bash
-python get_config.py PROJ --show-schemes
-python get_project_issue_type_scheme.py --project-id 10000
+jira admin config get PROJ --show-schemes
+jira admin issue-type-scheme project --project-id 10000
 ```
 
 ### Debug Scheme Assignments
 ```bash
-python get_permission_scheme.py 10000 --show-projects
-python get_workflow_scheme.py --id 10100 --show-projects
+jira admin permission-scheme get 10000 --show-projects
+jira admin workflow-scheme get --id 10100 --show-projects
 ```
 
 ---

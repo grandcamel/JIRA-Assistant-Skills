@@ -96,17 +96,17 @@ See [estimation examples](examples/estimation.md) for detailed usage.
 
 ```bash
 # Create epic and add issues
-python create_epic.py --project PROJ --summary "Mobile App MVP" --epic-name "MVP"
-python add_to_epic.py --epic PROJ-100 --issues PROJ-101,PROJ-102
+jira agile epic create --project PROJ --summary "Mobile App MVP" --epic-name "MVP"
+jira agile epic add-issues --epic PROJ-100 --issues PROJ-101,PROJ-102
 
 # Create and start sprint
-python create_sprint.py --board 123 --name "Sprint 42" --goal "Launch MVP"
-python move_to_sprint.py --sprint 456 --issues PROJ-101,PROJ-102
-python manage_sprint.py --sprint 456 --start
+jira agile sprint create --board 123 --name "Sprint 42" --goal "Launch MVP"
+jira agile sprint move-issues --sprint 456 --issues PROJ-101,PROJ-102
+jira agile sprint manage --sprint 456 --start
 
 # Estimate and track
-python estimate_issue.py PROJ-101 --points 5
-python get_estimates.py --sprint 456 --group-by status
+jira agile estimate PROJ-101 --points 5
+jira agile estimates --sprint 456 --group-by status
 ```
 
 See [Quick Start Guide](docs/QUICK_START.md) for essential workflows.

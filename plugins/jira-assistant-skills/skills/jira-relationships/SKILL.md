@@ -101,42 +101,42 @@ All scripts support these common options:
 
 ```bash
 # View available link types in your JIRA instance
-python get_link_types.py
+jira relationships link-types
 
 # Create links using semantic flags
-python link_issue.py PROJ-1 --blocks PROJ-2
-python link_issue.py PROJ-1 --duplicates PROJ-2
-python link_issue.py PROJ-1 --relates-to PROJ-2
+jira relationships link PROJ-1 --blocks PROJ-2
+jira relationships link PROJ-1 --duplicates PROJ-2
+jira relationships link PROJ-1 --relates-to PROJ-2
 
 # View and remove links
-python get_links.py PROJ-123
-python unlink_issue.py PROJ-1 --from PROJ-2
+jira relationships get-links PROJ-123
+jira relationships unlink PROJ-1 --from PROJ-2
 
 # Clone an issue with its relationships
-python clone_issue.py PROJ-123 --include-subtasks --include-links
+jira relationships clone PROJ-123 --include-subtasks --include-links
 ```
 
 ### Advanced - Blocker Analysis & Statistics
 
 ```bash
 # Find blocker chains for sprint planning
-python get_blockers.py PROJ-123 --recursive --depth 3
+jira relationships get-blockers PROJ-123 --recursive --depth 3
 
 # Project-wide link statistics (find orphans, hubs)
-python link_stats.py --project PROJ --top 10
+jira relationships stats --project PROJ --top 10
 
 # Bulk link issues from JQL query
-python bulk_link.py --jql "project=PROJ AND fixVersion=1.0" --relates-to PROJ-500 --dry-run
+jira relationships bulk-link --jql "project=PROJ AND fixVersion=1.0" --relates-to PROJ-500 --dry-run
 ```
 
 ### Visualization - Dependency Graphs
 
 ```bash
 # Export for documentation (Mermaid for GitHub/GitLab)
-python get_dependencies.py PROJ-123 --output mermaid
+jira relationships get-dependencies PROJ-123 --output mermaid
 
 # Export for publication (Graphviz)
-python get_dependencies.py PROJ-123 --output dot > deps.dot
+jira relationships get-dependencies PROJ-123 --output dot > deps.dot
 dot -Tpng deps.dot -o deps.png
 ```
 
@@ -145,7 +145,7 @@ dot -Tpng deps.dot -o deps.png
 Use `get_dependencies.py` with `--output` flag to generate diagrams:
 - Formats: `text` (default), `json`, `mermaid` (GitHub docs), `dot` (Graphviz), `plantuml`, `d2`
 - All formats include status-based coloring and link type labels
-- Run `python get_dependencies.py --help` for rendering instructions
+- Run `jira relationships get-dependencies --help` for rendering instructions
 
 ## Link Types
 

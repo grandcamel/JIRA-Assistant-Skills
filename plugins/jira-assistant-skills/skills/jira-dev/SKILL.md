@@ -77,16 +77,16 @@ All scripts support `--help` for detailed usage. See [scripts/REFERENCE.md](scri
 
 ```bash
 # Generate branch name
-python create_branch_name.py PROJ-123 --auto-prefix
+jira dev branch-name PROJ-123 --auto-prefix
 
 # Extract issues from commits
-git log --oneline -10 | python parse_commit_issues.py --from-stdin
+git log --oneline -10 | jira dev parse-commits --from-stdin
 
 # Generate PR description
-python create_pr_description.py PROJ-123 --include-checklist
+jira dev pr-description PROJ-123 --include-checklist
 
 # Link PR to issue
-python link_pr.py PROJ-123 --pr https://github.com/org/repo/pull/456
+jira dev link-pr PROJ-123 --pr https://github.com/org/repo/pull/456
 ```
 
 ## Configuration

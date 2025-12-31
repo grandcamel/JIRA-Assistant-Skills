@@ -15,16 +15,16 @@ Triggers: User asks to...
 - Update issue fields (summary, description, priority, assignee, labels)
 - Delete an issue
 
-## Available Scripts
+## Available Commands
 
-| Script | Purpose | Key Options |
-|--------|---------|-------------|
-| `create_issue.py` | Create new issues | `--project`, `--type`, `--summary` (required) |
-| `get_issue.py` | Retrieve issue details | `--detailed`, `--show-links`, `--show-time` |
-| `update_issue.py` | Modify issue fields | `--summary`, `--priority`, `--assignee` |
-| `delete_issue.py` | Remove issues | `--force` (skip confirmation) |
+This skill provides the following commands via the `jira issue` CLI:
 
-All scripts support `--help` for full option documentation, `--profile` for JIRA instance selection, and `--output json` for programmatic use.
+- `jira issue create`: Create new issues
+- `jira issue get`: Retrieve issue details
+- `jira issue update`: Modify issue fields
+- `jira issue delete`: Remove issues
+
+All commands support `--help` for full option documentation, and global options like `--profile` for JIRA instance selection, and `--output json` for programmatic use.
 
 ## Templates
 
@@ -39,14 +39,14 @@ Pre-configured templates for common issue types:
 
 ```bash
 # Basic issue creation
-python create_issue.py --project PROJ --type Bug --summary "Login fails on mobile"
+jira issue create --project PROJ --type Bug --summary "Login fails on mobile"
 
 # With agile fields
-python create_issue.py --project PROJ --type Story --summary "User login" \
+jira issue create --project PROJ --type Story --summary "User login" \
   --epic PROJ-100 --story-points 5
 
 # With relationships
-python create_issue.py --project PROJ --type Task --summary "Setup database" \
+jira issue create --project PROJ --type Task --summary "Setup database" \
   --blocks PROJ-123 --estimate "2d"
 ```
 
@@ -54,36 +54,55 @@ python create_issue.py --project PROJ --type Task --summary "Setup database" \
 
 ```bash
 # Basic retrieval
-python get_issue.py PROJ-123
+jira issue get PROJ-123
 
 # With full details
-python get_issue.py PROJ-123 --detailed --show-links --show-time
+jira issue get PROJ-123 --detailed --show-links --show-time
 
 # JSON output for scripting
-python get_issue.py PROJ-123 --output json
+jira issue get PROJ-123 --output json
 ```
 
 ### Update Issues
 
 ```bash
 # Update priority and assignee
-python update_issue.py PROJ-123 --priority Critical --assignee self
+jira issue update PROJ-123 --priority Critical --assignee self
 
 # Update without notifications
-python update_issue.py PROJ-123 --summary "Updated title" --no-notify
+jira issue update PROJ-123 --summary "Updated title" --no-notify
 
 # Unassign issue
-python update_issue.py PROJ-123 --assignee none
+jira issue update PROJ-123 --assignee none
 ```
 
 ### Delete Issues
 
 ```bash
 # Delete with confirmation
-python delete_issue.py PROJ-456
+jira issue delete PROJ-456
 
 # Force delete (no prompt)
-python delete_issue.py PROJ-456 --force
+jira issue delete PROJ-456 --force
+```
+
+## Shell Completion
+
+To enable shell completion for the `jira` CLI, add the appropriate command to your shell's configuration file (e.g., `.bashrc`, `.zshrc`, `config.fish`).
+
+**Bash:**
+```bash
+eval "$(_JIRA_COMPLETE=bash_source jira)"
+```
+
+**Zsh:**
+```bash
+eval "$(_JIRA_COMPLETE=zsh_source jira)"
+```
+
+**Fish:**
+```bash
+_JIRA_COMPLETE=fish_source jira | source
 ```
 
 ## Exit Codes

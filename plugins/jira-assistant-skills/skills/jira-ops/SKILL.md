@@ -37,33 +37,33 @@ Use this skill when you need to:
 
 ```bash
 # Discover project context for intelligent defaults
-python discover_project.py PROJ --profile development
+jira ops discover-project PROJ --profile development
 
 # Check cache status
-python cache_status.py
+jira ops cache-status
 
 # Clear cache
-python cache_clear.py --force
+jira ops cache-clear --force
 
 # Warm cache with project/field data
-python cache_warm.py --all --profile production
+jira ops cache-warm --all --profile production
 ```
 
 ## Common Tasks (30-Second Solutions)
 
 ### Check cache status
 ```bash
-python cache_status.py
+jira ops cache-status
 ```
 
 ### Warm the cache
 ```bash
-python cache_warm.py --all --profile production
+jira ops cache-warm --all --profile production
 ```
 
 ### Clear stale cache
 ```bash
-python cache_clear.py --force
+jira ops cache-clear --force
 ```
 
 See [Scripts Guide](docs/SCRIPTS.md) for complete documentation.

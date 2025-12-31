@@ -25,16 +25,16 @@ Query and discovery operations for JIRA issues using JQL (JIRA Query Language).
 
 ```bash
 # Find your open issues
-python jql_search.py "assignee = currentUser() AND status != Done"
+jira search query "assignee = currentUser() AND status != Done"
 
 # Find bugs in a project
-python jql_search.py "project = PROJ AND type = Bug AND status = Open"
+jira search query "project = PROJ AND type = Bug AND status = Open"
 
 # Export results to CSV
-python export_results.py "project = PROJ" --output report.csv
+jira search export "project = PROJ" --output report.csv
 
 # Save a filter for reuse
-python create_filter.py "My Bugs" "type = Bug AND assignee = currentUser()" --favourite
+jira search filter create "My Bugs" "type = Bug AND assignee = currentUser()" --favourite
 ```
 
 For detailed setup, see [docs/QUICK_START.md](docs/QUICK_START.md).
@@ -43,11 +43,11 @@ For detailed setup, see [docs/QUICK_START.md](docs/QUICK_START.md).
 
 | Script | Purpose | Example |
 |--------|---------|---------|
-| `jql_search.py` | Execute JQL queries | `python jql_search.py "project = PROJ"` |
-| `export_results.py` | Export to CSV/JSON | `python export_results.py "JQL" -o report.csv` |
-| `create_filter.py` | Save a reusable filter | `python create_filter.py "Name" "JQL"` |
-| `jql_validate.py` | Check JQL syntax | `python jql_validate.py "your query"` |
-| `run_filter.py` | Run a saved filter | `python run_filter.py --name "Filter"` |
+| `jql_search.py` | Execute JQL queries | `jira search query "project = PROJ"` |
+| `export_results.py` | Export to CSV/JSON | `jira search export "JQL" -o report.csv` |
+| `create_filter.py` | Save a reusable filter | `jira search filter create "Name" "JQL"` |
+| `jql_validate.py` | Check JQL syntax | `jira search validate "your query"` |
+| `run_filter.py` | Run a saved filter | `jira search filter run --name "Filter"` |
 
 For all 18 scripts, see [docs/SCRIPT_REFERENCE.md](docs/SCRIPT_REFERENCE.md).
 
@@ -77,68 +77,68 @@ For all 18 scripts, see [docs/SCRIPT_REFERENCE.md](docs/SCRIPT_REFERENCE.md).
 
 ```bash
 # Basic search
-python jql_search.py "project = PROJ AND status = Open"
+jira search query "project = PROJ AND status = Open"
 
 # With field selection
-python jql_search.py "project = PROJ" --fields key,summary,status,assignee
+jira search query "project = PROJ" --fields key,summary,status,assignee
 
 # With result limit
-python jql_search.py "project = PROJ" --max-results 50
+jira search query "project = PROJ" --max-results 50
 ```
 
 ### JQL Building
 
 ```bash
 # Validate syntax
-python jql_validate.py "project = PROJ AND status = Open"
+jira search validate "project = PROJ AND status = Open"
 
 # Interactive builder
-python jql_interactive.py
+jira search interactive
 
 # Get field suggestions
-python jql_suggest.py status
+jira search suggest status
 ```
 
 ### Saved Filters
 
 ```bash
 # Create filter
-python create_filter.py "Sprint Issues" "sprint IN openSprints()" --favourite
+jira search filter create "Sprint Issues" "sprint IN openSprints()" --favourite
 
 # List filters
-python get_filters.py --mine
+jira search filter list --mine
 
 # Run filter
-python run_filter.py --name "Sprint Issues"
+jira search filter run --name "Sprint Issues"
 
 # Share filter
-python share_filter.py 10042 --project PROJ
+jira search filter share 10042 --project PROJ
 ```
 
 ### Export
 
 ```bash
 # CSV export
-python export_results.py "project = PROJ" --output report.csv
+jira search export "project = PROJ" --output report.csv
 
 # JSON export
-python export_results.py "project = PROJ" --output data.json --format json
+jira search export "project = PROJ" --output data.json --format json
 
 # Large export (>5000 issues)
-python streaming_export.py "project = PROJ" --output report.csv --enable-checkpoint
+jira search export "project = PROJ" --output report.csv --enable-checkpoint
 ```
 
 ### Query History
 
 ```bash
 # Save query locally
-python jql_history.py --add "project = PROJ" --name my-query
+jira search history --add "project = PROJ" --name my-query
 
 # List saved queries
-python jql_history.py --list
+jira search history --list
 
 # Run saved query
-python jql_history.py --run my-query
+jira search history --run my-query
 ```
 
 ## Streaming Export for Large Datasets
@@ -154,10 +154,10 @@ For exports >5000 issues, use `streaming_export.py`:
 
 ```bash
 # Resumable export
-python streaming_export.py "project = PROJ" --output report.csv --enable-checkpoint
+jira search export "project = PROJ" --output report.csv --enable-checkpoint
 
 # Resume if interrupted
-python streaming_export.py --resume export-20251226-143022
+jira search export --resume export-20251226-143022
 ```
 
 ## Exit Codes
@@ -173,9 +173,9 @@ python streaming_export.py --resume export-20251226-143022
 
 **Quick diagnostics:**
 ```bash
-python jql_validate.py "your query"  # Check syntax
-python jql_fields.py                 # List fields
-python jql_suggest.py status         # Get values
+jira search validate "your query"  # Check syntax
+jira search fields                 # List fields
+jira search suggest status         # Get values
 ```
 
 For detailed troubleshooting, see [references/TROUBLESHOOTING.md](references/TROUBLESHOOTING.md).
