@@ -41,26 +41,14 @@ def get_issue(ctx, issue_key: str, fields: str, detailed: bool, show_links: bool
         sys.modules[spec.name] = module
         spec.loader.exec_module(module)
 
-        # Check if the preferred 'get_issue' function (aliased to execute_skill) exists
-        if hasattr(module, 'get_issue') and callable(getattr(module, 'get_issue')):
-            # The original get_issue function expects specific args, not an argparse namespace
-            # We need to map CLI arguments to direct function arguments
-            result = module.get_issue(
-                issue_key=issue_key,
-                fields=fields.split(',') if fields else None,
-                profile=ctx.obj.get('PROFILE')
-            )
-            # The script logic inside get_issue.py already handles output formatting
-            # We need to explicitly call the formatting if we are calling execute_skill directly
-            # For simplicity for now, we'll let the main() function handle output.
-            # If issue.get_issue() does not print, we need to handle it here.
-            # For now, let's just make it simpler and call the main function with the mapped CLI arguments.
-            # This is where the 'main(argv=...)' refactoring comes in handy.
-            module.main(script_args + ["--output", ctx.obj['OUTPUT']]) # Call script's main with mapped args and global output
-            ctx.exit(0)
+        # Check if the script has a main() function
+        if hasattr(module, 'main') and callable(getattr(module, 'main')):
+            # Call script's main with mapped args
+            module.main(script_args + ["--output", ctx.obj['OUTPUT']])
+            # Success - exit cleanly (don't use ctx.exit inside try block)
         else:
-            # Fallback to subprocess if execute_skill/get_issue is not found or not callable.
-            raise ImportError("Callable 'get_issue' function not found in script.")
+            # Fallback to subprocess if main is not found or not callable.
+            raise ImportError("Callable 'main' function not found in script.")
 
     except ImportError as e:
         # --- Fallback: Subprocess call to main(argv=...) ---
@@ -70,6 +58,9 @@ def get_issue(ctx, issue_key: str, fields: str, detailed: bool, show_links: bool
             args=script_args + ["--output", ctx.obj['OUTPUT']],
             ctx=ctx
         )
+    except click.exceptions.Exit:
+        # Script called sys.exit(0) or similar - this is expected, re-raise
+        raise
     except Exception as e:
         click.echo(f"Error calling get_issue directly: {e}", err=True)
         ctx.exit(1)
@@ -129,14 +120,10 @@ def create_issue(ctx, project: str, type: str, summary: str, description: str, p
         sys.modules[spec.name] = module
         spec.loader.exec_module(module)
 
-        if hasattr(module, 'create_issue') and callable(getattr(module, 'create_issue')):
-            # The original create_issue function expects specific args
-            # We need to map CLI arguments to direct function arguments
-            # For simplicity and consistency, calling the main function with mapped CLI arguments
+        if hasattr(module, 'main') and callable(getattr(module, 'main')):
             module.main(script_args + ["--output", ctx.obj['OUTPUT']])
-            ctx.exit(0)
         else:
-            raise ImportError("Callable 'create_issue' function not found in script.")
+            raise ImportError("Callable 'main' function not found in script.")
 
     except ImportError as e:
         click.echo(f"Warning: Falling back to subprocess for {script_module_path.name} ({e})", err=True)
@@ -145,6 +132,8 @@ def create_issue(ctx, project: str, type: str, summary: str, description: str, p
             args=script_args + ["--output", ctx.obj['OUTPUT']],
             ctx=ctx
         )
+    except click.exceptions.Exit:
+        raise
     except Exception as e:
         click.echo(f"Error calling create_issue directly: {e}", err=True)
         ctx.exit(1)
@@ -184,11 +173,10 @@ def update_issue(ctx, issue_key: str, summary: str, description: str, priority: 
         sys.modules[spec.name] = module
         spec.loader.exec_module(module)
 
-        if hasattr(module, 'update_issue') and callable(getattr(module, 'update_issue')):
+        if hasattr(module, 'main') and callable(getattr(module, 'main')):
             module.main(script_args + ["--output", ctx.obj['OUTPUT']])
-            ctx.exit(0)
         else:
-            raise ImportError("Callable 'update_issue' function not found in script.")
+            raise ImportError("Callable 'main' function not found in script.")
 
     except ImportError as e:
         click.echo(f"Warning: Falling back to subprocess for {script_module_path.name} ({e})", err=True)
@@ -197,6 +185,8 @@ def update_issue(ctx, issue_key: str, summary: str, description: str, priority: 
             args=script_args + ["--output", ctx.obj['OUTPUT']],
             ctx=ctx
         )
+    except click.exceptions.Exit:
+        raise
     except Exception as e:
         click.echo(f"Error calling update_issue directly: {e}", err=True)
         ctx.exit(1)
@@ -221,11 +211,10 @@ def delete_issue(ctx, issue_key: str, force: bool):
         sys.modules[spec.name] = module
         spec.loader.exec_module(module)
 
-        if hasattr(module, 'delete_issue') and callable(getattr(module, 'delete_issue')):
+        if hasattr(module, 'main') and callable(getattr(module, 'main')):
             module.main(script_args + ["--output", ctx.obj['OUTPUT']])
-            ctx.exit(0)
         else:
-            raise ImportError("Callable 'delete_issue' function not found in script.")
+            raise ImportError("Callable 'main' function not found in script.")
 
     except ImportError as e:
         click.echo(f"Warning: Falling back to subprocess for {script_module_path.name} ({e})", err=True)
@@ -234,6 +223,8 @@ def delete_issue(ctx, issue_key: str, force: bool):
             args=script_args + ["--output", ctx.obj['OUTPUT']],
             ctx=ctx
         )
+    except click.exceptions.Exit:
+        raise
     except Exception as e:
         click.echo(f"Error calling delete_issue directly: {e}", err=True)
         ctx.exit(1)
