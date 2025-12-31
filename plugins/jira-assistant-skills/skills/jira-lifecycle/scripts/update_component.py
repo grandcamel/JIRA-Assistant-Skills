@@ -86,7 +86,7 @@ def update_component_dry_run(component_id: str, name: str = None, description: s
     return update_data
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Update a project component in JIRA',
@@ -116,7 +116,7 @@ Examples:
     parser.add_argument('--profile', '-p',
                        help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Check that at least one field to update is specified
     if not any([args.name, args.description, args.lead, args.assignee_type]):

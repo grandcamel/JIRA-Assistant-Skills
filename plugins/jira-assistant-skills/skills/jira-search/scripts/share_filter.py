@@ -291,7 +291,7 @@ def handle_share_user(client, args) -> None:
         print(f"Filter {args.filter_id} shared with user {args.user}.")
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Manage filter sharing permissions.',
@@ -333,7 +333,7 @@ Examples:
     parser.add_argument('--profile',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(args.profile)

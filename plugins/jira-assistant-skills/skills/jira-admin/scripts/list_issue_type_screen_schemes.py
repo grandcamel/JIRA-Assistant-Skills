@@ -123,7 +123,7 @@ def format_schemes_output(schemes: List[Dict[str, Any]],
     return format_table(data, columns=columns)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='List all issue type screen schemes in JIRA',
         epilog='''
@@ -155,7 +155,7 @@ Examples:
                         help='Output format (default: text)')
     parser.add_argument('--profile', '-p', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(args.profile)

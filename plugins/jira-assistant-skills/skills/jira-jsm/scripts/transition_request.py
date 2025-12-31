@@ -78,7 +78,7 @@ def list_transitions(issue_key: str, profile: Optional[str] = None) -> list:
         return client.get_request_transitions(issue_key)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Transition a JSM service request',
@@ -123,7 +123,7 @@ Examples:
     parser.add_argument('--profile',
                         help='JIRA profile to use from config')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Show transitions

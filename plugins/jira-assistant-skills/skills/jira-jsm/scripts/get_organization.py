@@ -33,7 +33,7 @@ def get_organization_func(organization_id: int, profile: str = None) -> dict:
         return client.get_organization(organization_id)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Get JSM organization details',
@@ -57,7 +57,7 @@ Examples:
     parser.add_argument('--verbose', '-v', action='store_true',
                         help='Show full API response')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         organization = get_organization_func(

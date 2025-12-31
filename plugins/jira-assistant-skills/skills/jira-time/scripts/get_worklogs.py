@@ -122,7 +122,7 @@ def format_worklogs_text(worklogs_result: Dict[str, Any], issue_key: str) -> str
     return '\n'.join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get worklogs (time entries) for a JIRA issue.',
         epilog='''
@@ -148,7 +148,7 @@ Examples:
     parser.add_argument('--output', '-o', choices=['text', 'json'], default='text',
                         help='Output format (default: text)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Validate issue key

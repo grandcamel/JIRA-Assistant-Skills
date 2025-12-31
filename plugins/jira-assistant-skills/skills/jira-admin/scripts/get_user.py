@@ -160,7 +160,7 @@ def format_user_json(user: Dict[str, Any]) -> str:
     return json.dumps(user, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get JIRA user details by account ID or email',
         epilog='''
@@ -190,7 +190,7 @@ Examples:
                         default='text', help='Output format (default: text)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(args.profile)

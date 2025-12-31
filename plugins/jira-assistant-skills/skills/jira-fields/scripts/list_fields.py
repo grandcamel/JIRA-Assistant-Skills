@@ -93,7 +93,7 @@ def list_fields(filter_pattern: str = None,
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='List custom fields in JIRA instance',
         epilog='Example: python list_fields.py --agile'
@@ -112,7 +112,7 @@ def main():
                         default='text',
                         help='Output format')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         fields = list_fields(

@@ -61,7 +61,7 @@ def add_customer_to_service_desk(service_desk_id: str, account_ids: list,
         client.add_customers_to_service_desk(service_desk_id, account_ids)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Add customers to a JSM service desk',
@@ -88,7 +88,7 @@ Examples:
     parser.add_argument('--profile',
                         help='JIRA profile to use from config')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         account_ids = parse_account_ids(args.account_id)

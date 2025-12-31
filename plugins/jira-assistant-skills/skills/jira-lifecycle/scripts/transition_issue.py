@@ -167,7 +167,7 @@ def transition_issue(issue_key: str, transition_id: str = None,
     return result
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Transition a JIRA issue to a new status',
         epilog='Example: python transition_issue.py PROJ-123 --name "In Progress"'
@@ -196,7 +196,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         fields = json.loads(args.fields) if args.fields else None

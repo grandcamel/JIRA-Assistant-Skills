@@ -255,7 +255,7 @@ def format_output(
         return result['markdown']
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Generate PR description from JIRA issue',
         epilog='Example: python create_pr_description.py PROJ-123 --include-checklist'
@@ -282,7 +282,7 @@ def main():
     parser.add_argument('--profile',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = create_pr_description(

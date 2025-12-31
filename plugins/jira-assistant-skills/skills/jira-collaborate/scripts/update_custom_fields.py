@@ -49,7 +49,7 @@ def update_custom_fields(issue_key: str, field: str = None, value: str = None,
     client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Update custom fields on a JIRA issue',
         epilog='Example: python update_custom_fields.py PROJ-123 --field customfield_10001 --value "Production"'
@@ -66,7 +66,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         update_custom_fields(

@@ -63,7 +63,7 @@ def remove_watcher(issue_key: str, user: str, profile: str = None) -> None:
     client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Manage watchers on a JIRA issue',
         epilog='Example: python manage_watchers.py PROJ-123 --add user@example.com'
@@ -84,7 +84,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         if args.list:

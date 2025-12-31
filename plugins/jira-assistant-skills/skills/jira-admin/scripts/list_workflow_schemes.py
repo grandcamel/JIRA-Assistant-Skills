@@ -140,7 +140,7 @@ def format_schemes_json(schemes: List[Dict[str, Any]]) -> str:
     return json.dumps(schemes, indent=2, default=str)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='List all workflow schemes in a JIRA instance',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -198,7 +198,7 @@ Note: Requires 'Administer Jira' global permission.
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(profile=args.profile)

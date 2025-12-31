@@ -173,7 +173,7 @@ def format_output(
         return '\n'.join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get commits linked to a JIRA issue',
         epilog='Example: python get_issue_commits.py PROJ-123 --detailed'
@@ -193,7 +193,7 @@ def main():
     parser.add_argument('--profile',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         commits = get_issue_commits(

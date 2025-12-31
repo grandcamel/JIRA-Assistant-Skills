@@ -154,7 +154,7 @@ def format_success_message(account_id: str, group_name: Optional[str] = None,
     return f"User '{account_id}' removed from group '{group_identifier}' successfully."
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Remove a user from a JIRA group',
         epilog='''
@@ -182,7 +182,7 @@ Examples:
                         help='Preview without removing')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Validate user identification
     if not args.email and not args.account_id:

@@ -88,7 +88,7 @@ def add_comment_with_visibility(issue_key: str, body: str, format_type: str = 't
     return result
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Add a comment to a JIRA issue',
         epilog='''
@@ -115,7 +115,7 @@ Examples:
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Determine visibility settings

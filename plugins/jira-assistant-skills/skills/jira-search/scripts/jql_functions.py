@@ -185,7 +185,7 @@ def format_functions_json(functions: List[Dict[str, Any]]) -> str:
     return json.dumps(functions, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='List JQL functions with usage examples.',
@@ -213,7 +213,7 @@ Examples:
     parser.add_argument('--profile', '-p',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(args.profile)

@@ -52,7 +52,7 @@ def format_queues_json(queues_data: Dict[str, Any]) -> str:
     return json.dumps(queues_data, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(description='List JSM service desk queues')
     parser.add_argument('--service-desk', type=int, required=True, help='Service desk ID')
@@ -60,7 +60,7 @@ def main():
     parser.add_argument('--output', choices=['text', 'json'], default='text')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         queues = list_queues(args.service_desk, args.profile)

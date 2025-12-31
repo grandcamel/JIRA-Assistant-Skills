@@ -185,7 +185,7 @@ def format_search_json(workflows: List[Dict[str, Any]]) -> str:
     return json.dumps(workflows, indent=2, default=str)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Search workflows with various filters',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -273,7 +273,7 @@ Note: Requires 'Administer Jira' global permission.
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Determine active filter
     is_active = None

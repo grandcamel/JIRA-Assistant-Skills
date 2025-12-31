@@ -47,7 +47,7 @@ def upload_attachment(issue_key: str, file_path: str, file_name: str = None,
     return result
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Upload an attachment to a JIRA issue',
         epilog='Example: python upload_attachment.py PROJ-123 --file screenshot.png'
@@ -63,7 +63,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = upload_attachment(

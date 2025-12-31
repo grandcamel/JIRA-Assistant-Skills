@@ -97,7 +97,7 @@ def format_screen_output(screen: Dict[str, Any],
     return '\n'.join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get detailed information about a JIRA screen',
         epilog='''
@@ -126,7 +126,7 @@ Examples:
                         help='Output format (default: text)')
     parser.add_argument('--profile', '-p', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # If --fields specified without --tabs, enable tabs
     if args.show_fields and not args.show_tabs:

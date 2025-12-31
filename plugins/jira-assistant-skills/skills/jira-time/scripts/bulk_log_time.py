@@ -133,7 +133,7 @@ def bulk_log_time(client, issues: Optional[List[str]] = None,
     }
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Log time to multiple JIRA issues at once.',
         epilog='''
@@ -166,7 +166,7 @@ Examples:
                         default='text',
                         help='Output format (default: text)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Validate that either issues or jql is specified
     if not args.issues and not args.jql:

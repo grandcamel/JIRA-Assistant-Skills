@@ -224,7 +224,7 @@ def format_assignment_result(
     return '\n'.join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Assign a JIRA permission scheme to projects',
@@ -270,7 +270,7 @@ Examples:
         help='JIRA profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Validate arguments
     if not args.project and not args.projects:

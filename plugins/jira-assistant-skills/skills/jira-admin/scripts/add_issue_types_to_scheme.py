@@ -56,7 +56,7 @@ def add_issue_types_to_scheme(
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description='Add issue types to an issue type scheme',
@@ -94,7 +94,7 @@ Note:
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         add_issue_types_to_scheme(

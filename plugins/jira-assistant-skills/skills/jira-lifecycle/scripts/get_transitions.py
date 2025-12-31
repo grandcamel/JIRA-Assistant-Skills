@@ -39,7 +39,7 @@ def get_transitions(issue_key: str, profile: str = None) -> list:
     return transitions
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get available transitions for a JIRA issue',
         epilog='Example: python get_transitions.py PROJ-123'
@@ -54,7 +54,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         transitions = get_transitions(

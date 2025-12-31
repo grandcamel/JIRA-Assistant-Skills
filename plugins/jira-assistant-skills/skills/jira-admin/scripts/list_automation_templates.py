@@ -92,7 +92,7 @@ def format_template_summary(template: Dict[str, Any], verbose: bool = False) -> 
     return result
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='List available automation templates',
         epilog='''
@@ -128,7 +128,7 @@ Examples:
                         default='table', help='Output format (default: table)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         templates = list_automation_templates(

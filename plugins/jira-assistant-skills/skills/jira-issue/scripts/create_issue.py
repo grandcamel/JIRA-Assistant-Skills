@@ -205,7 +205,7 @@ def create_issue(project: str, issue_type: str, summary: str,
     return result
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Create a new JIRA issue',
         epilog='Example: python create_issue.py --project PROJ --type Bug --summary "Login fails"'
@@ -256,7 +256,7 @@ def main():
                        default='text',
                        help='Output format (default: text)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         labels = [l.strip() for l in args.labels.split(',')] if args.labels else None

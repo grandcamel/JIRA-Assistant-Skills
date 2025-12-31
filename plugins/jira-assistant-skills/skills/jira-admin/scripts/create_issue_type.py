@@ -104,7 +104,7 @@ def format_created_issue_type(issue_type: Dict[str, Any], output_format: str = '
     return '\n'.join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description='Create a new issue type in JIRA',
@@ -165,7 +165,7 @@ Note:
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         issue_type = create_issue_type(

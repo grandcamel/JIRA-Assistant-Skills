@@ -61,7 +61,7 @@ def parse_attributes(attr_list: list) -> dict:
     return attributes
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Create new asset/CMDB object",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -75,7 +75,7 @@ def main():
                        help='Preview changes without creating')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Validate object_type_id is positive

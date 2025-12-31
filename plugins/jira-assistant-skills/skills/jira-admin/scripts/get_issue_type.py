@@ -100,7 +100,7 @@ def format_issue_type(issue_type: Dict[str, Any], output_format: str = 'detail')
     return '\n'.join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description='Get issue type details from JIRA',
@@ -141,7 +141,7 @@ Examples:
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         issue_type = get_issue_type(

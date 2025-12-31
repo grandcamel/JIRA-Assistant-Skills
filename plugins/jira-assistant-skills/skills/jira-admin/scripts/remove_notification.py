@@ -232,7 +232,7 @@ def format_json_output(result: Dict[str, Any]) -> str:
     return json.dumps(result, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description='Remove a notification from a notification scheme',
@@ -261,7 +261,7 @@ Examples:
                         help='Output format (default: text)')
     parser.add_argument('--profile', '-p', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if not args.notification_id and not (args.event_name or args.event_id):
         parser.error("Either --notification-id or --event/--recipient must be provided")

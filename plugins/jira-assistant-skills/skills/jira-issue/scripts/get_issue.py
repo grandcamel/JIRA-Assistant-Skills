@@ -44,7 +44,7 @@ def get_issue(issue_key: str, fields: list = None, profile: str = None) -> dict:
     return issue
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get and display a JIRA issue',
         epilog='Example: python get_issue.py PROJ-123 --detailed'
@@ -70,7 +70,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         fields = [f.strip() for f in args.fields.split(',')] if args.fields else None

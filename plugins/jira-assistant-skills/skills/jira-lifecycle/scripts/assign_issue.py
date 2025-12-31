@@ -95,7 +95,7 @@ def assign_issue(issue_key: str, user: str = None, assign_to_self: bool = False,
     return result
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Assign or reassign a JIRA issue',
         epilog='''Examples:
@@ -130,7 +130,7 @@ Note: Account IDs are more reliable than emails. Find them via:
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = assign_issue(

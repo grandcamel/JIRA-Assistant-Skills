@@ -77,7 +77,7 @@ def format_project_scheme(assignment: Dict[str, Any], output_format: str = 'deta
     return '\n'.join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description='Get issue type scheme for a project',
@@ -110,7 +110,7 @@ Examples:
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         assignment = get_project_issue_type_scheme(

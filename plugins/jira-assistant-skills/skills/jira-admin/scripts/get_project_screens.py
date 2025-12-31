@@ -195,7 +195,7 @@ def format_output(result: Dict[str, Any],
     return '\n'.join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get screen configuration for a JIRA project',
         epilog='''
@@ -237,7 +237,7 @@ Examples:
                         help='Output format (default: text)')
     parser.add_argument('--profile', '-p', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(args.profile)

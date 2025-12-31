@@ -62,7 +62,7 @@ def delete_issue(issue_key: str, force: bool = False, profile: str = None) -> No
     client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Delete a JIRA issue',
         epilog='Example: python delete_issue.py PROJ-123'
@@ -76,7 +76,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         delete_issue(

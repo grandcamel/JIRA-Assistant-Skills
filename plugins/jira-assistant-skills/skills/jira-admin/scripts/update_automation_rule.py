@@ -83,7 +83,7 @@ def update_automation_rule(
     return client.update_rule(rule_id, rule_config=rule_config)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Update an automation rule configuration',
         epilog='''
@@ -121,7 +121,7 @@ Examples:
                         default='text', help='Output format (default: text)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Must have at least one update
     if not any([args.name, args.desc, args.config]):

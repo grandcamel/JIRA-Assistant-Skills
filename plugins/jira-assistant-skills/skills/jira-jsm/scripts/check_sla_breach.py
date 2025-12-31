@@ -201,7 +201,7 @@ def format_breach_json(result: Dict[str, Any]) -> str:
     return json.dumps(output, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Check JSM service request SLA breach status',
@@ -235,7 +235,7 @@ Examples:
     parser.add_argument('--profile',
                         help='JIRA profile to use from config')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = check_sla_breach(

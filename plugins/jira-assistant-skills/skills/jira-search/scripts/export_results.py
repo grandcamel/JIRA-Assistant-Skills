@@ -83,7 +83,7 @@ def export_results(jql: str, output_file: str, format_type: str = 'csv',
             json.dump({'issues': export_data, 'total': len(export_data)}, f, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Export JQL search results to file',
         epilog='Example: python export_results.py "project = PROJ" --output report.csv'
@@ -107,7 +107,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         fields = [f.strip() for f in args.fields.split(',')] if args.fields else None

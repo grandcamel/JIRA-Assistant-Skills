@@ -55,7 +55,7 @@ def reorder_issue_types_in_scheme(
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description='Reorder issue types within an issue type scheme',
@@ -96,7 +96,7 @@ Note:
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         reorder_issue_types_in_scheme(

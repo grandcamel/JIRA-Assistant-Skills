@@ -151,7 +151,7 @@ def format_created_group_json(group: Dict[str, Any]) -> str:
     return json.dumps(group, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Create a new JIRA group',
         epilog='''
@@ -170,7 +170,7 @@ Examples:
                         default='text', help='Output format (default: text)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Validate name first

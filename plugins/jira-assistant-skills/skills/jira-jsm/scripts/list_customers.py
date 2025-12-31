@@ -47,7 +47,7 @@ def list_service_desk_customers(service_desk_id: str, query: str = None,
         )
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='List customers for a JSM service desk',
@@ -86,7 +86,7 @@ Examples:
     parser.add_argument('--profile',
                         help='JIRA profile to use from config')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = list_service_desk_customers(

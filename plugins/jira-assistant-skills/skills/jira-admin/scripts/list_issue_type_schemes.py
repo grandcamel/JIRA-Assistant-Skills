@@ -84,7 +84,7 @@ def format_schemes(response: Dict[str, Any], output_format: str = 'table') -> st
     return format_table(headers, rows)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description='List all issue type schemes in JIRA',
@@ -141,7 +141,7 @@ Examples:
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         response = list_issue_type_schemes(

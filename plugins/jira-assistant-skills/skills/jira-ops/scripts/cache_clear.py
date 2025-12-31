@@ -33,7 +33,7 @@ if shared_lib_path not in sys.path:
 from jira_assistant_skills_lib import JiraCache
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Clear JIRA cache entries",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -78,7 +78,7 @@ Examples:
         help="Custom cache directory"
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         cache = JiraCache(cache_dir=args.cache_dir)

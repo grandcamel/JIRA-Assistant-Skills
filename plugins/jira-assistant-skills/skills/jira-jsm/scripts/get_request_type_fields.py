@@ -147,7 +147,7 @@ def format_fields_json(fields_data: dict) -> str:
     return format_json(fields_data)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get fields for a JSM request type',
         epilog='Example: python get_request_type_fields.py 1 25'
@@ -170,7 +170,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Fetch fields

@@ -36,7 +36,7 @@ def list_organizations_func(start: int = 0, limit: int = 50,
         return client.get_organizations(start=start, limit=limit)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='List JSM organizations',
@@ -65,7 +65,7 @@ Examples:
     parser.add_argument('--profile',
                         help='JIRA profile to use from config')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         data = list_organizations_func(

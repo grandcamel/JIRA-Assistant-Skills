@@ -140,7 +140,7 @@ def format_success_message(account_id: str, group_name: Optional[str] = None,
     return f"User '{account_id}' added to group '{group_identifier}' successfully."
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Add a user to a JIRA group',
         epilog='''
@@ -168,7 +168,7 @@ Examples:
                         default='text', help='Output format (default: text)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Validate user identification
     if not args.email and not args.account_id:

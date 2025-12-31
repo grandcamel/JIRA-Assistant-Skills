@@ -87,7 +87,7 @@ def get_backlog(board_id: int,
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get backlog issues for a JIRA board',
         epilog='Example: python get_backlog.py --board 123'
@@ -109,7 +109,7 @@ def main():
                        default='text',
                        help='Output format')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = get_backlog(

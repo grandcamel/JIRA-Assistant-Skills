@@ -198,7 +198,7 @@ def format_report_text(report: Dict[str, Any], show_details: bool = True) -> str
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Generate time reports from JIRA worklogs.',
         epilog='''
@@ -233,7 +233,7 @@ Examples:
                         default='text',
                         help='Output format (default: text)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Handle period shortcuts
     if args.period:

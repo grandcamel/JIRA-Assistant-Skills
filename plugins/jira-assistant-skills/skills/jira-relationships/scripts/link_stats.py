@@ -256,7 +256,7 @@ def format_project_stats(stats: Dict[str, Any], top: int = 10) -> str:
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Analyze link statistics for JIRA issues',
         epilog='''
@@ -293,7 +293,7 @@ Examples:
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         if args.issue_key:

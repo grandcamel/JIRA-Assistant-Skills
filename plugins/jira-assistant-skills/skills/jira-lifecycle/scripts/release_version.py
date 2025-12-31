@@ -133,7 +133,7 @@ def release_version_dry_run(version_id: str, release_date: str = None,
     return update_data
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Release a project version in JIRA',
@@ -163,7 +163,7 @@ Examples:
     parser.add_argument('--profile', '-p',
                        help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Validate arguments
     if args.id and args.name:

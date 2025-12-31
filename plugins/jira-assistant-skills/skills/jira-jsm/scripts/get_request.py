@@ -142,7 +142,7 @@ def format_request_json(request: Dict[str, Any]) -> str:
     return json.dumps(request, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Get JSM service request details',
@@ -179,7 +179,7 @@ Examples:
     parser.add_argument('--profile',
                         help='JIRA profile to use from config')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         show_sla = args.show_sla or args.full

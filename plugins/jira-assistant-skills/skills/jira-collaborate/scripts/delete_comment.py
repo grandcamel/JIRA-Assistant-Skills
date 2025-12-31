@@ -108,7 +108,7 @@ def delete_comment_dry_run(issue_key: str, comment_id: str, profile: str = None)
     return comment
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Delete a comment from a JIRA issue',
@@ -131,7 +131,7 @@ Examples:
     parser.add_argument('--profile', '-p',
                        help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         if args.dry_run:

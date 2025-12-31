@@ -211,7 +211,7 @@ def format_groups_csv(groups: List[Dict[str, Any]],
     return output.getvalue()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='List JIRA groups with optional filtering',
         epilog='''
@@ -238,7 +238,7 @@ Examples:
                         default='table', help='Output format (default: table)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(args.profile)

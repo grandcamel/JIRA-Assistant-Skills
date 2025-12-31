@@ -225,7 +225,7 @@ def format_grouped_statuses(groups: Dict[str, List[Dict[str, Any]]]) -> str:
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='List all statuses in a JIRA instance',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -290,7 +290,7 @@ Examples:
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(profile=args.profile)

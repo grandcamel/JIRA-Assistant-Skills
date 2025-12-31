@@ -78,7 +78,7 @@ def update_worklog(client, issue_key: str, worklog_id: str,
     )
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Update an existing worklog (time entry) on a JIRA issue.',
         epilog='''
@@ -110,7 +110,7 @@ Examples:
     parser.add_argument('--output', '-o', choices=['text', 'json'], default='text',
                         help='Output format (default: text)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Validate that at least one field is being updated
     if not any([args.time, args.started, args.comment]):

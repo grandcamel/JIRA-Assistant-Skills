@@ -121,7 +121,7 @@ def delete_group(client, group_name: Optional[str] = None,
     )
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Delete a JIRA group',
         epilog='''
@@ -146,7 +146,7 @@ Examples:
                         help='Preview without deleting')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Require either group name or group ID
     if not args.group_name and not args.group_id:

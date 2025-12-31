@@ -74,7 +74,7 @@ def generate_progress_bar(progress: int, width: int = 20) -> str:
     return '█' * filled + '░' * empty
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get time tracking summary for a JIRA issue.',
         epilog='''
@@ -91,7 +91,7 @@ Examples:
     parser.add_argument('--output', '-o', choices=['text', 'json'], default='text',
                         help='Output format (default: text)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Validate issue key

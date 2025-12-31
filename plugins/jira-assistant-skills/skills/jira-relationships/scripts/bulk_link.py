@@ -181,7 +181,7 @@ def format_bulk_result(result: Dict[str, Any], output_format: str = 'text') -> s
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Bulk link multiple issues to a target',
         epilog='Example: python bulk_link.py --issues PROJ-1,PROJ-2 --blocks PROJ-100'
@@ -232,7 +232,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Determine target and link type from semantic flags
     target = None

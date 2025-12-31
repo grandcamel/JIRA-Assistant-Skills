@@ -95,7 +95,7 @@ def format_issue_types(
     return format_table(headers, rows)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description='List all issue types in JIRA',
@@ -149,7 +149,7 @@ Examples:
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         issue_types = list_issue_types(

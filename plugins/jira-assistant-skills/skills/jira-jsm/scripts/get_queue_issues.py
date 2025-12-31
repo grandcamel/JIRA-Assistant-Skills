@@ -55,7 +55,7 @@ def format_issues_json(issues_data: Dict[str, Any]) -> str:
     return json.dumps(issues_data, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(description='Get issues in JSM service desk queue')
     parser.add_argument('--service-desk', type=int, required=True, help='Service desk ID')
@@ -65,7 +65,7 @@ def main():
     parser.add_argument('--output', choices=['text', 'json'], default='text')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         issues = get_queue_issues(

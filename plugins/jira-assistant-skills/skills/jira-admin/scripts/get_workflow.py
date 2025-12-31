@@ -271,7 +271,7 @@ def format_workflow_json(workflow: Dict[str, Any]) -> str:
     return json.dumps(workflow, indent=2, default=str)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get detailed workflow information',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -346,7 +346,7 @@ Note: Requires 'Administer Jira' global permission.
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if not args.name and not args.entity_id:
         parser.error("Either workflow name or --entity-id must be provided")

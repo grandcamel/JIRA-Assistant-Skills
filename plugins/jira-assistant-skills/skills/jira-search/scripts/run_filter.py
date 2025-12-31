@@ -59,7 +59,7 @@ def run_filter(filter_id: str = None, filter_name: str = None,
     return results
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Run a saved JIRA filter',
         epilog='Example: python run_filter.py --name "My Open Issues"'
@@ -82,7 +82,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         results = run_filter(

@@ -265,7 +265,7 @@ def link_commit_to_issues(
     return results
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Link Git commit to JIRA issue',
         epilog='Example: python link_commit.py PROJ-123 --commit abc123 --repo https://github.com/org/repo'
@@ -294,7 +294,7 @@ def main():
     parser.add_argument('--profile',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Determine issue keys

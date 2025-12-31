@@ -104,7 +104,7 @@ def parse_param(param_str: str) -> tuple:
     return key, value
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Create an automation rule from a template',
         epilog='''
@@ -147,7 +147,7 @@ Examples:
                         default='text', help='Output format (default: text)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Must have either project or config
     if not args.project and not args.config:

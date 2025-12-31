@@ -97,7 +97,7 @@ def rank_issue(issue_keys: List[str],
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Rank issues in JIRA backlog',
         epilog='Example: python rank_issue.py PROJ-1 --before PROJ-2'
@@ -126,7 +126,7 @@ def main():
                        default='text',
                        help='Output format')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Parse issue keys

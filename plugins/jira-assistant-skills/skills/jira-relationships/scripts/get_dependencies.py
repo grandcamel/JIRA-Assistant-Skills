@@ -342,7 +342,7 @@ def format_d2(issue_key: str, dependencies: list) -> str:
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Find all dependencies for a JIRA issue',
         epilog='''
@@ -374,7 +374,7 @@ Export formats:
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         link_types = args.link_types.split(',') if args.link_types else None

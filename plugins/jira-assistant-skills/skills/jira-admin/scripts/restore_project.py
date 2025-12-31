@@ -95,7 +95,7 @@ def format_output(project: Dict[str, Any], output_format: str = "text") -> str:
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description="Restore an archived or deleted JIRA project",
@@ -138,7 +138,7 @@ Examples:
         help="Configuration profile to use"
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(profile=args.profile)

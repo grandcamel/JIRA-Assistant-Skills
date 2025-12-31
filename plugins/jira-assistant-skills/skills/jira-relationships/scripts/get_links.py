@@ -121,7 +121,7 @@ def format_links(links: list, issue_key: str, output_format: str = 'text') -> st
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='View issue links for a JIRA issue',
         epilog='Example: python get_links.py PROJ-123 --type blocks'
@@ -152,7 +152,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         links = get_links(

@@ -36,7 +36,7 @@ def get_participants_func(issue_key: str, start: int = 0, limit: int = 50,
         return client.get_request_participants(issue_key, start=start, limit=limit)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Get request participants',
@@ -67,7 +67,7 @@ Examples:
     parser.add_argument('--profile',
                         help='JIRA profile to use from config')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         data = get_participants_func(

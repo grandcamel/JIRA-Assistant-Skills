@@ -154,7 +154,7 @@ def format_json_output(result: Dict[str, Any]) -> str:
     return json.dumps(result, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description='Get notification scheme details from JIRA',
@@ -177,7 +177,7 @@ Examples:
                         help='Show projects using this scheme')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if not args.scheme_id and not args.scheme_name:
         parser.error("Either scheme_id or --name must be provided")

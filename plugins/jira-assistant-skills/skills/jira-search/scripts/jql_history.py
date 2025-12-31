@@ -296,7 +296,7 @@ def format_query_list(queries: List[Dict[str, Any]]) -> str:
     )
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Manage JQL query history and cache',
         epilog='''
@@ -371,7 +371,7 @@ Examples:
     parser.add_argument('--profile',
                        help='JIRA profile to use (with --run)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         if args.list:

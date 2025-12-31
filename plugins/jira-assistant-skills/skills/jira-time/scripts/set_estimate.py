@@ -68,7 +68,7 @@ def set_estimate(client, issue_key: str,
     return client.get_time_tracking(issue_key)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Set time estimates on a JIRA issue.',
         epilog='''
@@ -90,7 +90,7 @@ Examples:
     parser.add_argument('--output', choices=['text', 'json'], default='text',
                         help='Output format (default: text)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Validate that at least one estimate is specified
     if not args.original and not args.remaining:

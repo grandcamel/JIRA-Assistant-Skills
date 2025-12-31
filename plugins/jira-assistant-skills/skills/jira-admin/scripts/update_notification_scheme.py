@@ -163,7 +163,7 @@ def format_json_output(result: Dict[str, Any]) -> str:
     return json.dumps(result, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description='Update notification scheme metadata in JIRA',
@@ -184,7 +184,7 @@ Examples:
                         help='Output format (default: text)')
     parser.add_argument('--profile', '-p', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if not args.name and not args.description:
         parser.error("At least one of --name or --description must be provided")

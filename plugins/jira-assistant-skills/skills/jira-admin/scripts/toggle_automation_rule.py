@@ -95,7 +95,7 @@ def toggle_automation_rule(
         return client.enable_rule(rule_id)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Toggle automation rule state',
         epilog='''
@@ -125,7 +125,7 @@ Examples:
                         default='text', help='Output format (default: text)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if not args.rule_id and not args.name:
         parser.error("Either rule_id or --name must be provided")

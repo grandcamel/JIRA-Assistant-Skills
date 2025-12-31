@@ -219,7 +219,7 @@ def warm_statuses(client, cache, verbose=False):
         return 0, None
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Pre-warm JIRA cache",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -268,7 +268,7 @@ Examples:
         help="Verbose output"
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Check if any warming option is selected
     if not any([args.projects, args.fields, args.users, args.all]):

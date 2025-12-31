@@ -168,7 +168,7 @@ def move_to_backlog(issue_keys: List[str] = None,
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Move issues to a Sprint or backlog in JIRA',
         epilog='Example: python move_to_sprint.py --sprint 456 --issues PROJ-1,PROJ-2'
@@ -200,7 +200,7 @@ def main():
                        default='text',
                        help='Output format')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Validate arguments

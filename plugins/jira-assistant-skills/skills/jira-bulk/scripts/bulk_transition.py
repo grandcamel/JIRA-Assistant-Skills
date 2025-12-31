@@ -536,7 +536,7 @@ def bulk_transition(
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Bulk transition JIRA issues to new status',
         epilog='''
@@ -589,7 +589,7 @@ Examples:
     parser.add_argument('--profile',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Handle list checkpoints

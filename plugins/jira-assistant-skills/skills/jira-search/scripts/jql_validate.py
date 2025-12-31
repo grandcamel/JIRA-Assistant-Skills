@@ -220,7 +220,7 @@ def format_results_json(results: List[Dict[str, Any]]) -> str:
     return json.dumps(results, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Validate JQL query syntax.',
@@ -247,7 +247,7 @@ Examples:
     parser.add_argument('--profile', '-p',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Collect queries
     queries = list(args.queries) if args.queries else []

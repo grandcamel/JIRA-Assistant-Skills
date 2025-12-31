@@ -117,7 +117,7 @@ def get_estimates(sprint_id: int = None,
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get story point estimation summary',
         epilog='Example: python get_estimates.py --sprint 456'
@@ -140,7 +140,7 @@ def main():
                        default='text',
                        help='Output format')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = get_estimates(

@@ -140,7 +140,7 @@ def format_service_desk_created_json(service_desk: dict) -> str:
     return format_json(service_desk)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Create a new JSM service desk (requires admin permissions)',
         epilog='Example: python create_service_desk.py --name "IT Service Desk" --key ITS'
@@ -166,7 +166,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # List templates and exit

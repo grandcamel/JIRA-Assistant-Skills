@@ -35,7 +35,7 @@ def create_organization_func(name: str, profile: str = None) -> dict:
         return client.create_organization(name)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Create a JSM organization',
@@ -64,7 +64,7 @@ Examples:
     parser.add_argument('--verbose', '-v', action='store_true',
                         help='Show full API response')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         if not args.name or not args.name.strip():

@@ -488,7 +488,7 @@ def run_interactive(builder: InteractiveBuilder, start_with: str = None):
     builder.close_client()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Interactive JQL query builder',
         epilog='''
@@ -507,7 +507,7 @@ Examples:
     parser.add_argument('--profile',
                        help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         builder = InteractiveBuilder(profile=args.profile)

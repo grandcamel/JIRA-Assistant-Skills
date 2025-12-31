@@ -231,7 +231,7 @@ def configure_agile_fields(project_key: str,
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Configure Agile fields for a company-managed JIRA project',
         epilog='Example: python configure_agile_fields.py PROJ'
@@ -254,7 +254,7 @@ def main():
                         default='text',
                         help='Output format')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = configure_agile_fields(

@@ -106,7 +106,7 @@ def estimate_issue(issue_keys: List[str] = None,
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Set story points on JIRA issues',
         epilog='Example: python estimate_issue.py PROJ-1 --points 5'
@@ -127,7 +127,7 @@ def main():
                        default='text',
                        help='Output format')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Parse issue keys if provided

@@ -177,7 +177,7 @@ def format_scheme_json(scheme: Dict[str, Any]) -> str:
     return json.dumps(scheme, indent=2, default=str)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get detailed workflow scheme information',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -243,7 +243,7 @@ Note: Requires 'Administer Jira' global permission.
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.scheme_id is None and not args.name:
         parser.error("Either scheme name or --id must be provided")

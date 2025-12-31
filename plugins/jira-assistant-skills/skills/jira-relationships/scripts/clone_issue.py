@@ -240,7 +240,7 @@ def format_clone_result(result: Dict[str, Any], output_format: str = 'text') -> 
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Clone a JIRA issue',
         epilog='Example: python clone_issue.py PROJ-123 --include-links'
@@ -269,7 +269,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = clone_issue(

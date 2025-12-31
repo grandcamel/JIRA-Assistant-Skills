@@ -90,7 +90,7 @@ def format_request_type_json(request_type: dict) -> str:
     return format_json(request_type)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get JSM request type details',
         epilog='Example: python get_request_type.py 1 25'
@@ -110,7 +110,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Fetch request type

@@ -69,7 +69,7 @@ def format_json(asset: dict) -> str:
     return json.dumps(asset, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Get asset/CMDB object details",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -81,7 +81,7 @@ def main():
                        help='Output format (default: text)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         asset = get_asset(args.id)

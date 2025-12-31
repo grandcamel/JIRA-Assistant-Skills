@@ -101,7 +101,7 @@ def format_alternatives(alternatives: List[Dict[str, Any]]) -> str:
     return format_table(headers, rows)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description='Delete an issue type from JIRA',
@@ -161,7 +161,7 @@ Note:
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Show alternatives only

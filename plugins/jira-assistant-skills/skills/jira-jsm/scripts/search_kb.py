@@ -65,7 +65,7 @@ def format_json(articles: list) -> str:
     return json.dumps(articles, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Search Knowledge Base articles",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -81,7 +81,7 @@ def main():
                        help='Output format (default: text)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         articles = search_kb(args.service_desk, args.query, args.max_results)

@@ -212,7 +212,7 @@ def link_pr(
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Link Pull Request to JIRA issue',
         epilog='Example: python link_pr.py PROJ-123 --pr https://github.com/org/repo/pull/456'
@@ -237,7 +237,7 @@ def main():
     parser.add_argument('--profile',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = link_pr(

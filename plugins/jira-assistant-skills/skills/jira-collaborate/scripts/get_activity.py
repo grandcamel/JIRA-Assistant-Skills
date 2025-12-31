@@ -128,7 +128,7 @@ def display_activity_table(changes: List[Dict[str, Any]]) -> None:
     ))
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Get activity/changelog for a JIRA issue',
@@ -174,7 +174,7 @@ Field types:
     parser.add_argument('--profile', '-p',
                        help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Get activity

@@ -56,7 +56,7 @@ def create_customer_account(email: str, display_name: str = None,
         return client.create_customer(email, display_name)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Create a JSM customer account',
@@ -90,7 +90,7 @@ Examples:
     parser.add_argument('--verbose', '-v', action='store_true',
                         help='Show full API response')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         if not validate_email(args.email):

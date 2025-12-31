@@ -48,7 +48,7 @@ def link_asset(asset_id: int, issue_key: str, comment: str = None):
             client.add_request_comment(issue_key, comment, public=False)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Link asset to service request",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -61,7 +61,7 @@ def main():
     parser.add_argument('--comment', help='Optional comment about the link')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         link_asset(args.asset_id, args.request, args.comment)

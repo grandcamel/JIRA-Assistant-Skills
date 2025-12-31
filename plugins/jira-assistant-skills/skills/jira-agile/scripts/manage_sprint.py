@@ -243,7 +243,7 @@ def get_active_sprint(board_id: int,
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Manage Sprint lifecycle in JIRA',
         epilog='Example: python manage_sprint.py --sprint 456 --start'
@@ -282,7 +282,7 @@ def main():
                        default='text',
                        help='Output format')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = None

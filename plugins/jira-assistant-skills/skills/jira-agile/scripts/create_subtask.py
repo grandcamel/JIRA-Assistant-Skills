@@ -147,7 +147,7 @@ def create_subtask(parent_key: str, summary: str, description: str = None,
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Create a sub-task issue in JIRA',
         epilog='Example: python create_subtask.py --parent PROJ-101 --summary "Implement login API"'
@@ -176,7 +176,7 @@ def main():
                        default='text',
                        help='Output format (default: text)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         labels = [l.strip() for l in args.labels.split(',')] if args.labels else None

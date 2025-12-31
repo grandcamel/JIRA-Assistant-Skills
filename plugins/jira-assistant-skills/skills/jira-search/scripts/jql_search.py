@@ -101,7 +101,7 @@ def search_issues(jql: str, fields: list = None, max_results: int = 50,
     return results
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Search for JIRA issues using JQL',
         epilog='''
@@ -147,7 +147,7 @@ Examples:
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Validate: need either jql or --filter
     if not args.jql and not args.filter:

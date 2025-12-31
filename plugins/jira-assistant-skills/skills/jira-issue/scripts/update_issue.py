@@ -91,7 +91,7 @@ def update_issue(issue_key: str, summary: str = None, description: str = None,
     client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Update a JIRA issue',
         epilog='Example: python update_issue.py PROJ-123 --summary "New title" --priority High'
@@ -119,7 +119,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         labels = [l.strip() for l in args.labels.split(',')] if args.labels else None

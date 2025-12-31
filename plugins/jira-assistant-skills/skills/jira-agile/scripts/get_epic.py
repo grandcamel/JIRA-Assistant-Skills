@@ -180,7 +180,7 @@ def format_epic_output(epic_data: Dict, format: str = 'text') -> str:
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get epic details and progress from JIRA',
         epilog='Example: python get_epic.py PROJ-100 --with-children'
@@ -198,7 +198,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = get_epic(

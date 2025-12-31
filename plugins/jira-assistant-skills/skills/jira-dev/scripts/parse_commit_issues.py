@@ -159,7 +159,7 @@ def format_output(
         return '\n'.join(issue_keys)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Parse JIRA issue keys from commit messages',
         epilog='Example: python parse_commit_issues.py "PROJ-123: Fix bug"'
@@ -182,7 +182,7 @@ def main():
                         default=True,
                         help='Return unique issue keys only (default: True)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Get input
     if args.from_stdin:

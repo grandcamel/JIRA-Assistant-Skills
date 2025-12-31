@@ -70,7 +70,7 @@ def resolve_issue(issue_key: str, resolution: str = "Fixed",
     client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Resolve a JIRA issue',
         epilog='Example: python resolve_issue.py PROJ-123 --resolution Fixed'
@@ -86,7 +86,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         resolve_issue(

@@ -80,7 +80,7 @@ def create_component_dry_run(project: str, name: str, description: str = None,
     return component_data
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Create a project component in JIRA',
@@ -110,7 +110,7 @@ Examples:
     parser.add_argument('--profile', '-p',
                        help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         if args.dry_run:

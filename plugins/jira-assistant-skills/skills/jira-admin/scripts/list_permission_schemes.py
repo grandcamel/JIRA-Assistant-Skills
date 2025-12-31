@@ -111,7 +111,7 @@ def format_permission_schemes(
     return format_table(data, columns=columns)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='List JIRA permission schemes',
@@ -145,7 +145,7 @@ Examples:
         help='JIRA profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(profile=args.profile)

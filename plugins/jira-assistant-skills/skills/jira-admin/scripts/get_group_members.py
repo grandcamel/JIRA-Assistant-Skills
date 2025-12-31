@@ -155,7 +155,7 @@ def format_members_csv(members: List[Dict[str, Any]]) -> str:
     return output.getvalue()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get members of a JIRA group',
         epilog='''
@@ -181,7 +181,7 @@ Examples:
                         default='table', help='Output format (default: table)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Require either group name or group ID
     if not args.group_name and not args.group_id:

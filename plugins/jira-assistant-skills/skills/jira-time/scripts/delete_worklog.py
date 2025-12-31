@@ -56,7 +56,7 @@ def delete_worklog(client, issue_key: str, worklog_id: str,
     return None
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Delete a worklog (time entry) from a JIRA issue.',
         epilog='''
@@ -86,7 +86,7 @@ Examples:
     parser.add_argument('--profile', '-p',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Validate issue key

@@ -147,7 +147,7 @@ def bulk_set_priority(
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Bulk set priority on JIRA issues',
         epilog='Example: python bulk_set_priority.py --issues PROJ-1,PROJ-2 --priority High'
@@ -177,7 +177,7 @@ def main():
     parser.add_argument('--profile',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Validate priority before any client creation

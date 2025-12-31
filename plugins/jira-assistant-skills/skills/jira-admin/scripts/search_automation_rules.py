@@ -137,7 +137,7 @@ def expand_trigger(trigger: str) -> str:
     return TRIGGER_SHORTCUTS.get(trigger.lower(), trigger)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Search automation rules with filters',
         epilog='''
@@ -191,7 +191,7 @@ Trigger shortcuts:
                         default='table', help='Output format (default: table)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # At least one filter should be provided
     if not any([args.trigger, args.state, args.scope, args.project]):

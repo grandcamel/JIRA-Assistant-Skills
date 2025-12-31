@@ -145,7 +145,7 @@ def create_field(name: str,
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Create a custom field in JIRA',
         epilog='Example: python create_field.py --name "Story Points" --type number'
@@ -165,7 +165,7 @@ def main():
                         default='text',
                         help='Output format')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = create_field(

@@ -76,7 +76,7 @@ def format_update_result(filter_data: Dict[str, Any],
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Update a saved filter.',
@@ -102,7 +102,7 @@ Examples:
     parser.add_argument('--profile', '-p',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Check that at least one update field is provided
     if not any([args.name, args.jql, args.description]):

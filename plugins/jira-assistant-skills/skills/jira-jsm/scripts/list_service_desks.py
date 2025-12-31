@@ -110,7 +110,7 @@ def format_service_desks_json(service_desks: dict) -> str:
     return format_json(service_desks)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='List all JSM service desks',
         epilog='Example: python list_service_desks.py --filter IT'
@@ -135,7 +135,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Fetch service desks

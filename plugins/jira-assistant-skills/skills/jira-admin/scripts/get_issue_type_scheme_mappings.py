@@ -78,7 +78,7 @@ def format_mappings(response: Dict[str, Any], output_format: str = 'table') -> s
     return format_table(headers, rows)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description='Get issue type scheme mappings',
@@ -127,7 +127,7 @@ Examples:
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         response = get_issue_type_scheme_mappings(

@@ -204,7 +204,7 @@ def format_attachment_list(attachments: List[Dict[str, Any]]) -> str:
     )
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Download attachments from a JIRA issue',
         epilog='''
@@ -240,7 +240,7 @@ Examples:
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         if args.list:

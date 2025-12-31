@@ -128,7 +128,7 @@ def check_project_fields(project_key: str,
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Check field availability for a JIRA project',
         epilog='Example: python check_project_fields.py PROJ --check-agile'
@@ -147,7 +147,7 @@ def main():
                         default='text',
                         help='Output format')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = check_project_fields(

@@ -91,7 +91,7 @@ def format_link_types(link_types: list, output_format: str = 'text') -> str:
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='List available issue link types',
         epilog='Example: python get_link_types.py --filter "block"'
@@ -106,7 +106,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         link_types = get_link_types(

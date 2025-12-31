@@ -47,7 +47,7 @@ def format_bytes(size_bytes: int) -> str:
         return f"{size_bytes / (1024 * 1024 * 1024):.1f} GB"
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Display JIRA cache statistics",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -81,7 +81,7 @@ Examples:
         help="Verbose output"
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         cache = JiraCache(cache_dir=args.cache_dir)

@@ -187,7 +187,7 @@ def link_issue(issue_key: str, blocks: str = None, duplicates: str = None,
     return None
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Create a link between two JIRA issues',
         epilog='Example: python link_issue.py PROJ-1 --blocks PROJ-2'
@@ -241,7 +241,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = link_issue(

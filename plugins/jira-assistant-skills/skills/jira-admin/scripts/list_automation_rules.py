@@ -118,7 +118,7 @@ def format_rule_summary(rule: Dict[str, Any]) -> Dict[str, str]:
     }
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='List automation rules in JIRA',
         epilog='''
@@ -157,7 +157,7 @@ Examples:
                         default='table', help='Output format (default: table)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         rules = list_automation_rules(

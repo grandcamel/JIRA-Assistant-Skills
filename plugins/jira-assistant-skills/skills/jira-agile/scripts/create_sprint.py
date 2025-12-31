@@ -106,7 +106,7 @@ def create_sprint(board_id: int, name: str,
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Create a new Sprint in JIRA',
         epilog='Example: python create_sprint.py --board 123 --name "Sprint 42" --goal "Launch MVP"'
@@ -129,7 +129,7 @@ def main():
                        default='text',
                        help='Output format (default: text)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = create_sprint(

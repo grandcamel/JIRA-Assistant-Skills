@@ -201,7 +201,7 @@ def format_result_json(result: Dict[str, Any]) -> str:
     return json.dumps(result, indent=2, default=str)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Assign a workflow scheme to a project',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -283,7 +283,7 @@ Note: This is an experimental API endpoint.
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Load status mappings from file if provided
     status_mappings = None

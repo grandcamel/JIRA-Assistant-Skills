@@ -218,7 +218,7 @@ def format_sprint_output(sprint_data: dict, format: str = 'text') -> str:
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get Sprint details and progress from JIRA',
         epilog='Example: python get_sprint.py 456 --with-issues'
@@ -239,7 +239,7 @@ def main():
                        default='text',
                        help='Output format')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = None

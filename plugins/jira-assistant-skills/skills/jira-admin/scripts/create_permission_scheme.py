@@ -210,7 +210,7 @@ def format_created_scheme(scheme: Dict[str, Any], output_format: str = 'table') 
     return '\n'.join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Create a JIRA permission scheme',
@@ -264,7 +264,7 @@ Examples:
         help='JIRA profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(profile=args.profile)

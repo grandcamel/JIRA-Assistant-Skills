@@ -226,7 +226,7 @@ def format_output(
         return branch_name
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Generate Git branch name from JIRA issue',
         epilog='Example: python create_branch_name.py PROJ-123 --auto-prefix'
@@ -247,7 +247,7 @@ def main():
     parser.add_argument('--profile',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         issue_key = validate_issue_key(args.issue_key)

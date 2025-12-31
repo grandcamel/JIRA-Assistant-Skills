@@ -30,7 +30,7 @@ def delete_organization_func(organization_id: int, profile: str = None) -> None:
         client.delete_organization(organization_id)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Delete a JSM organization',
@@ -54,7 +54,7 @@ Examples:
     parser.add_argument('--profile',
                         help='JIRA profile to use from config')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         if args.dry_run:

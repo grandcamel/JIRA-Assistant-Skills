@@ -61,7 +61,7 @@ def parse_attributes(attr_list: list) -> dict:
     return attributes
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Update existing asset/CMDB object",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -75,7 +75,7 @@ def main():
                        help='Preview changes without updating')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         attributes = parse_attributes(args.attr)

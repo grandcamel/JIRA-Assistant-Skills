@@ -758,7 +758,7 @@ def discover_project(project_key: str, profile: str = None,
         client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Discover JIRA project context and save to skill directory',
         epilog='''
@@ -797,7 +797,7 @@ Examples:
                         default='text',
                         help='Output format (default: text)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Normalize project key to uppercase
     project_key = args.project_key.upper()

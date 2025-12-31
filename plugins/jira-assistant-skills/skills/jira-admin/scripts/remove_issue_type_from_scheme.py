@@ -54,7 +54,7 @@ def remove_issue_type_from_scheme(
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description='Remove an issue type from an issue type scheme',
@@ -97,7 +97,7 @@ Note:
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Confirmation prompt

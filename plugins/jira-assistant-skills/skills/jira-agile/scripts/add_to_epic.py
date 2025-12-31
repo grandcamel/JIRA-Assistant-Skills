@@ -129,7 +129,7 @@ def add_to_epic(epic_key: Optional[str] = None,
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Add issues to an Epic in JIRA',
         epilog='Example: python add_to_epic.py --epic PROJ-100 --issues PROJ-101,PROJ-102,PROJ-103'
@@ -150,7 +150,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Validate required arguments

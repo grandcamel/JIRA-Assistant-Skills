@@ -101,7 +101,7 @@ def bulk_update(jql: str, add_labels: list = None, remove_labels: list = None,
         print_warning(f"Failed: {failed} issue(s)")
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Bulk update issues from JQL search',
         epilog='Example: python bulk_update.py "project = PROJ" --add-labels "reviewed"'
@@ -125,7 +125,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         add_labels = [l.strip() for l in args.add_labels.split(',')] if args.add_labels else None

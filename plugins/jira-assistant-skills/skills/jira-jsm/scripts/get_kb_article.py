@@ -59,7 +59,7 @@ def format_json(article: dict) -> str:
     return json.dumps(article, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Get Knowledge Base article details",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -71,7 +71,7 @@ def main():
                        help='Output format (default: text)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         article = get_kb_article(args.article_id)

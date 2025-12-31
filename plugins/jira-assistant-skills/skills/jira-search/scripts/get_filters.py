@@ -198,7 +198,7 @@ def format_filters_json(filters: List[Dict[str, Any]]) -> str:
     return json.dumps(filters, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='List and search saved filters.',
@@ -233,7 +233,7 @@ Examples:
     parser.add_argument('--profile', '-p',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(args.profile)

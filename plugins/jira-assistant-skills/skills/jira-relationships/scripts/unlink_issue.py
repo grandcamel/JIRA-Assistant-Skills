@@ -121,7 +121,7 @@ def unlink_issue(issue_key: str, from_issue: str = None, link_type: str = None,
     return {'deleted_count': len(links_to_delete)}
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Remove links from a JIRA issue',
         epilog='Example: python unlink_issue.py PROJ-123 --from PROJ-456'
@@ -147,7 +147,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = unlink_issue(

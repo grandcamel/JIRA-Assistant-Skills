@@ -63,7 +63,7 @@ def format_json(suggestions: list) -> str:
     return json.dumps(suggestions, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Suggest KB articles for a request",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -77,7 +77,7 @@ def main():
                        help='Output format (default: text)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         suggestions = suggest_kb(args.request, args.max_suggestions)

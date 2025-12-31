@@ -137,7 +137,7 @@ def format_report_json(report: Dict[str, Any]) -> str:
     return json.dumps(report, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(description='Generate JSM SLA compliance report')
     parser.add_argument('--project', help='Project key')
@@ -148,7 +148,7 @@ def main():
     parser.add_argument('--output', choices=['text', 'csv', 'json'], default='text')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         report = generate_sla_report(

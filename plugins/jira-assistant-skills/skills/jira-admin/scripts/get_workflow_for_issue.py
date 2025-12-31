@@ -182,7 +182,7 @@ def format_issue_workflow_json(result: Dict[str, Any]) -> str:
     return json.dumps(result, indent=2, default=str)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get workflow information for a JIRA issue',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -230,7 +230,7 @@ Examples:
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(profile=args.profile)

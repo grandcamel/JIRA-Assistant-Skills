@@ -496,7 +496,7 @@ class StreamingExporter:
         }
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Streaming export for large JIRA search results',
         epilog='''
@@ -542,7 +542,7 @@ Examples:
     parser.add_argument('--profile',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Handle list checkpoints

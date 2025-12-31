@@ -81,7 +81,7 @@ def invoke_manual_rule(
     )
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Invoke a manual automation rule',
         epilog='''
@@ -120,7 +120,7 @@ Examples:
                         default='text', help='Output format (default: text)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Must have either issue key or context file
     if not args.issue_key and not args.context_file:

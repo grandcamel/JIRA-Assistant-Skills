@@ -99,7 +99,7 @@ def add_worklog(client, issue_key: str, time_spent: str,
     )
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Add a worklog (time entry) to a JIRA issue.',
         epilog='''
@@ -144,7 +144,7 @@ Visibility options:
     parser.add_argument('--output', '-o', choices=['text', 'json'], default='text',
                         help='Output format (default: text)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         # Validate issue key

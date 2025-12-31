@@ -82,7 +82,7 @@ def format_created_scheme(result: Dict[str, Any], output_format: str = 'detail')
     return '\n'.join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description='Create a new issue type scheme in JIRA',
@@ -143,7 +143,7 @@ Note:
         help='Configuration profile to use'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         result = create_issue_type_scheme(

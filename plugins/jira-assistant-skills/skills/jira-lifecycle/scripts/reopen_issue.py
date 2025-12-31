@@ -76,7 +76,7 @@ def reopen_issue(issue_key: str, comment: str = None, profile: str = None) -> No
     client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Reopen a closed or resolved JIRA issue',
         epilog='Example: python reopen_issue.py PROJ-123 --comment "Regression found"'
@@ -89,7 +89,7 @@ def main():
     parser.add_argument('--profile',
                        help='JIRA profile to use (default: from config)')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         reopen_issue(

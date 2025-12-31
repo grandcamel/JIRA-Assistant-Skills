@@ -147,7 +147,7 @@ def display_versions_table(versions: List[Dict[str, Any]]) -> None:
     ))
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Get project versions in JIRA',
@@ -181,7 +181,7 @@ Examples:
     parser.add_argument('--profile', '-p',
                        help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Validate arguments
     if args.id:

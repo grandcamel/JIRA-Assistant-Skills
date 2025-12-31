@@ -117,7 +117,7 @@ def format_sla_json(sla_data: Dict[str, Any]) -> str:
     return json.dumps(sla_data, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Get JSM service request SLA information',
@@ -144,7 +144,7 @@ Examples:
     parser.add_argument('--profile',
                         help='JIRA profile to use from config')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         sla_data = get_slas(

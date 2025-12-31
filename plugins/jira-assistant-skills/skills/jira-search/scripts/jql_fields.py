@@ -117,7 +117,7 @@ def format_fields_json(fields: List[Dict[str, Any]]) -> str:
     return json.dumps(fields, indent=2)
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='List JQL searchable fields and their operators.',
@@ -146,7 +146,7 @@ Examples:
     parser.add_argument('--profile', '-p',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Validate mutually exclusive options
     if args.custom_only and args.system_only:

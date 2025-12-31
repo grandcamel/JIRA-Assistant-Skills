@@ -170,7 +170,7 @@ def bulk_assign(
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Bulk assign JIRA issues to a user',
         epilog='Example: python bulk_assign.py --issues PROJ-1,PROJ-2 --assignee self'
@@ -205,7 +205,7 @@ def main():
     parser.add_argument('--profile',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         issue_keys = None

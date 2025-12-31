@@ -227,7 +227,7 @@ def format_users_csv(users: List[Dict[str, Any]], show_groups: bool = False) -> 
     return output.getvalue()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Search JIRA users by name or email',
         epilog='''
@@ -262,7 +262,7 @@ Examples:
                         default='table', help='Output format (default: table)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Validate assignable search
     if args.assignable and not args.project:

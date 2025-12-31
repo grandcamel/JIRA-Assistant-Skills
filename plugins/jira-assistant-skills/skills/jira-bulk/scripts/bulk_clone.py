@@ -416,7 +416,7 @@ def bulk_clone(
             client.close()
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Bulk clone JIRA issues',
         epilog='Example: python bulk_clone.py --issues PROJ-1,PROJ-2 --include-subtasks'
@@ -454,7 +454,7 @@ def main():
     parser.add_argument('--profile',
                         help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         issue_keys = None

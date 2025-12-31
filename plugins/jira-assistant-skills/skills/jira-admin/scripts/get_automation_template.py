@@ -90,7 +90,7 @@ def format_template_output(template: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description='Get automation template details',
         epilog='''
@@ -111,7 +111,7 @@ Examples:
                         default='text', help='Output format (default: text)')
     parser.add_argument('--profile', help='JIRA profile to use')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         template = get_automation_template(
