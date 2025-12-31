@@ -11,11 +11,11 @@
 <sub>More context-efficient<br>than MCP servers</sub>
 </td>
 <td align="center">
-<h2>14</h2>
+<h2>15</h2>
 <sub>Specialized skills<br>one conversation</sub>
 </td>
 <td align="center">
-<h2>100+</h2>
+<h2>245</h2>
 <sub>Production-ready<br>Python scripts</sub>
 </td>
 <td align="center">
@@ -27,16 +27,16 @@
 
 <p align="center">
   <a href="https://pypi.org/project/jira-assistant-skills-lib/"><img src="https://img.shields.io/pypi/v/jira-assistant-skills-lib?logo=pypi&logoColor=white" alt="PyPI"></a>
-  <img src="https://img.shields.io/badge/tests-617%20passing-brightgreen?logo=pytest" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-1644%20passing-brightgreen?logo=pytest" alt="Tests">
   <img src="https://img.shields.io/badge/python-3.8+-3776AB?logo=python&logoColor=white" alt="Python 3.8+">
-  <img src="https://img.shields.io/badge/skills-14-FF6B6B" alt="Skills">
+  <img src="https://img.shields.io/badge/skills-15-FF6B6B" alt="Skills">
   <img src="https://img.shields.io/github/stars/grandcamel/jira-assistant-skills?style=social" alt="GitHub Stars">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
 <p align="center">
   <strong>Natural language JIRA automation for Claude Code</strong><br>
-  <sub>From sprint planning to incident response—14 skills, 100+ scripts, zero JQL memorization.</sub>
+  <sub>From sprint planning to incident response—15 skills, 245 scripts, zero JQL memorization.</sub>
 </p>
 
 <div align="center">
@@ -467,11 +467,11 @@ flowchart TD
 
 | Category | Tests | Description |
 |----------|------:|-------------|
-| Core Integration | 157 | Issue lifecycle, collaboration, agile workflows |
-| JSM Integration | 94 | Service desks, SLAs, approvals, knowledge base |
-| New Skills | 171 | Bulk ops, dev workflows, fields, cache |
-| Unit Tests | 195 | Isolated function validation |
-| **Total** | **617** | **All passing** |
+| Core Skills | 850+ | Issue, search, lifecycle, collaborate, agile, relationships, time |
+| JSM Integration | 150+ | Service desks, SLAs, approvals, knowledge base |
+| Advanced Skills | 300+ | Bulk ops, dev workflows, fields, cache, admin |
+| Live Integration | 340+ | End-to-end tests against real JIRA instances |
+| **Total** | **1644** | **All passing** |
 
 > Tests run against live JIRA Cloud instances to ensure real-world reliability.
 
@@ -534,11 +534,11 @@ Contributions are welcome! See our [Contributing Guide](CONTRIBUTING.md).
 git clone https://github.com/grandcamel/jira-assistant-skills.git
 cd jira-assistant-skills
 
-# Install the shared library
-pip install jira-assistant-skills-lib
+# Install dependencies
+pip install jira-assistant-skills-lib>=0.1.5 pytest pytest-asyncio
 
-# Run tests
-pytest plugins/jira-assistant-skills/skills/*/tests/ -v
+# Run tests (uses root pytest.ini configuration)
+pytest plugins/jira-assistant-skills/skills/*/tests/*.py -v
 ```
 
 ---
