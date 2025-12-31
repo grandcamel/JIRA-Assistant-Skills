@@ -186,7 +186,10 @@ Examples:
                                        next_page_token=args.page_token)
 
         issues = results.get('issues', [])
-        total = results.get('total', 0)
+        # Note: /rest/api/3/search/jql uses cursor pagination and doesn't return 'total'
+        # It returns 'isLast' and 'nextPageToken' instead
+        total = results.get('total')  # May be None with new endpoint
+        is_last = results.get('isLast', True)
 
         # Save as filter if requested
         if args.save_as:
@@ -207,7 +210,15 @@ Examples:
                 output['savedFilter'] = saved_filter
             print(format_json(output))
         else:
-            print_info(f"Found {total} issue(s)")
+            # Handle both old (total) and new (isLast) API responses
+            if total is not None:
+                print_info(f"Found {total} issue(s)")
+            else:
+                count_msg = f"Found {len(issues)} issue(s)"
+                if not is_last:
+                    count_msg += " (more available)"
+                print_info(count_msg)
+
             if issues:
                 print()
                 print(format_search_results(issues, show_agile=args.show_agile,
@@ -217,7 +228,10 @@ Examples:
                 # Show pagination info if more results available
                 next_token = results.get('nextPageToken')
                 if next_token:
-                    print(f"\nShowing {len(issues)} of {total} results")
+                    if total is not None:
+                        print(f"\nShowing {len(issues)} of {total} results")
+                    else:
+                        print(f"\nShowing {len(issues)} results (more available)")
                     print(f"Next page token: {next_token}")
                     print("Use --page-token to fetch next page")
 

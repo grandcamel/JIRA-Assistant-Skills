@@ -54,7 +54,8 @@ def run_skill_script_subprocess(script_path: Path, args: list[str], ctx: click.C
         if ctx.obj.get('VERBOSE'): env[f'{env_prefix}_VERBOSE'] = 'true'
         if ctx.obj.get('QUIET'): env[f'{env_prefix}_QUIET'] = 'true'
 
-        click.echo(f"Running: {' '.join(command)}", err=True) # For verbose output
+        if ctx.obj.get('VERBOSE'):
+            click.echo(f"Running: {' '.join(command)}", err=True)
         result = subprocess.run(
             command,
             check=False, # We handle return code
