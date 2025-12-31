@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v2.0.0...v2.0.1) (2025-12-31)
+
+
+### Bug Fixes
+
+* **skills:** add enterprise fields to SKILL.md frontmatter ([b358635](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/b3586352dd95e0b1786572ae1f4ba8749841ec2f))
+
 ## [1.1.0](https://github.com/grandcamel/jira-assistant-skills/compare/v1.0.3...v1.1.0) (2025-12-29)
 
 
