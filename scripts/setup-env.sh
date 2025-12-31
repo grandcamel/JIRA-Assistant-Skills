@@ -168,7 +168,8 @@ validate_https_url() {
         print_error "URL must use HTTPS (start with https://)"
         return 1
     fi
-    if [[ ! "$url" =~ ^https://[a-zA-Z0-9][-a-zA-Z0-9]*(\.[a-zA-Z0-9][-a-zA-Z0-9]*)*\.?[a-zA-Z0-9]*(:[0-9]+)?(/.*)?$ ]]; then
+    # Basic URL format check - allows standard hostnames and Atlassian cloud URLs
+    if [[ ! "$url" =~ ^https://[a-zA-Z0-9][-a-zA-Z0-9.]*(:[0-9]+)?(/.*)?$ ]]; then
         print_error "Invalid URL format"
         return 1
     fi
@@ -444,19 +445,16 @@ run_connection_tests() {
     fi
 
     local jira_ok=true
-    local anthropic_ok=true
 
     # Test JIRA
     if ! test_jira_connection "$JIRA_SITE_URL" "$JIRA_EMAIL" "$JIRA_API_TOKEN"; then
         jira_ok=false
     fi
 
-    # Test Anthropic
-    if ! test_anthropic_connection "$ANTHROPIC_API_KEY"; then
-        anthropic_ok=false
-    fi
+    # Test Anthropic (informational only, doesn't block save)
+    test_anthropic_connection "$ANTHROPIC_API_KEY"
 
-    # If any test failed, ask to continue
+    # If JIRA test failed, ask to continue
     if [[ "$jira_ok" == "false" ]]; then
         echo ""
         echo -n "JIRA connection failed. Save configuration anyway? (y/N): "
@@ -575,6 +573,12 @@ offer_source() {
 # ============================================================================
 
 main() {
+    # Check for required dependencies
+    if ! command -v curl &> /dev/null; then
+        print_error "curl is required but not installed"
+        exit 1
+    fi
+
     print_header
 
     echo "This script will configure environment variables for ${PROJECT_NAME}."
