@@ -1,10 +1,14 @@
 ---
-name: "JIRA Administration"
+name: "jira-administration"
 description: >
   Complete JIRA project and system administration including projects,
   automation rules, permissions, users, notifications, screens, issue types,
   and workflows. Use when managing project structure, automating work,
   configuring team access, or setting up issue tracking.
+version: "1.0.0"
+author: "jira-assistant-skills"
+license: "MIT"
+allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 ---
 
 # JIRA Admin Skill

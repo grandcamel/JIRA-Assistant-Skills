@@ -1,6 +1,10 @@
 ---
-name: "JIRA Operations"
+name: "jira-operations"
 description: "Cache management, request batching, and operational utilities. Use when optimizing performance, managing cache, or diagnosing JIRA API issues."
+version: "1.0.0"
+author: "jira-assistant-skills"
+license: "MIT"
+allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 triggers:
   - "Cache hit rate drops below 50%"
   - "JIRA API responses slower than 2 seconds"

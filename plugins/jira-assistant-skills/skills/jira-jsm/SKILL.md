@@ -1,6 +1,10 @@
 ---
-name: "JIRA Service Management"
+name: "jira-service-management"
 description: "Complete ITSM/ITIL workflow support for JSM - service desks, requests, SLAs, customers, approvals, knowledge base. Use when managing service desk requests, tracking SLAs, or handling customer operations."
+version: "1.0.0"
+author: "jira-assistant-skills"
+license: "MIT"
+allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 ---
 
 # jira-jsm

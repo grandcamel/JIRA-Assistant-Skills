@@ -1,6 +1,10 @@
 ---
-name: "JIRA Bulk Operations"
+name: "jira-bulk-operations"
 description: "Bulk operations for 50+ issues - transitions, assignments, priorities, and cloning. Use when: updating multiple issues simultaneously (dry-run preview included), needing rollback safety, or coordinating team changes. Handles partial failures gracefully."
+version: "1.0.0"
+author: "jira-assistant-skills"
+license: "MIT"
+allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 ---
 
 # jira-bulk

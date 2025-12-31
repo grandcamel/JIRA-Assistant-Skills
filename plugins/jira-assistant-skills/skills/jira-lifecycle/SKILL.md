@@ -1,6 +1,10 @@
 ---
-name: "JIRA Lifecycle Management"
+name: "jira-lifecycle-management"
 description: "Manage issue lifecycle through workflow transitions and status changes. Control who does what and when via assignments, versions, and components."
+version: "1.0.0"
+author: "jira-assistant-skills"
+license: "MIT"
+allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 ---
 
 # jira-lifecycle

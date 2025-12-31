@@ -1,6 +1,10 @@
 ---
-name: "JIRA Time Tracking"
+name: "jira-time-tracking"
 description: "Time tracking and worklog management with estimation, reporting, and billing integration. Use for logging work, managing estimates, generating reports, bulk operations, and team time tracking policies."
+version: "1.0.0"
+author: "jira-assistant-skills"
+license: "MIT"
+allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 ---
 
 # JIRA Time Tracking Skill

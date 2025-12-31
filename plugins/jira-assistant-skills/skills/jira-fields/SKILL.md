@@ -1,6 +1,10 @@
 ---
-name: "JIRA Custom Fields"
+name: "jira-custom-fields"
 description: "Custom field management and configuration - list fields, check project fields, configure Agile fields. Use when discovering custom fields, checking Agile field availability, or configuring project fields."
+version: "1.0.0"
+author: "jira-assistant-skills"
+license: "MIT"
+allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 ---
 
 # jira-fields: JIRA Custom Field Management

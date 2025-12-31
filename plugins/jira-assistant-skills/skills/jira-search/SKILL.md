@@ -1,6 +1,10 @@
 ---
-name: "JIRA Search & JQL"
+name: "jira-search-jql"
 description: "Find issues by criteria (status, assignee, priority, etc.) using JQL. Create filters, export results to CSV/JSON, bulk update. Ideal for reporting and automation."
+version: "1.0.0"
+author: "jira-assistant-skills"
+license: "MIT"
+allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 ---
 
 # jira-search

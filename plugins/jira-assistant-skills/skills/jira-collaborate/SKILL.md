@@ -1,8 +1,12 @@
 ---
-name: "JIRA Collaboration"
+name: "jira-collaboration"
 description: |
   Collaborate on issues: add/edit comments, share attachments, notify users,
   track activity. For team communication and coordination on JIRA issues.
+version: "1.0.0"
+author: "jira-assistant-skills"
+license: "MIT"
+allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 keywords:
   - comments
   - attachments

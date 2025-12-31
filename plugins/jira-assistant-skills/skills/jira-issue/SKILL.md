@@ -1,6 +1,10 @@
 ---
-name: "JIRA Issue Management"
+name: "jira-issue-management"
 description: "Core CRUD operations for JIRA issues - create, read, update, delete tickets. Use when creating bugs, tasks, stories, retrieving issue details, updating fields, or deleting issues."
+version: "1.0.0"
+author: "jira-assistant-skills"
+license: "MIT"
+allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 ---
 
 # jira-issue

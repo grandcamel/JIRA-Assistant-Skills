@@ -1,6 +1,10 @@
 ---
-name: "JIRA Agile Management"
+name: "jira-agile-management"
 description: "Epic, sprint, and backlog management - create/link epics, manage sprints, estimate with story points, rank backlog issues."
+version: "1.0.0"
+author: "jira-assistant-skills"
+license: "MIT"
+allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 ---
 
 # jira-agile

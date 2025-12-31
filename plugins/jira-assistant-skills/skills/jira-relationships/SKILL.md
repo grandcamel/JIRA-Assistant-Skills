@@ -1,6 +1,10 @@
 ---
-name: "JIRA Issue Relationships"
+name: "jira-issue-relationships"
 description: "Issue linking and dependency management - create links, view blockers, analyze dependencies, clone issues. Use when linking issues, finding blocker chains, or cloning with relationships."
+version: "1.0.0"
+author: "jira-assistant-skills"
+license: "MIT"
+allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 ---
 
 # jira-relationships

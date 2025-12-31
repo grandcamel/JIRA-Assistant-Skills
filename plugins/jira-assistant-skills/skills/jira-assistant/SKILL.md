@@ -1,11 +1,10 @@
 ---
-name: "JIRA Assistant"
+name: "jira-assistant"
 description: "JIRA automation hub routing to 12 specialized skills for any JIRA task: issues, workflows, agile, search, time tracking, service management, and more."
-when_to_use: |
-  - Need to work with JIRA in any capacity
-  - Unsure which JIRA skill applies to your task
-  - Managing issues, workflows, agile, search, time tracking, or service management
-  - Need to combine multiple JIRA operations in one flow
+version: "1.0.0"
+author: "jira-assistant-skills"
+license: "MIT"
+allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 ---
 
 # JIRA Assistant
