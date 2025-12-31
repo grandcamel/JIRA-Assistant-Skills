@@ -27,17 +27,28 @@ Each skill is designed for autonomous discovery and use by Claude Code.
 All skills depend on the `jira-assistant-skills-lib` PyPI package. Install with:
 
 ```bash
-pip install jira-assistant-skills-lib
+pip install jira-assistant-skills-lib>=0.1.5
 ```
 
 The package provides:
 - **JiraClient**: HTTP client with automatic retry (3 attempts, exponential backoff on 429/5xx)
 - **ConfigManager**: Multi-source configuration merging (env vars > settings.local.json > settings.json > defaults)
+- **Config helpers**: `get_agile_fields()`, `get_agile_field()`, `get_project_defaults()` for Agile field IDs and issue defaults
 - **Error handling**: Exception hierarchy that maps HTTP status codes to domain exceptions (400→ValidationError, 401→AuthenticationError, etc.)
 - **Validators**: Input validation (issue keys must match `^[A-Z][A-Z0-9]*-[0-9]+$`, URLs must be HTTPS)
 - **Formatters**: Output formatting (tables via tabulate, JSON, CSV export)
 - **ADF helpers**: Markdown to Atlassian Document Format conversion
 - **Time utilities**: Time parsing (parse_time_string), formatting (format_seconds), and relative date handling
+- **Cache**: SQLite-based caching with TTL support (`JiraCache`, `get_cache`)
+- **Request batching**: Concurrent API requests (`RequestBatcher`, `batch_fetch_issues`)
+- **Batch processing**: Large-scale operations with checkpoints (`BatchProcessor`, `BatchConfig`)
+- **Project context**: Project metadata and defaults (`ProjectContext`, `get_project_context`)
+- **Transition helpers**: Fuzzy transition matching (`find_transition_by_name`, `find_transition_by_keywords`)
+- **User helpers**: User resolution (`resolve_user_to_account_id`, `get_user_display_info`)
+- **JSM utilities**: SLA formatting and status helpers
+- **Credential management**: Secure credential storage with keychain support
+- **Permission helpers**: Permission scheme management utilities
+- **Autocomplete cache**: JQL field/value autocomplete caching
 
 **Import pattern**: All scripts use `from jira_assistant_skills_lib import ...` to access shared modules.
 
@@ -337,14 +348,26 @@ When developing features using Test-Driven Development (TDD), follow this commit
 
 4. **Run tests before committing**: Always verify all tests pass before creating a commit:
    ```bash
+   # Install test dependencies (pytest-asyncio required for async tests)
+   pip install pytest pytest-asyncio
+
    # Run specific skill tests
    pytest plugins/jira-assistant-skills/skills/jira-search/tests/ -v
 
-   # Run all tests
-   pytest plugins/jira-assistant-skills/skills/*/tests/ -v
+   # Run all unit tests (uses root pytest.ini configuration)
+   pytest plugins/jira-assistant-skills/skills/*/tests/*.py -v
+
+   # Run tests for multiple skills together
+   pytest plugins/jira-assistant-skills/skills/jira-search/tests/ \
+          plugins/jira-assistant-skills/skills/jira-bulk/tests/ -v
    ```
 
 5. **Never commit failing tests**: If tests are failing, either fix the implementation or fix the tests before committing. The main branch should always have passing tests.
+
+6. **Pytest configuration**: The project uses a centralized `pytest.ini` at the root with:
+   - `import-mode=importlib` to avoid module name conflicts across skills
+   - Shared markers (unit, integration, live, slow, etc.)
+   - Test paths configured for skill directories
 
 ## Live Integration Testing
 
