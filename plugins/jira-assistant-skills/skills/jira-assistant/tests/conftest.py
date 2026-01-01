@@ -179,6 +179,9 @@ def record_otel(request, otel_enabled, cost_tracker):
                 cost_usd=result.cost_usd
             )
     """
+    # Get model from pytest config for OTel recording
+    configured_model = request.config.getoption("--model") or "unknown"
+
     def _record(
         test_id: str,
         category: str,
@@ -218,6 +221,7 @@ def record_otel(request, otel_enabled, cost_tracker):
                 cost_usd=cost_usd,
                 asked_clarification=asked_clarification,
                 session_id=session_id,
+                model=configured_model,
                 tokens_input=tokens_input,
                 tokens_output=tokens_output,
                 response_text=response_text,
