@@ -64,6 +64,21 @@ GOLDEN_FILE = TESTS_DIR / "routing_golden.yaml"
 DEBUG_DIR = Path.home() / ".claude" / "debug"
 
 
+class CommandMatch(NamedTuple):
+    """Result of matching a single expected command pattern."""
+    pattern: str
+    is_regex: bool
+    matched: bool
+
+
+class ToolUseResult(NamedTuple):
+    """Result of tool use accuracy check."""
+    total_patterns: int
+    matched_patterns: int
+    accuracy: float  # 0.0 to 1.0
+    matches: list[CommandMatch]
+
+
 class RoutingResult(NamedTuple):
     """Result of a routing test."""
     skill_loaded: str | None
@@ -71,6 +86,11 @@ class RoutingResult(NamedTuple):
     session_id: str
     duration_ms: int
     cost_usd: float
+    # Enhanced fields for tool use accuracy
+    response_text: str = ""
+    input_tokens: int = 0
+    output_tokens: int = 0
+    tool_use: ToolUseResult | None = None
 
 
 def load_golden_tests() -> list[dict]:
@@ -80,16 +100,85 @@ def load_golden_tests() -> list[dict]:
     return data.get("tests", [])
 
 
-def run_claude_routing(input_text: str, timeout: int = 60) -> RoutingResult:
+def validate_tool_use(response_text: str, expected_commands: list[dict] | None) -> ToolUseResult:
+    """
+    Validate that expected command patterns appear in the response.
+
+    Args:
+        response_text: The full response text from Claude
+        expected_commands: List of expected command patterns, each with:
+            - pattern: Literal string to match
+            - pattern_regex: Regex pattern to match (alternative to pattern)
+
+    Returns:
+        ToolUseResult with accuracy metrics and individual match results
+    """
+    if not expected_commands:
+        return ToolUseResult(
+            total_patterns=0,
+            matched_patterns=0,
+            accuracy=1.0,  # No expectations = 100% by default
+            matches=[]
+        )
+
+    matches = []
+    matched_count = 0
+
+    # Normalize response for matching (handle code blocks)
+    response_lower = response_text.lower()
+
+    for cmd in expected_commands:
+        if "pattern" in cmd:
+            # Literal string match (case-insensitive)
+            pattern = cmd["pattern"]
+            is_regex = False
+            matched = pattern.lower() in response_lower
+        elif "pattern_regex" in cmd:
+            # Regex match
+            pattern = cmd["pattern_regex"]
+            is_regex = True
+            try:
+                matched = bool(re.search(pattern, response_text, re.IGNORECASE))
+            except re.error:
+                matched = False
+        else:
+            continue
+
+        matches.append(CommandMatch(
+            pattern=pattern,
+            is_regex=is_regex,
+            matched=matched
+        ))
+
+        if matched:
+            matched_count += 1
+
+    total = len(matches)
+    accuracy = matched_count / total if total > 0 else 1.0
+
+    return ToolUseResult(
+        total_patterns=total,
+        matched_patterns=matched_count,
+        accuracy=accuracy,
+        matches=matches
+    )
+
+
+def run_claude_routing(
+    input_text: str,
+    expected_commands: list[dict] | None = None,
+    timeout: int = 60
+) -> RoutingResult:
     """
     Run Claude Code with input and extract routing result.
 
     Args:
         input_text: The user input to test
+        expected_commands: Optional list of expected command patterns for tool use validation
         timeout: Maximum seconds to wait
 
     Returns:
-        RoutingResult with skill loaded and metadata
+        RoutingResult with skill loaded, response text, and tool use metrics
     """
     if not input_text:
         # Empty input edge case
@@ -98,7 +187,11 @@ def run_claude_routing(input_text: str, timeout: int = 60) -> RoutingResult:
             asked_clarification=True,
             session_id="",
             duration_ms=0,
-            cost_usd=0.0
+            cost_usd=0.0,
+            response_text="",
+            input_tokens=0,
+            output_tokens=0,
+            tool_use=None
         )
 
     # Run Claude non-interactively
@@ -173,12 +266,26 @@ def run_claude_routing(input_text: str, timeout: int = 60) -> RoutingResult:
     if not skill_loaded:
         skill_loaded = infer_skill_from_response(response_text, permission_denials)
 
+    # Extract token counts
+    input_tokens = output.get("num_turns", 0)  # Fallback if not available
+    output_tokens = 0
+    if "usage" in output:
+        input_tokens = output["usage"].get("input_tokens", 0)
+        output_tokens = output["usage"].get("output_tokens", 0)
+
+    # Validate tool use accuracy if expected commands provided
+    tool_use_result = validate_tool_use(response_text, expected_commands)
+
     return RoutingResult(
         skill_loaded=skill_loaded,
         asked_clarification=asked_clarification,
         session_id=session_id,
         duration_ms=duration_ms,
         cost_usd=cost_usd,
+        response_text=response_text,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        tool_use=tool_use_result,
     )
 
 
@@ -339,24 +446,32 @@ def test_direct_routing(test_case, record_otel):
     """Test high-certainty direct routing."""
     input_text = test_case["input"]
     expected_skill = test_case["expected_skill"]
+    expected_commands = test_case.get("expected_commands")
     test_id = test_case["id"]
 
-    result = run_claude_routing(input_text)
+    result = run_claude_routing(input_text, expected_commands=expected_commands)
 
-    passed = (result.skill_loaded == expected_skill and not result.asked_clarification)
+    routing_passed = (result.skill_loaded == expected_skill and not result.asked_clarification)
+    tool_use_passed = result.tool_use is None or result.tool_use.accuracy >= 0.5
 
-    # Record to OpenTelemetry
+    # Record to OpenTelemetry with enhanced context
     record_otel(
         test_id=test_id,
         category="direct",
         input_text=input_text,
         expected_skill=expected_skill,
         actual_skill=result.skill_loaded,
-        passed=passed,
+        passed=routing_passed and tool_use_passed,
         duration_ms=result.duration_ms,
         cost_usd=result.cost_usd,
         asked_clarification=result.asked_clarification,
-        session_id=result.session_id
+        session_id=result.session_id,
+        tokens_input=result.input_tokens,
+        tokens_output=result.output_tokens,
+        response_text=result.response_text,
+        tool_use_accuracy=result.tool_use.accuracy if result.tool_use else None,
+        tool_use_matched=result.tool_use.matched_patterns if result.tool_use else None,
+        tool_use_total=result.tool_use.total_patterns if result.tool_use else None,
     )
 
     assert result.skill_loaded == expected_skill, (
@@ -370,6 +485,21 @@ def test_direct_routing(test_case, record_otel):
         f"Direct routing should not ask clarification\n"
         f"Input: {input_text}"
     )
+
+    # Validate tool use accuracy if expected commands specified
+    if expected_commands and result.tool_use:
+        # Report unmatched patterns for debugging
+        unmatched = [m for m in result.tool_use.matches if not m.matched]
+        if unmatched:
+            unmatched_patterns = [m.pattern for m in unmatched]
+            print(f"  Unmatched command patterns: {unmatched_patterns}")
+
+        # Warn but don't fail if tool use accuracy is low (< 50%)
+        if result.tool_use.accuracy < 0.5:
+            print(
+                f"  WARNING: Low tool use accuracy {result.tool_use.accuracy:.0%} "
+                f"({result.tool_use.matched_patterns}/{result.tool_use.total_patterns})"
+            )
 
 
 # =============================================================================
