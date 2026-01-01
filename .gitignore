@@ -43,6 +43,10 @@ ENV/
 htmlcov/
 *.cover
 
+# Test remediation artifacts
+.remediation_state.json
+.skill_backups/
+
 # Environment variables
 .env
 .env.local
