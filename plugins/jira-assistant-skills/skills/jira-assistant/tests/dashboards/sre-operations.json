@@ -1,0 +1,453 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "routing-sre-ops",
+    "title": "Routing Tests - SRE Operations",
+    "description": "Performance, costs, resource utilization, and reliability metrics",
+    "tags": ["routing", "sre", "operations", "costs", "performance"],
+    "timezone": "browser",
+    "schemaVersion": 39,
+    "version": 1,
+    "refresh": "30s",
+    "time": { "from": "now-24h", "to": "now" },
+    "templating": {
+      "list": [
+        {
+          "name": "model",
+          "label": "Model",
+          "type": "query",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "query": "label_values(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\"}, model)",
+          "refresh": 2,
+          "includeAll": true,
+          "multi": true,
+          "current": { "text": "All", "value": "$__all" }
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Cost Overview",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+        "collapsed": false
+      },
+      {
+        "id": 2,
+        "title": "Total API Cost (24h)",
+        "type": "stat",
+        "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+          "colorMode": "value",
+          "graphMode": "area"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 50 }
+            ]},
+            "unit": "currencyUSD",
+            "decimals": 2
+          }
+        },
+        "targets": [{
+          "expr": "sum(increase(routing_test_cost_usd_sum[24h]))",
+          "legendFormat": "Total Cost"
+        }]
+      },
+      {
+        "id": 3,
+        "title": "Avg Cost per Test",
+        "type": "stat",
+        "gridPos": { "h": 5, "w": 6, "x": 6, "y": 1 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": { "calcs": ["mean"], "fields": "", "values": false },
+          "colorMode": "value",
+          "graphMode": "none"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.10 },
+              { "color": "red", "value": 0.25 }
+            ]},
+            "unit": "currencyUSD",
+            "decimals": 4
+          }
+        },
+        "targets": [{
+          "expr": "sum(rate(routing_test_cost_usd_sum[1h])) / sum(rate(routing_test_cost_usd_count[1h]))",
+          "legendFormat": "Avg Cost"
+        }]
+      },
+      {
+        "id": 4,
+        "title": "Tests Run (24h)",
+        "type": "stat",
+        "gridPos": { "h": 5, "w": 6, "x": 12, "y": 1 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+          "colorMode": "value",
+          "graphMode": "area"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+            "unit": "short"
+          }
+        },
+        "targets": [{
+          "expr": "sum(increase(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[24h]))",
+          "legendFormat": "Tests"
+        }]
+      },
+      {
+        "id": 5,
+        "title": "Cost Efficiency",
+        "type": "stat",
+        "gridPos": { "h": 5, "w": 6, "x": 18, "y": 1 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "description": "Cost per passed test",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+          "colorMode": "value",
+          "graphMode": "none"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.15 },
+              { "color": "red", "value": 0.30 }
+            ]},
+            "unit": "currencyUSD",
+            "decimals": 4
+          }
+        },
+        "targets": [{
+          "expr": "sum(increase(routing_test_cost_usd_sum[24h])) / sum(increase(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_OK\", span_name=~\"routing_test_TC.*\"}[24h]))",
+          "legendFormat": "Cost/Pass"
+        }]
+      },
+      {
+        "id": 6,
+        "title": "Cost Over Time",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+          "tooltip": { "mode": "multi", "sort": "desc" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "custom": { "drawStyle": "bars", "fillOpacity": 80 },
+            "unit": "currencyUSD"
+          }
+        },
+        "targets": [{
+          "expr": "sum(increase(routing_test_cost_usd_sum[$__rate_interval]))",
+          "legendFormat": "Cost"
+        }]
+      },
+      {
+        "id": 7,
+        "title": "Cost by Model",
+        "type": "piechart",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "values": ["value", "percent"] },
+          "pieType": "donut",
+          "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false }
+        },
+        "fieldConfig": {
+          "defaults": { "color": { "mode": "palette-classic" }, "unit": "currencyUSD" }
+        },
+        "targets": [{
+          "expr": "sum by (model) (increase(routing_test_cost_usd_sum[24h]))",
+          "legendFormat": "{{model}}"
+        }]
+      },
+      {
+        "id": 8,
+        "title": "Performance Metrics",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+        "collapsed": false
+      },
+      {
+        "id": 9,
+        "title": "Latency Percentiles",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "calcs": ["mean", "max"] },
+          "tooltip": { "mode": "multi", "sort": "desc" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "spanNulls": true },
+            "unit": "s",
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 15 },
+              { "color": "red", "value": 30 }
+            ]}
+          }
+        },
+        "targets": [
+          { "expr": "histogram_quantile(0.50, sum(rate(traces_spanmetrics_latency_bucket{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[5m])) by (le))", "legendFormat": "p50" },
+          { "expr": "histogram_quantile(0.90, sum(rate(traces_spanmetrics_latency_bucket{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[5m])) by (le))", "legendFormat": "p90" },
+          { "expr": "histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency_bucket{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[5m])) by (le))", "legendFormat": "p95" },
+          { "expr": "histogram_quantile(0.99, sum(rate(traces_spanmetrics_latency_bucket{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[5m])) by (le))", "legendFormat": "p99" }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Duration Heatmap",
+        "type": "heatmap",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "calculate": false,
+          "cellGap": 1,
+          "color": { "mode": "scheme", "scheme": "Spectral", "steps": 64, "reverse": true },
+          "yAxis": { "unit": "s" }
+        },
+        "targets": [{
+          "expr": "sum(increase(traces_spanmetrics_latency_bucket{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[$__rate_interval])) by (le)",
+          "format": "heatmap",
+          "legendFormat": "{{le}}"
+        }]
+      },
+      {
+        "id": 11,
+        "title": "Test Throughput",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+          "tooltip": { "mode": "multi", "sort": "desc" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 20 },
+            "unit": "short"
+          }
+        },
+        "targets": [{
+          "expr": "sum(rate(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[5m])) * 60",
+          "legendFormat": "Tests/min"
+        }]
+      },
+      {
+        "id": 12,
+        "title": "Duration by Model",
+        "type": "bargauge",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 23 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 15 },
+              { "color": "red", "value": 30 }
+            ]},
+            "unit": "s"
+          }
+        },
+        "targets": [{
+          "expr": "sum by (model) (rate(traces_spanmetrics_latency_sum{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[1h])) / sum by (model) (rate(traces_spanmetrics_latency_count{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[1h]))",
+          "legendFormat": "{{model}}"
+        }]
+      },
+      {
+        "id": 13,
+        "title": "Reliability & Errors",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+        "collapsed": false
+      },
+      {
+        "id": 14,
+        "title": "Error Rate",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+          "tooltip": { "mode": "multi", "sort": "desc" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "fixedColor": "red", "mode": "fixed" },
+            "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 30, "thresholdsStyle": { "mode": "area" } },
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 30 }
+            ]}
+          }
+        },
+        "targets": [{
+          "expr": "sum(rate(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_ERROR\", span_name=~\"routing_test_TC.*\"}[5m])) / sum(rate(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[5m])) * 100",
+          "legendFormat": "Error Rate"
+        }]
+      },
+      {
+        "id": 15,
+        "title": "Failures by Error Type",
+        "type": "piechart",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "values": ["value", "percent"] },
+          "pieType": "pie",
+          "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false }
+        },
+        "fieldConfig": {
+          "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" }
+        },
+        "targets": [{
+          "expr": "sum by (error_type) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_ERROR\", span_name=~\"routing_test_TC.*\"})",
+          "legendFormat": "{{error_type}}"
+        }]
+      },
+      {
+        "id": 16,
+        "title": "OpenTelemetry Collector Health",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 },
+        "collapsed": false
+      },
+      {
+        "id": 17,
+        "title": "OTLP Spans Received",
+        "type": "timeseries",
+        "gridPos": { "h": 6, "w": 8, "x": 0, "y": 41 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "custom": { "drawStyle": "line", "fillOpacity": 20 },
+            "unit": "short"
+          }
+        },
+        "targets": [{
+          "expr": "rate(otelcol_receiver_accepted_spans_total[5m])",
+          "legendFormat": "Spans/sec"
+        }]
+      },
+      {
+        "id": 18,
+        "title": "OTLP Metrics Received",
+        "type": "timeseries",
+        "gridPos": { "h": 6, "w": 8, "x": 8, "y": 41 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "custom": { "drawStyle": "line", "fillOpacity": 20 },
+            "unit": "short"
+          }
+        },
+        "targets": [{
+          "expr": "rate(otelcol_receiver_accepted_metric_points_total[5m])",
+          "legendFormat": "Metrics/sec"
+        }]
+      },
+      {
+        "id": 19,
+        "title": "OTLP Export Errors",
+        "type": "timeseries",
+        "gridPos": { "h": 6, "w": 8, "x": 16, "y": 41 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "fixedColor": "red", "mode": "fixed" },
+            "custom": { "drawStyle": "line", "fillOpacity": 30 },
+            "unit": "short"
+          }
+        },
+        "targets": [
+          { "expr": "rate(otelcol_exporter_send_failed_spans_total[5m])", "legendFormat": "Failed Spans" },
+          { "expr": "rate(otelcol_exporter_send_failed_metric_points_total[5m])", "legendFormat": "Failed Metrics" }
+        ]
+      },
+      {
+        "id": 20,
+        "title": "Resource Utilization",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 47 },
+        "collapsed": false
+      },
+      {
+        "id": 21,
+        "title": "Session Summary Table",
+        "type": "table",
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 48 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "showHeader": true,
+          "cellHeight": "sm",
+          "footer": { "show": true, "reducer": ["sum"], "fields": ["Tests", "Cost"] }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "custom": { "align": "auto" },
+            "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] }
+          },
+          "overrides": [
+            { "matcher": { "id": "byName", "options": "skill_version" }, "properties": [{ "id": "displayName", "value": "Skill Version" }] },
+            { "matcher": { "id": "byName", "options": "model" }, "properties": [{ "id": "displayName", "value": "Model" }] },
+            { "matcher": { "id": "byName", "options": "vcs_commit_sha" }, "properties": [{ "id": "displayName", "value": "Commit" }] }
+          ]
+        },
+        "targets": [{
+          "expr": "sum by (skill_version, model, vcs_commit_sha) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"})",
+          "format": "table",
+          "instant": true
+        }],
+        "transformations": [
+          { "id": "sortBy", "options": { "fields": {}, "sort": [{ "field": "Value", "desc": true }] } }
+        ]
+      }
+    ]
+  },
+  "folderUid": "",
+  "message": "SRE Operations dashboard",
+  "overwrite": true
+}

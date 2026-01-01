@@ -1,0 +1,424 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "routing-skills-ab",
+    "title": "Routing Tests - Skills Engineer A/B",
+    "description": "A/B comparison across models, skill versions, branches, and commits",
+    "tags": ["routing", "skills", "ab-testing", "comparison"],
+    "timezone": "browser",
+    "schemaVersion": 39,
+    "version": 1,
+    "refresh": "1m",
+    "time": { "from": "now-24h", "to": "now" },
+    "templating": {
+      "list": [
+        {
+          "name": "skill_version_a",
+          "label": "Skill Version A",
+          "type": "query",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "query": "label_values(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\"}, skill_version)",
+          "refresh": 2,
+          "includeAll": false,
+          "current": {}
+        },
+        {
+          "name": "skill_version_b",
+          "label": "Skill Version B",
+          "type": "query",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "query": "label_values(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\"}, skill_version)",
+          "refresh": 2,
+          "includeAll": false,
+          "current": {}
+        },
+        {
+          "name": "model",
+          "label": "Model",
+          "type": "query",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "query": "label_values(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\"}, model)",
+          "refresh": 2,
+          "includeAll": true,
+          "multi": true,
+          "current": { "text": "All", "value": "$__all" }
+        },
+        {
+          "name": "branch",
+          "label": "Branch",
+          "type": "query",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "query": "label_values(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\"}, vcs_branch)",
+          "refresh": 2,
+          "includeAll": true,
+          "multi": true,
+          "current": { "text": "All", "value": "$__all" }
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Model Comparison",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+        "collapsed": false
+      },
+      {
+        "id": 2,
+        "title": "Pass Rate by Model",
+        "type": "bargauge",
+        "gridPos": { "h": 6, "w": 12, "x": 0, "y": 1 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "green", "value": 80 }
+            ]},
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "targets": [{
+          "expr": "sum by (model) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_OK\", span_name=~\"routing_test_TC.*\"}) / sum by (model) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}) * 100",
+          "legendFormat": "{{model}}"
+        }]
+      },
+      {
+        "id": 3,
+        "title": "Avg Duration by Model",
+        "type": "bargauge",
+        "gridPos": { "h": 6, "w": 12, "x": 12, "y": 1 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 15 },
+              { "color": "red", "value": 30 }
+            ]},
+            "unit": "s"
+          }
+        },
+        "targets": [{
+          "expr": "sum by (model) (rate(traces_spanmetrics_latency_sum{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[1h])) / sum by (model) (rate(traces_spanmetrics_latency_count{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[1h]))",
+          "legendFormat": "{{model}}"
+        }]
+      },
+      {
+        "id": 4,
+        "title": "Model Performance Over Time",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 7 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "calcs": ["mean", "max", "min"] },
+          "tooltip": { "mode": "multi", "sort": "desc" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "spanNulls": true },
+            "unit": "percent"
+          }
+        },
+        "targets": [{
+          "expr": "sum by (model) (increase(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_OK\", span_name=~\"routing_test_TC.*\"}[1h])) / sum by (model) (increase(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[1h])) * 100",
+          "legendFormat": "{{model}}"
+        }]
+      },
+      {
+        "id": 5,
+        "title": "Skill Version Comparison",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
+        "collapsed": false
+      },
+      {
+        "id": 6,
+        "title": "Pass Rate by Skill Version",
+        "type": "bargauge",
+        "gridPos": { "h": 6, "w": 12, "x": 0, "y": 16 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "green", "value": 80 }
+            ]},
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "targets": [{
+          "expr": "sum by (skill_version) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_OK\", span_name=~\"routing_test_TC.*\"}) / sum by (skill_version) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}) * 100",
+          "legendFormat": "v{{skill_version}}"
+        }]
+      },
+      {
+        "id": 7,
+        "title": "Tests Run by Skill Version",
+        "type": "piechart",
+        "gridPos": { "h": 6, "w": 12, "x": 12, "y": 16 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "values": ["value", "percent"] },
+          "pieType": "donut",
+          "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+        },
+        "fieldConfig": {
+          "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" }
+        },
+        "targets": [{
+          "expr": "sum by (skill_version) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"})",
+          "legendFormat": "v{{skill_version}}"
+        }]
+      },
+      {
+        "id": 8,
+        "title": "Branch & Commit Analysis",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
+        "collapsed": false
+      },
+      {
+        "id": 9,
+        "title": "Pass Rate by Branch",
+        "type": "bargauge",
+        "gridPos": { "h": 6, "w": 12, "x": 0, "y": 23 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "green", "value": 80 }
+            ]},
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "targets": [{
+          "expr": "sum by (vcs_branch) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_OK\", span_name=~\"routing_test_TC.*\"}) / sum by (vcs_branch) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}) * 100",
+          "legendFormat": "{{vcs_branch}}"
+        }]
+      },
+      {
+        "id": 10,
+        "title": "Pass Rate by Commit",
+        "type": "bargauge",
+        "gridPos": { "h": 6, "w": 12, "x": 12, "y": 23 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "green", "value": 80 }
+            ]},
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "targets": [{
+          "expr": "sum by (vcs_commit_sha) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_OK\", span_name=~\"routing_test_TC.*\"}) / sum by (vcs_commit_sha) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}) * 100",
+          "legendFormat": "{{vcs_commit_sha}}"
+        }]
+      },
+      {
+        "id": 11,
+        "title": "Skill-Level Analysis",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 29 },
+        "collapsed": false
+      },
+      {
+        "id": 12,
+        "title": "Routing Accuracy by Target Skill",
+        "type": "table",
+        "gridPos": { "h": 10, "w": 12, "x": 0, "y": 30 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "showHeader": true,
+          "cellHeight": "sm",
+          "footer": { "show": true, "reducer": ["mean"], "fields": ["Pass Rate"] }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "custom": { "align": "auto", "cellOptions": { "type": "auto" } },
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "green", "value": 80 }
+            ]}
+          },
+          "overrides": [
+            { "matcher": { "id": "byName", "options": "expected_skill" }, "properties": [{ "id": "displayName", "value": "Target Skill" }] },
+            { "matcher": { "id": "byName", "options": "Value" }, "properties": [{ "id": "displayName", "value": "Pass Rate" }, { "id": "unit", "value": "percent" }, { "id": "custom.cellOptions", "value": { "type": "color-background-solid" } }] }
+          ]
+        },
+        "targets": [{
+          "expr": "sum by (expected_skill) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_OK\", span_name=~\"routing_test_TC.*\"}) / sum by (expected_skill) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}) * 100",
+          "format": "table",
+          "instant": true
+        }],
+        "transformations": [
+          { "id": "sortBy", "options": { "fields": {}, "sort": [{ "field": "Value", "desc": false }] } }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Misroute Confusion Matrix",
+        "type": "table",
+        "gridPos": { "h": 10, "w": 12, "x": 12, "y": 30 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "showHeader": true,
+          "cellHeight": "sm"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "custom": { "align": "auto", "cellOptions": { "type": "color-background-solid" } },
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 3 }
+            ]}
+          },
+          "overrides": [
+            { "matcher": { "id": "byName", "options": "expected_skill" }, "properties": [{ "id": "displayName", "value": "Expected" }] },
+            { "matcher": { "id": "byName", "options": "actual_skill" }, "properties": [{ "id": "displayName", "value": "Actual" }] },
+            { "matcher": { "id": "byName", "options": "Value" }, "properties": [{ "id": "displayName", "value": "Misroutes" }] }
+          ]
+        },
+        "targets": [{
+          "expr": "sum by (expected_skill, actual_skill) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_ERROR\", span_name=~\"routing_test_TC.*\"}) > 0",
+          "format": "table",
+          "instant": true
+        }],
+        "transformations": [
+          { "id": "sortBy", "options": { "fields": {}, "sort": [{ "field": "Value", "desc": true }] } }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Category Performance Comparison",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 },
+        "collapsed": false
+      },
+      {
+        "id": 15,
+        "title": "Category Pass Rate by Model",
+        "type": "barchart",
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 41 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "orientation": "horizontal",
+          "showValue": "always",
+          "groupWidth": 0.8,
+          "barWidth": 0.9,
+          "stacking": "none",
+          "legend": { "displayMode": "list", "placement": "right", "showLegend": true }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "targets": [
+          { "expr": "sum by (model) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_OK\", span_name=~\"routing_test_TC0[0-2].*\"}) / sum by (model) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC0[0-2].*\"}) * 100", "legendFormat": "direct - {{model}}" },
+          { "expr": "sum by (model) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_OK\", span_name=~\"routing_test_TC03.*\"}) / sum by (model) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC03.*\"}) * 100", "legendFormat": "disambiguation - {{model}}" },
+          { "expr": "sum by (model) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_OK\", span_name=~\"routing_test_TC05.*\"}) / sum by (model) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC05.*\"}) * 100", "legendFormat": "negative - {{model}}" }
+        ]
+      },
+      {
+        "id": 16,
+        "title": "Regression Detection",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 49 },
+        "collapsed": false
+      },
+      {
+        "id": 17,
+        "title": "Pass Rate Trend (Detect Regressions)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 50 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "calcs": ["mean", "last", "min"] },
+          "tooltip": { "mode": "multi", "sort": "desc" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "spanNulls": true,
+              "thresholdsStyle": { "mode": "area" }
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "green", "value": 80 }
+            ]}
+          }
+        },
+        "targets": [{
+          "expr": "sum(increase(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_OK\", span_name=~\"routing_test_TC.*\"}[1h])) / sum(increase(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[1h])) * 100",
+          "legendFormat": "Overall Pass Rate"
+        }]
+      }
+    ]
+  },
+  "folderUid": "",
+  "message": "Skills Engineer A/B comparison dashboard",
+  "overwrite": true
+}
