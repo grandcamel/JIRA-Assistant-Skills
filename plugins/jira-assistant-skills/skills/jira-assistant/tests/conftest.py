@@ -199,6 +199,8 @@ def record_otel(request, otel_enabled, cost_tracker):
         tool_use_accuracy: float | None = None,
         tool_use_matched: int | None = None,
         tool_use_total: int | None = None,
+        error_type: str | None = None,
+        error_message: str | None = None,
     ):
         # Update cost tracker
         cost_tracker["total_cost_usd"] += cost_usd
@@ -207,6 +209,23 @@ def record_otel(request, otel_enabled, cost_tracker):
             cost_tracker["passed"] += 1
         else:
             cost_tracker["failed"] += 1
+
+        # Auto-classify error type if not provided
+        classified_error_type = error_type
+        classified_error_message = error_message
+        if not passed and not classified_error_type:
+            if expected_skill and actual_skill and expected_skill != actual_skill:
+                classified_error_type = "misroute"
+                classified_error_message = f"Expected {expected_skill}, got {actual_skill}"
+            elif not actual_skill or actual_skill == "none":
+                classified_error_type = "no_skill_detected"
+                classified_error_message = "No skill was detected in response"
+            elif asked_clarification and category != "disambiguation":
+                classified_error_type = "unexpected_clarification"
+                classified_error_message = "Asked for clarification when direct routing expected"
+            else:
+                classified_error_type = "assertion_failed"
+                classified_error_message = "Test assertion failed"
 
         # Record to OpenTelemetry if enabled
         if otel_enabled and record_test_result:
@@ -228,6 +247,8 @@ def record_otel(request, otel_enabled, cost_tracker):
                 tool_use_accuracy=tool_use_accuracy,
                 tool_use_matched=tool_use_matched,
                 tool_use_total=tool_use_total,
+                error_type=classified_error_type,
+                error_message=classified_error_message,
             )
 
     return _record
