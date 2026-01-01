@@ -21,6 +21,8 @@ try:
         start_suite_span,
         end_suite_span,
         set_suite_context_from_traceparent,
+        start_worker_span,
+        end_worker_span,
         shutdown as otel_shutdown,
         OTEL_AVAILABLE
     )
@@ -32,6 +34,8 @@ except ImportError:
     start_suite_span = None
     end_suite_span = None
     set_suite_context_from_traceparent = None
+    start_worker_span = None
+    end_worker_span = None
     otel_shutdown = None
 
 # Environment variable for xdist trace context propagation
@@ -100,7 +104,7 @@ def pytest_configure(config):
 
 
 def pytest_sessionstart(session):
-    """Start suite span at session start."""
+    """Start suite and worker spans at session start."""
     config = session.config
 
     if not getattr(config, '_otel_enabled', False):
@@ -110,10 +114,13 @@ def pytest_sessionstart(session):
     worker_id = os.environ.get("PYTEST_XDIST_WORKER")
 
     if worker_id:
-        # We're an xdist worker - inherit context from main process
+        # We're an xdist worker - inherit suite context from main process
         traceparent = os.environ.get(TRACEPARENT_ENV_VAR)
         if traceparent and set_suite_context_from_traceparent:
             set_suite_context_from_traceparent(traceparent)
+            # Start worker span for this xdist worker
+            if start_worker_span:
+                start_worker_span(worker_id)
     else:
         # We're the main process (or not using xdist) - start the suite span
         if start_suite_span:
@@ -123,7 +130,7 @@ def pytest_sessionstart(session):
             try:
                 num_workers = int(config.getoption("numprocesses", 0) or 0)
             except (TypeError, ValueError):
-                num_workers = 1
+                num_workers = 0
 
             traceparent = start_suite_span(
                 suite_name="routing_test_suite",
@@ -136,29 +143,48 @@ def pytest_sessionstart(session):
                 os.environ[TRACEPARENT_ENV_VAR] = traceparent
                 config._suite_traceparent = traceparent
 
+            # For non-xdist runs, start a "main" worker span
+            if num_workers == 0 and start_worker_span:
+                start_worker_span("main")
+
 
 def pytest_sessionfinish(session, exitstatus):
-    """End suite span at session finish."""
+    """End worker and suite spans at session finish."""
     config = session.config
 
     if not getattr(config, '_otel_enabled', False):
         return
 
-    # Only end the suite span from the main process
-    worker_id = os.environ.get("PYTEST_XDIST_WORKER")
-    if worker_id:
-        return  # Workers don't end the suite span
-
-    if end_suite_span:
-        # Get counts from terminal reporter if available
-        reporter = config.pluginmanager.get_plugin("terminalreporter")
-        if reporter:
-            passed = len(reporter.stats.get("passed", []))
-            failed = len(reporter.stats.get("failed", []))
-            skipped = len(reporter.stats.get("skipped", []))
+    # Get counts from terminal reporter if available
+    reporter = config.pluginmanager.get_plugin("terminalreporter")
+    if reporter:
+        passed = len(reporter.stats.get("passed", []))
+        failed = len(reporter.stats.get("failed", []))
+        skipped = len(reporter.stats.get("skipped", []))
+    else:
+        # Fall back to cost_tracker counts
+        cost_tracker = getattr(config, '_cost_tracker', None)
+        if cost_tracker:
+            passed = cost_tracker.get("passed", 0)
+            failed = cost_tracker.get("failed", 0)
+            skipped = cost_tracker.get("skipped", 0)
         else:
             passed = failed = skipped = 0
 
+    # Check if we're an xdist worker
+    worker_id = os.environ.get("PYTEST_XDIST_WORKER")
+
+    if worker_id:
+        # End this worker's span
+        if end_worker_span:
+            end_worker_span(passed=passed, failed=failed, skipped=skipped)
+        return  # Workers don't end the suite span
+
+    # Main process: end worker span (for non-xdist), then suite span
+    if end_worker_span:
+        end_worker_span(passed=passed, failed=failed, skipped=skipped)
+
+    if end_suite_span:
         # Get cost from cost_tracker if available
         cost_tracker = getattr(config, '_cost_tracker', None)
         total_cost = cost_tracker.get("total_cost_usd", 0.0) if cost_tracker else 0.0

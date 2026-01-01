@@ -76,6 +76,13 @@ _suite_context = None
 _suite_token = None
 _suite_start_time = None
 
+# Worker span state (child of suite, parent of tests)
+_worker_span = None
+_worker_context = None
+_worker_token = None
+_worker_start_time = None
+_worker_id = None
+
 # Metric instruments
 _test_counter = None
 _duration_histogram = None
@@ -435,8 +442,8 @@ def record_test_result(
         end_time_ns = time.time_ns()
         start_time_ns = end_time_ns - (duration_ms * 1_000_000)  # Convert ms to ns
 
-        # Use suite context as parent if available
-        parent_context = _suite_context if _suite_context else None
+        # Use worker context as parent (falls back to suite context)
+        parent_context = get_worker_context()
 
         with _tracer.start_as_current_span(
             f"routing_test_{test_id}",
@@ -737,6 +744,135 @@ def end_suite_span(
         _suite_context = None
         _suite_token = None
         _suite_start_time = None
+
+
+def start_worker_span(
+    worker_id: str = "main",
+) -> bool:
+    """
+    Start a worker-level span that will be parent to test spans.
+
+    This should be called when a pytest worker starts (or at session start
+    for sequential runs). Worker spans are children of the suite span.
+
+    Args:
+        worker_id: Worker identifier (e.g., "main", "gw0", "gw1")
+
+    Returns:
+        True if worker span was started successfully, False otherwise.
+    """
+    global _worker_span, _worker_context, _worker_token, _worker_start_time, _worker_id
+
+    if not _metrics_initialized or not _tracer:
+        return False
+
+    # Need suite context as parent
+    if not _suite_context:
+        print(f"Warning: No suite context for worker {worker_id}")
+        return False
+
+    try:
+        from opentelemetry import context
+
+        _worker_id = worker_id
+        _worker_start_time = time.time_ns()
+
+        # Create worker span as child of suite span
+        _worker_span = _tracer.start_span(
+            f"worker_{worker_id}",
+            context=_suite_context,
+            start_time=_worker_start_time,
+        )
+
+        # Set worker attributes
+        _worker_span.set_attribute("worker.id", worker_id)
+        _worker_span.set_attribute("worker.type", "xdist" if worker_id.startswith("gw") else "main")
+
+        # Set worker span as current context
+        _worker_context = trace.set_span_in_context(_worker_span)
+        _worker_token = context.attach(_worker_context)
+
+        print(f"Started worker span: worker_{worker_id}")
+        return True
+
+    except Exception as e:
+        print(f"Failed to start worker span: {e}")
+        return False
+
+
+def get_worker_context():
+    """
+    Get the current worker context for creating child spans.
+
+    Returns:
+        The worker context if available, otherwise suite context, or None.
+    """
+    return _worker_context or _suite_context
+
+
+def end_worker_span(
+    passed: int = 0,
+    failed: int = 0,
+    skipped: int = 0,
+):
+    """
+    End the worker span with summary attributes.
+
+    This should be called when a pytest worker finishes.
+
+    Args:
+        passed: Number of passed tests in this worker
+        failed: Number of failed tests in this worker
+        skipped: Number of skipped tests in this worker
+    """
+    global _worker_span, _worker_context, _worker_token, _worker_start_time, _worker_id
+
+    if not _worker_span:
+        return
+
+    try:
+        from opentelemetry import context
+
+        # Calculate duration
+        end_time_ns = time.time_ns()
+        duration_ms = (end_time_ns - _worker_start_time) / 1_000_000 if _worker_start_time else 0
+
+        total = passed + failed
+
+        # Set final attributes
+        _worker_span.set_attribute("worker.passed", passed)
+        _worker_span.set_attribute("worker.failed", failed)
+        _worker_span.set_attribute("worker.skipped", skipped)
+        _worker_span.set_attribute("worker.total", passed + failed + skipped)
+        _worker_span.set_attribute("worker.duration_ms", duration_ms)
+
+        # Set status based on failures
+        if failed > 0:
+            _worker_span.set_status(Status(
+                StatusCode.ERROR,
+                f"{failed} tests failed in worker {_worker_id}"
+            ))
+        else:
+            _worker_span.set_status(Status(StatusCode.OK))
+
+        # End the span
+        _worker_span.end(end_time=end_time_ns)
+
+        # Detach context
+        if _worker_token:
+            context.detach(_worker_token)
+
+        print(f"Ended worker span: worker_{_worker_id} ({passed} passed, {failed} failed)")
+
+    except Exception as e:
+        print(f"Failed to end worker span: {e}")
+
+    finally:
+        _worker_span = None
+        _worker_context = None
+        _worker_token = None
+        _worker_start_time = None
+        _worker_id = None
 
 
 def record_test_session_summary(
