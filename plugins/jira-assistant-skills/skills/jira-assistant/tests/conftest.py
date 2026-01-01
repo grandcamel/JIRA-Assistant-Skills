@@ -1,5 +1,6 @@
 """Pytest configuration for routing tests."""
 
+import os
 import sys
 from pathlib import Path
 
@@ -17,6 +18,9 @@ try:
         init_telemetry,
         record_test_result,
         record_test_session_summary,
+        start_suite_span,
+        end_suite_span,
+        set_suite_context_from_traceparent,
         shutdown as otel_shutdown,
         OTEL_AVAILABLE
     )
@@ -25,7 +29,13 @@ except ImportError:
     init_telemetry = None
     record_test_result = None
     record_test_session_summary = None
+    start_suite_span = None
+    end_suite_span = None
+    set_suite_context_from_traceparent = None
     otel_shutdown = None
+
+# Environment variable for xdist trace context propagation
+TRACEPARENT_ENV_VAR = "PYTEST_OTEL_TRACEPARENT"
 
 
 def pytest_addoption(parser):
@@ -89,6 +99,78 @@ def pytest_configure(config):
             print("Warning: OpenTelemetry not available. Install with: pip install -r requirements-otel.txt")
 
 
+def pytest_sessionstart(session):
+    """Start suite span at session start."""
+    config = session.config
+
+    if not getattr(config, '_otel_enabled', False):
+        return
+
+    # Check if we're an xdist worker
+    worker_id = os.environ.get("PYTEST_XDIST_WORKER")
+
+    if worker_id:
+        # We're an xdist worker - inherit context from main process
+        traceparent = os.environ.get(TRACEPARENT_ENV_VAR)
+        if traceparent and set_suite_context_from_traceparent:
+            set_suite_context_from_traceparent(traceparent)
+    else:
+        # We're the main process (or not using xdist) - start the suite span
+        if start_suite_span:
+            model = config.getoption("--model") or "unknown"
+
+            # Detect xdist worker count
+            try:
+                num_workers = int(config.getoption("numprocesses", 0) or 0)
+            except (TypeError, ValueError):
+                num_workers = 1
+
+            traceparent = start_suite_span(
+                suite_name="routing_test_suite",
+                model=model,
+                parallel_workers=max(1, num_workers),
+            )
+
+            # Store traceparent for xdist workers
+            if traceparent:
+                os.environ[TRACEPARENT_ENV_VAR] = traceparent
+                config._suite_traceparent = traceparent
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """End suite span at session finish."""
+    config = session.config
+
+    if not getattr(config, '_otel_enabled', False):
+        return
+
+    # Only end the suite span from the main process
+    worker_id = os.environ.get("PYTEST_XDIST_WORKER")
+    if worker_id:
+        return  # Workers don't end the suite span
+
+    if end_suite_span:
+        # Get counts from terminal reporter if available
+        reporter = config.pluginmanager.get_plugin("terminalreporter")
+        if reporter:
+            passed = len(reporter.stats.get("passed", []))
+            failed = len(reporter.stats.get("failed", []))
+            skipped = len(reporter.stats.get("skipped", []))
+        else:
+            passed = failed = skipped = 0
+
+        # Get cost from cost_tracker if available
+        cost_tracker = getattr(config, '_cost_tracker', None)
+        total_cost = cost_tracker.get("total_cost_usd", 0.0) if cost_tracker else 0.0
+
+        end_suite_span(
+            passed=passed,
+            failed=failed,
+            skipped=skipped,
+            total_cost_usd=total_cost,
+        )
+
+
 def pytest_unconfigure(config):
     """Shutdown telemetry on exit."""
     if getattr(config, '_otel_enabled', False) and otel_shutdown:
@@ -142,13 +224,17 @@ def cost_tracker(request):
         "skipped": 0,
         "start_time": time.time()
     }
+
+    # Store in config for pytest_sessionfinish access
+    request.config._cost_tracker = tracker
+
     yield tracker
 
     # Print summary
     print(f"\n\nTotal API cost: ${tracker['total_cost_usd']:.4f}")
     print(f"Total API time: {tracker['total_duration_ms'] / 1000:.1f}s")
 
-    # Record session summary to OpenTelemetry
+    # Record session summary to OpenTelemetry (legacy - suite span now handles this)
     if getattr(request.config, '_otel_enabled', False) and record_test_session_summary:
         elapsed_ms = int((time.time() - tracker["start_time"]) * 1000)
         record_test_session_summary(

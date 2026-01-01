@@ -70,6 +70,12 @@ _tracer = None
 _metrics_initialized = False
 _resource_attributes = {}
 
+# Suite span state (for parent-child hierarchy)
+_suite_span = None
+_suite_context = None
+_suite_token = None
+_suite_start_time = None
+
 # Metric instruments
 _test_counter = None
 _duration_histogram = None
@@ -424,12 +430,17 @@ def record_test_result(
 
     # Create detailed trace span with correct duration
     # Backdate the span start time so spanmetrics captures the actual test duration
+    # If suite context exists, create span as child of suite span
     if _tracer:
         end_time_ns = time.time_ns()
         start_time_ns = end_time_ns - (duration_ms * 1_000_000)  # Convert ms to ns
 
+        # Use suite context as parent if available
+        parent_context = _suite_context if _suite_context else None
+
         with _tracer.start_as_current_span(
             f"routing_test_{test_id}",
+            context=parent_context,
             start_time=start_time_ns,
         ) as span:
             # Test identification
@@ -545,6 +556,187 @@ def update_accuracy(passed: int, total: int):
     """
     if total > 0:
         _accuracy_value["value"] = (passed / total) * 100
+
+
+def start_suite_span(
+    suite_name: str = "routing_test_suite",
+    model: str = "unknown",
+    parallel_workers: int = 1,
+) -> Optional[str]:
+    """
+    Start a suite-level span that will be parent to all test spans.
+
+    This should be called at pytest_sessionstart. Individual test spans
+    will be created as children of this span.
+
+    Args:
+        suite_name: Name for the suite span
+        model: Claude model being used
+        parallel_workers: Number of parallel workers (for xdist)
+
+    Returns:
+        Serialized trace context (traceparent format) for xdist propagation,
+        or None if telemetry not initialized.
+    """
+    global _suite_span, _suite_context, _suite_token, _suite_start_time
+
+    if not _metrics_initialized or not _tracer:
+        return None
+
+    try:
+        from opentelemetry import context
+        from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+
+        _suite_start_time = time.time_ns()
+
+        # Create the suite span (don't use context manager - we'll end it manually)
+        _suite_span = _tracer.start_span(
+            suite_name,
+            start_time=_suite_start_time,
+        )
+
+        # Set initial attributes
+        resource_attrs = get_resource_attributes()
+        _suite_span.set_attribute("suite.name", suite_name)
+        _suite_span.set_attribute("suite.model", model)
+        _suite_span.set_attribute("suite.parallel_workers", parallel_workers)
+        _suite_span.set_attribute("suite.skill_version", resource_attrs.get("skill.version", "unknown"))
+        _suite_span.set_attribute("suite.vcs_branch", resource_attrs.get("vcs.branch", "unknown"))
+        _suite_span.set_attribute("suite.vcs_commit", resource_attrs.get("vcs.commit.sha", "unknown"))
+
+        # Set suite span as current context
+        _suite_context = trace.set_span_in_context(_suite_span)
+        _suite_token = context.attach(_suite_context)
+
+        # Serialize context for xdist workers
+        carrier = {}
+        TraceContextTextMapPropagator().inject(carrier, _suite_context)
+        traceparent = carrier.get("traceparent", "")
+
+        print(f"Started suite span: {suite_name} (traceparent: {traceparent[:50]}...)")
+        return traceparent
+
+    except Exception as e:
+        print(f"Failed to start suite span: {e}")
+        return None
+
+
+def get_suite_context():
+    """
+    Get the current suite context for creating child spans.
+
+    Returns:
+        The suite context, or None if no suite span is active.
+    """
+    return _suite_context
+
+
+def set_suite_context_from_traceparent(traceparent: str) -> bool:
+    """
+    Set the suite context from a serialized traceparent string.
+
+    This is used by pytest-xdist workers to inherit the parent suite span
+    from the main process.
+
+    Args:
+        traceparent: Serialized trace context in W3C traceparent format
+
+    Returns:
+        True if context was set successfully, False otherwise.
+    """
+    global _suite_context, _suite_token
+
+    if not _metrics_initialized:
+        return False
+
+    try:
+        from opentelemetry import context
+        from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+
+        carrier = {"traceparent": traceparent}
+        _suite_context = TraceContextTextMapPropagator().extract(carrier)
+        _suite_token = context.attach(_suite_context)
+
+        print(f"Inherited suite context from traceparent: {traceparent[:50]}...")
+        return True
+
+    except Exception as e:
+        print(f"Failed to set suite context: {e}")
+        return False
+
+
+def end_suite_span(
+    passed: int,
+    failed: int,
+    skipped: int,
+    total_cost_usd: float = 0.0,
+):
+    """
+    End the suite span with final summary attributes.
+
+    This should be called at pytest_sessionfinish.
+
+    Args:
+        passed: Number of passed tests
+        failed: Number of failed tests
+        skipped: Number of skipped tests
+        total_cost_usd: Total API cost
+    """
+    global _suite_span, _suite_context, _suite_token, _suite_start_time
+
+    if not _suite_span:
+        return
+
+    try:
+        from opentelemetry import context
+
+        # Calculate duration
+        end_time_ns = time.time_ns()
+        duration_ms = (end_time_ns - _suite_start_time) / 1_000_000 if _suite_start_time else 0
+
+        total = passed + failed
+        accuracy = (passed / total * 100) if total > 0 else 0
+
+        # Set final attributes
+        _suite_span.set_attribute("suite.passed", passed)
+        _suite_span.set_attribute("suite.failed", failed)
+        _suite_span.set_attribute("suite.skipped", skipped)
+        _suite_span.set_attribute("suite.total", passed + failed + skipped)
+        _suite_span.set_attribute("suite.executed", total)
+        _suite_span.set_attribute("suite.accuracy_percent", accuracy)
+        _suite_span.set_attribute("suite.duration_ms", duration_ms)
+        _suite_span.set_attribute("suite.duration_seconds", duration_ms / 1000.0)
+        _suite_span.set_attribute("suite.cost_usd", total_cost_usd)
+
+        # Set status based on failures
+        if failed > 0:
+            _suite_span.set_status(Status(
+                StatusCode.ERROR,
+                f"{failed} tests failed"
+            ))
+        else:
+            _suite_span.set_status(Status(StatusCode.OK))
+
+        # End the span
+        _suite_span.end(end_time=end_time_ns)
+
+        # Detach context
+        if _suite_token:
+            context.detach(_suite_token)
+
+        print(f"Ended suite span: {passed} passed, {failed} failed, accuracy {accuracy:.1f}%")
+
+        # Update accuracy gauge
+        update_accuracy(passed, total)
+
+    except Exception as e:
+        print(f"Failed to end suite span: {e}")
+
+    finally:
+        _suite_span = None
+        _suite_context = None
+        _suite_token = None
+        _suite_start_time = None
 
 
 def record_test_session_summary(
