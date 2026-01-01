@@ -160,7 +160,13 @@ def record_otel(request, otel_enabled, cost_tracker):
         duration_ms: int,
         cost_usd: float,
         asked_clarification: bool = False,
-        session_id: str = ""
+        session_id: str = "",
+        tokens_input: int = 0,
+        tokens_output: int = 0,
+        response_text: str = "",
+        tool_use_accuracy: float | None = None,
+        tool_use_matched: int | None = None,
+        tool_use_total: int | None = None,
     ):
         # Update cost tracker
         cost_tracker["total_cost_usd"] += cost_usd
@@ -182,7 +188,13 @@ def record_otel(request, otel_enabled, cost_tracker):
                 duration_ms=duration_ms,
                 cost_usd=cost_usd,
                 asked_clarification=asked_clarification,
-                session_id=session_id
+                session_id=session_id,
+                tokens_input=tokens_input,
+                tokens_output=tokens_output,
+                response_text=response_text,
+                tool_use_accuracy=tool_use_accuracy,
+                tool_use_matched=tool_use_matched,
+                tool_use_total=tool_use_total,
             )
 
     return _record
