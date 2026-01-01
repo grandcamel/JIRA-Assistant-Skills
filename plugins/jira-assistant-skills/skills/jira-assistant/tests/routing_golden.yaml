@@ -10,7 +10,7 @@
 # - workflow: Multi-skill sequences
 # - edge: Edge cases, typos, malformed
 
-version: "1.0"
+version: "1.1"
 tests:
 
   # ============================================================
@@ -25,6 +25,10 @@ tests:
     expected_skill: jira-issue
     certainty: high
     notes: "Clear create intent with project key"
+    expected_commands:
+      - pattern: "jira issue create"
+      - pattern: "--project TES"
+      - pattern: "--type Bug"
 
   - id: TC002
     category: direct
@@ -32,6 +36,9 @@ tests:
     expected_skill: jira-issue
     certainty: high
     notes: "Single issue lookup by key"
+    expected_commands:
+      - pattern: "jira issue get"
+      - pattern: "TES-123"
 
   - id: TC003
     category: direct
@@ -39,6 +46,10 @@ tests:
     expected_skill: jira-issue
     certainty: high
     notes: "Field update on specific issue"
+    expected_commands:
+      - pattern: "jira issue update"
+      - pattern: "PROJ-456"
+      - pattern: "--summary"
 
   - id: TC004
     category: direct
@@ -47,6 +58,9 @@ tests:
     certainty: high
     requires_confirmation: true
     notes: "Destructive operation"
+    expected_commands:
+      - pattern: "jira issue delete"
+      - pattern: "TES-789"
 
   # jira-search
   - id: TC005
@@ -55,6 +69,10 @@ tests:
     expected_skill: jira-search
     certainty: high
     notes: "Search with multiple criteria"
+    expected_commands:
+      - pattern: "jira search"
+      - pattern_regex: "(type\\s*=\\s*Bug|issuetype\\s*=\\s*Bug)"
+      - pattern_regex: "(assignee\\s*=\\s*currentUser|assignee\\s*=\\s*me)"
 
   - id: TC006
     category: direct
@@ -62,6 +80,10 @@ tests:
     expected_skill: jira-search
     certainty: high
     notes: "Search with time filter"
+    expected_commands:
+      - pattern: "jira search"
+      - pattern: "project = TES"
+      - pattern_regex: "created\\s*>=\\s*-\\d+[dwm]"
 
   - id: TC007
     category: direct
@@ -69,6 +91,10 @@ tests:
     expected_skill: jira-search
     certainty: high
     notes: "Explicit JQL query"
+    expected_commands:
+      - pattern: "jira search"
+      - pattern: "project = TES"
+      - pattern: "type = Bug"
 
   - id: TC008
     category: direct
@@ -76,6 +102,9 @@ tests:
     expected_skill: jira-search
     certainty: high
     notes: "Export keyword"
+    expected_commands:
+      - pattern: "jira search"
+      - pattern_regex: "(--export|--output csv|--format csv)"
 
   # jira-lifecycle
   - id: TC009
@@ -84,6 +113,10 @@ tests:
     expected_skill: jira-lifecycle
     certainty: high
     notes: "Status transition"
+    expected_commands:
+      - pattern: "jira lifecycle transition"
+      - pattern: "TES-123"
+      - pattern_regex: "(Done|\"Done\")"
 
   - id: TC010
     category: direct
@@ -91,6 +124,10 @@ tests:
     expected_skill: jira-lifecycle
     certainty: high
     notes: "Close is a transition"
+    expected_commands:
+      - pattern: "jira lifecycle transition"
+      - pattern: "PROJ-456"
+      - pattern_regex: "(Close|Closed|Done)"
 
   - id: TC011
     category: direct
@@ -98,6 +135,10 @@ tests:
     expected_skill: jira-lifecycle
     certainty: high
     notes: "Assignment change"
+    expected_commands:
+      - pattern: "jira lifecycle assign"
+      - pattern: "TES-789"
+      - pattern: "john@example.com"
 
   # jira-agile
   - id: TC012
@@ -106,6 +147,9 @@ tests:
     expected_skill: jira-agile
     certainty: high
     notes: "Epic creation"
+    expected_commands:
+      - pattern: "jira agile epic create"
+      - pattern: "User Authentication"
 
   - id: TC013
     category: direct
@@ -113,6 +157,10 @@ tests:
     expected_skill: jira-agile
     certainty: high
     notes: "Sprint management"
+    expected_commands:
+      - pattern: "jira agile sprint"
+      - pattern: "TES-123"
+      - pattern_regex: "(add|move)"
 
   - id: TC014
     category: direct
@@ -120,6 +168,10 @@ tests:
     expected_skill: jira-agile
     certainty: high
     notes: "Story point estimation"
+    expected_commands:
+      - pattern_regex: "jira agile (estimate|story-points)"
+      - pattern: "TES-456"
+      - pattern: "5"
 
   - id: TC015
     category: direct
@@ -127,6 +179,9 @@ tests:
     expected_skill: jira-agile
     certainty: high
     notes: "Backlog keyword"
+    expected_commands:
+      - pattern: "jira agile backlog"
+      - pattern: "TES"
 
   # jira-collaborate
   - id: TC016
@@ -135,6 +190,9 @@ tests:
     expected_skill: jira-collaborate
     certainty: high
     notes: "Comment addition"
+    expected_commands:
+      - pattern: "jira collaborate comment"
+      - pattern: "TES-123"
 
   - id: TC017
     category: direct
@@ -142,6 +200,9 @@ tests:
     expected_skill: jira-collaborate
     certainty: high
     notes: "Attachment"
+    expected_commands:
+      - pattern: "jira collaborate attach"
+      - pattern: "PROJ-456"
 
   - id: TC018
     category: direct
@@ -149,6 +210,9 @@ tests:
     expected_skill: jira-collaborate
     certainty: high
     notes: "Watcher management"
+    expected_commands:
+      - pattern: "jira collaborate watch"
+      - pattern: "TES-789"
 
   # jira-relationships
   - id: TC019
@@ -157,6 +221,10 @@ tests:
     expected_skill: jira-relationships
     certainty: high
     notes: "Issue linking"
+    expected_commands:
+      - pattern: "jira relationships link"
+      - pattern: "TES-123"
+      - pattern: "TES-456"
 
   - id: TC020
     category: direct
@@ -164,6 +232,10 @@ tests:
     expected_skill: jira-relationships
     certainty: high
     notes: "Blocker query"
+    expected_commands:
+      - pattern: "jira relationships"
+      - pattern: "TES-789"
+      - pattern_regex: "(blockers|blocking|blocked)"
 
   - id: TC021
     category: direct
@@ -171,6 +243,9 @@ tests:
     expected_skill: jira-relationships
     certainty: high
     notes: "Issue cloning"
+    expected_commands:
+      - pattern: "jira relationships clone"
+      - pattern: "TES-100"
 
   # jira-time
   - id: TC022
@@ -179,6 +254,10 @@ tests:
     expected_skill: jira-time
     certainty: high
     notes: "Time logging"
+    expected_commands:
+      - pattern: "jira time log"
+      - pattern: "TES-123"
+      - pattern: "2h"
 
   - id: TC023
     category: direct
@@ -186,6 +265,10 @@ tests:
     expected_skill: jira-time
     certainty: high
     notes: "Estimate setting"
+    expected_commands:
+      - pattern: "jira time estimate"
+      - pattern: "PROJ-456"
+      - pattern: "4h"
 
   # jira-bulk
   - id: TC024
@@ -195,6 +278,10 @@ tests:
     certainty: high
     requires_confirmation: true
     notes: "Explicit bulk keyword"
+    expected_commands:
+      - pattern: "jira bulk"
+      - pattern_regex: "(priority|update)"
+      - pattern: "High"
 
   - id: TC025
     category: direct
@@ -203,6 +290,10 @@ tests:
     certainty: high
     requires_confirmation: true
     notes: "Large quantity signals bulk"
+    expected_commands:
+      - pattern: "jira bulk transition"
+      - pattern: "Done"
+      - pattern: "--dry-run"
 
   # jira-dev
   - id: TC026
@@ -211,6 +302,9 @@ tests:
     expected_skill: jira-dev
     certainty: high
     notes: "Git branch generation"
+    expected_commands:
+      - pattern: "jira dev branch"
+      - pattern: "TES-123"
 
   - id: TC027
     category: direct
@@ -218,6 +312,9 @@ tests:
     expected_skill: jira-dev
     certainty: high
     notes: "PR description"
+    expected_commands:
+      - pattern: "jira dev pr"
+      - pattern: "TES-456"
 
   # jira-fields
   - id: TC028
@@ -226,6 +323,10 @@ tests:
     expected_skill: jira-fields
     certainty: high
     notes: "Custom field discovery"
+    expected_commands:
+      - pattern: "jira fields"
+      - pattern_regex: "(list|search|get)"
+      - pattern_regex: "(story.?points?|customfield)"
 
   # jira-ops
   - id: TC029
@@ -234,6 +335,10 @@ tests:
     expected_skill: jira-ops
     certainty: high
     notes: "Cache management"
+    expected_commands:
+      - pattern: "jira ops cache"
+      - pattern: "TES"
+      - pattern_regex: "(warm|refresh)"
 
   # jira-admin
   - id: TC030
@@ -242,6 +347,9 @@ tests:
     expected_skill: jira-admin
     certainty: high
     notes: "Permission check"
+    expected_commands:
+      - pattern: "jira admin permissions"
+      - pattern: "TES"
 
   # ============================================================
   # DISAMBIGUATION (Low Certainty)
