@@ -1,0 +1,750 @@
+# Golden Test Set for jira-assistant Routing
+# Version: 1.0
+# Created: 2025-12-31
+#
+# Test categories:
+# - direct: High-certainty, single skill match
+# - disambiguation: Multiple skills could match
+# - context: Requires conversation history
+# - negative: Should NOT route to specific skill
+# - workflow: Multi-skill sequences
+# - edge: Edge cases, typos, malformed
+
+version: "1.0"
+tests:
+
+  # ============================================================
+  # DIRECT ROUTING (High Certainty)
+  # Expected: Route directly without asking
+  # ============================================================
+
+  # jira-issue
+  - id: TC001
+    category: direct
+    input: "create a bug in TES"
+    expected_skill: jira-issue
+    certainty: high
+    notes: "Clear create intent with project key"
+
+  - id: TC002
+    category: direct
+    input: "show me TES-123"
+    expected_skill: jira-issue
+    certainty: high
+    notes: "Single issue lookup by key"
+
+  - id: TC003
+    category: direct
+    input: "update the summary of PROJ-456 to 'New title'"
+    expected_skill: jira-issue
+    certainty: high
+    notes: "Field update on specific issue"
+
+  - id: TC004
+    category: direct
+    input: "delete issue TES-789"
+    expected_skill: jira-issue
+    certainty: high
+    requires_confirmation: true
+    notes: "Destructive operation"
+
+  # jira-search
+  - id: TC005
+    category: direct
+    input: "find all open bugs assigned to me"
+    expected_skill: jira-search
+    certainty: high
+    notes: "Search with multiple criteria"
+
+  - id: TC006
+    category: direct
+    input: "search for issues in TES created last week"
+    expected_skill: jira-search
+    certainty: high
+    notes: "Search with time filter"
+
+  - id: TC007
+    category: direct
+    input: "run JQL: project = TES AND type = Bug"
+    expected_skill: jira-search
+    certainty: high
+    notes: "Explicit JQL query"
+
+  - id: TC008
+    category: direct
+    input: "export issues to CSV"
+    expected_skill: jira-search
+    certainty: high
+    notes: "Export keyword"
+
+  # jira-lifecycle
+  - id: TC009
+    category: direct
+    input: "move TES-123 to Done"
+    expected_skill: jira-lifecycle
+    certainty: high
+    notes: "Status transition"
+
+  - id: TC010
+    category: direct
+    input: "close PROJ-456"
+    expected_skill: jira-lifecycle
+    certainty: high
+    notes: "Close is a transition"
+
+  - id: TC011
+    category: direct
+    input: "assign TES-789 to john@example.com"
+    expected_skill: jira-lifecycle
+    certainty: high
+    notes: "Assignment change"
+
+  # jira-agile
+  - id: TC012
+    category: direct
+    input: "create an epic called 'User Authentication'"
+    expected_skill: jira-agile
+    certainty: high
+    notes: "Epic creation"
+
+  - id: TC013
+    category: direct
+    input: "add TES-123 to the current sprint"
+    expected_skill: jira-agile
+    certainty: high
+    notes: "Sprint management"
+
+  - id: TC014
+    category: direct
+    input: "set story points on TES-456 to 5"
+    expected_skill: jira-agile
+    certainty: high
+    notes: "Story point estimation"
+
+  - id: TC015
+    category: direct
+    input: "show the backlog for TES"
+    expected_skill: jira-agile
+    certainty: high
+    notes: "Backlog keyword"
+
+  # jira-collaborate
+  - id: TC016
+    category: direct
+    input: "add a comment to TES-123"
+    expected_skill: jira-collaborate
+    certainty: high
+    notes: "Comment addition"
+
+  - id: TC017
+    category: direct
+    input: "attach this file to PROJ-456"
+    expected_skill: jira-collaborate
+    certainty: high
+    notes: "Attachment"
+
+  - id: TC018
+    category: direct
+    input: "watch TES-789"
+    expected_skill: jira-collaborate
+    certainty: high
+    notes: "Watcher management"
+
+  # jira-relationships
+  - id: TC019
+    category: direct
+    input: "link TES-123 to TES-456"
+    expected_skill: jira-relationships
+    certainty: high
+    notes: "Issue linking"
+
+  - id: TC020
+    category: direct
+    input: "what's blocking TES-789?"
+    expected_skill: jira-relationships
+    certainty: high
+    notes: "Blocker query"
+
+  - id: TC021
+    category: direct
+    input: "clone TES-100"
+    expected_skill: jira-relationships
+    certainty: high
+    notes: "Issue cloning"
+
+  # jira-time
+  - id: TC022
+    category: direct
+    input: "log 2 hours on TES-123"
+    expected_skill: jira-time
+    certainty: high
+    notes: "Time logging"
+
+  - id: TC023
+    category: direct
+    input: "set the estimate on PROJ-456 to 4h"
+    expected_skill: jira-time
+    certainty: high
+    notes: "Estimate setting"
+
+  # jira-bulk
+  - id: TC024
+    category: direct
+    input: "bulk update all bugs in TES to High priority"
+    expected_skill: jira-bulk
+    certainty: high
+    requires_confirmation: true
+    notes: "Explicit bulk keyword"
+
+  - id: TC025
+    category: direct
+    input: "transition 50 issues to Done"
+    expected_skill: jira-bulk
+    certainty: high
+    requires_confirmation: true
+    notes: "Large quantity signals bulk"
+
+  # jira-dev
+  - id: TC026
+    category: direct
+    input: "generate a branch name for TES-123"
+    expected_skill: jira-dev
+    certainty: high
+    notes: "Git branch generation"
+
+  - id: TC027
+    category: direct
+    input: "write a PR description for TES-456"
+    expected_skill: jira-dev
+    certainty: high
+    notes: "PR description"
+
+  # jira-fields
+  - id: TC028
+    category: direct
+    input: "what's the field ID for story points?"
+    expected_skill: jira-fields
+    certainty: high
+    notes: "Custom field discovery"
+
+  # jira-ops
+  - id: TC029
+    category: direct
+    input: "warm the cache for project TES"
+    expected_skill: jira-ops
+    certainty: high
+    notes: "Cache management"
+
+  # jira-admin
+  - id: TC030
+    category: direct
+    input: "check my permissions in TES"
+    expected_skill: jira-admin
+    certainty: high
+    notes: "Permission check"
+
+  # ============================================================
+  # DISAMBIGUATION (Low Certainty)
+  # Expected: Ask clarifying question
+  # ============================================================
+
+  - id: TC031
+    category: disambiguation
+    input: "show me the sprint"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-agile
+      - jira-search
+    ask: "Do you want sprint details or the issues in the sprint?"
+
+  - id: TC032
+    category: disambiguation
+    input: "update the issues"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-issue
+      - jira-lifecycle
+      - jira-bulk
+    ask: "What would you like to update - fields, status, or multiple issues?"
+
+  - id: TC033
+    category: disambiguation
+    input: "remove the bugs"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-issue
+      - jira-bulk
+    ask: "Do you want to delete them or close them?"
+    notes: "Ambiguous destructive operation"
+
+  - id: TC034
+    category: disambiguation
+    input: "link the PR"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-dev
+      - jira-relationships
+    ask: "Link a GitHub PR to an issue, or create an issue link?"
+
+  # ============================================================
+  # CONTEXT-DEPENDENT
+  # Expected: Resolve based on conversation history
+  # ============================================================
+
+  - id: TC035
+    category: context
+    input: "assign it to me"
+    context:
+      last_issue: TES-123
+    expected_skill: jira-lifecycle
+    certainty: high
+    notes: "Pronoun resolution from context"
+
+  - id: TC036
+    category: context
+    input: "close them"
+    context:
+      last_search: ["TES-100", "TES-101", "TES-102"]
+    expected_skill: jira-bulk
+    certainty: high
+    notes: "Plural pronoun after search"
+
+  - id: TC037
+    category: context
+    input: "create another bug"
+    context:
+      last_project: TES
+    expected_skill: jira-issue
+    certainty: high
+    notes: "Implicit project from context"
+
+  - id: TC038
+    category: context
+    input: "add it to the sprint"
+    context:
+      last_created: TES-789
+    expected_skill: jira-agile
+    certainty: high
+    notes: "Recently created issue"
+
+  # ============================================================
+  # NEGATIVE TRIGGERS
+  # Expected: Should NOT route to the skill
+  # ============================================================
+
+  - id: TC039
+    category: negative
+    input: "show me TES-123"
+    expected_skill: jira-issue
+    not_skill: jira-search
+    notes: "Single issue lookup is NOT search"
+
+  - id: TC040
+    category: negative
+    input: "move TES-123 to Done"
+    expected_skill: jira-lifecycle
+    not_skill: jira-issue
+    notes: "Status transition is NOT issue update"
+
+  - id: TC041
+    category: negative
+    input: "bulk close 50 bugs"
+    expected_skill: jira-bulk
+    not_skill: jira-lifecycle
+    notes: "Large quantity is NOT single transition"
+
+  - id: TC042
+    category: negative
+    input: "add a comment to TES-123"
+    expected_skill: jira-collaborate
+    not_skill: jira-issue
+    notes: "Comments are NOT issue field updates"
+
+  - id: TC043
+    category: negative
+    input: "log 2 hours on TES-123"
+    expected_skill: jira-time
+    not_skill: jira-issue
+    notes: "Time tracking is NOT issue update"
+
+  # ============================================================
+  # WORKFLOW (Multi-skill sequences)
+  # Expected: Chain skills in order
+  # ============================================================
+
+  - id: TC044
+    category: workflow
+    input: "create a bug and assign it to me"
+    workflow:
+      - skill: jira-issue
+        action: create
+      - skill: jira-lifecycle
+        action: assign
+    notes: "Create then assign"
+
+  - id: TC045
+    category: workflow
+    input: "find all P1 bugs and close them"
+    workflow:
+      - skill: jira-search
+        action: find
+      - skill: jira-bulk
+        action: transition
+    notes: "Search then bulk transition"
+
+  - id: TC046
+    category: workflow
+    input: "create an epic with 3 stories"
+    workflow:
+      - skill: jira-agile
+        action: create epic
+      - skill: jira-issue
+        action: create stories (repeat 3x)
+    notes: "Epic creation with children"
+
+  # ============================================================
+  # EDGE CASES
+  # ============================================================
+
+  - id: TC047
+    category: edge
+    input: "tes-123"
+    expected_skill: jira-issue
+    certainty: high
+    notes: "Lowercase issue key should work"
+
+  - id: TC048
+    category: edge
+    input: "what can you do?"
+    expected_skill: jira-assistant
+    certainty: high
+    action: show_quick_reference
+    notes: "Capability discovery"
+
+  - id: TC049
+    category: edge
+    input: "use jira-agile to check the backlog"
+    expected_skill: jira-agile
+    certainty: high
+    notes: "Explicit skill mention wins"
+
+  - id: TC050
+    category: edge
+    input: ""
+    expected_skill: null
+    action: ask_for_input
+    notes: "Empty input"
+
+  # ============================================================
+  # ADDITIONAL DISAMBIGUATION (TC051-TC061)
+  # Added per engineering review feedback
+  # ============================================================
+
+  - id: TC051
+    category: disambiguation
+    input: "update the fields"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-issue
+      - jira-bulk
+    ask: "Update fields on one issue or multiple issues?"
+
+  - id: TC052
+    category: disambiguation
+    input: "show my work"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-search
+      - jira-time
+    ask: "Show issues assigned to you or your logged time?"
+
+  - id: TC053
+    category: disambiguation
+    input: "move these to the sprint"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-agile
+      - jira-bulk
+    ask: "Add specific issues to sprint or bulk move from search?"
+
+  - id: TC054
+    category: disambiguation
+    input: "update the estimate"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-time
+      - jira-issue
+    ask: "Update time estimate (worklog) or story points?"
+
+  - id: TC055
+    category: disambiguation
+    input: "create a request"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-jsm
+      - jira-issue
+    ask: "Create a service desk request or a regular issue?"
+
+  - id: TC056
+    category: disambiguation
+    input: "check the status"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-issue
+      - jira-lifecycle
+    ask: "View issue details or check available transitions?"
+
+  - id: TC057
+    category: disambiguation
+    input: "add to the epic"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-agile
+      - jira-issue
+    ask: "Link existing issue to epic or create new issue in epic?"
+
+  - id: TC058
+    category: disambiguation
+    input: "show the dependencies"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-relationships
+      - jira-search
+    ask: "View issue links or search for blocked issues?"
+
+  - id: TC059
+    category: disambiguation
+    input: "fix the priority"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-issue
+      - jira-bulk
+    ask: "Update priority on one issue or multiple?"
+
+  - id: TC060
+    category: disambiguation
+    input: "set up the project"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-admin
+      - jira-agile
+    ask: "Configure project settings or set up sprints/board?"
+
+  - id: TC061
+    category: disambiguation
+    input: "copy this issue"
+    expected_skill: null
+    certainty: low
+    disambiguation_options:
+      - jira-relationships
+      - jira-issue
+    ask: "Clone with links or create similar issue?"
+
+  # ============================================================
+  # ADDITIONAL WORKFLOWS (TC062-TC068)
+  # Added per engineering review feedback
+  # ============================================================
+
+  - id: TC062
+    category: workflow
+    input: "create a release with all completed issues"
+    workflow:
+      - skill: jira-search
+        action: find completed issues
+      - skill: jira-lifecycle
+        action: set fix version
+    notes: "Search then version assignment"
+
+  - id: TC063
+    category: workflow
+    input: "move blocked issues to next sprint"
+    workflow:
+      - skill: jira-relationships
+        action: find blocked issues
+      - skill: jira-agile
+        action: move to sprint
+    notes: "Relationship query then sprint management"
+
+  - id: TC064
+    category: workflow
+    input: "archive old bugs with a comment"
+    workflow:
+      - skill: jira-search
+        action: find old bugs
+      - skill: jira-collaborate
+        action: add archive comment
+      - skill: jira-bulk
+        action: transition to closed
+    notes: "Search, comment, then bulk close"
+
+  - id: TC065
+    category: workflow
+    input: "create subtasks for each acceptance criteria"
+    workflow:
+      - skill: jira-issue
+        action: get parent issue
+      - skill: jira-issue
+        action: create subtasks (repeat)
+    notes: "Read parent then create children"
+
+  - id: TC066
+    category: workflow
+    input: "reassign all my issues before vacation"
+    workflow:
+      - skill: jira-search
+        action: find my open issues
+      - skill: jira-bulk
+        action: reassign
+    notes: "Search then bulk reassign"
+
+  - id: TC067
+    category: workflow
+    input: "split this story into smaller tasks"
+    workflow:
+      - skill: jira-issue
+        action: get original story
+      - skill: jira-issue
+        action: create new stories
+      - skill: jira-relationships
+        action: link as "split from"
+    notes: "Read, create, then link"
+
+  - id: TC068
+    category: workflow
+    input: "generate release notes from done issues"
+    workflow:
+      - skill: jira-search
+        action: find issues in version
+      - skill: jira-dev
+        action: format release notes
+    notes: "Search then dev formatting"
+
+  # ============================================================
+  # ADDITIONAL CONTEXT-DEPENDENT (TC069-TC074)
+  # Added per engineering review feedback
+  # ============================================================
+
+  - id: TC069
+    category: context
+    input: "add another one"
+    context:
+      last_operation: create
+      last_issue_type: Bug
+      last_project: TES
+    expected_skill: jira-issue
+    certainty: high
+    notes: "Repeat last create operation"
+
+  - id: TC070
+    category: context
+    input: "do the same for TES"
+    context:
+      last_operation: search
+      last_project: ABC
+      last_query: "type = Bug AND status = Open"
+    expected_skill: jira-search
+    certainty: high
+    notes: "Repeat search in different project"
+
+  - id: TC071
+    category: context
+    input: "now close it"
+    context:
+      last_created: TES-999
+    expected_skill: jira-lifecycle
+    certainty: high
+    notes: "Transition recently created issue"
+
+  - id: TC072
+    category: context
+    input: "link them together"
+    context:
+      mentioned_issues: ["TES-100", "TES-101"]
+    expected_skill: jira-relationships
+    certainty: high
+    notes: "Link multiple mentioned issues"
+
+  - id: TC073
+    category: context
+    input: "add that to the sprint too"
+    context:
+      last_sprint_action: "added TES-200 to Sprint 5"
+      mentioned_issue: "TES-201"
+    expected_skill: jira-agile
+    certainty: high
+    notes: "Repeat sprint action"
+
+  - id: TC074
+    category: context
+    input: "what about the other one?"
+    context:
+      search_results: ["TES-300", "TES-301", "TES-302"]
+      last_viewed: "TES-300"
+    expected_skill: jira-issue
+    certainty: medium
+    notes: "Disambiguate from search results"
+
+  # ============================================================
+  # ADDITIONAL NEGATIVE TRIGGERS (TC075-TC079)
+  # Added per engineering review feedback
+  # ============================================================
+
+  - id: TC075
+    category: negative
+    input: "show me the time spent on TES-123"
+    expected_skill: jira-time
+    not_skill: jira-issue
+    notes: "Time query is NOT issue view"
+
+  - id: TC076
+    category: negative
+    input: "create a service desk ticket"
+    expected_skill: jira-jsm
+    not_skill: jira-issue
+    notes: "Service desk request is NOT regular issue"
+
+  - id: TC077
+    category: negative
+    input: "what custom fields are available?"
+    expected_skill: jira-fields
+    not_skill: jira-search
+    notes: "Field discovery is NOT search"
+
+  - id: TC078
+    category: negative
+    input: "warm the cache for TES"
+    expected_skill: jira-ops
+    not_skill: jira-admin
+    notes: "Cache ops is NOT admin"
+
+  - id: TC079
+    category: negative
+    input: "generate a branch name for TES-456"
+    expected_skill: jira-dev
+    not_skill: jira-issue
+    notes: "Git integration is NOT issue ops"
+
+# ============================================================
+# SUMMARY
+# ============================================================
+# Total: 79 test cases
+# - Direct routing: 30
+# - Disambiguation: 15 (was 4, +11)
+# - Context-dependent: 10 (was 4, +6)
+# - Negative triggers: 10 (was 5, +5)
+# - Workflow: 10 (was 3, +7)
+# - Edge cases: 4
