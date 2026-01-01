@@ -1,0 +1,681 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "jira-routing-tests",
+    "title": "JIRA Assistant - Routing Tests",
+    "tags": ["claude-code", "jira", "routing", "tests"],
+    "timezone": "browser",
+    "schemaVersion": 39,
+    "version": 2,
+    "refresh": "10s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "annotations": {
+      "list": []
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Routing Accuracy",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red", "value": null },
+                { "color": "yellow", "value": 50 },
+                { "color": "green", "value": 80 }
+              ]
+            },
+            "unit": "percent"
+          },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "expr": "routing_accuracy_percent",
+            "legendFormat": "Accuracy",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Tests Passed",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null }
+              ]
+            },
+            "unit": "short"
+          },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "expr": "sum(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_OK\", span_name=~\"routing_test_TC.*\"})",
+            "legendFormat": "Passed",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Tests Failed",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "red", "value": 1 }
+              ]
+            },
+            "unit": "short"
+          },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "expr": "sum(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", status_code=\"STATUS_CODE_ERROR\", span_name=~\"routing_test_TC.*\"})",
+            "legendFormat": "Failed",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Total Tests Run",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "blue", "value": null }
+              ]
+            },
+            "unit": "short"
+          },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "expr": "sum(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"})",
+            "legendFormat": "Total",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Test Sessions",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "purple", "value": null }
+              ]
+            },
+            "unit": "short"
+          },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "expr": "sum(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=\"routing_test_session\"})",
+            "legendFormat": "Sessions",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Avg Test Duration",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["mean"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 10 },
+                { "color": "red", "value": 30 }
+              ]
+            },
+            "unit": "s"
+          },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(traces_spanmetrics_latency_sum{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[5m])) / sum(rate(traces_spanmetrics_latency_count{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[5m]))",
+            "legendFormat": "Avg Duration",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Test Results Over Time",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "none"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "axisBorderShow": false,
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "bars",
+              "fillOpacity": 80,
+              "gradientMode": "none",
+              "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+              "insertNulls": false,
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": { "type": "linear" },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": { "group": "A", "mode": "normal" },
+              "thresholdsStyle": { "mode": "off" }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [{ "color": "green", "value": null }]
+            },
+            "unit": "short"
+          },
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "Passed" },
+              "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
+            },
+            {
+              "matcher": { "id": "byName", "options": "Failed" },
+              "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "expr": "sum by (status_code) (increase(traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[1m]))",
+            "legendFormat": "{{status_code}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Tests by ID",
+        "type": "bargauge",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true,
+          "valueMode": "color",
+          "minVizWidth": 0,
+          "minVizHeight": 10
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null }
+              ]
+            },
+            "unit": "short"
+          },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "expr": "traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}",
+            "legendFormat": "{{span_name}} ({{status_code}})",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Test Duration Heatmap",
+        "type": "heatmap",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "calculate": false,
+          "cellGap": 1,
+          "color": {
+            "exponent": 0.5,
+            "fill": "dark-orange",
+            "mode": "scheme",
+            "reverse": false,
+            "scale": "exponential",
+            "scheme": "Spectral",
+            "steps": 64
+          },
+          "exemplars": {
+            "color": "rgba(255,0,255,0.7)"
+          },
+          "filterValues": {
+            "le": 1e-9
+          },
+          "legend": {
+            "show": true
+          },
+          "rowsFrame": {
+            "layout": "auto"
+          },
+          "tooltip": {
+            "show": true,
+            "yHistogram": false
+          },
+          "yAxis": {
+            "axisPlacement": "left",
+            "reverse": false,
+            "unit": "s"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "scaleDistribution": {
+                "type": "linear"
+              }
+            }
+          },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "expr": "sum(increase(traces_spanmetrics_latency_bucket{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[$__rate_interval])) by (le)",
+            "legendFormat": "{{le}}",
+            "format": "heatmap",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Test Status Distribution",
+        "type": "piechart",
+        "gridPos": { "h": 8, "w": 6, "x": 12, "y": 12 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "right",
+            "showLegend": true,
+            "values": ["value", "percent"]
+          },
+          "pieType": "pie",
+          "reduceOptions": {
+            "calcs": ["lastNotNull"],
+            "fields": "",
+            "values": false
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "mappings": [],
+            "unit": "short"
+          },
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "STATUS_CODE_OK" },
+              "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }, { "id": "displayName", "value": "Passed" }]
+            },
+            {
+              "matcher": { "id": "byName", "options": "STATUS_CODE_ERROR" },
+              "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }, { "id": "displayName", "value": "Failed" }]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "expr": "sum by (status_code) (traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"})",
+            "legendFormat": "{{status_code}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Latency Percentiles",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 6, "x": 18, "y": 12 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "axisBorderShow": false,
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+              "insertNulls": false,
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "pointSize": 5,
+              "scaleDistribution": { "type": "linear" },
+              "showPoints": "never",
+              "spanNulls": true,
+              "stacking": { "group": "A", "mode": "none" },
+              "thresholdsStyle": { "mode": "off" }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [{ "color": "green", "value": null }]
+            },
+            "unit": "s"
+          },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(traces_spanmetrics_latency_bucket{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[5m])) by (le))",
+            "legendFormat": "p50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.90, sum(rate(traces_spanmetrics_latency_bucket{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[5m])) by (le))",
+            "legendFormat": "p90",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(traces_spanmetrics_latency_bucket{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}[5m])) by (le))",
+            "legendFormat": "p99",
+            "refId": "C"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Test Traces",
+        "type": "traces",
+        "gridPos": { "h": 10, "w": 24, "x": 0, "y": 20 },
+        "datasource": { "type": "tempo", "uid": "tempo" },
+        "options": {},
+        "targets": [
+          {
+            "queryType": "traceqlSearch",
+            "limit": 20,
+            "tableType": "traces",
+            "filters": [
+              {
+                "id": "service-name",
+                "operator": "=",
+                "scope": "resource",
+                "tag": "service.name",
+                "value": ["jira-assistant-routing-tests"],
+                "valueType": "string"
+              }
+            ],
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Claude Code Logs",
+        "type": "logs",
+        "gridPos": { "h": 10, "w": 24, "x": 0, "y": 30 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "options": {
+          "showTime": true,
+          "showLabels": true,
+          "showCommonLabels": false,
+          "wrapLogMessage": true,
+          "prettifyLogMessage": false,
+          "enableLogDetails": true,
+          "dedupStrategy": "none",
+          "sortOrder": "Descending"
+        },
+        "targets": [
+          {
+            "expr": "{service_name=\"claude-code\"}",
+            "legendFormat": "",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Test Details Table",
+        "type": "table",
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 40 },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "options": {
+          "showHeader": true,
+          "cellHeight": "sm",
+          "footer": {
+            "show": true,
+            "reducer": ["sum"],
+            "countRows": false,
+            "fields": ["Value"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "custom": {
+              "align": "auto",
+              "cellOptions": { "type": "auto" },
+              "inspect": false
+            },
+            "mappings": [
+              { "options": { "STATUS_CODE_OK": { "color": "green", "index": 0, "text": "PASSED" } }, "type": "value" },
+              { "options": { "STATUS_CODE_ERROR": { "color": "red", "index": 1, "text": "FAILED" } }, "type": "value" }
+            ],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "text", "value": null }
+              ]
+            }
+          },
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "status_code" },
+              "properties": [
+                { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+                { "id": "displayName", "value": "Status" }
+              ]
+            },
+            {
+              "matcher": { "id": "byName", "options": "span_name" },
+              "properties": [
+                { "id": "displayName", "value": "Test ID" }
+              ]
+            },
+            {
+              "matcher": { "id": "byName", "options": "Value" },
+              "properties": [
+                { "id": "displayName", "value": "Count" }
+              ]
+            }
+          ]
+        },
+        "transformations": [
+          {
+            "id": "sortBy",
+            "options": {
+              "fields": {},
+              "sort": [{ "field": "span_name", "desc": false }]
+            }
+          }
+        ],
+        "targets": [
+          {
+            "expr": "traces_spanmetrics_calls_total{service=\"jira-assistant-routing-tests\", span_name=~\"routing_test_TC.*\"}",
+            "legendFormat": "",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": []
+    }
+  },
+  "folderUid": "",
+  "message": "Updated with correct metric queries",
+  "overwrite": true
+}
