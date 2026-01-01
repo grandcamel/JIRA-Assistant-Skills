@@ -294,6 +294,8 @@ Use scopes to identify which part of the codebase changed. Suggested scopes for 
 - **jira-dev**: Changes to the jira-dev skill
 - **jira-fields**: Changes to the jira-fields skill
 - **jira-ops**: Changes to the jira-ops skill
+- **jira-admin**: Changes to the jira-admin skill
+- **jira-assistant**: Changes to the jira-assistant hub skill
 - **shared**: Changes to shared library code
 - **config**: Configuration changes
 - **docs**: Documentation updates (CLAUDE.md, README.md, etc.)
@@ -426,6 +428,58 @@ pytest plugins/jira-assistant-skills/skills/jira-jsm/tests/live_integration/test
 - `--service-desk-id N`: Use existing service desk instead of creating one
 - `--keep-project`: Keep test service desk after tests (for debugging)
 
+## Routing Tests
+
+The jira-assistant skill includes routing accuracy tests that validate Claude routes user prompts to the correct skill based on SKILL.md descriptions.
+
+### Running Routing Tests
+
+```bash
+cd plugins/jira-assistant-skills/skills/jira-assistant/tests
+
+# Run all routing tests (sequential, ~22 min)
+pytest test_routing.py -v
+
+# Fast iteration with haiku model (~10 min with parallel)
+./fast_test.sh --fast --parallel 4
+
+# Test specific skill routing
+./fast_test.sh --skill agile --fast
+
+# Smoke test (5 key tests, ~1.5 min)
+./fast_test.sh --smoke --fast
+
+# Re-run only failed tests
+./fast_test.sh --failed --fast
+```
+
+### Fast Iteration Options
+
+The `fast_test.sh` script optimizes the fix-test-pass/fail cycle:
+
+| Option | Description |
+|--------|-------------|
+| `--fast` | Use haiku model (faster, lower cost) |
+| `--skill NAME` | Test specific skill(s): issue, search, lifecycle, agile, etc. |
+| `--id TC###` | Test specific test ID(s) |
+| `--smoke` | Run 5 representative tests |
+| `--parallel N` | Run N tests concurrently |
+| `--failed` | Re-run only previously failed tests |
+
+### OpenTelemetry Observability
+
+Enable metrics export for test analysis:
+
+```bash
+# Start local collector (requires Docker)
+docker run -p 4318:4318 otel/opentelemetry-collector
+
+# Run tests with OTel export
+pytest test_routing.py --otel --otlp-endpoint http://localhost:4318 -v
+```
+
+See `plugins/jira-assistant-skills/skills/jira-assistant/tests/FAST_ITERATION.md` for detailed documentation.
+
 ## CLI Usage
 
 The project provides a unified `jira` CLI entry point for all operations:
@@ -482,7 +536,7 @@ All commands support these global options:
 
 ## Key Constraints
 
-- **Python 3.8+**: Minimum version for type hints and pathlib
+- **Python 3.10+**: Minimum version for union syntax (`X | Y`) and modern type hints
 - **No external CLI tools**: All operations via Python/requests
 - **Profile-aware**: All scripts must support `--profile` override
 - **Validation first**: Call validators before API operations to fail fast
