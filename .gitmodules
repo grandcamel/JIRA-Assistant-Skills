@@ -1,0 +1,3 @@
+[submodule "plugins/jira-assistant-skills/skills/jira-assistant/tests/claude-devcontainer"]
+	path = plugins/jira-assistant-skills/skills/jira-assistant/tests/claude-devcontainer
+	url = https://github.com/grandcamel/claude-devcontainer.git
