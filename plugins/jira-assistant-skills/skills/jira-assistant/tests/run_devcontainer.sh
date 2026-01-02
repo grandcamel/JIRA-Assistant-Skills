@@ -71,6 +71,9 @@ NPM_PACKAGES=()
 APT_PACKAGES=()
 ENHANCED_MODE=false
 CLAUDE_VERSION=""
+CUSTOM_IMAGE=""
+CUSTOM_TAG=""
+PUSH_IMAGE=false
 
 # =============================================================================
 # Argument Parsing
@@ -150,6 +153,18 @@ while [[ $# -gt 0 ]]; do
             CLAUDE_VERSION="$2"
             shift 2
             ;;
+        --image)
+            CUSTOM_IMAGE="$2"
+            shift 2
+            ;;
+        --tag)
+            CUSTOM_TAG="$2"
+            shift 2
+            ;;
+        --push)
+            PUSH_IMAGE=true
+            shift
+            ;;
         --help|-h)
             echo "Usage: $0 [options] [-- command...]"
             echo ""
@@ -176,6 +191,11 @@ while [[ $# -gt 0 ]]; do
             echo "  --build               Rebuild Docker image before running"
             echo "  --model NAME          Claude model (sonnet, haiku, opus)"
             echo "  --claude-version VER  Use specific Claude Code version (e.g., 2.0.69)"
+            echo ""
+            echo "Custom Image (for private registries):"
+            echo "  --image NAME          Custom image name (e.g., registry.company.com/team/dev)"
+            echo "  --tag TAG             Custom image tag (default: latest)"
+            echo "  --push                Push image to registry after building (requires --build)"
             echo ""
             echo "Additional Packages (installed at container start):"
             echo "  --pip PKG[,PKG,...]   Install Python packages (can be used multiple times)"
@@ -225,6 +245,12 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "  # Use specific Claude Code version"
             echo "  $0 --claude-version 2.0.69"
+            echo ""
+            echo "  # Build and push to private registry"
+            echo "  $0 --build --image registry.company.com/team/jira-dev --tag v1.0 --push"
+            echo ""
+            echo "  # Use image from private registry"
+            echo "  $0 --image registry.company.com/team/jira-dev --tag v1.0"
             exit 0
             ;;
         --)
@@ -250,6 +276,20 @@ PROJECT_PATH="$(cd "$PROJECT_PATH" 2>/dev/null && pwd)" || {
     exit 1
 }
 
+# Apply custom image name/tag if specified
+if [[ -n "$CUSTOM_IMAGE" ]]; then
+    DEV_IMAGE_NAME="$CUSTOM_IMAGE"
+fi
+if [[ -n "$CUSTOM_TAG" ]]; then
+    DEV_IMAGE_TAG="$CUSTOM_TAG"
+fi
+
+# Validate --push requires --build
+if [[ "$PUSH_IMAGE" == "true" ]] && [[ "$BUILD_IMAGE" != "true" ]]; then
+    echo_error "--push requires --build flag"
+    exit 1
+fi
+
 # =============================================================================
 # Image Management
 # =============================================================================
@@ -263,6 +303,12 @@ build_dev_image() {
     echo_info "Image built successfully"
 }
 
+push_dev_image() {
+    echo_info "Pushing image to registry: $DEV_IMAGE_NAME:$DEV_IMAGE_TAG"
+    docker push "$DEV_IMAGE_NAME:$DEV_IMAGE_TAG"
+    echo_info "Image pushed successfully"
+}
+
 check_dev_image() {
     if ! docker image inspect "$DEV_IMAGE_NAME:$DEV_IMAGE_TAG" &>/dev/null; then
         echo_warn "Dev image not found, building (this may take several minutes)..."
@@ -272,8 +318,12 @@ check_dev_image() {
 
 ensure_dev_image() {
     local force_build="$1"
+    local push_after_build="$2"
     if [[ "$force_build" == "true" ]]; then
         build_dev_image
+        if [[ "$push_after_build" == "true" ]]; then
+            push_dev_image
+        fi
     else
         check_dev_image
     fi
@@ -320,6 +370,10 @@ run_devcontainer() {
 
     if [[ -n "$CLAUDE_VERSION" ]]; then
         echo_status "DEV" "Claude Code version: $CLAUDE_VERSION"
+    fi
+
+    if [[ -n "$CUSTOM_IMAGE" ]] || [[ -n "$CUSTOM_TAG" ]]; then
+        echo_status "DEV" "Image: $DEV_IMAGE_NAME:$DEV_IMAGE_TAG"
     fi
     echo ""
 
@@ -503,7 +557,7 @@ main() {
 
     setup_cleanup_trap
     validate_auth "$USE_API_KEY" "$USE_API_KEY_FROM_CONFIG"
-    ensure_dev_image "$BUILD_IMAGE"
+    ensure_dev_image "$BUILD_IMAGE" "$PUSH_IMAGE"
     run_devcontainer
 
     if [[ "$DETACH" != "true" ]]; then
