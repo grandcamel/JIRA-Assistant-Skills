@@ -4,7 +4,8 @@
 #
 # Authentication modes:
 # 1. OAuth (default) - Uses credentials from macOS Keychain (free with subscription)
-# 2. API Key (--api-key) - Uses ANTHROPIC_API_KEY (paid)
+# 2. API Key (--api-key) - Uses ANTHROPIC_API_KEY environment variable (paid)
+# 3. API Key from config (--api-key-from-config) - Reads from ~/.claude.json (paid)
 #
 # Usage:
 #   ./run_container_tests.sh [options] [-- pytest-args...]
@@ -12,7 +13,8 @@
 # Examples:
 #   ./run_container_tests.sh                       # Run with OAuth (macOS)
 #   ./run_container_tests.sh --parallel 4          # Parallel with OAuth
-#   ./run_container_tests.sh --api-key             # Run with API key
+#   ./run_container_tests.sh --api-key             # Run with API key from env
+#   ./run_container_tests.sh --api-key-from-config # Run with API key from .claude.json
 #   ./run_container_tests.sh -- -k "TC001"         # Single test
 #
 # Environment Variables:
@@ -21,24 +23,34 @@
 
 set -e
 
+# Source shared library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-IMAGE_NAME="jira-skills-test-runner"
-IMAGE_TAG="latest"
-CREDS_TMP_DIR=""
+source "$SCRIPT_DIR/lib_container.sh"
 
-# Default options
+# =============================================================================
+# Script-specific Configuration
+# =============================================================================
+
 USE_API_KEY=false
+USE_API_KEY_FROM_CONFIG=false
 BUILD_IMAGE=false
 PARALLEL=""
 MODEL=""
 KEEP_CONTAINER=false
 PYTEST_ARGS=()
 
-# Parse arguments
+# =============================================================================
+# Argument Parsing
+# =============================================================================
+
 while [[ $# -gt 0 ]]; do
     case $1 in
         --api-key)
+            USE_API_KEY=true
+            shift
+            ;;
+        --api-key-from-config)
+            USE_API_KEY_FROM_CONFIG=true
             USE_API_KEY=true
             shift
             ;;
@@ -64,8 +76,9 @@ while [[ $# -gt 0 ]]; do
             echo "Run routing tests in a Docker container."
             echo ""
             echo "Authentication (choose one):"
-            echo "  (default)       Use OAuth from macOS Keychain (free with subscription)"
-            echo "  --api-key       Use ANTHROPIC_API_KEY environment variable (paid)"
+            echo "  (default)              Use OAuth from macOS Keychain (free with subscription)"
+            echo "  --api-key              Use ANTHROPIC_API_KEY environment variable (paid)"
+            echo "  --api-key-from-config  Use primaryApiKey from ~/.claude.json (paid)"
             echo ""
             echo "Options:"
             echo "  --build         Rebuild Docker image before running"
@@ -78,7 +91,8 @@ while [[ $# -gt 0 ]]; do
             echo "  $0                           # Run all tests with OAuth"
             echo "  $0 --parallel 4              # 4 parallel workers"
             echo "  $0 -- -k 'TC001' -v          # Single test"
-            echo "  $0 --api-key                 # Use API key instead"
+            echo "  $0 --api-key                 # Use API key from environment"
+            echo "  $0 --api-key-from-config     # Use API key from .claude.json"
             exit 0
             ;;
         --)
@@ -93,123 +107,16 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Color output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# =============================================================================
+# Main Runner
+# =============================================================================
 
-echo_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
-echo_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-echo_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-
-# Cleanup function
-cleanup() {
-    local exit_code=$?
-
-    # Remove temporary credentials directory
-    if [[ -n "$CREDS_TMP_DIR" && -d "$CREDS_TMP_DIR" ]]; then
-        rm -rf "$CREDS_TMP_DIR"
-    fi
-
-    exit $exit_code
-}
-
-# Set up cleanup trap
-trap cleanup EXIT INT TERM
-
-# Get OAuth credentials from macOS Keychain
-get_oauth_credentials() {
-    if [[ "$(uname)" != "Darwin" ]]; then
-        echo_error "OAuth mode requires macOS (for Keychain access)"
-        echo "Use --api-key mode on Linux, or run tests on macOS."
-        return 1
-    fi
-
-    local creds
-    creds=$(security find-generic-password -a "$USER" -s 'Claude Code-credentials' -w 2>/dev/null) || {
-        echo_error "Cannot access Claude Code credentials in Keychain"
-        echo ""
-        echo "Make sure you're logged into Claude Code:"
-        echo "  claude login"
-        return 1
-    }
-
-    # Verify credentials are valid JSON with required fields
-    if ! echo "$creds" | jq -e '.claudeAiOauth.accessToken' >/dev/null 2>&1; then
-        echo_error "Invalid credentials format in Keychain"
-        echo "Try logging in again: claude login"
-        return 1
-    fi
-
-    echo "$creds"
-}
-
-# Create credentials directory for container
-create_credentials_dir() {
-    CREDS_TMP_DIR=$(mktemp -d)
-
-    local creds
-    creds=$(get_oauth_credentials) || return 1
-
-    echo "$creds" > "$CREDS_TMP_DIR/.credentials.json"
-    chmod 600 "$CREDS_TMP_DIR/.credentials.json"
-
-    echo_info "OAuth credentials prepared for container"
-    return 0
-}
-
-# Validate authentication
-validate_auth() {
-    if [[ "$USE_API_KEY" == "true" ]]; then
-        if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
-            echo_error "ANTHROPIC_API_KEY is not set"
-            echo ""
-            echo "Export your API key:"
-            echo "  export ANTHROPIC_API_KEY='sk-ant-api03-...'"
-            echo ""
-            echo "Or use OAuth mode (default) on macOS."
-            exit 1
-        fi
-        echo_info "Using API key authentication"
-    else
-        if ! create_credentials_dir; then
-            exit 1
-        fi
-        echo_info "Using OAuth authentication (free with subscription)"
-    fi
-}
-
-# Build Docker image
-build_image() {
-    echo_info "Building Docker image: $IMAGE_NAME:$IMAGE_TAG"
-
-    docker build \
-        -t "$IMAGE_NAME:$IMAGE_TAG" \
-        -f "$SCRIPT_DIR/Dockerfile" \
-        "$SCRIPT_DIR"
-
-    echo_info "Image built successfully"
-}
-
-# Check if image exists
-check_image() {
-    if ! docker image inspect "$IMAGE_NAME:$IMAGE_TAG" &>/dev/null; then
-        echo_warn "Image not found, building..."
-        build_image
-    fi
-}
-
-# Run tests in container
 run_tests() {
     echo_info "Starting container tests..."
 
     # Build docker run command
-    local docker_args=(
-        "run"
-    )
+    local docker_args=("run")
 
-    # Remove container after run unless --keep
     if [[ "$KEEP_CONTAINER" != "true" ]]; then
         docker_args+=("--rm")
     fi
@@ -220,21 +127,17 @@ run_tests() {
         "-v" "$SCRIPT_DIR:/workspace/tests:ro"
     )
 
-    # Set working directory (use /tmp to avoid semantic confusion -
-    # e.g., "tests" directory could be misinterpreted as relating to
-    # test inputs like "TES-123" project keys, and /workspace shows
-    # the plugin structure which prompts Claude to ask about JIRA setup)
+    # Set working directory (use /tmp to avoid semantic confusion)
     docker_args+=("-w" "/tmp")
 
     # Authentication configuration
     if [[ "$USE_API_KEY" == "true" ]]; then
         docker_args+=("-e" "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}")
     else
-        # Mount OAuth credentials
         docker_args+=("-v" "$CREDS_TMP_DIR:/home/testrunner/.claude")
     fi
 
-    # Enable host.docker.internal for container to reach host services (e.g., OTLP collector)
+    # Enable host.docker.internal
     docker_args+=("--add-host" "host.docker.internal:host-gateway")
 
     # Container-specific environment
@@ -247,24 +150,10 @@ run_tests() {
 
     # Model selection
     if [[ -n "$MODEL" ]]; then
-        case "$MODEL" in
-            haiku)
-                docker_args+=("-e" "ANTHROPIC_MODEL=claude-haiku-3-5-20241022")
-                ;;
-            sonnet)
-                docker_args+=("-e" "ANTHROPIC_MODEL=claude-sonnet-4-20250514")
-                ;;
-            opus)
-                docker_args+=("-e" "ANTHROPIC_MODEL=claude-opus-4-20250514")
-                ;;
-            *)
-                docker_args+=("-e" "ANTHROPIC_MODEL=$MODEL")
-                ;;
-        esac
+        docker_args+=("-e" "$(get_model_env "$MODEL")")
     fi
 
-    # Build pytest command (use full path since we run from /tmp)
-    # Plugin is loaded via CLAUDE_PLUGIN_DIR environment variable
+    # Build pytest command
     local pytest_cmd="pytest /workspace/tests/test_routing.py -v"
 
     # Add parallel option
@@ -272,46 +161,34 @@ run_tests() {
         pytest_cmd+=" -n $PARALLEL"
     fi
 
-    # Add user-provided pytest args (properly quote each arg)
+    # Add user-provided pytest args
     if [[ ${#PYTEST_ARGS[@]} -gt 0 ]]; then
-        for arg in "${PYTEST_ARGS[@]}"; do
-            # Escape single quotes in the arg and wrap in single quotes
-            escaped_arg=$(printf '%s' "$arg" | sed "s/'/'\\\\''/g")
-            pytest_cmd+=" '$escaped_arg'"
-        done
+        pytest_cmd+="$(quote_pytest_args "${PYTEST_ARGS[@]}")"
     fi
-
-    # Full command to run
-    local full_cmd="$pytest_cmd"
 
     # Override entrypoint to run shell command
     docker_args+=("--entrypoint" "/bin/bash")
     docker_args+=("$IMAGE_NAME:$IMAGE_TAG")
-    docker_args+=("-c" "$full_cmd")
+    docker_args+=("-c" "$pytest_cmd")
 
     # Run container
     echo_info "Running: docker ${docker_args[*]}"
     docker "${docker_args[@]}"
 }
 
-# Main execution
+# =============================================================================
+# Main
+# =============================================================================
+
 main() {
     echo "=============================================="
     echo "JIRA Skills Container Test Runner"
     echo "=============================================="
     echo ""
 
-    # Validate authentication
-    validate_auth
-
-    # Build image if requested or needed
-    if [[ "$BUILD_IMAGE" == "true" ]]; then
-        build_image
-    else
-        check_image
-    fi
-
-    # Run tests
+    setup_cleanup_trap
+    validate_auth "$USE_API_KEY" "$USE_API_KEY_FROM_CONFIG"
+    ensure_image "$BUILD_IMAGE"
     run_tests
 
     echo ""
