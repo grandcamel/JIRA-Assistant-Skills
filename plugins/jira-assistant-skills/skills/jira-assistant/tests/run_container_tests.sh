@@ -301,25 +301,34 @@ run_tests() {
         esac
     fi
 
-    # Add image name
-    docker_args+=("$IMAGE_NAME:$IMAGE_TAG")
+    # Build the full command: install plugin, then run pytest
+    # Plugin is mounted at /workspace/plugin, install it so Claude Code can find SKILL.md files
+    local install_cmd="claude plugins add /workspace/plugin --local 2>/dev/null || true"
 
     # Build pytest command
-    local pytest_cmd=("test_routing.py" "-v")
+    local pytest_cmd="pytest test_routing.py -v"
 
     # Add parallel option
     if [[ -n "$PARALLEL" ]]; then
-        pytest_cmd+=("-n" "$PARALLEL")
+        pytest_cmd+=" -n $PARALLEL"
     fi
 
     # Add user-provided pytest args
     if [[ ${#PYTEST_ARGS[@]} -gt 0 ]]; then
-        pytest_cmd+=("${PYTEST_ARGS[@]}")
+        pytest_cmd+=" ${PYTEST_ARGS[*]}"
     fi
 
+    # Combine: install plugin then run tests
+    local full_cmd="$install_cmd && $pytest_cmd"
+
+    # Override entrypoint to run shell command
+    docker_args+=("--entrypoint" "/bin/bash")
+    docker_args+=("$IMAGE_NAME:$IMAGE_TAG")
+    docker_args+=("-c" "$full_cmd")
+
     # Run container
-    echo_info "Running: docker ${docker_args[*]} ${pytest_cmd[*]}"
-    docker "${docker_args[@]}" "${pytest_cmd[@]}"
+    echo_info "Running: docker ${docker_args[*]}"
+    docker "${docker_args[@]}"
 }
 
 # Main execution

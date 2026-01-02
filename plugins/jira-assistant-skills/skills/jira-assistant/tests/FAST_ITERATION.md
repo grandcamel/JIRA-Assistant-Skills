@@ -315,6 +315,57 @@ The container automatically sets these for optimal operation:
 | `CLAUDE_CODE_API_KEY_HELPER_TTL_MS` | `240000` | Token refresh every 4 min |
 | `CHOKIDAR_USEPOLLING` | `true` | Docker file watching |
 
+## Iterative Refinement Loop
+
+The container setup supports a fast edit-test cycle for improving SKILL.md descriptions:
+
+### How It Works
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. Host: Claude edits SKILL.md                              │
+│     vim plugins/.../skills/jira-agile/SKILL.md               │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ Volume mount
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│  2. Container: Plugin installed from mount                   │
+│     claude plugins add /workspace/plugin --local             │
+│     (runs automatically at container start)                  │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│  3. Container: Tests run with updated SKILL.md               │
+│     pytest test_routing.py -v -k "agile"                     │
+│     (Claude reads SKILL.md fresh each invocation)            │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│  4. Review results, repeat from step 1                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Workflow Example
+
+```bash
+# Terminal 1: Edit SKILL.md
+vim plugins/jira-assistant-skills/skills/jira-agile/SKILL.md
+
+# Terminal 2: Run tests (sees changes immediately via volume mount)
+./run_container_tests.sh --token-server -- -k "agile" -v
+
+# Repeat until tests pass
+```
+
+### Why This Works
+
+1. **Volume mount** - Plugin directory is mounted into container (`-v $PLUGIN_ROOT:/workspace/plugin`)
+2. **Fresh install** - Container installs plugin from mount on each run
+3. **No caching** - Claude Code reads SKILL.md content fresh each invocation
+4. **Hot reload** - Changes on host are immediately visible in container
+
 ## Next Steps
 
 See [ROUTING_ACCURACY_PROPOSAL.md](ROUTING_ACCURACY_PROPOSAL.md) for specific skill description changes to improve routing accuracy.
