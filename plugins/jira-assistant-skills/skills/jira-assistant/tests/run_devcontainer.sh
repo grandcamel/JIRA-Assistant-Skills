@@ -69,6 +69,7 @@ COMMAND_ARGS=()
 PIP_PACKAGES=()
 NPM_PACKAGES=()
 APT_PACKAGES=()
+ENHANCED_MODE=false
 
 # =============================================================================
 # Argument Parsing
@@ -140,6 +141,10 @@ while [[ $# -gt 0 ]]; do
             APT_PACKAGES+=("${pkgs[@]}")
             shift 2
             ;;
+        --enhanced)
+            ENHANCED_MODE=true
+            shift
+            ;;
         --help|-h)
             echo "Usage: $0 [options] [-- command...]"
             echo ""
@@ -171,6 +176,15 @@ while [[ $# -gt 0 ]]; do
             echo "  --npm PKG[,PKG,...]   Install npm packages globally (can be used multiple times)"
             echo "  --apt PKG[,PKG,...]   Install system packages via apt (can be used multiple times)"
             echo ""
+            echo "Enhanced Mode:"
+            echo "  --enhanced            Install enhanced CLI tools and shell configuration:"
+            echo "                        - Starship prompt (fast, customizable)"
+            echo "                        - eza (modern ls), bat (cat with highlighting)"
+            echo "                        - delta (better git diff), zoxide (smart cd)"
+            echo "                        - btop (system monitor), lazygit (git TUI)"
+            echo "                        - tmux (configured), neovim + kickstart"
+            echo "                        - direnv (per-directory environments)"
+            echo ""
             echo "Authentication (choose one):"
             echo "  (default)              Use OAuth from macOS Keychain (free with subscription)"
             echo "  --api-key              Use ANTHROPIC_API_KEY environment variable (paid)"
@@ -198,6 +212,10 @@ while [[ $# -gt 0 ]]; do
             echo "  # Install additional packages"
             echo "  $0 --pip flask,sqlalchemy --npm lodash"
             echo "  $0 --apt graphviz --pip pydot"
+            echo ""
+            echo "  # Enhanced mode with modern CLI tools"
+            echo "  $0 --enhanced"
+            echo "  $0 --enhanced --project ~/myproject --persist-cache"
             exit 0
             ;;
         --)
@@ -286,6 +304,10 @@ run_devcontainer() {
     if [[ ${#APT_PACKAGES[@]} -gt 0 ]]; then
         echo_status "DEV" "Apt packages: ${APT_PACKAGES[*]}"
     fi
+
+    if [[ "$ENHANCED_MODE" == "true" ]]; then
+        echo_status "DEV" "Enhanced mode: starship, eza, bat, delta, zoxide, btop, lazygit, tmux, neovim, direnv"
+    fi
     echo ""
 
     echo_info "Starting developer container..."
@@ -313,6 +335,11 @@ run_devcontainer() {
     docker_args+=(
         "-v" "$PLUGIN_ROOT:/workspace/plugin:ro"
     )
+
+    # Mount enhanced config directory if enhanced mode
+    if [[ "$ENHANCED_MODE" == "true" ]]; then
+        docker_args+=("-v" "$SCRIPT_DIR/enhanced:/workspace/enhanced:ro")
+    fi
 
     # Mount project directory
     docker_args+=("-v" "$PROJECT_PATH:/workspace/project")
@@ -384,6 +411,11 @@ run_devcontainer() {
 
     # Build initialization commands for package installation
     local init_commands=()
+
+    # Enhanced mode setup (run first for best experience)
+    if [[ "$ENHANCED_MODE" == "true" ]]; then
+        init_commands+=("/workspace/enhanced/setup-enhanced.sh")
+    fi
 
     # Apt packages (requires sudo, run first)
     if [[ ${#APT_PACKAGES[@]} -gt 0 ]]; then
