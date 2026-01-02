@@ -206,6 +206,11 @@ def run_claude_routing(
         "--debug",
     ]
 
+    # Add plugin-dir if specified via environment (for container testing)
+    plugin_dir = os.environ.get("CLAUDE_PLUGIN_DIR")
+    if plugin_dir:
+        cmd.extend(["--plugin-dir", plugin_dir])
+
     # Add model flag if specified (e.g., --model haiku for faster tests)
     model = get_test_model()
     if model:

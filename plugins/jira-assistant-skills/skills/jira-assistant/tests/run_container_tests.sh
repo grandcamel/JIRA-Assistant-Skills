@@ -220,8 +220,11 @@ run_tests() {
         "-v" "$SCRIPT_DIR:/workspace/tests:ro"
     )
 
-    # Set working directory
-    docker_args+=("-w" "/workspace/tests")
+    # Set working directory (use /tmp to avoid semantic confusion -
+    # e.g., "tests" directory could be misinterpreted as relating to
+    # test inputs like "TES-123" project keys, and /workspace shows
+    # the plugin structure which prompts Claude to ask about JIRA setup)
+    docker_args+=("-w" "/tmp")
 
     # Authentication configuration
     if [[ "$USE_API_KEY" == "true" ]]; then
@@ -239,6 +242,7 @@ run_tests() {
         "-e" "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1"
         "-e" "CLAUDE_CODE_ACTION=bypassPermissions"
         "-e" "OTLP_HTTP_ENDPOINT=http://host.docker.internal:4318"
+        "-e" "CLAUDE_PLUGIN_DIR=/workspace/plugin"
     )
 
     # Model selection
@@ -259,24 +263,26 @@ run_tests() {
         esac
     fi
 
-    # Build the full command: install plugin, then run pytest
-    local install_cmd="claude plugins add /workspace/plugin --local 2>/dev/null || true"
-
-    # Build pytest command
-    local pytest_cmd="pytest test_routing.py -v"
+    # Build pytest command (use full path since we run from /tmp)
+    # Plugin is loaded via CLAUDE_PLUGIN_DIR environment variable
+    local pytest_cmd="pytest /workspace/tests/test_routing.py -v"
 
     # Add parallel option
     if [[ -n "$PARALLEL" ]]; then
         pytest_cmd+=" -n $PARALLEL"
     fi
 
-    # Add user-provided pytest args
+    # Add user-provided pytest args (properly quote each arg)
     if [[ ${#PYTEST_ARGS[@]} -gt 0 ]]; then
-        pytest_cmd+=" ${PYTEST_ARGS[*]}"
+        for arg in "${PYTEST_ARGS[@]}"; do
+            # Escape single quotes in the arg and wrap in single quotes
+            escaped_arg=$(printf '%s' "$arg" | sed "s/'/'\\\\''/g")
+            pytest_cmd+=" '$escaped_arg'"
+        done
     fi
 
-    # Combine: install plugin then run tests
-    local full_cmd="$install_cmd && $pytest_cmd"
+    # Full command to run
+    local full_cmd="$pytest_cmd"
 
     # Override entrypoint to run shell command
     docker_args+=("--entrypoint" "/bin/bash")
