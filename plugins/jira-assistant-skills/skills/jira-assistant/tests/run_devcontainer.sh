@@ -34,6 +34,10 @@
 #   # Persist caches across sessions
 #   ./run_devcontainer.sh --persist-cache
 #
+#   # Install additional packages
+#   ./run_devcontainer.sh --pip flask,sqlalchemy --npm lodash
+#   ./run_devcontainer.sh --apt graphviz --pip pydot
+#
 
 set -e
 
@@ -62,6 +66,9 @@ MODEL=""
 CONTAINER_NAME=""
 DETACH=false
 COMMAND_ARGS=()
+PIP_PACKAGES=()
+NPM_PACKAGES=()
+APT_PACKAGES=()
 
 # =============================================================================
 # Argument Parsing
@@ -118,6 +125,21 @@ while [[ $# -gt 0 ]]; do
             DETACH=true
             shift
             ;;
+        --pip)
+            IFS=',' read -ra pkgs <<< "$2"
+            PIP_PACKAGES+=("${pkgs[@]}")
+            shift 2
+            ;;
+        --npm)
+            IFS=',' read -ra pkgs <<< "$2"
+            NPM_PACKAGES+=("${pkgs[@]}")
+            shift 2
+            ;;
+        --apt)
+            IFS=',' read -ra pkgs <<< "$2"
+            APT_PACKAGES+=("${pkgs[@]}")
+            shift 2
+            ;;
         --help|-h)
             echo "Usage: $0 [options] [-- command...]"
             echo ""
@@ -144,6 +166,11 @@ while [[ $# -gt 0 ]]; do
             echo "  --build               Rebuild Docker image before running"
             echo "  --model NAME          Claude model (sonnet, haiku, opus)"
             echo ""
+            echo "Additional Packages (installed at container start):"
+            echo "  --pip PKG[,PKG,...]   Install Python packages (can be used multiple times)"
+            echo "  --npm PKG[,PKG,...]   Install npm packages globally (can be used multiple times)"
+            echo "  --apt PKG[,PKG,...]   Install system packages via apt (can be used multiple times)"
+            echo ""
             echo "Authentication (choose one):"
             echo "  (default)              Use OAuth from macOS Keychain (free with subscription)"
             echo "  --api-key              Use ANTHROPIC_API_KEY environment variable (paid)"
@@ -167,6 +194,10 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "  # Named container (can reattach with: docker exec -it mydev bash)"
             echo "  $0 --name mydev --detach"
+            echo ""
+            echo "  # Install additional packages"
+            echo "  $0 --pip flask,sqlalchemy --npm lodash"
+            echo "  $0 --apt graphviz --pip pydot"
             exit 0
             ;;
         --)
@@ -242,6 +273,18 @@ run_devcontainer() {
 
     if [[ ${#PORTS[@]} -gt 0 ]]; then
         echo_status "DEV" "Ports: ${PORTS[*]}"
+    fi
+
+    if [[ ${#PIP_PACKAGES[@]} -gt 0 ]]; then
+        echo_status "DEV" "Pip packages: ${PIP_PACKAGES[*]}"
+    fi
+
+    if [[ ${#NPM_PACKAGES[@]} -gt 0 ]]; then
+        echo_status "DEV" "Npm packages: ${NPM_PACKAGES[*]}"
+    fi
+
+    if [[ ${#APT_PACKAGES[@]} -gt 0 ]]; then
+        echo_status "DEV" "Apt packages: ${APT_PACKAGES[*]}"
     fi
     echo ""
 
@@ -339,13 +382,53 @@ run_devcontainer() {
     # Image name
     docker_args+=("$DEV_IMAGE_NAME:$DEV_IMAGE_TAG")
 
+    # Build initialization commands for package installation
+    local init_commands=()
+
+    # Apt packages (requires sudo, run first)
+    if [[ ${#APT_PACKAGES[@]} -gt 0 ]]; then
+        local apt_list="${APT_PACKAGES[*]}"
+        init_commands+=("echo '📦 Installing apt packages: $apt_list'")
+        init_commands+=("sudo apt-get update -qq")
+        init_commands+=("sudo apt-get install -y -qq ${APT_PACKAGES[*]}")
+    fi
+
+    # Pip packages
+    if [[ ${#PIP_PACKAGES[@]} -gt 0 ]]; then
+        local pip_list="${PIP_PACKAGES[*]}"
+        init_commands+=("echo '🐍 Installing pip packages: $pip_list'")
+        init_commands+=("pip install -q ${PIP_PACKAGES[*]}")
+    fi
+
+    # Npm packages (global install)
+    if [[ ${#NPM_PACKAGES[@]} -gt 0 ]]; then
+        local npm_list="${NPM_PACKAGES[*]}"
+        init_commands+=("echo '📦 Installing npm packages: $npm_list'")
+        init_commands+=("npm install -g --silent ${NPM_PACKAGES[*]}")
+    fi
+
     # Command to run (default: interactive bash with login shell)
-    if [[ ${#COMMAND_ARGS[@]} -gt 0 ]]; then
-        # Wrap command for bash entrypoint
-        docker_args+=("-c" "${COMMAND_ARGS[*]}")
+    if [[ ${#init_commands[@]} -gt 0 ]]; then
+        # Has init commands - need to run them first
+        local init_script
+        init_script=$(IFS=';'; echo "${init_commands[*]}")
+
+        if [[ ${#COMMAND_ARGS[@]} -gt 0 ]]; then
+            # Init + user command
+            docker_args+=("-c" "$init_script; ${COMMAND_ARGS[*]}")
+        else
+            # Init + interactive shell
+            docker_args+=("-c" "$init_script; exec bash -l")
+        fi
     else
-        # Interactive login shell
-        docker_args+=("-l")
+        # No init commands
+        if [[ ${#COMMAND_ARGS[@]} -gt 0 ]]; then
+            # Just user command
+            docker_args+=("-c" "${COMMAND_ARGS[*]}")
+        else
+            # Interactive login shell
+            docker_args+=("-l")
+        fi
     fi
 
     # Run container
