@@ -2,24 +2,21 @@
 #
 # Run routing tests in a Docker container with isolated environment
 #
-# IMPORTANT: Container tests require an API key (ANTHROPIC_API_KEY).
-# OAuth tokens do NOT work in containers due to Claude Code's native
-# macOS Keychain integration.
-#
-# For free testing with OAuth subscription, run tests directly on the host:
-#   pytest test_routing.py -v
-#   ./fast_test.sh --skill agile --fast
+# Authentication modes:
+# 1. OAuth (default) - Uses credentials from macOS Keychain (free with subscription)
+# 2. API Key (--api-key) - Uses ANTHROPIC_API_KEY (paid)
 #
 # Usage:
 #   ./run_container_tests.sh [options] [-- pytest-args...]
 #
 # Examples:
-#   ./run_container_tests.sh --api-key                  # Run with API key
-#   ./run_container_tests.sh --api-key --parallel 4     # Parallel execution
-#   ./run_container_tests.sh --api-key -- -k "TC001"    # Single test
+#   ./run_container_tests.sh                       # Run with OAuth (macOS)
+#   ./run_container_tests.sh --parallel 4          # Parallel with OAuth
+#   ./run_container_tests.sh --api-key             # Run with API key
+#   ./run_container_tests.sh -- -k "TC001"         # Single test
 #
 # Environment Variables:
-#   ANTHROPIC_API_KEY     - API key (required)
+#   ANTHROPIC_API_KEY     - API key (only needed with --api-key)
 #
 
 set -e
@@ -28,6 +25,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 IMAGE_NAME="jira-skills-test-runner"
 IMAGE_TAG="latest"
+CREDS_TMP_DIR=""
 
 # Default options
 USE_API_KEY=false
@@ -65,15 +63,11 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Run routing tests in a Docker container."
             echo ""
-            echo "IMPORTANT: Container tests require an API key (ANTHROPIC_API_KEY)."
-            echo "OAuth tokens do NOT work in containers."
-            echo ""
-            echo "For free testing with OAuth subscription, run tests on the host:"
-            echo "  pytest test_routing.py -v"
-            echo "  ./fast_test.sh --skill agile --fast"
+            echo "Authentication (choose one):"
+            echo "  (default)       Use OAuth from macOS Keychain (free with subscription)"
+            echo "  --api-key       Use ANTHROPIC_API_KEY environment variable (paid)"
             echo ""
             echo "Options:"
-            echo "  --api-key       Use ANTHROPIC_API_KEY (required)"
             echo "  --build         Rebuild Docker image before running"
             echo "  --parallel N    Run N tests in parallel (requires pytest-xdist)"
             echo "  --model NAME    Use specific model (sonnet, haiku, opus)"
@@ -81,10 +75,10 @@ while [[ $# -gt 0 ]]; do
             echo "  --help          Show this help message"
             echo ""
             echo "Examples:"
-            echo "  export ANTHROPIC_API_KEY='sk-ant-api03-...'"
-            echo "  $0 --api-key                    # Run all tests"
-            echo "  $0 --api-key --parallel 4       # 4 parallel workers"
-            echo "  $0 --api-key -- -k 'TC001' -v   # Single test"
+            echo "  $0                           # Run all tests with OAuth"
+            echo "  $0 --parallel 4              # 4 parallel workers"
+            echo "  $0 -- -k 'TC001' -v          # Single test"
+            echo "  $0 --api-key                 # Use API key instead"
             exit 0
             ;;
         --)
@@ -109,34 +103,81 @@ echo_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 echo_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 echo_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
+# Cleanup function
+cleanup() {
+    local exit_code=$?
+
+    # Remove temporary credentials directory
+    if [[ -n "$CREDS_TMP_DIR" && -d "$CREDS_TMP_DIR" ]]; then
+        rm -rf "$CREDS_TMP_DIR"
+    fi
+
+    exit $exit_code
+}
+
+# Set up cleanup trap
+trap cleanup EXIT INT TERM
+
+# Get OAuth credentials from macOS Keychain
+get_oauth_credentials() {
+    if [[ "$(uname)" != "Darwin" ]]; then
+        echo_error "OAuth mode requires macOS (for Keychain access)"
+        echo "Use --api-key mode on Linux, or run tests on macOS."
+        return 1
+    fi
+
+    local creds
+    creds=$(security find-generic-password -a "$USER" -s 'Claude Code-credentials' -w 2>/dev/null) || {
+        echo_error "Cannot access Claude Code credentials in Keychain"
+        echo ""
+        echo "Make sure you're logged into Claude Code:"
+        echo "  claude login"
+        return 1
+    }
+
+    # Verify credentials are valid JSON with required fields
+    if ! echo "$creds" | jq -e '.claudeAiOauth.accessToken' >/dev/null 2>&1; then
+        echo_error "Invalid credentials format in Keychain"
+        echo "Try logging in again: claude login"
+        return 1
+    fi
+
+    echo "$creds"
+}
+
+# Create credentials directory for container
+create_credentials_dir() {
+    CREDS_TMP_DIR=$(mktemp -d)
+
+    local creds
+    creds=$(get_oauth_credentials) || return 1
+
+    echo "$creds" > "$CREDS_TMP_DIR/.credentials.json"
+    chmod 600 "$CREDS_TMP_DIR/.credentials.json"
+
+    echo_info "OAuth credentials prepared for container"
+    return 0
+}
+
 # Validate authentication
 validate_auth() {
-    if [[ "$USE_API_KEY" != "true" ]]; then
-        echo_error "Container tests require --api-key flag"
-        echo ""
-        echo "OAuth tokens do NOT work in containers. Use one of:"
-        echo ""
-        echo "1. Run with API key (container):"
-        echo "   export ANTHROPIC_API_KEY='sk-ant-api03-...'"
-        echo "   $0 --api-key"
-        echo ""
-        echo "2. Run on host (free with OAuth subscription):"
-        echo "   pytest test_routing.py -v"
-        echo "   ./fast_test.sh --skill agile --fast"
-        exit 1
+    if [[ "$USE_API_KEY" == "true" ]]; then
+        if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
+            echo_error "ANTHROPIC_API_KEY is not set"
+            echo ""
+            echo "Export your API key:"
+            echo "  export ANTHROPIC_API_KEY='sk-ant-api03-...'"
+            echo ""
+            echo "Or use OAuth mode (default) on macOS."
+            exit 1
+        fi
+        echo_info "Using API key authentication"
+    else
+        if ! create_credentials_dir; then
+            exit 1
+        fi
+        echo_info "Using OAuth authentication (free with subscription)"
     fi
-
-    if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
-        echo_error "ANTHROPIC_API_KEY is not set"
-        echo ""
-        echo "Export your API key:"
-        echo "  export ANTHROPIC_API_KEY='sk-ant-api03-...'"
-        echo ""
-        echo "Get an API key at: https://console.anthropic.com/settings/keys"
-        exit 1
-    fi
-
-    echo_info "Using API key authentication"
 }
 
 # Build Docker image
@@ -182,8 +223,13 @@ run_tests() {
     # Set working directory
     docker_args+=("-w" "/workspace/tests")
 
-    # API key authentication
-    docker_args+=("-e" "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}")
+    # Authentication configuration
+    if [[ "$USE_API_KEY" == "true" ]]; then
+        docker_args+=("-e" "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}")
+    else
+        # Mount OAuth credentials
+        docker_args+=("-v" "$CREDS_TMP_DIR:/home/testrunner/.claude")
+    fi
 
     # Container-specific environment
     docker_args+=(

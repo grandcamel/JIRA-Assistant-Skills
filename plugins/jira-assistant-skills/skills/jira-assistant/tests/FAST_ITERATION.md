@@ -200,16 +200,6 @@ For pull request validation:
 
 For isolated, reproducible test environments, use the Docker-based test runner.
 
-### Important: Authentication Limitation
-
-**OAuth tokens do NOT work in containers.** Claude Code on macOS uses native Keychain integration
-that cannot be replicated in Linux containers. The Anthropic API does not directly accept OAuth
-tokens - they must be exchanged through Claude Code's native auth flow.
-
-**Container tests require an API key (paid).**
-
-For free testing with OAuth subscription, run tests directly on the host instead.
-
 ### Benefits
 
 | Feature | Benefit |
@@ -217,7 +207,7 @@ For free testing with OAuth subscription, run tests directly on the host instead
 | Isolation | Tests run in clean environment |
 | Reproducibility | Same container = same results |
 | CI/CD Ready | Easy integration with pipelines |
-| Parallel Safety | No interference between test runs |
+| OAuth Support | Free with Claude subscription (macOS) |
 
 ### Quick Start
 
@@ -225,26 +215,30 @@ For free testing with OAuth subscription, run tests directly on the host instead
 # Build container (first time only)
 ./run_container_tests.sh --build
 
-# Run with API key (required for container tests)
+# Run with OAuth (default on macOS - free with subscription)
+./run_container_tests.sh
+
+# Run with parallelism
+./run_container_tests.sh --parallel 4
+
+# Run specific test
+./run_container_tests.sh -- -k "TC001" -v
+
+# Run with API key (for CI/CD or Linux hosts)
 export ANTHROPIC_API_KEY="sk-ant-api03-..."
 ./run_container_tests.sh --api-key
-
-# Run with options
-./run_container_tests.sh --api-key --parallel 4 --model haiku
-./run_container_tests.sh --api-key -- -k "TC001" -v  # Pass pytest args
 ```
 
-### Host vs Container Testing
+### Authentication Options
 
-| Aspect | Host (Recommended) | Container |
-|--------|-------------------|-----------|
-| Auth | OAuth (free with subscription) | API key (paid) |
-| Isolation | Shared environment | Clean per-run |
-| Speed | Fast startup | Container overhead |
-| Use Case | Development iteration | CI/CD pipelines |
+| Method | Flag | Platform | Cost | Use Case |
+|--------|------|----------|------|----------|
+| **OAuth** | (default) | macOS | Free (subscription) | Development, local testing |
+| API Key | `--api-key` | Any | Pay per token | CI/CD pipelines |
 
-**Recommendation:** Use host-based testing during development (free with OAuth subscription).
-Use container-based testing for CI/CD pipelines where you have an API key budget.
+**How OAuth works:** The script extracts credentials from macOS Keychain and mounts them
+as `.credentials.json` in the container. Claude Code in the container reads this file
+for authentication.
 
 ### Container Options
 
@@ -252,7 +246,8 @@ Use container-based testing for CI/CD pipelines where you have an API key budget
 ./run_container_tests.sh [options] [-- pytest-args...]
 
 Options:
-  --api-key       Use ANTHROPIC_API_KEY (required)
+  (default)       Use OAuth from macOS Keychain
+  --api-key       Use ANTHROPIC_API_KEY instead
   --build         Rebuild Docker image before running
   --parallel N    Run N tests in parallel
   --model NAME    Use specific model (sonnet, haiku, opus)
