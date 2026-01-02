@@ -384,6 +384,60 @@ PROFILE_TOOLS["custom-profile"]="Read Glob Grep Bash(jira specific:*)"
 PROFILE_DESCRIPTION["custom-profile"]="Description of custom profile"
 ```
 
+## Workspace Workflows
+
+For hybrid file + JIRA workflows, use the workspace runner to mount a local project directory.
+
+### Quick Start
+
+```bash
+cd plugins/jira-assistant-skills/skills/jira-assistant/tests
+
+# Organize docs and close JIRA ticket
+./run_workspace.sh --project ~/myproject \
+  --prompt "Organize the docs/ folder and close TES-123"
+
+# Review code and add JIRA comment
+./run_workspace.sh --project ~/myproject --profile code-review \
+  --prompt "Review src/auth.py and comment on TES-456"
+
+# Safe exploration (read-only mount)
+./run_workspace.sh --project ~/myproject --readonly \
+  --prompt "What documentation is missing?"
+```
+
+### Workspace Profiles
+
+| Profile | File Access | JIRA Access | Use Case |
+|---------|-------------|-------------|----------|
+| `docs-jira` | Read/Write/Edit | Issue + Lifecycle | Organize files, close tickets |
+| `code-review` | Read only | Comments | Review code, add JIRA feedback |
+| `docs-only` | Read/Write/Edit | None | Pure file organization |
+| `full-access` | All | All | Unrestricted hybrid workflows |
+
+### How It Works
+
+1. **Volume mount**: Project directory mounted at `/workspace/project`
+2. **Working directory**: Set to `/workspace/project` for natural file paths
+3. **Tool restrictions**: Profile controls which file and JIRA tools are available
+4. **Read-only option**: Use `--readonly` to prevent accidental file modifications
+
+### Example Workflows
+
+```bash
+# Generate changelog from git history, update JIRA release
+./run_workspace.sh --project ~/myproject \
+  --prompt "Generate CHANGELOG.md from recent commits and update TES-100"
+
+# Create missing docs, link to JIRA epic
+./run_workspace.sh --project ~/myproject \
+  --prompt "Create README for src/utils/ and link to epic TES-50"
+
+# Audit code TODOs, create JIRA subtasks
+./run_workspace.sh --project ~/myproject --profile full-access \
+  --prompt "Find all TODOs in src/ and create subtasks under TES-200"
+```
+
 ## Next Steps
 
 See [ROUTING_ACCURACY_PROPOSAL.md](ROUTING_ACCURACY_PROPOSAL.md) for specific skill description changes to improve routing accuracy.
