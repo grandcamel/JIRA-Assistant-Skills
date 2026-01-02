@@ -1,0 +1,8 @@
+# Placeholder file for conditional certificate injection
+# This file is used when no extra CA certificates are needed
+#
+# To add Zscaler or other corporate CA certificates:
+#   docker build --build-arg EXTRA_CA_CERT=path/to/zscaler.crt .
+#
+# The certificate will be added to the system trust store before
+# any network operations (apt-get, npm, pip) occur.

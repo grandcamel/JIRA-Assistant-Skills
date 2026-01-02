@@ -4,14 +4,45 @@ LABEL maintainer="jasonkrue@gmail.com"
 LABEL description="Container for running JIRA Assistant Skills routing tests with Claude Code"
 LABEL version="1.0.0"
 
-# Install system dependencies
+# =============================================================================
+# Optional Corporate CA Certificate Injection (e.g., Zscaler)
+#
+# Usage:
+#   Without cert (default): docker build .
+#   With Zscaler cert:      docker build --build-arg EXTRA_CA_CERT=zscaler.crt .
+#
+# The certificate is injected BEFORE any network operations so that
+# apt-get, npm install, and pip install all work behind corporate proxies.
+# =============================================================================
+ARG EXTRA_CA_CERT=NO_EXTRA_CERTS
+COPY ${EXTRA_CA_CERT} /tmp/maybe-cert
+
+# Install ca-certificates first (minimal network, usually cached)
+# Then conditionally add custom cert if provided
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && if grep -q "BEGIN CERTIFICATE" /tmp/maybe-cert 2>/dev/null; then \
+         cp /tmp/maybe-cert /usr/local/share/ca-certificates/extra-ca.crt && \
+         update-ca-certificates && \
+         echo "✓ Custom CA certificate installed"; \
+       else \
+         echo "○ No custom CA certificate (using system defaults)"; \
+       fi \
+    && rm -f /tmp/maybe-cert \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables for tools that need explicit cert paths
+# These point to the combined system cert bundle (includes custom CA if added)
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+
+# Install remaining system dependencies (TLS now works with corporate proxy)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
     python3-venv \
     git \
     curl \
-    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Claude Code CLI globally
