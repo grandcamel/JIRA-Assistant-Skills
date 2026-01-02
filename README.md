@@ -529,6 +529,30 @@ E2E tests validate the plugin with the Claude Code CLI:
 
 See [tests/e2e/README.md](tests/e2e/README.md) for details.
 
+### Sandboxed Container Testing
+
+Run tests with restricted tool access for safe demos and focused testing:
+
+```bash
+cd plugins/jira-assistant-skills/skills/jira-assistant/tests
+
+# Safe demo mode (view/search only)
+./run_sandboxed.sh --profile read-only
+
+# JQL-focused testing
+./run_sandboxed.sh --profile search-only
+
+# Issue CRUD only
+./run_sandboxed.sh --profile issue-only
+```
+
+| Profile | Use Case | What's Allowed |
+|---------|----------|----------------|
+| `read-only` | Safe demos, evaluations | View issues, search, list fields |
+| `search-only` | JQL training | Search queries only |
+| `issue-only` | CRUD workshops | Issue operations only |
+| `full` | Complete testing | All operations |
+
 ---
 
 ## Contributing

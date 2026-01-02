@@ -501,6 +501,37 @@ After debugging a non-obvious test failure, document the root cause in:
 
 See `plugins/jira-assistant-skills/skills/jira-assistant/tests/FAST_ITERATION.md` for detailed documentation.
 
+### Sandboxed Container Testing
+
+Run tests in Docker containers with restricted tool access for safe demos and focused testing:
+
+```bash
+cd plugins/jira-assistant-skills/skills/jira-assistant/tests
+
+# List available sandbox profiles
+./run_sandboxed.sh --list-profiles
+
+# Run in read-only mode (safe for demos)
+./run_sandboxed.sh --profile read-only
+
+# Run with validation tests to verify restrictions work
+./run_sandboxed.sh --profile read-only --validate
+
+# Run specific tests in search-only mode
+./run_sandboxed.sh --profile search-only -- -k "TC005"
+```
+
+**Available profiles:**
+
+| Profile | Use Case | Allowed Operations |
+|---------|----------|-------------------|
+| `read-only` | Safe demos | `jira issue get`, `jira search`, `jira fields list/get` |
+| `search-only` | JQL workshops | `jira search` only |
+| `issue-only` | CRUD training | All `jira issue` commands |
+| `full` | Full testing | No restrictions |
+
+The sandbox uses Claude's `--allowedTools` flag with patterns like `Bash(jira issue get:*)` to restrict tool access.
+
 ## CLI Usage
 
 The project provides a unified `jira` CLI entry point for all operations:

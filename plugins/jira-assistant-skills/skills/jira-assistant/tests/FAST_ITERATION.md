@@ -310,6 +310,80 @@ cd plugins/jira-assistant-skills/skills/jira-assistant/tests
 3. **Immediate feedback** - SKILL.md changes are picked up immediately
 4. **Fast iteration** - Use `--fast` for haiku model, `--parallel` for concurrency
 
+## Sandboxed Container Testing
+
+For isolated, restricted testing scenarios, use the sandboxed container runner.
+
+### Sandbox Profiles
+
+| Profile | Description | Allowed Operations |
+|---------|-------------|-------------------|
+| `read-only` | View/search only | `jira issue get`, `jira search`, `jira fields list/get` |
+| `search-only` | JQL search only | `jira search` |
+| `issue-only` | Issue CRUD only | All `jira issue` commands |
+| `full` | No restrictions | Everything (same as `run_container_tests.sh`) |
+
+### Quick Start
+
+```bash
+cd plugins/jira-assistant-skills/skills/jira-assistant/tests
+
+# List available profiles
+./run_sandboxed.sh --list-profiles
+
+# Run in read-only mode (safe for demos)
+./run_sandboxed.sh --profile read-only
+
+# Run specific tests in search-only mode
+./run_sandboxed.sh --profile search-only -- -k "TC005"
+
+# Run with validation tests to verify restrictions
+./run_sandboxed.sh --profile read-only --validate
+```
+
+### Validation Tests
+
+The `test_sandbox_validation.py` file contains tests that verify sandbox restrictions work correctly:
+
+```bash
+# Run validation tests for a specific profile
+./run_sandboxed.sh --profile read-only --validate
+
+# What validation tests check:
+# - Read-only: Allows get/search, blocks create/update/delete
+# - Search-only: Allows search, blocks issue get and create
+# - Issue-only: Allows issue CRUD, blocks JQL search
+# - Full: No restrictions, no permission denials
+```
+
+### How Sandboxing Works
+
+The sandbox uses Claude's `--allowedTools` flag to restrict tool access:
+
+1. **Tool patterns**: `Bash(jira issue get:*)` allows only `jira issue get` commands
+2. **Wildcard support**: `Bash(jira issue:*)` allows all issue subcommands
+3. **Multiple tools**: Space-separated list combines restrictions
+4. **Environment variable**: `CLAUDE_ALLOWED_TOOLS` passes restrictions to test harness
+
+### Use Cases
+
+| Scenario | Profile | Why |
+|----------|---------|-----|
+| Customer demo | `read-only` | Can show capabilities without modifying data |
+| JQL workshop | `search-only` | Focus on search syntax, no side effects |
+| Issue training | `issue-only` | CRUD practice without search complexity |
+| Full testing | `full` | Comprehensive testing of all skills |
+
+### Adding Custom Profiles
+
+Edit `run_sandboxed.sh` to add profiles:
+
+```bash
+# In the profile definitions section:
+PROFILE_TOOLS["custom-profile"]="Read Glob Grep Bash(jira specific:*)"
+PROFILE_DESCRIPTION["custom-profile"]="Description of custom profile"
+```
+
 ## Next Steps
 
 See [ROUTING_ACCURACY_PROPOSAL.md](ROUTING_ACCURACY_PROPOSAL.md) for specific skill description changes to improve routing accuracy.
