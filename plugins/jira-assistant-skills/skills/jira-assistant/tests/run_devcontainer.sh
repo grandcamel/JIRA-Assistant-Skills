@@ -74,6 +74,7 @@ CLAUDE_VERSION=""
 CUSTOM_IMAGE=""
 CUSTOM_TAG=""
 PUSH_IMAGE=false
+USE_ENHANCED_IMAGE=false
 
 # =============================================================================
 # Argument Parsing
@@ -165,6 +166,10 @@ while [[ $# -gt 0 ]]; do
             PUSH_IMAGE=true
             shift
             ;;
+        --use-enhanced)
+            USE_ENHANCED_IMAGE=true
+            shift
+            ;;
         --help|-h)
             echo "Usage: $0 [options] [-- command...]"
             echo ""
@@ -196,6 +201,8 @@ while [[ $# -gt 0 ]]; do
             echo "  --image NAME          Custom image name (e.g., registry.company.com/team/dev)"
             echo "  --tag TAG             Custom image tag (default: latest)"
             echo "  --push                Push image to registry after building (requires --build)"
+            echo "  --use-enhanced        Use pre-built enhanced image (jira-skills-dev-enhanced)"
+            echo "                        Build with: ./build-enhanced.sh"
             echo ""
             echo "Additional Packages (installed at container start):"
             echo "  --pip PKG[,PKG,...]   Install Python packages (can be used multiple times)"
@@ -251,6 +258,9 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "  # Use image from private registry"
             echo "  $0 --image registry.company.com/team/jira-dev --tag v1.0"
+            echo ""
+            echo "  # Use pre-built enhanced image (instant startup)"
+            echo "  $0 --use-enhanced"
             exit 0
             ;;
         --)
@@ -276,7 +286,13 @@ PROJECT_PATH="$(cd "$PROJECT_PATH" 2>/dev/null && pwd)" || {
     exit 1
 }
 
-# Apply custom image name/tag if specified
+# Apply --use-enhanced (overrides defaults, but custom image/tag take precedence)
+if [[ "$USE_ENHANCED_IMAGE" == "true" ]]; then
+    DEV_IMAGE_NAME="jira-skills-dev-enhanced"
+    # Note: --enhanced runtime mode is skipped when using pre-built enhanced image
+fi
+
+# Apply custom image name/tag if specified (takes precedence over --use-enhanced)
 if [[ -n "$CUSTOM_IMAGE" ]]; then
     DEV_IMAGE_NAME="$CUSTOM_IMAGE"
 fi
@@ -295,10 +311,17 @@ fi
 # =============================================================================
 
 build_dev_image() {
+    local dockerfile="$SCRIPT_DIR/Dockerfile.dev"
+
+    # Use enhanced Dockerfile if building enhanced image
+    if [[ "$USE_ENHANCED_IMAGE" == "true" ]] || [[ "$DEV_IMAGE_NAME" == *"enhanced"* ]]; then
+        dockerfile="$SCRIPT_DIR/Dockerfile.dev-enhanced"
+    fi
+
     echo_info "Building developer container image: $DEV_IMAGE_NAME:$DEV_IMAGE_TAG"
     docker build \
         -t "$DEV_IMAGE_NAME:$DEV_IMAGE_TAG" \
-        -f "$SCRIPT_DIR/Dockerfile.dev" \
+        -f "$dockerfile" \
         "$SCRIPT_DIR"
     echo_info "Image built successfully"
 }
@@ -364,7 +387,9 @@ run_devcontainer() {
         echo_status "DEV" "Apt packages: ${APT_PACKAGES[*]}"
     fi
 
-    if [[ "$ENHANCED_MODE" == "true" ]]; then
+    if [[ "$USE_ENHANCED_IMAGE" == "true" ]]; then
+        echo_status "DEV" "Using pre-built enhanced image (instant startup)"
+    elif [[ "$ENHANCED_MODE" == "true" ]]; then
         echo_status "DEV" "Enhanced mode: starship, eza, bat, delta, zoxide, btop, lazygit, tmux, neovim, direnv"
     fi
 
@@ -403,8 +428,8 @@ run_devcontainer() {
         "-v" "$PLUGIN_ROOT:/workspace/plugin:ro"
     )
 
-    # Mount enhanced config directory if enhanced mode
-    if [[ "$ENHANCED_MODE" == "true" ]]; then
+    # Mount enhanced config directory if runtime enhanced mode (not pre-built)
+    if [[ "$ENHANCED_MODE" == "true" ]] && [[ "$USE_ENHANCED_IMAGE" != "true" ]]; then
         docker_args+=("-v" "$SCRIPT_DIR/enhanced:/workspace/enhanced:ro")
     fi
 
@@ -480,7 +505,8 @@ run_devcontainer() {
     local init_commands=()
 
     # Enhanced mode setup (run first for best experience)
-    if [[ "$ENHANCED_MODE" == "true" ]]; then
+    # Skip if using pre-built enhanced image (tools already installed)
+    if [[ "$ENHANCED_MODE" == "true" ]] && [[ "$USE_ENHANCED_IMAGE" != "true" ]]; then
         init_commands+=("/workspace/enhanced/setup-enhanced.sh")
     fi
 
