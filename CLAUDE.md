@@ -478,6 +478,27 @@ docker run -p 4318:4318 otel/opentelemetry-collector
 pytest test_routing.py --otel --otlp-endpoint http://localhost:4318 -v
 ```
 
+### Documenting Testing Insights
+
+After debugging a non-obvious test failure, document the root cause in:
+`plugins/jira-assistant-skills/skills/jira-assistant/tests/FAST_ITERATION.md`
+
+**Why:** Context is lost between sessions. Future sessions need these insights to avoid re-discovering the same issues.
+
+**What to document:**
+- Environment factors that cause unexpected test behavior
+- Semantic ambiguities (e.g., directory names conflicting with test inputs)
+- Workarounds for Claude CLI quirks
+- Container/networking gotchas
+
+**Format example:**
+```
+**Discovered:** 2026-01-02
+**Test case:** TC001 ("create a bug in TES")
+**Root cause:** Working directory `/workspace/tests` caused Claude to interpret "TES" as a file reference
+**Fix:** Changed container working directory to `/tmp`
+```
+
 See `plugins/jira-assistant-skills/skills/jira-assistant/tests/FAST_ITERATION.md` for detailed documentation.
 
 ## CLI Usage

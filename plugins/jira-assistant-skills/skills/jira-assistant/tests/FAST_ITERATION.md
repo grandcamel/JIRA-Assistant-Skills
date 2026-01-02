@@ -264,6 +264,29 @@ The container automatically sets these for optimal operation:
 | `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | `1` | No telemetry/updates |
 | `CLAUDE_CODE_ACTION` | `bypassPermissions` | Automated testing |
 | `CHOKIDAR_USEPOLLING` | `true` | Docker file watching |
+| `CLAUDE_PLUGIN_DIR` | `/workspace/plugin` | Plugin location for `--plugin-dir` |
+| `OTLP_HTTP_ENDPOINT` | `http://host.docker.internal:4318` | OTel collector on host |
+
+### Container Testing Gotchas
+
+#### Working Directory Semantics
+
+The container runs from `/tmp` rather than `/workspace/tests` because Claude scans the working directory for context. Directory names can create semantic ambiguity with test inputs:
+
+| Working Directory | Problem |
+|-------------------|---------|
+| `/workspace/tests` | Claude sees "tests" and may confuse it with "TES" (a JIRA project key in test cases like "show me TES-123") |
+| `/workspace` | Claude sees the plugin structure and asks about JIRA setup instead of routing to skills |
+| `/tmp` | Neutral context, Claude focuses purely on the prompt |
+
+**Discovered:** 2026-01-02 during container baseline testing. TC001 ("create a bug in TES") was failing because Claude interpreted "TES" as potentially referring to files in the `/workspace/tests` directory.
+
+#### Plugin Loading
+
+The container uses `CLAUDE_PLUGIN_DIR` environment variable rather than `claude plugin install` because:
+- `claude plugin install` requires marketplace lookup
+- `--plugin-dir` flag loads plugins directly from a directory path
+- The test harness reads `CLAUDE_PLUGIN_DIR` and adds `--plugin-dir` to Claude invocations
 
 ## Iterative Refinement Loop (Host-Based)
 
