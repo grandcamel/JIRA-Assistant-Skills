@@ -1,6 +1,6 @@
 {
   "name": "jira-assistant-skills",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Complete JIRA automation suite with 14 specialized skills - issue management, agile workflows, time tracking, service management, bulk operations, and more",
   "author": {
     "name": "grandcamel"
