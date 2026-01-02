@@ -82,7 +82,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Misc
     gnupg \
     ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    # Create symlinks for Debian package naming differences
+    && ln -sf /usr/bin/fdfind /usr/local/bin/fd
 
 # =============================================================================
 # Go Language
@@ -105,13 +107,13 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --de
 # =============================================================================
 # Node.js Global Tools (Node already in base image)
 # =============================================================================
+# Note: yarn is already included in node:20-bookworm base image
 RUN npm install -g \
     @anthropic-ai/claude-code \
     typescript \
     ts-node \
     eslint \
     prettier \
-    yarn \
     pnpm
 
 # =============================================================================
@@ -161,17 +163,27 @@ RUN curl -fsSL https://get.docker.com | sh \
     && rm -rf /var/lib/apt/lists/*
 
 # =============================================================================
-# Create non-root user
+# Create non-root user (handle existing GID/UID from base image)
 # =============================================================================
 ARG USERNAME=devuser
 ARG USER_UID=1000
-ARG USER_GID=$USER_UID
+ARG USER_GID=1000
 
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m -s /bin/bash $USERNAME \
+# Create group if it doesn't exist, create user if it doesn't exist
+# The node:20-bookworm image already has uid/gid 1000 (node user)
+RUN if ! getent group $USER_GID >/dev/null; then groupadd --gid $USER_GID $USERNAME; fi \
+    && if ! id -u $USER_UID >/dev/null 2>&1; then \
+         useradd --uid $USER_UID --gid $USER_GID -m -s /bin/bash $USERNAME; \
+       else \
+         # User exists, just rename if needed and ensure home dir setup
+         existing_user=$(getent passwd $USER_UID | cut -d: -f1); \
+         if [ "$existing_user" != "$USERNAME" ]; then \
+           usermod -l $USERNAME -d /home/$USERNAME -m $existing_user 2>/dev/null || true; \
+         fi; \
+       fi \
     && mkdir -p /home/$USERNAME/.claude \
     && mkdir -p /home/$USERNAME/go \
-    && chown -R $USERNAME:$USERNAME /home/$USERNAME
+    && chown -R $USER_UID:$USER_GID /home/$USERNAME
 
 # Add user to docker group if it exists
 RUN usermod -aG docker $USERNAME 2>/dev/null || true

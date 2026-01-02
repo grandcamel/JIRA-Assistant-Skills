@@ -253,7 +253,11 @@ run_devcontainer() {
     # Interactive or detached mode
     if [[ "$DETACH" == "true" ]]; then
         docker_args+=("-d")
+    elif [[ ${#COMMAND_ARGS[@]} -gt 0 ]]; then
+        # Running a command, don't need TTY
+        docker_args+=("--rm")
     else
+        # Interactive shell
         docker_args+=("-it" "--rm")
     fi
 
@@ -335,9 +339,13 @@ run_devcontainer() {
     # Image name
     docker_args+=("$DEV_IMAGE_NAME:$DEV_IMAGE_TAG")
 
-    # Command to run (default: interactive bash)
+    # Command to run (default: interactive bash with login shell)
     if [[ ${#COMMAND_ARGS[@]} -gt 0 ]]; then
-        docker_args+=("${COMMAND_ARGS[@]}")
+        # Wrap command for bash entrypoint
+        docker_args+=("-c" "${COMMAND_ARGS[*]}")
+    else
+        # Interactive login shell
+        docker_args+=("-l")
     fi
 
     # Run container
