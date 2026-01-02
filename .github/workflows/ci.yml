@@ -1,0 +1,233 @@
+# Continuous Integration workflow
+# Runs linting, type checking, security scanning, and tests on pull requests and pushes
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ==========================================================================
+  # Code Quality: Linting and Formatting
+  # ==========================================================================
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff linter
+        run: ruff check . --output-format=github
+
+      - name: Run ruff formatter check
+        run: ruff format --check .
+
+  # ==========================================================================
+  # Type Checking
+  # ==========================================================================
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install mypy types-requests types-tabulate
+          pip install -e ".[dev]"
+
+      - name: Run mypy on library
+        run: |
+          mypy jira-assistant-skills-lib/src/jira_assistant_skills_lib \
+            --config-file=pyproject.toml \
+            --ignore-missing-imports \
+            || true  # Non-blocking for gradual adoption
+        continue-on-error: true
+
+  # ==========================================================================
+  # Security Scanning
+  # ==========================================================================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install bandit
+        run: pip install "bandit[toml]"
+
+      - name: Run bandit security scan
+        run: |
+          bandit -r jira-assistant-skills-lib/src \
+            -c pyproject.toml \
+            -f sarif \
+            -o bandit-results.sarif \
+            || true
+
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: bandit-results.sarif
+        continue-on-error: true
+
+  # ==========================================================================
+  # Dependency Vulnerability Scanning
+  # ==========================================================================
+  dependency-scan:
+    name: Dependency Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit dependencies
+        run: |
+          pip-audit --desc on --progress-spinner off \
+            || echo "::warning::Dependency vulnerabilities found"
+        continue-on-error: true
+
+  # ==========================================================================
+  # Unit Tests
+  # ==========================================================================
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install jira-assistant-skills-lib pytest pytest-asyncio pytest-cov
+
+      - name: Run unit tests
+        run: |
+          # Run tests per skill to avoid conftest.py conflicts
+          for skill_dir in plugins/jira-assistant-skills/skills/*/tests/; do
+            if [ -d "$skill_dir" ]; then
+              skill_name=$(basename $(dirname $skill_dir))
+              echo "Testing $skill_name..."
+              python -m pytest "$skill_dir" -v \
+                --ignore="${skill_dir}live_integration" \
+                -m "not live and not slow" \
+                || exit 1
+            fi
+          done
+
+      - name: Run library tests
+        run: |
+          if [ -d "jira-assistant-skills-lib/tests" ]; then
+            python -m pytest jira-assistant-skills-lib/tests -v || true
+          fi
+        continue-on-error: true
+
+  # ==========================================================================
+  # Pre-commit Hooks Validation
+  # ==========================================================================
+  pre-commit:
+    name: Pre-commit Hooks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit on all files
+        run: |
+          pre-commit run --all-files --show-diff-on-failure \
+            || echo "::warning::Pre-commit hooks found issues"
+        continue-on-error: true
+
+  # ==========================================================================
+  # Docker Build Validation
+  # ==========================================================================
+  docker-lint:
+    name: Docker Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lint Dockerfiles with hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          ignore: DL3008,DL3013
+        continue-on-error: true
+
+  # ==========================================================================
+  # Summary job that depends on all others
+  # ==========================================================================
+  ci-success:
+    name: CI Success
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check required jobs
+        run: |
+          if [[ "${{ needs.lint.result }}" == "failure" ]] || \
+             [[ "${{ needs.test.result }}" == "failure" ]]; then
+            echo "Required checks failed"
+            exit 1
+          fi
+          echo "All required checks passed!"
