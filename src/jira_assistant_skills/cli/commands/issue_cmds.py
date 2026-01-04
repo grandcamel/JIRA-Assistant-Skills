@@ -174,7 +174,7 @@ def update_issue(ctx, issue_key: str, summary: str, description: str, priority: 
         spec.loader.exec_module(module)
 
         if hasattr(module, 'main') and callable(getattr(module, 'main')):
-            module.main(script_args + ["--output", ctx.obj['OUTPUT']])
+            module.main(script_args)
         else:
             raise ImportError("Callable 'main' function not found in script.")
 
@@ -182,7 +182,7 @@ def update_issue(ctx, issue_key: str, summary: str, description: str, priority: 
         click.echo(f"Warning: Falling back to subprocess for {script_module_path.name} ({e})", err=True)
         run_skill_script_subprocess(
             script_path=script_module_path,
-            args=script_args + ["--output", ctx.obj['OUTPUT']],
+            args=script_args,
             ctx=ctx
         )
     except click.exceptions.Exit:
@@ -212,7 +212,7 @@ def delete_issue(ctx, issue_key: str, force: bool):
         spec.loader.exec_module(module)
 
         if hasattr(module, 'main') and callable(getattr(module, 'main')):
-            module.main(script_args + ["--output", ctx.obj['OUTPUT']])
+            module.main(script_args)
         else:
             raise ImportError("Callable 'main' function not found in script.")
 
@@ -220,7 +220,7 @@ def delete_issue(ctx, issue_key: str, force: bool):
         click.echo(f"Warning: Falling back to subprocess for {script_module_path.name} ({e})", err=True)
         run_skill_script_subprocess(
             script_path=script_module_path,
-            args=script_args + ["--output", ctx.obj['OUTPUT']],
+            args=script_args,
             ctx=ctx
         )
     except click.exceptions.Exit:
