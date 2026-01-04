@@ -175,11 +175,8 @@ def create_issue(project: str, issue_type: str, summary: str,
             try:
                 client.create_link('Blocks', issue_key, target_key)
                 links_created.append(f"blocks {target_key}")
-            except JiraError as e:
-                if isinstance(e, (PermissionError, NotFoundError)):
-                    links_failed.append(f"blocks {target_key}: {str(e)}")
-                else:
-                    raise
+            except (PermissionError, NotFoundError) as e:
+                links_failed.append(f"blocks {target_key}: {str(e)}")
 
     if relates_to:
         for target_key in relates_to:
@@ -187,11 +184,8 @@ def create_issue(project: str, issue_type: str, summary: str,
             try:
                 client.create_link('Relates', issue_key, target_key)
                 links_created.append(f"relates to {target_key}")
-            except JiraError as e:
-                if isinstance(e, (PermissionError, NotFoundError)):
-                    links_failed.append(f"relates to {target_key}: {str(e)}")
-                else:
-                    raise
+            except (PermissionError, NotFoundError) as e:
+                links_failed.append(f"relates to {target_key}: {str(e)}")
 
     if links_created:
         result['links_created'] = links_created

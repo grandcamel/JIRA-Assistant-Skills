@@ -28,7 +28,7 @@ from typing import List, Dict, Any, Optional
 # Add shared lib to path
 
 from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError, NotFoundError
 from jira_assistant_skills_lib import format_json
 from jira_assistant_skills_lib import (
     format_grant_for_export,
@@ -269,7 +269,7 @@ Examples:
             )
             print(output)
 
-    except JiraError as e:
+    except (JiraError, ValidationError, NotFoundError) as e:
         print_error(e)
         sys.exit(1)
     except KeyboardInterrupt:

@@ -59,14 +59,21 @@ def list_workflows(
                 start_at=current_start,
                 max_results=max_results
             )
+            workflows_data = response.get('values', [])
+            is_paginated = True
         else:
-            # Use basic list endpoint
+            # Use basic list endpoint - returns a list directly, not paginated
             response = client.get_workflows(
                 start_at=current_start,
                 max_results=max_results
             )
-
-        workflows_data = response.get('values', [])
+            # get_workflows returns a list directly, not a paginated response
+            if isinstance(response, list):
+                workflows_data = response
+                is_paginated = False
+            else:
+                workflows_data = response.get('values', [])
+                is_paginated = True
 
         # Process each workflow
         for wf_data in workflows_data:
@@ -86,12 +93,17 @@ def list_workflows(
             all_workflows.append(workflow)
 
         # Check if more pages exist
-        total = response.get('total', len(workflows_data))
-        is_last = response.get('isLast', True)
-
-        if fetch_all and not is_last:
-            current_start += max_results
+        if is_paginated:
+            total = response.get('total', len(workflows_data))
+            is_last = response.get('isLast', True)
+            if fetch_all and not is_last:
+                current_start += max_results
+            else:
+                has_more = False
         else:
+            # Non-paginated response (basic list) returns all results at once
+            total = len(workflows_data)
+            is_last = True
             has_more = False
 
     # Add usage information if requested
@@ -113,8 +125,8 @@ def list_workflows(
 
     return {
         'workflows': all_workflows,
-        'total': len(all_workflows) if fetch_all else response.get('total', len(all_workflows)),
-        'has_more': not response.get('isLast', True) if not fetch_all else False
+        'total': len(all_workflows) if fetch_all else total,
+        'has_more': not is_last if not fetch_all else False
     }
 
 

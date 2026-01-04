@@ -28,7 +28,7 @@ from typing import List, Dict, Any, Optional
 
 
 from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
+from jira_assistant_skills_lib import print_error, JiraError, AuthenticationError, PermissionError
 from jira_assistant_skills_lib import validate_issue_key
 
 
@@ -113,7 +113,7 @@ def bulk_link(issues: List[str] = None, jql: str = None, target: str = None,
                 client.create_link(link_type, issue_key, target)
                 created += 1
                 progress.append({'issue': issue_key, 'status': 'created'})
-            except JiraError as e:
+            except (JiraError, AuthenticationError, PermissionError) as e:
                 failed += 1
                 errors.append(f"{issue_key}: {str(e)}")
                 progress.append({'issue': issue_key, 'status': 'failed', 'error': str(e)})

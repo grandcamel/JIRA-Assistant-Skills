@@ -14,7 +14,7 @@ from typing import Optional, Dict, Any, List
 # Add shared lib to path
 
 from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError, AuthenticationError
 from jira_assistant_skills_lib import validate_issue_key
 from jira_assistant_skills_lib import text_to_adf
 from jira_assistant_skills_lib import validate_time_format, parse_time_string, format_seconds
@@ -114,7 +114,7 @@ def bulk_log_time(client, issues: Optional[List[str]] = None,
                 'worklog_id': worklog.get('id'),
                 'time_spent': time_spent
             })
-        except JiraError as e:
+        except (JiraError, AuthenticationError) as e:
             failures.append({
                 'issue': issue_key,
                 'error': str(e)

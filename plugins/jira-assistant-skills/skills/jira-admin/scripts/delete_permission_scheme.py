@@ -27,7 +27,7 @@ from typing import Dict, Any, Tuple, List
 # Add shared lib to path
 
 from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError, NotFoundError
 from jira_assistant_skills_lib import format_json
 
 
@@ -225,7 +225,7 @@ Examples:
 
         print(f"Deleted permission scheme: {scheme.get('name')} (ID: {args.scheme_id})")
 
-    except JiraError as e:
+    except (JiraError, ValidationError, NotFoundError) as e:
         print_error(e)
         sys.exit(1)
     except KeyboardInterrupt:

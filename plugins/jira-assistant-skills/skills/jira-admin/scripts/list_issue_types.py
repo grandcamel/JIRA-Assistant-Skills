@@ -77,22 +77,23 @@ def format_issue_types(
     if not issue_types:
         return "No issue types found."
 
-    # Prepare table data
+    # Prepare table data as list of dicts for format_table
+    columns = ['id', 'name', 'description', 'subtask', 'hierarchy', 'scope']
     headers = ['ID', 'Name', 'Description', 'Subtask', 'Hierarchy', 'Scope']
     rows = []
 
     for issue_type in issue_types:
-        scope_type = issue_type.get('scope', {}).get('type', 'GLOBAL')
-        rows.append([
-            issue_type.get('id', ''),
-            issue_type.get('name', ''),
-            (issue_type.get('description', '') or '')[:50],
-            'Yes' if issue_type.get('subtask') else 'No',
-            str(issue_type.get('hierarchyLevel', 0)),
-            scope_type
-        ])
+        scope_type = issue_type.get('scope', {}).get('type', 'GLOBAL') if issue_type.get('scope') else 'GLOBAL'
+        rows.append({
+            'id': issue_type.get('id', ''),
+            'name': issue_type.get('name', ''),
+            'description': (issue_type.get('description', '') or '')[:50],
+            'subtask': 'Yes' if issue_type.get('subtask') else 'No',
+            'hierarchy': str(issue_type.get('hierarchyLevel', 0)),
+            'scope': scope_type
+        })
 
-    return format_table(headers, rows)
+    return format_table(rows, columns=columns, headers=headers)
 
 
 def main(argv: list[str] | None = None):

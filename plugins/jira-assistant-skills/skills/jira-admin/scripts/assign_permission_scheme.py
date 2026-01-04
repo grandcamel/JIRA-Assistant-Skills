@@ -316,7 +316,7 @@ Examples:
             output = format_assignment_result(results, scheme_name, dry_run=args.dry_run)
             print(output)
 
-    except JiraError as e:
+    except (JiraError, ValidationError) as e:
         print_error(e)
         sys.exit(1)
     except KeyboardInterrupt:

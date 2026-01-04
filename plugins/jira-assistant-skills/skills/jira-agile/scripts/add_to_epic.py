@@ -17,7 +17,7 @@ from typing import List, Optional, Dict
 
 # Imports from shared library
 from jira_assistant_skills_lib import get_jira_client, get_agile_field
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
+from jira_assistant_skills_lib import print_error, JiraError, ValidationError, PermissionError
 from jira_assistant_skills_lib import validate_issue_key
 from jira_assistant_skills_lib import print_success, print_warning
 
@@ -109,13 +109,7 @@ def add_to_epic(epic_key: Optional[str] = None,
                 else:
                     result['added'] += 1
 
-            except JiraError as e:
-                result['failed'] += 1
-                result['failures'].append({
-                    'issue': issue_key,
-                    'error': str(e)
-                })
-            except ValidationError as e:
+            except (JiraError, ValidationError, PermissionError) as e:
                 result['failed'] += 1
                 result['failures'].append({
                     'issue': issue_key,
