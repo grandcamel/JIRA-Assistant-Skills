@@ -1,5 +1,37 @@
 # Changelog
 
+## [2.3.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v2.2.0...v2.3.0) (2026-01-04)
+
+
+### Features
+
+* **jira-assistant:** add --claude-version flag to devcontainer ([e3f6e06](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/e3f6e06004e08d5beef5fadc5068a3940b369261))
+* **jira-assistant:** add --enhanced flag to devcontainer ([a387c54](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/a387c54b6c32f3200d12d44ade1f6ab95c2ef13b))
+* **jira-assistant:** add --use-enhanced flag to devcontainer ([fa6f1d1](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/fa6f1d1de1ae75bf7fd2c2d64162dc021235bdc4))
+* **jira-assistant:** add batteries-included developer container ([af53838](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/af538388422bf1713fe81bef74517c3fb22cdff6))
+* **jira-assistant:** add Docker-based container test runner ([495083a](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/495083a17a21444c48bc6f305afe6f187ae86d8f))
+* **jira-assistant:** add enhanced developer environment configs ([d017be1](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/d017be1d379ece7550e39a8653bc34925636807a))
+* **jira-assistant:** add optional corporate CA certificate support to Dockerfile ([1e4d282](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/1e4d2821967828fe66a13c1e10512e20a6f11617))
+* **jira-assistant:** add pre-built enhanced container image ([abf5caf](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/abf5caf5a3cb1228b8cfc4c5851ecb49453b5b88))
+* **jira-assistant:** add private registry support to devcontainer ([6ab9c31](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/6ab9c3118acc129d80dc9702758f15732978e87f))
+* **jira-assistant:** add runtime package installation to devcontainer ([e8e4a35](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/e8e4a351466bcec73610022d1d167ccd530bf51b))
+* **jira-assistant:** add sandboxed container testing with profile support ([5dfa331](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/5dfa331d069c3657e4012984217669526b1fcc23))
+* **jira-assistant:** add token server for auto-refreshing OAuth in containers ([f0db7ab](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/f0db7ab2607c6ce5afec19cf6554638d3052c754))
+* **jira-assistant:** add workspace runner for hybrid file + JIRA workflows ([80ac4e1](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/80ac4e1a418703d2821ac7bf42c632345ea8d43f))
+* **jira-assistant:** enable OAuth in containers via .credentials.json ([57cee17](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/57cee17e116ff0058b80c0f191ad3f059ea2010b))
+
+
+### Bug Fixes
+
+* **jira-assistant:** configure OTLP endpoint for container OTel export ([00b8d30](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/00b8d30ea325d7578cc1fffd0f4609150ae70a8c))
+* **jira-assistant:** correct OAuth token extraction for macOS keychain ([caa073c](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/caa073c8664217ecd7c34b0a90238aac9d21ea3e))
+* **jira-assistant:** fix developer container build and command handling ([baf7420](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/baf742081ba8bdd86346bb91cddc61ef0441a8dd))
+* **jira-assistant:** improve container test infrastructure ([eb945df](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/eb945df195e104e998807ac1b51a2d4e62676ea1))
+* **jira-assistant:** install plugin in container for iterative refinement loop ([c953018](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/c953018a1a008448918b9594e609e7d946021a6b))
+* **jira-assistant:** pass prompt via stdin in workspace runner ([0de556a](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/0de556a4043e11892fc24f53063d3f60ab137db2))
+* **jira-assistant:** remove OAuth container support - requires API key ([1c895de](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/1c895dedca7c9a2faea4b61aad174e1cc009830c))
+* remove non-standard assistant_skills from plugin.json ([5e5e4fa](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/5e5e4fa0a983901c9cba25f0178d799d982ee092))
+
 ## [2.1.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v2.0.1...v2.1.0) (2025-12-31)
 
 
