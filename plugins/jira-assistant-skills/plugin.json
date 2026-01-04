@@ -28,30 +28,5 @@
     "./commands/jira-discover-project.md",
     "./commands/browse-skills.md",
     "./commands/skill-info.md"
-  ],
-  "assistant_skills": {
-    "requirements": "./skills/shared/scripts/lib/requirements.txt",
-    "env_vars": [
-      {
-        "name": "JIRA_SITE_URL",
-        "description": "Jira instance base URL (e.g., https://company.atlassian.net)",
-        "required": true
-      },
-      {
-        "name": "JIRA_EMAIL",
-        "description": "Atlassian account email for authentication",
-        "required": true
-      },
-      {
-        "name": "JIRA_API_TOKEN",
-        "description": "Atlassian API token (generate at id.atlassian.com/manage-profile/security/api-tokens)",
-        "required": true
-      },
-      {
-        "name": "JIRA_PROFILE",
-        "description": "Configuration profile name for multi-instance support (optional, defaults to 'production')",
-        "required": false
-      }
-    ]
-  }
+  ]
 }
