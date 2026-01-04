@@ -203,7 +203,8 @@ def main(argv: list[str] | None = None):
             print(f"Parent: {args.parent}")
             if args.estimate:
                 print(f"Estimate: {args.estimate}")
-            print(f"URL: {result.get('self', '').replace('/rest/api/3/issue/', '/browse/')}")
+            base_url = result.get('self', '').split('/rest/api/')[0]
+            print(f"URL: {base_url}/browse/{subtask_key}")
 
     except JiraError as e:
         print_error(e)

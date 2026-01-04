@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Comprehensive JIRA automation skills for Claude Code - 14 specialized skills covering issue management, agile workflows, time tracking, service management, and more. Natural language JIRA automation with zero JQL memorization.",
-    "version": "2.2.1",
+    "version": "2.2.2",
     "homepage": "https://github.com/grandcamel/jira-assistant-skills",
     "repository": "https://github.com/grandcamel/jira-assistant-skills",
     "license": "MIT"
@@ -15,7 +15,7 @@
       "name": "jira-assistant-skills",
       "source": "./plugins/jira-assistant-skills",
       "description": "Complete JIRA automation suite with 14 specialized skills - issue management, agile workflows, time tracking, service management, bulk operations, and more",
-      "version": "2.2.1",
+      "version": "2.2.2",
       "category": "productivity",
       "keywords": ["jira", "automation", "agile", "issues", "sprints", "time-tracking", "service-desk"],
       "author": {

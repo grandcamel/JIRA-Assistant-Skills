@@ -286,7 +286,8 @@ def main(argv: list[str] | None = None):
             print(json.dumps(result, indent=2))
         else:
             print_success(f"Created issue: {issue_key}")
-            print(f"URL: {result.get('self', '').replace('/rest/api/3/issue/', '/browse/')}")
+            base_url = result.get('self', '').split('/rest/api/')[0]
+            print(f"URL: {base_url}/browse/{issue_key}")
             defaults_applied = result.get('defaults_applied', [])
             if defaults_applied:
                 print(f"Defaults applied: {', '.join(defaults_applied)}")

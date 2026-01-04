@@ -199,7 +199,8 @@ def main(argv: list[str] | None = None):
             print_success(f"Created epic: {epic_key}")
             if args.epic_name:
                 print(f"Epic Name: {args.epic_name}")
-            print(f"URL: {result.get('self', '').replace('/rest/api/3/issue/', '/browse/')}")
+            base_url = result.get('self', '').split('/rest/api/')[0]
+            print(f"URL: {base_url}/browse/{epic_key}")
 
     except JiraError as e:
         print_error(e)
