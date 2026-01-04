@@ -28,7 +28,7 @@ This skill provides the following commands via the `jira issue` CLI:
 - `jira issue update`: Modify issue fields
 - `jira issue delete`: Remove issues
 
-All commands support `--help` for full option documentation, and global options like `--profile` for JIRA instance selection, and `--output json` for programmatic use.
+All commands support `--help` for full option documentation and `--profile` for JIRA instance selection. The `get` and `create` commands also support `--output json` for programmatic use.
 
 ## Templates
 
