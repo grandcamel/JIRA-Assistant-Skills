@@ -77,7 +77,7 @@ class TestRankIssue:
         """Test moving issue to top of backlog - requires board context."""
         # Arrange
         from rank_issue import rank_issue
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         mock_jira_client.rank_issues.return_value = None
 
@@ -93,7 +93,7 @@ class TestRankIssue:
         """Test moving issue to bottom of backlog - requires board context."""
         # Arrange
         from rank_issue import rank_issue
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         mock_jira_client.rank_issues.return_value = None
 
@@ -127,7 +127,7 @@ class TestRankIssue:
         """Test validation of rank position."""
         # Arrange
         from rank_issue import rank_issue
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         # Act & Assert - no position specified
         with pytest.raises(ValidationError) as exc_info:

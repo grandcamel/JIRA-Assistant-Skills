@@ -348,7 +348,7 @@ class TestCreateIssueValidation:
 
     def test_create_issue_invalid_project_key_raises_error(self, mock_jira_client):
         """Test that invalid project key raises ValidationError."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with patch.object(create_issue_module, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError):
@@ -360,7 +360,7 @@ class TestCreateIssueValidation:
 
     def test_create_issue_empty_project_key_raises_error(self, mock_jira_client):
         """Test that empty project key raises ValidationError."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with patch.object(create_issue_module, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError):
@@ -372,7 +372,7 @@ class TestCreateIssueValidation:
 
     def test_create_issue_invalid_epic_key_raises_error(self, mock_jira_client):
         """Test that invalid epic key raises ValidationError."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with patch.object(create_issue_module, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError):
@@ -422,7 +422,7 @@ class TestCreateIssueErrors:
 
     def test_create_issue_validation_error_from_api(self, mock_jira_client):
         """Test handling validation error from API."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         mock_jira_client.create_issue.side_effect = ValidationError(
             "Issue type 'InvalidType' is not valid for project 'PROJ'"
         )

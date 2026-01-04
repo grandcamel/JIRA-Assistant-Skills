@@ -348,7 +348,7 @@ class TestUpdateIssueValidation:
 
     def test_update_issue_invalid_key_raises_error(self, mock_jira_client):
         """Test that invalid issue key raises ValidationError."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with patch.object(update_issue_module, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError):
@@ -359,7 +359,7 @@ class TestUpdateIssueValidation:
 
     def test_update_issue_empty_key_raises_error(self, mock_jira_client):
         """Test that empty issue key raises ValidationError."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with patch.object(update_issue_module, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError):
@@ -429,7 +429,7 @@ class TestUpdateIssueErrors:
 
     def test_update_issue_validation_error_from_api(self, mock_jira_client):
         """Test handling validation error from API."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         mock_jira_client.update_issue.side_effect = ValidationError(
             "Priority 'InvalidPriority' is not valid"
         )

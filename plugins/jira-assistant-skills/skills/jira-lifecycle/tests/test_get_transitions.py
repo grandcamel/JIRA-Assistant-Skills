@@ -45,7 +45,7 @@ class TestGetTransitions:
 
     def test_get_transitions_invalid_issue_key(self):
         """Test error on invalid issue key."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         from get_transitions import get_transitions
 
         with pytest.raises(ValidationError):

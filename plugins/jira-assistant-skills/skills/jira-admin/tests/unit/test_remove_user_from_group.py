@@ -112,7 +112,7 @@ class TestRemoveUserConfirmation:
         """Test that removal requires confirmation."""
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
             from remove_user_from_group import remove_user_from_group
-            from jira_assistant_skills_lib import ValidationError
+            from assistant_skills_lib.error_handler import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:
                 remove_user_from_group(

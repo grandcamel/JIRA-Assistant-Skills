@@ -61,7 +61,7 @@ class TestEstimateIssue:
     def test_set_story_points_fibonacci(self, mock_jira_client):
         """Test validation of Fibonacci sequence (1,2,3,5,8,13...)."""
         from estimate_issue import estimate_issue
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         # Valid Fibonacci values should work
         for points in [1, 2, 3, 5, 8, 13, 21]:

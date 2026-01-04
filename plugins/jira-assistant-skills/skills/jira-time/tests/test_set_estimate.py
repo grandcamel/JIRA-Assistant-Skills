@@ -90,7 +90,7 @@ class TestSetEstimateValidation:
     def test_set_estimate_invalid_format(self, mock_jira_client):
         """Test validation of time format."""
         from set_estimate import set_estimate
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             set_estimate(mock_jira_client, 'PROJ-123', original_estimate='invalid')
@@ -98,7 +98,7 @@ class TestSetEstimateValidation:
     def test_set_estimate_no_values(self, mock_jira_client):
         """Test error when no estimate values provided."""
         from set_estimate import set_estimate
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             set_estimate(mock_jira_client, 'PROJ-123')

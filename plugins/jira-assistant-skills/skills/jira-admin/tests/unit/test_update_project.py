@@ -188,7 +188,7 @@ class TestUpdateProject:
     def test_update_project_invalid_assignee_type(self, mock_jira_client):
         """Test error for invalid assignee type."""
         from update_project import update_project
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             update_project(
@@ -202,7 +202,7 @@ class TestUpdateProject:
     def test_update_project_no_changes(self, mock_jira_client):
         """Test behavior when no changes are provided."""
         from update_project import update_project
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         # Should either return early or raise an error
         with pytest.raises(ValidationError):

@@ -165,7 +165,7 @@ class TestGetWorkflowForIssueErrorHandling:
     def test_get_workflow_for_issue_invalid_key(self, mock_jira_client):
         """Test error for invalid issue key format."""
         from get_workflow_for_issue import get_workflow_for_issue
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             get_workflow_for_issue(client=mock_jira_client, issue_key='invalid-key')

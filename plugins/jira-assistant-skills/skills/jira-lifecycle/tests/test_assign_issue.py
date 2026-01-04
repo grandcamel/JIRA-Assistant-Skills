@@ -54,7 +54,7 @@ class TestAssignIssue:
 
     def test_assign_requires_one_option(self):
         """Test error when no assignment option specified."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         from assign_issue import assign_issue
 
         with pytest.raises(ValidationError, match="Specify exactly one"):
@@ -62,7 +62,7 @@ class TestAssignIssue:
 
     def test_assign_rejects_multiple_options(self):
         """Test error when multiple assignment options specified."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         from assign_issue import assign_issue
 
         with pytest.raises(ValidationError, match="Specify exactly one"):
@@ -70,7 +70,7 @@ class TestAssignIssue:
 
     def test_assign_rejects_user_and_unassign(self):
         """Test error when user and unassign both specified."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         from assign_issue import assign_issue
 
         with pytest.raises(ValidationError, match="Specify exactly one"):
@@ -78,7 +78,7 @@ class TestAssignIssue:
 
     def test_assign_rejects_all_options(self):
         """Test error when all assignment options specified."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         from assign_issue import assign_issue
 
         with pytest.raises(ValidationError, match="Specify exactly one"):
@@ -86,7 +86,7 @@ class TestAssignIssue:
 
     def test_assign_invalid_issue_key(self):
         """Test error on invalid issue key."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         from assign_issue import assign_issue
 
         with pytest.raises(ValidationError):
@@ -178,7 +178,7 @@ class TestAssignIssueErrorHandling:
     @patch('assign_issue.get_jira_client')
     def test_user_not_found(self, mock_get_client, mock_jira_client):
         """Test handling when assignee user is not found."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.assign_issue.side_effect = ValidationError("User not found")
 

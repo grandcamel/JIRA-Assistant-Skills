@@ -53,7 +53,7 @@ class TestConfirmBeforeDelete:
     def test_confirm_before_delete(self, mock_jira_client, sample_notification_scheme_detail):
         """Test confirmation prompt before deletion."""
         from delete_notification_scheme import delete_notification_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         # Setup mock
         mock_jira_client.get_notification_scheme.return_value = sample_notification_scheme_detail
@@ -130,7 +130,7 @@ class TestPreventDeleteInUse:
     def test_prevent_delete_in_use(self, mock_jira_client, sample_notification_scheme_detail, sample_project_mappings):
         """Test preventing deletion of schemes in use by projects."""
         from delete_notification_scheme import delete_notification_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         # Setup mock - scheme is in use by projects
         mock_jira_client.get_notification_scheme.return_value = sample_notification_scheme_detail

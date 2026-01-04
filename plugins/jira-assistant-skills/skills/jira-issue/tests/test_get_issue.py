@@ -180,7 +180,7 @@ class TestGetIssueValidation:
 
     def test_get_issue_invalid_key_raises_error(self, mock_jira_client):
         """Test that invalid issue key raises ValidationError."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError):
@@ -188,7 +188,7 @@ class TestGetIssueValidation:
 
     def test_get_issue_empty_key_raises_error(self, mock_jira_client):
         """Test that empty issue key raises ValidationError."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError):
@@ -196,7 +196,7 @@ class TestGetIssueValidation:
 
     def test_get_issue_key_with_spaces_raises_error(self, mock_jira_client):
         """Test that issue key with spaces raises ValidationError."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError):

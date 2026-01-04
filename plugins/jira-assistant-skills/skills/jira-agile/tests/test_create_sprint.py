@@ -126,7 +126,7 @@ class TestCreateSprint:
         """Test validation of date ranges (end > start)."""
         # Arrange
         from create_sprint import create_sprint
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         # Act & Assert - end date before start date
         with pytest.raises(ValidationError) as exc_info:

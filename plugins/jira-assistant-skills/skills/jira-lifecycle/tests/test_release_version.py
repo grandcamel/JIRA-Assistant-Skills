@@ -78,7 +78,7 @@ class TestReleaseVersion:
     @patch('release_version.get_jira_client')
     def test_release_version_not_found(self, mock_get_client, mock_jira_client, sample_versions_list):
         """Test error when version name not found."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_versions.return_value = sample_versions_list

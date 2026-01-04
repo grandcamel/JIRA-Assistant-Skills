@@ -62,7 +62,7 @@ class TestDeleteGroupConfirmation:
         """Test that deletion requires confirmation."""
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
             from delete_group import delete_group
-            from jira_assistant_skills_lib import ValidationError
+            from assistant_skills_lib.error_handler import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:
                 delete_group(mock_jira_client, group_name="my-group", confirmed=False)
@@ -108,7 +108,7 @@ class TestDeleteGroupSystemProtection:
         """Test that system groups cannot be deleted."""
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
             from delete_group import check_system_group_protection
-            from jira_assistant_skills_lib import ValidationError
+            from assistant_skills_lib.error_handler import ValidationError
 
             for group_name in system_groups:
                 with pytest.raises(ValidationError) as exc_info:

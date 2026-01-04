@@ -69,7 +69,7 @@ class TestResolveIssue:
     @patch('resolve_issue.get_jira_client')
     def test_resolve_issue_no_transitions(self, mock_get_client, mock_jira_client):
         """Test error when no transitions available."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_transitions.return_value = []
 
@@ -81,7 +81,7 @@ class TestResolveIssue:
     @patch('resolve_issue.get_jira_client')
     def test_resolve_issue_no_resolve_transition(self, mock_get_client, mock_jira_client):
         """Test error when no resolution transition found."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_transitions.return_value = [
             {'id': '11', 'name': 'To Do', 'to': {'name': 'To Do'}},
@@ -95,7 +95,7 @@ class TestResolveIssue:
 
     def test_resolve_issue_invalid_key(self):
         """Test error on invalid issue key."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         from resolve_issue import resolve_issue
 
         with pytest.raises(ValidationError):

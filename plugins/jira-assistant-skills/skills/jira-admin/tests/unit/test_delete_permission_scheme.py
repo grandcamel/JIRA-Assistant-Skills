@@ -39,7 +39,7 @@ class TestDeletePermissionScheme:
     def test_delete_without_confirm(self, mock_jira_client):
         """Test that deletion requires confirmation."""
         from delete_permission_scheme import delete_permission_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             delete_permission_scheme(mock_jira_client, scheme_id=10050, confirm=False)
@@ -61,7 +61,7 @@ class TestDeletePermissionScheme:
 
     def test_scheme_in_use(self, mock_jira_client):
         """Test error when scheme is in use by projects."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         mock_jira_client.delete_permission_scheme.side_effect = ValidationError(
             "The permission scheme cannot be deleted because it is used by one or more projects."
         )

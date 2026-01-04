@@ -84,7 +84,7 @@ class TestReopenIssue:
     @patch('reopen_issue.get_jira_client')
     def test_reopen_issue_no_transitions(self, mock_get_client, mock_jira_client):
         """Test error when no transitions available."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_transitions.return_value = []
 
@@ -96,7 +96,7 @@ class TestReopenIssue:
     @patch('reopen_issue.get_jira_client')
     def test_reopen_issue_no_reopen_transition(self, mock_get_client, mock_jira_client):
         """Test error when no reopen transition found."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_transitions.return_value = [
             {'id': '21', 'name': 'Done', 'to': {'name': 'Done'}},
@@ -110,7 +110,7 @@ class TestReopenIssue:
 
     def test_reopen_issue_invalid_key(self):
         """Test error on invalid issue key."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         from reopen_issue import reopen_issue
 
         with pytest.raises(ValidationError):

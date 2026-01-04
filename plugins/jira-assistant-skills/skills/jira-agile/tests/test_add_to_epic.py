@@ -149,7 +149,7 @@ class TestAddToEpic:
         """Test error when target is not an Epic issue type."""
         # Arrange
         from add_to_epic import add_to_epic
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         # Return a Story instead of Epic
         mock_jira_client.get_issue.return_value = sample_issue_response

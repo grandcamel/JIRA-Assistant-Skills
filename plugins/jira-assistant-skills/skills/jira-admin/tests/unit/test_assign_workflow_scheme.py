@@ -88,7 +88,7 @@ class TestAssignWorkflowSchemeExecution:
     def test_assign_scheme_requires_confirmation(self, mock_jira_client):
         """Test that assignment requires explicit confirmation."""
         from assign_workflow_scheme import assign_workflow_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             assign_workflow_scheme(
@@ -221,7 +221,7 @@ class TestAssignWorkflowSchemeErrorHandling:
     def test_assign_scheme_missing_params(self, mock_jira_client):
         """Test error when neither scheme_id nor scheme_name provided."""
         from assign_workflow_scheme import assign_workflow_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             assign_workflow_scheme(

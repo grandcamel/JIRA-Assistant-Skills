@@ -50,7 +50,7 @@ class TestUnlinkIssue:
         mock_jira_client.get_issue_links.return_value = sample_issue_links
 
         import unlink_issue
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError) as exc_info:
@@ -81,7 +81,7 @@ class TestUnlinkIssue:
     def test_unlink_requires_target_or_all(self, mock_jira_client):
         """Test error when neither target nor --all specified."""
         import unlink_issue
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError) as exc_info:

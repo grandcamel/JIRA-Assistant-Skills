@@ -123,7 +123,7 @@ class TestCommentVisibility:
     @patch('add_comment.get_jira_client')
     def test_invalid_visibility_role(self, mock_get_client, mock_jira_client):
         """Test error for invalid role name."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.add_comment_with_visibility.side_effect = ValidationError(

@@ -147,7 +147,7 @@ class TestResolveScheme:
         mock_jira_client.get_permission_schemes.return_value = permission_schemes_response
 
         from assign_permission_scheme import resolve_scheme_id
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             resolve_scheme_id(mock_jira_client, 'Nonexistent Scheme')

@@ -179,7 +179,7 @@ class TestAddIssueTypesToScheme:
     def test_add_issue_types_empty_list(self, mock_jira_client):
         """Should raise ValidationError for empty list."""
         from add_issue_types_to_scheme import add_issue_types_to_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             add_issue_types_to_scheme(

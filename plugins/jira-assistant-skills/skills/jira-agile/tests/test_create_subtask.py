@@ -172,7 +172,7 @@ class TestCreateSubtask:
         """Test validation that some issue types can't have subtasks."""
         # Arrange
         from create_subtask import create_subtask
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         # Return a subtask as the parent (subtasks can't have subtasks)
         mock_jira_client.get_issue.return_value = sample_subtask_response

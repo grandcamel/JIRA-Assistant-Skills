@@ -110,7 +110,7 @@ class TestCreateFilter:
 
     def test_create_filter_invalid_jql(self, mock_jira_client):
         """Test error handling for invalid JQL."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         mock_jira_client.create_filter.side_effect = ValidationError(
             "JQL parse error: Field 'projct' does not exist"
         )

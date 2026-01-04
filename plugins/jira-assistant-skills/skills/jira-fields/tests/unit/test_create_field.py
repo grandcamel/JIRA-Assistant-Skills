@@ -21,7 +21,8 @@ for path in [str(_shared_lib_dir), str(_scripts_dir)]:
         sys.path.insert(0, path)
 
 from create_field import create_field, FIELD_TYPES
-from jira_assistant_skills_lib import JiraError, AuthenticationError, ValidationError
+from jira_assistant_skills_lib import JiraError, AuthenticationError
+from assistant_skills_lib.error_handler import ValidationError
 
 
 @pytest.mark.fields

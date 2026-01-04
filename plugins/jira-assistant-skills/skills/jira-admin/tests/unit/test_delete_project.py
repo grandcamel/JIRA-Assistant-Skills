@@ -137,7 +137,7 @@ class TestDeleteProject:
     def test_delete_project_invalid_key(self, mock_jira_client):
         """Test validation of project key format."""
         from delete_project import delete_project
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             delete_project(

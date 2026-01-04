@@ -67,7 +67,7 @@ class TestUpdateCustomFields:
 
     def test_update_no_fields_specified(self):
         """Test error when no fields specified."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         from update_custom_fields import update_custom_fields
 
@@ -76,7 +76,7 @@ class TestUpdateCustomFields:
 
     def test_update_invalid_issue_key(self):
         """Test error for invalid issue key."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         from update_custom_fields import update_custom_fields
 

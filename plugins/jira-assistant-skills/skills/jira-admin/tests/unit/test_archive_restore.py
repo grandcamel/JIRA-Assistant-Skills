@@ -120,7 +120,7 @@ class TestArchiveProject:
     def test_archive_project_invalid_key(self, mock_jira_client):
         """Test error for invalid project key."""
         from archive_project import archive_project
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             archive_project(
@@ -240,7 +240,7 @@ class TestRestoreProject:
     def test_restore_project_invalid_key(self, mock_jira_client):
         """Test error for invalid project key."""
         from restore_project import restore_project
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             restore_project(

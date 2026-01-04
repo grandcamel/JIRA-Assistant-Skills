@@ -86,7 +86,7 @@ class TestValidateRequiredFields:
     def test_validate_required_fields(self, mock_jira_client):
         """Test validation of required fields (name)."""
         from create_notification_scheme import create_notification_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         # Execute without name
         with pytest.raises(ValidationError) as exc_info:
@@ -101,7 +101,7 @@ class TestValidateRequiredFields:
     def test_validate_name_whitespace(self, mock_jira_client):
         """Test that whitespace-only name is rejected."""
         from create_notification_scheme import create_notification_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             create_notification_scheme(
@@ -167,7 +167,7 @@ class TestValidateRecipientTypes:
     def test_validate_recipient_types(self, mock_jira_client):
         """Test validation of notification types."""
         from create_notification_scheme import create_notification_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         # Execute with invalid recipient type
         with pytest.raises(ValidationError) as exc_info:
@@ -187,7 +187,7 @@ class TestValidateRecipientTypes:
     def test_validate_parameterized_recipients(self, mock_jira_client):
         """Test validation that Group/User/ProjectRole require parameters."""
         from create_notification_scheme import create_notification_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         # Execute with Group without parameter
         with pytest.raises(ValidationError) as exc_info:

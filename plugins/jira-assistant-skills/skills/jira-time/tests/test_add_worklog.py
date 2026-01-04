@@ -165,7 +165,7 @@ class TestAddWorklogValidation:
     def test_add_worklog_invalid_time_format(self, mock_jira_client):
         """Test validation of time format."""
         from add_worklog import add_worklog
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             add_worklog(mock_jira_client, 'PROJ-123', 'invalid')
@@ -175,7 +175,7 @@ class TestAddWorklogValidation:
     def test_add_worklog_empty_time(self, mock_jira_client):
         """Test validation rejects empty time."""
         from add_worklog import add_worklog
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             add_worklog(mock_jira_client, 'PROJ-123', '')
@@ -275,7 +275,7 @@ class TestAddWorklogTimeValidationEdgeCases:
     def test_add_worklog_zero_time(self, mock_jira_client):
         """Test validation rejects zero time."""
         from add_worklog import add_worklog
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             add_worklog(mock_jira_client, 'PROJ-123', '0h')
@@ -284,7 +284,7 @@ class TestAddWorklogTimeValidationEdgeCases:
     def test_add_worklog_negative_time(self, mock_jira_client):
         """Test validation rejects negative time."""
         from add_worklog import add_worklog
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         # Negative time should be rejected by validation
         # Note: If the implementation doesn't validate this,
@@ -310,7 +310,7 @@ class TestAddWorklogTimeValidationEdgeCases:
     def test_add_worklog_whitespace_only(self, mock_jira_client):
         """Test validation rejects whitespace-only time."""
         from add_worklog import add_worklog
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             add_worklog(mock_jira_client, 'PROJ-123', '   ')

@@ -384,7 +384,7 @@ class TestAddFieldToScreen:
 
     def test_add_field_already_exists(self, mock_jira_client):
         """Test error handling when field already on screen."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         mock_jira_client.add_field_to_screen_tab.side_effect = ValidationError(
             "Field already exists on this screen"
         )
@@ -400,7 +400,7 @@ class TestAddFieldToScreen:
 
     def test_add_field_invalid_field_id(self, mock_jira_client):
         """Test error handling for invalid field ID."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         mock_jira_client.add_field_to_screen_tab.side_effect = ValidationError(
             "Field does not exist"
         )

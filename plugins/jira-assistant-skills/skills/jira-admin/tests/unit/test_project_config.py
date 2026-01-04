@@ -96,7 +96,7 @@ class TestSetAvatar:
     def test_upload_avatar_invalid_format(self, mock_jira_client):
         """Test error for unsupported file format."""
         from set_avatar import upload_avatar
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         import tempfile
         import os
 
@@ -195,7 +195,7 @@ class TestSetProjectLead:
     def test_set_lead_user_not_found(self, mock_jira_client):
         """Test error when user doesn't exist."""
         from set_project_lead import set_project_lead
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         mock_jira_client.search_users.return_value = []
 
@@ -230,7 +230,7 @@ class TestSetProjectLead:
     def test_set_lead_requires_email_or_account_id(self, mock_jira_client):
         """Test error when neither email nor account ID provided."""
         from set_project_lead import set_project_lead
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             set_project_lead(
@@ -298,7 +298,7 @@ class TestSetDefaultAssignee:
     def test_invalid_assignee_type(self, mock_jira_client):
         """Test error for invalid assignee type."""
         from set_default_assignee import set_default_assignee
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             set_default_assignee(

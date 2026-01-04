@@ -127,7 +127,7 @@ class TestGetProject:
     def test_get_project_invalid_key(self, mock_jira_client):
         """Test validation of project key format."""
         from get_project import get_project
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             get_project(

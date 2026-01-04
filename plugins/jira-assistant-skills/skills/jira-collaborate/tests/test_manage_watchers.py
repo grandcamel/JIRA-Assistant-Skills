@@ -61,7 +61,7 @@ class TestListWatchers:
 
     def test_list_watchers_invalid_issue_key(self):
         """Test error for invalid issue key."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         from manage_watchers import list_watchers
 
@@ -103,7 +103,7 @@ class TestAddWatcher:
     @patch('manage_watchers.get_jira_client')
     def test_add_watcher_user_not_found(self, mock_get_client, mock_jira_client):
         """Test error when user not found."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.search_users.return_value = []

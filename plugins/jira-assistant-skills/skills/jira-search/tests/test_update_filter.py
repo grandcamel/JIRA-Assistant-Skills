@@ -100,7 +100,7 @@ class TestUpdateFilter:
     def test_validate_new_jql(self, mock_jira_client, sample_filter):
         """Test JQL validation on update."""
         # If JQL is invalid, JIRA returns an error
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         mock_jira_client.update_filter.side_effect = ValidationError(
             "JQL parse error"
         )

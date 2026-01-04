@@ -71,7 +71,7 @@ class TestUploadAttachment:
 
     def test_upload_attachment_file_not_found(self):
         """Test error when file doesn't exist."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         from upload_attachment import upload_attachment
 
@@ -80,7 +80,7 @@ class TestUploadAttachment:
 
     def test_upload_attachment_invalid_issue_key(self, tmp_path):
         """Test error for invalid issue key."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")

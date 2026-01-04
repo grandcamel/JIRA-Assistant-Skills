@@ -201,7 +201,7 @@ class TestCreateIssueTypeScheme:
     def test_create_issue_type_scheme_empty_types(self, mock_jira_client):
         """Should raise ValidationError for empty issue type list."""
         from create_issue_type_scheme import create_issue_type_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             create_issue_type_scheme(
@@ -213,7 +213,7 @@ class TestCreateIssueTypeScheme:
     def test_create_issue_type_scheme_empty_name(self, mock_jira_client):
         """Should raise ValidationError for empty name."""
         from create_issue_type_scheme import create_issue_type_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             create_issue_type_scheme(
@@ -276,7 +276,7 @@ class TestUpdateIssueTypeScheme:
     def test_update_issue_type_scheme_no_changes(self, mock_jira_client):
         """Should raise ValidationError with no update parameters."""
         from update_issue_type_scheme import update_issue_type_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             update_issue_type_scheme(

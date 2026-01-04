@@ -96,7 +96,7 @@ class TestCreateGroupValidation:
         """Test that empty group name raises validation error."""
         with patch('config_manager.get_jira_client', return_value=mock_jira_client):
             from create_group import validate_group_name, create_group
-            from jira_assistant_skills_lib import ValidationError
+            from assistant_skills_lib.error_handler import ValidationError
 
             with pytest.raises(ValidationError):
                 validate_group_name("")

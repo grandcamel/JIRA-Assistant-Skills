@@ -278,7 +278,7 @@ class TestGetWorkflowSchemeErrorHandling:
     def test_get_workflow_scheme_missing_params(self, mock_jira_client):
         """Test error when neither id nor name provided."""
         from get_workflow_scheme import get_workflow_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             get_workflow_scheme(client=mock_jira_client)

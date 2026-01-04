@@ -97,7 +97,7 @@ class TestCreateIssueType:
 
     def test_create_issue_type_name_too_long(self, mock_jira_client):
         """Should raise ValidationError for name > 60 chars."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         from create_issue_type import create_issue_type
 
         # Act & Assert
@@ -112,7 +112,7 @@ class TestCreateIssueType:
 
     def test_create_issue_type_name_empty(self, mock_jira_client):
         """Should raise ValidationError for empty name."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         from create_issue_type import create_issue_type
 
         # Act & Assert
@@ -144,7 +144,7 @@ class TestCreateIssueType:
 
     def test_create_issue_type_invalid_type(self, mock_jira_client):
         """Should raise ValidationError for invalid type."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         from create_issue_type import create_issue_type
 
         # Act & Assert

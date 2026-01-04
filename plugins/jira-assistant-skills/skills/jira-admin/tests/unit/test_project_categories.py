@@ -65,7 +65,7 @@ class TestCreateCategory:
     def test_create_category_empty_name(self, mock_jira_client):
         """Test error for empty category name."""
         from create_category import create_category
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             create_category(
@@ -76,7 +76,7 @@ class TestCreateCategory:
     def test_create_category_name_too_long(self, mock_jira_client):
         """Test error for category name exceeding max length."""
         from create_category import create_category
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             create_category(
@@ -215,7 +215,7 @@ class TestAssignCategory:
     def test_assign_category_not_found(self, mock_jira_client, sample_categories_list):
         """Test error when category name doesn't exist."""
         from assign_category import assign_category
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         mock_jira_client.get_project_categories.return_value = sample_categories_list
 
@@ -270,7 +270,7 @@ class TestAssignCategory:
     def test_assign_category_requires_one_param(self, mock_jira_client):
         """Test error when neither category_id, category_name, nor remove specified."""
         from assign_category import assign_category
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             assign_category(

@@ -287,7 +287,7 @@ class TestGetWorkflowErrorHandling:
     def test_get_workflow_missing_parameters(self, mock_jira_client):
         """Test error when no name or entity_id provided."""
         from get_workflow import get_workflow
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             get_workflow(client=mock_jira_client)

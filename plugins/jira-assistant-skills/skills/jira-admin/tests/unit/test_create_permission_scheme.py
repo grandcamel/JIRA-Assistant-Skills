@@ -135,7 +135,7 @@ class TestCreateFromTemplate:
     def test_template_file_not_found(self):
         """Test error when template file doesn't exist."""
         from create_permission_scheme import load_template
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises((ValidationError, FileNotFoundError)):
             load_template('/nonexistent/path/template.json')
@@ -148,7 +148,7 @@ class TestCreateFromTemplate:
             f.write("not valid json")
 
         from create_permission_scheme import load_template
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises((ValidationError, json.JSONDecodeError)):
             load_template(str(template_file))
@@ -264,7 +264,7 @@ class TestValidation:
     def test_empty_name_rejected(self, mock_jira_client):
         """Test that empty name is rejected."""
         from create_permission_scheme import create_permission_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             create_permission_scheme(
@@ -275,7 +275,7 @@ class TestValidation:
     def test_invalid_grant_format(self, mock_jira_client):
         """Test that invalid grant format is rejected."""
         from create_permission_scheme import parse_grants
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             parse_grants(['INVALID_GRANT_FORMAT'])
@@ -283,7 +283,7 @@ class TestValidation:
     def test_invalid_holder_type(self, mock_jira_client):
         """Test that invalid holder type is rejected."""
         from create_permission_scheme import parse_grants
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             parse_grants(['BROWSE_PROJECTS:invalid_holder_type'])

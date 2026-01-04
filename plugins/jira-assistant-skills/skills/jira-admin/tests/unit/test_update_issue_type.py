@@ -146,7 +146,7 @@ class TestUpdateIssueType:
 
     def test_update_issue_type_name_too_long(self, mock_jira_client):
         """Should raise ValidationError for name > 60 chars."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         from update_issue_type import update_issue_type
 
         # Act & Assert
@@ -181,7 +181,7 @@ class TestUpdateIssueType:
 
     def test_update_issue_type_no_changes(self, mock_jira_client, story_response):
         """Should handle update with no fields specified."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
         from update_issue_type import update_issue_type
 
         # Act & Assert - should require at least one field

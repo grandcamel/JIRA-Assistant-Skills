@@ -197,7 +197,7 @@ class TestRemoveGrants:
         mock_jira_client.get_permission_scheme.return_value = permission_scheme_detail
 
         from update_permission_scheme import find_and_remove_grant
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
             find_and_remove_grant(

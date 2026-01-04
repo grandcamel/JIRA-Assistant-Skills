@@ -142,7 +142,7 @@ class TestCreateProject:
     def test_create_project_invalid_key(self, mock_jira_client):
         """Test validation of project key (uppercase, starts with letter)."""
         from create_project import create_project
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         # Test with invalid characters (contains hyphen which is not allowed)
         with pytest.raises(ValidationError) as exc_info:
@@ -187,7 +187,7 @@ class TestCreateProject:
     def test_create_project_invalid_type(self, mock_jira_client):
         """Test error for invalid project type."""
         from create_project import create_project
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
             create_project(

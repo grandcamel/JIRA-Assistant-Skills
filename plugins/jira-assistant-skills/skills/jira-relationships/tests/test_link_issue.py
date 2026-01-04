@@ -96,7 +96,7 @@ class TestLinkIssue:
         mock_jira_client.get_link_types.return_value = sample_link_types
 
         import link_issue
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
             with pytest.raises(ValidationError) as exc_info:
@@ -110,7 +110,7 @@ class TestLinkIssue:
 
     def test_link_invalid_issue(self, mock_jira_client, sample_link_types):
         """Test error when issue key is invalid."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         import link_issue
         with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
@@ -122,7 +122,7 @@ class TestLinkIssue:
 
     def test_link_self_reference(self, mock_jira_client, sample_link_types):
         """Test validation preventing linking issue to itself."""
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         import link_issue
         with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):

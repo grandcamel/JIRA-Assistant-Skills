@@ -224,7 +224,7 @@ class TestNoChangesError:
     def test_no_changes_error(self, mock_jira_client, sample_notification_scheme_detail):
         """Test error when no changes provided."""
         from update_notification_scheme import update_notification_scheme
-        from jira_assistant_skills_lib import ValidationError
+        from assistant_skills_lib.error_handler import ValidationError
 
         # Setup mock
         mock_jira_client.get_notification_scheme.return_value = sample_notification_scheme_detail
