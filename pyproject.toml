@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jira-assistant-skills"
-version = "2.2.0"
+version = "2.2.1"
 description = "A collection of CLI-based assistant skills for interacting with Jira."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -29,6 +29,24 @@ dev = [
 
 [project.scripts]
 jira = "jira_assistant_skills.cli.main:cli"
+
+# =============================================================================
+# Hatch Build Configuration
+# =============================================================================
+[tool.hatch.build.targets.wheel]
+packages = ["src/jira_assistant_skills"]
+
+[tool.hatch.build.targets.wheel.force-include]
+# Include skills scripts in the wheel so pip install works without editable mode
+"plugins/jira-assistant-skills/skills" = "jira_assistant_skills/skills"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/plugins/jira-assistant-skills/skills",
+    "/README.md",
+    "/LICENSE",
+]
 
 # =============================================================================
 # Ruff - Fast Python linter and formatter (replaces flake8, isort, black)

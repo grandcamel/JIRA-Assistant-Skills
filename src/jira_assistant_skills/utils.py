@@ -7,27 +7,42 @@ import importlib.resources
 from pathlib import Path
 
 # --- Robust SKILLS_ROOT_DIR Resolution ---
-# This path is relative to the *project root* where pyproject.toml and 'plugins' reside.
-# It assumes the package is installed in editable mode from the project root
-# or that 'plugins' is copied alongside the installed package.
-try:
-    # This attempts to get the root of the 'jira_assistant_skills' package
-    # then navigates up to the project root, then down to plugins/jira-assistant-skills/skills
-    with importlib.resources.path('jira_assistant_skills', '__init__.py') as p:
-        # p is like /path/to/site-packages/jira_assistant_skills/__init__.py or /path/to/project/src/jira_assistant_skills/__init__.py
-        # p.parent is /path/to/site-packages/jira_assistant_skills or /path/to/project/src/jira_assistant_skills
-        # p.parent.parent is /path/to/site-packages or /path/to/project/src
-        # p.parent.parent.parent is /path/to or /path/to/project (project root)
-        project_root = p.parent.parent.parent if p.parent.parent.name == 'src' else p.parent.parent # Adjust based on src layout
-        SKILLS_ROOT_DIR = (project_root / 'plugins' / 'jira-assistant-skills' / 'skills').resolve()
-except (ImportError, ModuleNotFoundError, FileNotFoundError):
-    # Fallback for direct execution or unusual development setups
-    # This assumes utils.py is in src/jira_assistant_skills/
-    # Path(__file__).resolve().parents[0] is src/jira_assistant_skills/
-    # Path(__file__).resolve().parents[1] is src/
-    # Path(__file__).resolve().parents[2] is project root
-    project_root = Path(__file__).resolve().parents[2]
-    SKILLS_ROOT_DIR = (project_root / 'plugins' / 'jira-assistant-skills' / 'skills').resolve()
+# Skills can be located in two places:
+# 1. Bundled in package: site-packages/jira_assistant_skills/skills/ (pip install from PyPI)
+# 2. Project structure: project_root/plugins/jira-assistant-skills/skills/ (editable install)
+def _resolve_skills_root() -> Path:
+    """Resolve the skills root directory, checking bundled location first."""
+    try:
+        with importlib.resources.path('jira_assistant_skills', '__init__.py') as p:
+            package_dir = p.parent
+
+            # Option 1: Skills bundled in package (pip install from PyPI)
+            bundled_skills = package_dir / 'skills'
+            if bundled_skills.exists() and bundled_skills.is_dir():
+                return bundled_skills.resolve()
+
+            # Option 2: Editable install - navigate to project root
+            # p.parent is jira_assistant_skills/
+            # p.parent.parent is src/ or site-packages/
+            # p.parent.parent.parent is project root (if src/ layout)
+            if p.parent.parent.name == 'src':
+                project_root = p.parent.parent.parent
+            else:
+                project_root = p.parent.parent
+
+            project_skills = project_root / 'plugins' / 'jira-assistant-skills' / 'skills'
+            if project_skills.exists():
+                return project_skills.resolve()
+
+            # Fallback: return bundled path even if it doesn't exist yet
+            return bundled_skills.resolve()
+
+    except (ImportError, ModuleNotFoundError, FileNotFoundError):
+        # Fallback for direct execution or unusual development setups
+        project_root = Path(__file__).resolve().parents[2]
+        return (project_root / 'plugins' / 'jira-assistant-skills' / 'skills').resolve()
+
+SKILLS_ROOT_DIR = _resolve_skills_root()
 
 
 # Helper for subprocess calls (centralized error handling)
