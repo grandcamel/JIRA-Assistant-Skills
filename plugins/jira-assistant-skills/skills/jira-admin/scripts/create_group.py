@@ -10,25 +10,20 @@ Supports:
 """
 
 import argparse
-import sys
 import json
-from pathlib import Path
-from typing import Dict, Any, Optional
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
 # System group name prefixes to warn about
-SYSTEM_GROUP_PREFIXES = [
-    'jira-',
-    'site-',
-    'atlassian-',
-    'confluence-',
-    'bitbucket-'
-]
+SYSTEM_GROUP_PREFIXES = ["jira-", "site-", "atlassian-", "confluence-", "bitbucket-"]
 
 
 def validate_group_name(name: str) -> None:
@@ -51,7 +46,7 @@ def validate_group_name(name: str) -> None:
         raise ValidationError("Group name cannot exceed 255 characters")
 
 
-def check_system_group_name(name: str) -> Optional[str]:
+def check_system_group_name(name: str) -> str | None:
     """
     Check if a group name resembles a system group.
 
@@ -65,11 +60,11 @@ def check_system_group_name(name: str) -> Optional[str]:
 
     # Exact matches with system groups
     system_groups = [
-        'jira-administrators',
-        'jira-users',
-        'jira-software-users',
-        'site-admins',
-        'atlassian-addons-admin'
+        "jira-administrators",
+        "jira-users",
+        "jira-software-users",
+        "site-admins",
+        "atlassian-addons-admin",
     ]
 
     if name_lower in system_groups:
@@ -79,7 +74,7 @@ def check_system_group_name(name: str) -> Optional[str]:
     return None
 
 
-def create_group(client, name: str, dry_run: bool = False) -> Optional[Dict[str, Any]]:
+def create_group(client, name: str, dry_run: bool = False) -> dict[str, Any] | None:
     """
     Create a new group.
 
@@ -116,10 +111,10 @@ def format_dry_run_preview(name: str) -> str:
     lines.append("")
     lines.append("This is a dry run. No group will be created.")
     lines.append("Remove --dry-run to create the group.")
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
-def format_created_group(group: Dict[str, Any]) -> str:
+def format_created_group(group: dict[str, Any]) -> str:
     """
     Format created group details as text.
 
@@ -135,10 +130,10 @@ def format_created_group(group: Dict[str, Any]) -> str:
     lines.append(f"Name:     {group.get('name', 'N/A')}")
     lines.append(f"Group ID: {group.get('groupId', 'N/A')}")
     lines.append(f"URL:      {group.get('self', 'N/A')}")
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
-def format_created_group_json(group: Dict[str, Any]) -> str:
+def format_created_group_json(group: dict[str, Any]) -> str:
     """
     Format created group as JSON.
 
@@ -153,22 +148,28 @@ def format_created_group_json(group: Dict[str, Any]) -> str:
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Create a new JIRA group',
-        epilog='''
+        description="Create a new JIRA group",
+        epilog="""
 Examples:
   %(prog)s "mobile-team"                  # Create a group
   %(prog)s "mobile-team" --dry-run        # Preview only
   %(prog)s "external-contractors" --output json
-''',
-        formatter_class=argparse.RawDescriptionHelpFormatter
+""",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument('name', help='Name for the new group')
-    parser.add_argument('--dry-run', '-n', action='store_true',
-                        help='Preview without creating')
-    parser.add_argument('--output', '-o', choices=['text', 'json'],
-                        default='text', help='Output format (default: text)')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument("name", help="Name for the new group")
+    parser.add_argument(
+        "--dry-run", "-n", action="store_true", help="Preview without creating"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -192,7 +193,7 @@ Examples:
         group = create_group(client, name=args.name)
 
         # Format output
-        if args.output == 'json':
+        if args.output == "json":
             print(format_created_group_json(group))
         else:
             print(format_created_group(group))
@@ -207,5 +208,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

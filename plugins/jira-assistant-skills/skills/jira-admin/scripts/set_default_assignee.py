@@ -19,23 +19,24 @@ Examples:
 """
 
 import argparse
-import sys
 import json
-from pathlib import Path
-from typing import Dict, Any
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, ValidationError, print_error
-from jira_assistant_skills_lib import validate_project_key, validate_assignee_type
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    validate_assignee_type,
+    validate_project_key,
+)
 
 
 def set_default_assignee(
-    project_key: str,
-    assignee_type: str,
-    client=None
-) -> Dict[str, Any]:
+    project_key: str, assignee_type: str, client=None
+) -> dict[str, Any]:
     """
     Set the default assignee type for a project.
 
@@ -68,18 +69,18 @@ def set_default_assignee(
             client.close()
 
 
-def format_output(project: Dict[str, Any], output_format: str = "text") -> str:
+def format_output(project: dict[str, Any], output_format: str = "text") -> str:
     """Format result for output."""
     if output_format == "json":
         return json.dumps(project, indent=2)
 
     # Text output
-    assignee_type = project.get('assigneeType', 'Unknown')
+    assignee_type = project.get("assigneeType", "Unknown")
 
     type_descriptions = {
-        'PROJECT_LEAD': 'Project Lead - Issues will be assigned to the project lead',
-        'UNASSIGNED': 'Unassigned - Issues will have no default assignee',
-        'COMPONENT_LEAD': 'Component Lead - Issues will be assigned based on component'
+        "PROJECT_LEAD": "Project Lead - Issues will be assigned to the project lead",
+        "UNASSIGNED": "Unassigned - Issues will have no default assignee",
+        "COMPONENT_LEAD": "Component Lead - Issues will be assigned based on component",
     }
 
     description = type_descriptions.get(assignee_type, assignee_type)
@@ -88,7 +89,7 @@ def format_output(project: Dict[str, Any], output_format: str = "text") -> str:
         f"Default assignee updated for project {project.get('key', 'Unknown')}",
         "",
         f"  Type: {assignee_type}",
-        f"  Meaning: {description}"
+        f"  Meaning: {description}",
     ]
 
     return "\n".join(lines)
@@ -114,33 +115,29 @@ Examples:
 
   # Set to component lead
   %(prog)s PROJ --type COMPONENT_LEAD
-        """
+        """,
     )
 
     # Required arguments
+    parser.add_argument("project_key", help="Project key (e.g., PROJ)")
     parser.add_argument(
-        "project_key",
-        help="Project key (e.g., PROJ)"
-    )
-    parser.add_argument(
-        "--type", "-t",
+        "--type",
+        "-t",
         required=True,
         dest="assignee_type",
-        choices=['PROJECT_LEAD', 'UNASSIGNED', 'COMPONENT_LEAD'],
-        help="Default assignee type"
+        choices=["PROJECT_LEAD", "UNASSIGNED", "COMPONENT_LEAD"],
+        help="Default assignee type",
     )
 
     # Output options
     parser.add_argument(
-        "--output", "-o",
-        choices=['text', 'json'],
-        default='text',
-        help="Output format (default: text)"
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
     )
-    parser.add_argument(
-        "--profile",
-        help="Configuration profile to use"
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -150,7 +147,7 @@ Examples:
         result = set_default_assignee(
             project_key=args.project_key,
             assignee_type=args.assignee_type,
-            client=client
+            client=client,
         )
 
         print(format_output(result, args.output))
@@ -162,7 +159,7 @@ Examples:
         print_error(e)
         sys.exit(1)
     finally:
-        if 'client' in locals():
+        if "client" in locals():
             client.close()
 
 

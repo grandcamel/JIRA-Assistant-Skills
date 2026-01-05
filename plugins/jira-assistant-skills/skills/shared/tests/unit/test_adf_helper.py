@@ -5,14 +5,15 @@ Tests wiki_markup_to_adf() and _parse_wiki_inline() functions for
 converting JIRA wiki markup to Atlassian Document Format (ADF).
 """
 
-import pytest
 import sys
 from pathlib import Path
 
-# Add lib path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts' / 'lib'))
+import pytest
 
-from jira_assistant_skills_lib import wiki_markup_to_adf, _parse_wiki_inline
+# Add lib path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts" / "lib"))
+
+from jira_assistant_skills_lib import _parse_wiki_inline, wiki_markup_to_adf
 
 
 @pytest.mark.unit
@@ -22,20 +23,12 @@ class TestWikiMarkupToAdf:
     def test_empty_text(self):
         """Test handling of empty input."""
         result = wiki_markup_to_adf("")
-        assert result == {
-            "version": 1,
-            "type": "doc",
-            "content": []
-        }
+        assert result == {"version": 1, "type": "doc", "content": []}
 
     def test_none_text(self):
         """Test handling of None input."""
         result = wiki_markup_to_adf(None)
-        assert result == {
-            "version": 1,
-            "type": "doc",
-            "content": []
-        }
+        assert result == {"version": 1, "type": "doc", "content": []}
 
     def test_plain_text(self):
         """Test plain text without formatting."""
@@ -75,7 +68,9 @@ class TestWikiMarkupToAdf:
 
     def test_bold_with_link(self):
         """Test bold field with link value (common commit format)."""
-        result = wiki_markup_to_adf("*Commit:* [abc123|https://github.com/org/repo/commit/abc123]")
+        result = wiki_markup_to_adf(
+            "*Commit:* [abc123|https://github.com/org/repo/commit/abc123]"
+        )
         content = result["content"][0]["content"]
         # Should be 3 parts: bold "Commit:", space " ", link "abc123"
         assert len(content) == 3
@@ -87,7 +82,10 @@ class TestWikiMarkupToAdf:
         # Linked value
         assert content[2]["text"] == "abc123"
         assert content[2]["marks"] == [
-            {"type": "link", "attrs": {"href": "https://github.com/org/repo/commit/abc123"}}
+            {
+                "type": "link",
+                "attrs": {"href": "https://github.com/org/repo/commit/abc123"},
+            }
         ]
 
     def test_multiline_text(self):
@@ -119,7 +117,9 @@ class TestWikiMarkupToAdf:
         assert len(result["content"]) == 6
 
         # First line is plain text header
-        assert result["content"][0]["content"][0]["text"] == "Commit linked to this issue:"
+        assert (
+            result["content"][0]["content"][0]["text"] == "Commit linked to this issue:"
+        )
 
         # Second paragraph should have bold Commit: and a link
         commit_para = result["content"][1]["content"]
@@ -235,7 +235,10 @@ class TestParseWikiInline:
         result = _parse_wiki_inline("[click|https://example.com/path?query=1&other=2]")
         assert len(result) == 1
         assert result[0]["text"] == "click"
-        assert result[0]["marks"][0]["attrs"]["href"] == "https://example.com/path?query=1&other=2"
+        assert (
+            result[0]["marks"][0]["attrs"]["href"]
+            == "https://example.com/path?query=1&other=2"
+        )
 
     def test_bold_followed_by_link(self):
         """Test bold followed by link (field with link value)."""

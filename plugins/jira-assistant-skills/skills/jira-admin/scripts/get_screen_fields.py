@@ -5,23 +5,26 @@ Get all fields on a screen or specific tab.
 Lists fields with their IDs and names, optionally filtered by type.
 """
 
-import sys
 import argparse
-import json
-from pathlib import Path
-from typing import List, Dict, Any, Optional
+import sys
+from typing import Any
 
 # Add shared lib to path
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_json,
+    format_table,
+    get_jira_client,
+    print_error,
+)
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import format_table, format_json
 
-
-def get_screen_fields(screen_id: int,
-                      tab_id: Optional[int] = None,
-                      client=None,
-                      field_type: Optional[str] = None) -> List[Dict[str, Any]]:
+def get_screen_fields(
+    screen_id: int,
+    tab_id: int | None = None,
+    client=None,
+    field_type: str | None = None,
+) -> list[dict[str, Any]]:
     """
     Get all fields on a screen or specific tab.
 
@@ -36,6 +39,7 @@ def get_screen_fields(screen_id: int,
     """
     if client is None:
         from jira_assistant_skills_lib import get_jira_client
+
         client = get_jira_client()
 
     fields = []
@@ -47,25 +51,27 @@ def get_screen_fields(screen_id: int,
         # Get fields from all tabs
         tabs = client.get_screen_tabs(screen_id)
         for tab in tabs:
-            tab_fields = client.get_screen_tab_fields(screen_id, tab['id'])
+            tab_fields = client.get_screen_tab_fields(screen_id, tab["id"])
             for field in tab_fields:
-                field['tab_id'] = tab['id']
-                field['tab_name'] = tab.get('name', '')
+                field["tab_id"] = tab["id"]
+                field["tab_name"] = tab.get("name", "")
             fields.extend(tab_fields)
 
     # Filter by type
     if field_type:
-        if field_type == 'custom':
-            fields = [f for f in fields if f.get('id', '').startswith('customfield_')]
-        elif field_type == 'system':
-            fields = [f for f in fields if not f.get('id', '').startswith('customfield_')]
+        if field_type == "custom":
+            fields = [f for f in fields if f.get("id", "").startswith("customfield_")]
+        elif field_type == "system":
+            fields = [
+                f for f in fields if not f.get("id", "").startswith("customfield_")
+            ]
 
     return fields
 
 
-def format_fields_output(fields: List[Dict[str, Any]],
-                         output_format: str = 'text',
-                         show_tab: bool = False) -> str:
+def format_fields_output(
+    fields: list[dict[str, Any]], output_format: str = "text", show_tab: bool = False
+) -> str:
     """
     Format fields for output.
 
@@ -77,7 +83,7 @@ def format_fields_output(fields: List[Dict[str, Any]],
     Returns:
         Formatted output string
     """
-    if output_format == 'json':
+    if output_format == "json":
         return format_json(fields)
 
     if not fields:
@@ -85,35 +91,31 @@ def format_fields_output(fields: List[Dict[str, Any]],
 
     # Prepare data for table
     data = []
-    columns = ['Field ID', 'Name']
+    columns = ["Field ID", "Name"]
     if show_tab:
-        columns.insert(0, 'Tab')
+        columns.insert(0, "Tab")
 
     for field in fields:
-        field_id = field.get('id', '')
-        field_type = 'Custom' if field_id.startswith('customfield_') else 'System'
+        field_id = field.get("id", "")
+        field_type = "Custom" if field_id.startswith("customfield_") else "System"
 
-        row = {
-            'Field ID': field_id,
-            'Name': field.get('name', ''),
-            'Type': field_type
-        }
+        row = {"Field ID": field_id, "Name": field.get("name", ""), "Type": field_type}
 
         if show_tab:
-            row['Tab'] = field.get('tab_name', '')
+            row["Tab"] = field.get("tab_name", "")
 
         data.append(row)
 
-    if 'Type' not in columns:
-        columns.append('Type')
+    if "Type" not in columns:
+        columns.append("Type")
 
     return format_table(data, columns=columns)
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Get all fields on a JIRA screen',
-        epilog='''
+        description="Get all fields on a JIRA screen",
+        epilog="""
 Examples:
     # Get all fields from all tabs
     python get_screen_fields.py 1
@@ -129,18 +131,28 @@ Examples:
 
     # JSON output
     python get_screen_fields.py 1 --output json
-'''
+""",
     )
 
-    parser.add_argument('screen_id', type=int,
-                        help='Screen ID')
-    parser.add_argument('--tab', '-t', dest='tab_id', type=int,
-                        help='Tab ID (if not specified, gets fields from all tabs)')
-    parser.add_argument('--type', choices=['custom', 'system'],
-                        help='Filter by field type')
-    parser.add_argument('--output', '-o', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--profile', '-p', help='JIRA profile to use')
+    parser.add_argument("screen_id", type=int, help="Screen ID")
+    parser.add_argument(
+        "--tab",
+        "-t",
+        dest="tab_id",
+        type=int,
+        help="Tab ID (if not specified, gets fields from all tabs)",
+    )
+    parser.add_argument(
+        "--type", choices=["custom", "system"], help="Filter by field type"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -151,7 +163,7 @@ Examples:
             screen_id=args.screen_id,
             tab_id=args.tab_id,
             client=client,
-            field_type=args.type
+            field_type=args.type,
         )
 
         # Show tab column if getting fields from all tabs
@@ -159,7 +171,7 @@ Examples:
         output = format_fields_output(fields, args.output, show_tab=show_tab)
         print(output)
 
-        if args.output == 'text' and fields:
+        if args.output == "text" and fields:
             print(f"\nTotal: {len(fields)} field(s)")
 
     except JiraError as e:
@@ -167,5 +179,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

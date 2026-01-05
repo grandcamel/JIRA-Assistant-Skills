@@ -5,14 +5,14 @@ Tests verify that argparse configurations are correct and handle
 various input combinations properly.
 """
 
-import pytest
 import sys
-import argparse
 from pathlib import Path
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
+import pytest
 
 # Add scripts path
-scripts_path = str(Path(__file__).parent.parent / 'scripts')
+scripts_path = str(Path(__file__).parent.parent / "scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
@@ -27,7 +27,7 @@ class TestCreateBranchNameCLI:
         import create_branch_name
 
         with pytest.raises(SystemExit) as exc_info:
-            with patch('sys.argv', ['create_branch_name.py']):
+            with patch("sys.argv", ["create_branch_name.py"]):
                 create_branch_name.main()
 
         assert exc_info.value.code == 2  # argparse error code
@@ -36,30 +36,48 @@ class TestCreateBranchNameCLI:
         """Test valid prefix choices are accepted."""
         import create_branch_name
 
-        valid_prefixes = ['feature', 'bugfix', 'hotfix', 'task', 'epic', 'spike', 'chore', 'docs']
+        valid_prefixes = [
+            "feature",
+            "bugfix",
+            "hotfix",
+            "task",
+            "epic",
+            "spike",
+            "chore",
+            "docs",
+        ]
 
         for prefix in valid_prefixes:
-            with patch('sys.argv', ['create_branch_name.py', 'PROJ-123', '--prefix', prefix]):
-                with patch.object(create_branch_name, 'get_jira_client') as mock_client:
-                    mock_client.return_value.get_issue.return_value = {
-                        'key': 'PROJ-123',
-                        'fields': {'summary': 'Test', 'issuetype': {'name': 'Bug'}}
-                    }
-                    mock_client.return_value.close = Mock()
-                    # Should not raise
-                    try:
-                        create_branch_name.main()
-                    except SystemExit as e:
-                        if e.code == 2:
-                            pytest.fail(f"Prefix '{prefix}' should be valid")
+            with (
+                patch(
+                    "sys.argv",
+                    ["create_branch_name.py", "PROJ-123", "--prefix", prefix],
+                ),
+                patch.object(create_branch_name, "get_jira_client") as mock_client,
+            ):
+                mock_client.return_value.get_issue.return_value = {
+                    "key": "PROJ-123",
+                    "fields": {"summary": "Test", "issuetype": {"name": "Bug"}},
+                }
+                mock_client.return_value.close = Mock()
+                # Should not raise
+                try:
+                    create_branch_name.main()
+                except SystemExit as e:
+                    if e.code == 2:
+                        pytest.fail(f"Prefix '{prefix}' should be valid")
 
     def test_invalid_prefix_rejected(self):
         """Test invalid prefix is rejected."""
         import create_branch_name
 
-        with pytest.raises(SystemExit) as exc_info:
-            with patch('sys.argv', ['create_branch_name.py', 'PROJ-123', '--prefix', 'invalid']):
-                create_branch_name.main()
+        with (
+            pytest.raises(SystemExit) as exc_info,
+            patch(
+                "sys.argv", ["create_branch_name.py", "PROJ-123", "--prefix", "invalid"]
+            ),
+        ):
+            create_branch_name.main()
 
         assert exc_info.value.code == 2
 
@@ -67,31 +85,36 @@ class TestCreateBranchNameCLI:
         """Test output format choices."""
         import create_branch_name
 
-        valid_outputs = ['text', 'json', 'git']
+        valid_outputs = ["text", "json", "git"]
 
         for output in valid_outputs:
-            with patch('sys.argv', ['create_branch_name.py', 'PROJ-123', '--output', output]):
-                with patch.object(create_branch_name, 'get_jira_client') as mock_client:
-                    mock_client.return_value.get_issue.return_value = {
-                        'key': 'PROJ-123',
-                        'fields': {'summary': 'Test', 'issuetype': {'name': 'Bug'}}
-                    }
-                    mock_client.return_value.close = Mock()
-                    try:
-                        create_branch_name.main()
-                    except SystemExit as e:
-                        if e.code == 2:
-                            pytest.fail(f"Output format '{output}' should be valid")
+            with (
+                patch(
+                    "sys.argv",
+                    ["create_branch_name.py", "PROJ-123", "--output", output],
+                ),
+                patch.object(create_branch_name, "get_jira_client") as mock_client,
+            ):
+                mock_client.return_value.get_issue.return_value = {
+                    "key": "PROJ-123",
+                    "fields": {"summary": "Test", "issuetype": {"name": "Bug"}},
+                }
+                mock_client.return_value.close = Mock()
+                try:
+                    create_branch_name.main()
+                except SystemExit as e:
+                    if e.code == 2:
+                        pytest.fail(f"Output format '{output}' should be valid")
 
     def test_auto_prefix_flag(self):
         """Test auto-prefix flag is recognized."""
         import create_branch_name
 
-        with patch('sys.argv', ['create_branch_name.py', 'PROJ-123', '--auto-prefix']):
-            with patch.object(create_branch_name, 'get_jira_client') as mock_client:
+        with patch("sys.argv", ["create_branch_name.py", "PROJ-123", "--auto-prefix"]):
+            with patch.object(create_branch_name, "get_jira_client") as mock_client:
                 mock_client.return_value.get_issue.return_value = {
-                    'key': 'PROJ-123',
-                    'fields': {'summary': 'Test', 'issuetype': {'name': 'Bug'}}
+                    "key": "PROJ-123",
+                    "fields": {"summary": "Test", "issuetype": {"name": "Bug"}},
                 }
                 mock_client.return_value.close = Mock()
                 try:
@@ -104,18 +127,31 @@ class TestCreateBranchNameCLI:
         """Test short option forms work."""
         import create_branch_name
 
-        with patch('sys.argv', ['create_branch_name.py', 'PROJ-123', '-p', 'bugfix', '-o', 'json', '-a']):
-            with patch.object(create_branch_name, 'get_jira_client') as mock_client:
-                mock_client.return_value.get_issue.return_value = {
-                    'key': 'PROJ-123',
-                    'fields': {'summary': 'Test', 'issuetype': {'name': 'Bug'}}
-                }
-                mock_client.return_value.close = Mock()
-                try:
-                    create_branch_name.main()
-                except SystemExit as e:
-                    if e.code == 2:
-                        pytest.fail("Short options should be valid")
+        with (
+            patch(
+                "sys.argv",
+                [
+                    "create_branch_name.py",
+                    "PROJ-123",
+                    "-p",
+                    "bugfix",
+                    "-o",
+                    "json",
+                    "-a",
+                ],
+            ),
+            patch.object(create_branch_name, "get_jira_client") as mock_client,
+        ):
+            mock_client.return_value.get_issue.return_value = {
+                "key": "PROJ-123",
+                "fields": {"summary": "Test", "issuetype": {"name": "Bug"}},
+            }
+            mock_client.return_value.close = Mock()
+            try:
+                create_branch_name.main()
+            except SystemExit as e:
+                if e.code == 2:
+                    pytest.fail("Short options should be valid")
 
 
 @pytest.mark.dev
@@ -128,7 +164,7 @@ class TestParseCommitIssuesCLI:
         import parse_commit_issues
 
         with pytest.raises(SystemExit) as exc_info:
-            with patch('sys.argv', ['parse_commit_issues.py']):
+            with patch("sys.argv", ["parse_commit_issues.py"]):
                 parse_commit_issues.main()
 
         # Script prints help and exits with code 1 when no message or --from-stdin
@@ -138,7 +174,7 @@ class TestParseCommitIssuesCLI:
         """Test message is accepted as positional argument."""
         import parse_commit_issues
 
-        with patch('sys.argv', ['parse_commit_issues.py', 'PROJ-123: Fix bug']):
+        with patch("sys.argv", ["parse_commit_issues.py", "PROJ-123: Fix bug"]):
             # Should not raise argparse error
             try:
                 parse_commit_issues.main()
@@ -150,7 +186,10 @@ class TestParseCommitIssuesCLI:
         """Test project filter option."""
         import parse_commit_issues
 
-        with patch('sys.argv', ['parse_commit_issues.py', 'PROJ-123: Fix bug', '--project', 'PROJ']):
+        with patch(
+            "sys.argv",
+            ["parse_commit_issues.py", "PROJ-123: Fix bug", "--project", "PROJ"],
+        ):
             try:
                 parse_commit_issues.main()
             except SystemExit as e:
@@ -161,8 +200,10 @@ class TestParseCommitIssuesCLI:
         """Test output format choices."""
         import parse_commit_issues
 
-        for fmt in ['text', 'json']:
-            with patch('sys.argv', ['parse_commit_issues.py', 'PROJ-123: Fix', '--output', fmt]):
+        for fmt in ["text", "json"]:
+            with patch(
+                "sys.argv", ["parse_commit_issues.py", "PROJ-123: Fix", "--output", fmt]
+            ):
                 try:
                     parse_commit_issues.main()
                 except SystemExit as e:
@@ -181,13 +222,13 @@ class TestLinkCommitCLI:
 
         # Missing all required args
         with pytest.raises(SystemExit) as exc_info:
-            with patch('sys.argv', ['link_commit.py']):
+            with patch("sys.argv", ["link_commit.py"]):
                 link_commit.main()
         assert exc_info.value.code == 2
 
         # Missing commit_sha
         with pytest.raises(SystemExit) as exc_info:
-            with patch('sys.argv', ['link_commit.py', 'PROJ-123']):
+            with patch("sys.argv", ["link_commit.py", "PROJ-123"]):
                 link_commit.main()
         assert exc_info.value.code == 2
 
@@ -195,9 +236,9 @@ class TestLinkCommitCLI:
         """Test all required arguments are accepted."""
         import link_commit
 
-        with patch('sys.argv', ['link_commit.py', 'PROJ-123', '--commit', 'abc123def']):
-            with patch.object(link_commit, 'get_jira_client') as mock_client:
-                mock_client.return_value.post.return_value = {'id': '10001'}
+        with patch("sys.argv", ["link_commit.py", "PROJ-123", "--commit", "abc123def"]):
+            with patch.object(link_commit, "get_jira_client") as mock_client:
+                mock_client.return_value.post.return_value = {"id": "10001"}
                 mock_client.return_value.close = Mock()
                 try:
                     link_commit.main()
@@ -209,19 +250,29 @@ class TestLinkCommitCLI:
         """Test optional --message and --repo options."""
         import link_commit
 
-        with patch('sys.argv', [
-            'link_commit.py', 'PROJ-123', '--commit', 'abc123def',
-            '--message', 'Fix login bug',
-            '--repo', 'https://github.com/org/repo'
-        ]):
-            with patch.object(link_commit, 'get_jira_client') as mock_client:
-                mock_client.return_value.post.return_value = {'id': '10001'}
-                mock_client.return_value.close = Mock()
-                try:
-                    link_commit.main()
-                except SystemExit as e:
-                    if e.code == 2:
-                        pytest.fail("Optional args should be accepted")
+        with (
+            patch(
+                "sys.argv",
+                [
+                    "link_commit.py",
+                    "PROJ-123",
+                    "--commit",
+                    "abc123def",
+                    "--message",
+                    "Fix login bug",
+                    "--repo",
+                    "https://github.com/org/repo",
+                ],
+            ),
+            patch.object(link_commit, "get_jira_client") as mock_client,
+        ):
+            mock_client.return_value.post.return_value = {"id": "10001"}
+            mock_client.return_value.close = Mock()
+            try:
+                link_commit.main()
+            except SystemExit as e:
+                if e.code == 2:
+                    pytest.fail("Optional args should be accepted")
 
 
 @pytest.mark.dev
@@ -235,7 +286,7 @@ class TestLinkPRCLI:
 
         # Missing required args
         with pytest.raises(SystemExit) as exc_info:
-            with patch('sys.argv', ['link_pr.py']):
+            with patch("sys.argv", ["link_pr.py"]):
                 link_pr.main()
         assert exc_info.value.code == 2
 
@@ -243,34 +294,52 @@ class TestLinkPRCLI:
         """Test issue_key and pr_url are required."""
         import link_pr
 
-        with patch('sys.argv', ['link_pr.py', 'PROJ-123', '--pr', 'https://github.com/org/repo/pull/456']):
-            with patch.object(link_pr, 'get_jira_client') as mock_client:
-                mock_client.return_value.post.return_value = {'id': '10001'}
-                mock_client.return_value.close = Mock()
-                try:
-                    link_pr.main()
-                except SystemExit as e:
-                    if e.code == 2:
-                        pytest.fail("Required args should be accepted")
+        with (
+            patch(
+                "sys.argv",
+                [
+                    "link_pr.py",
+                    "PROJ-123",
+                    "--pr",
+                    "https://github.com/org/repo/pull/456",
+                ],
+            ),
+            patch.object(link_pr, "get_jira_client") as mock_client,
+        ):
+            mock_client.return_value.post.return_value = {"id": "10001"}
+            mock_client.return_value.close = Mock()
+            try:
+                link_pr.main()
+            except SystemExit as e:
+                if e.code == 2:
+                    pytest.fail("Required args should be accepted")
 
     def test_status_choices(self):
         """Test status choices."""
         import link_pr
 
-        for status in ['open', 'merged', 'closed']:
-            with patch('sys.argv', [
-                'link_pr.py', 'PROJ-123',
-                '--pr', 'https://github.com/org/repo/pull/456',
-                '--status', status
-            ]):
-                with patch.object(link_pr, 'get_jira_client') as mock_client:
-                    mock_client.return_value.post.return_value = {'id': '10001'}
-                    mock_client.return_value.close = Mock()
-                    try:
-                        link_pr.main()
-                    except SystemExit as e:
-                        if e.code == 2:
-                            pytest.fail(f"Status '{status}' should be valid")
+        for status in ["open", "merged", "closed"]:
+            with (
+                patch(
+                    "sys.argv",
+                    [
+                        "link_pr.py",
+                        "PROJ-123",
+                        "--pr",
+                        "https://github.com/org/repo/pull/456",
+                        "--status",
+                        status,
+                    ],
+                ),
+                patch.object(link_pr, "get_jira_client") as mock_client,
+            ):
+                mock_client.return_value.post.return_value = {"id": "10001"}
+                mock_client.return_value.close = Mock()
+                try:
+                    link_pr.main()
+                except SystemExit as e:
+                    if e.code == 2:
+                        pytest.fail(f"Status '{status}' should be valid")
 
 
 @pytest.mark.dev
@@ -283,7 +352,7 @@ class TestCreatePRDescriptionCLI:
         import create_pr_description
 
         with pytest.raises(SystemExit) as exc_info:
-            with patch('sys.argv', ['create_pr_description.py']):
+            with patch("sys.argv", ["create_pr_description.py"]):
                 create_pr_description.main()
         assert exc_info.value.code == 2
 
@@ -291,45 +360,57 @@ class TestCreatePRDescriptionCLI:
         """Test optional flags are recognized."""
         import create_pr_description
 
-        with patch('sys.argv', [
-            'create_pr_description.py', 'PROJ-123',
-            '--include-checklist', '--include-labels'
-        ]):
-            with patch.object(create_pr_description, 'get_jira_client') as mock_client:
-                mock_client.return_value.get_issue.return_value = {
-                    'key': 'PROJ-123',
-                    'fields': {
-                        'summary': 'Test',
-                        'description': None,
-                        'labels': ['label1']
-                    }
-                }
-                mock_client.return_value.close = Mock()
-                try:
-                    create_pr_description.main()
-                except SystemExit as e:
-                    if e.code == 2:
-                        pytest.fail("Optional flags should be accepted")
+        with (
+            patch(
+                "sys.argv",
+                [
+                    "create_pr_description.py",
+                    "PROJ-123",
+                    "--include-checklist",
+                    "--include-labels",
+                ],
+            ),
+            patch.object(create_pr_description, "get_jira_client") as mock_client,
+        ):
+            mock_client.return_value.get_issue.return_value = {
+                "key": "PROJ-123",
+                "fields": {
+                    "summary": "Test",
+                    "description": None,
+                    "labels": ["label1"],
+                },
+            }
+            mock_client.return_value.close = Mock()
+            try:
+                create_pr_description.main()
+            except SystemExit as e:
+                if e.code == 2:
+                    pytest.fail("Optional flags should be accepted")
 
     def test_output_format_choices(self):
         """Test output format choices."""
         import create_pr_description
 
         # Implementation only supports 'text' and 'json' (not 'markdown')
-        for fmt in ['text', 'json']:
-            with patch('sys.argv', ['create_pr_description.py', 'PROJ-123', '--output', fmt]):
-                with patch.object(create_pr_description, 'get_jira_client') as mock_client:
-                    mock_client.return_value.get_issue.return_value = {
-                        'key': 'PROJ-123',
-                        'fields': {
-                            'summary': 'Test',
-                            'description': None,
-                            'labels': []
-                        }
-                    }
-                    mock_client.return_value.close = Mock()
-                    try:
-                        create_pr_description.main()
-                    except SystemExit as e:
-                        if e.code == 2:
-                            pytest.fail(f"Output format '{fmt}' should be valid")
+        for fmt in ["text", "json"]:
+            with (
+                patch(
+                    "sys.argv",
+                    ["create_pr_description.py", "PROJ-123", "--output", fmt],
+                ),
+                patch.object(create_pr_description, "get_jira_client") as mock_client,
+            ):
+                mock_client.return_value.get_issue.return_value = {
+                    "key": "PROJ-123",
+                    "fields": {
+                        "summary": "Test",
+                        "description": None,
+                        "labels": [],
+                    },
+                }
+                mock_client.return_value.close = Mock()
+                try:
+                    create_pr_description.main()
+                except SystemExit as e:
+                    if e.code == 2:
+                        pytest.fail(f"Output format '{fmt}' should be valid")

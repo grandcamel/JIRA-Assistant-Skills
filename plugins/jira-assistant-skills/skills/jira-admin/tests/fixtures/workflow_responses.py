@@ -17,53 +17,44 @@ WORKFLOWS_RESPONSE = {
         {
             "id": {
                 "name": "Software Development Workflow",
-                "entityId": "c6c7e6b0-19c4-4516-9a47-93f76124d4d4"
+                "entityId": "c6c7e6b0-19c4-4516-9a47-93f76124d4d4",
             },
             "description": "Workflow for software development projects",
-            "isDefault": False
+            "isDefault": False,
         },
         {
             "id": {
                 "name": "Bug Workflow",
-                "entityId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                "entityId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
             },
             "description": "Simplified workflow for bug tracking",
-            "isDefault": False
+            "isDefault": False,
         },
         {
-            "id": {
-                "name": "jira",
-                "entityId": "builtin-default-workflow"
-            },
+            "id": {"name": "jira", "entityId": "builtin-default-workflow"},
             "description": "The default JIRA workflow",
-            "isDefault": True
+            "isDefault": True,
         },
         {
             "id": {
                 "name": "Epic Workflow",
-                "entityId": "d4e5f6a7-b8c9-0123-4567-890abcdef123"
+                "entityId": "d4e5f6a7-b8c9-0123-4567-890abcdef123",
             },
             "description": "Workflow for managing epics",
-            "isDefault": False
-        }
-    ]
+            "isDefault": False,
+        },
+    ],
 }
 
 # Single workflow with full details
 SOFTWARE_WORKFLOW = {
     "id": {
         "name": "Software Development Workflow",
-        "entityId": "c6c7e6b0-19c4-4516-9a47-93f76124d4d4"
+        "entityId": "c6c7e6b0-19c4-4516-9a47-93f76124d4d4",
     },
     "description": "Workflow for software development projects",
-    "version": {
-        "versionNumber": 3,
-        "id": "12345"
-    },
-    "scope": {
-        "type": "GLOBAL",
-        "project": None
-    },
+    "version": {"versionNumber": 3, "id": "12345"},
+    "scope": {"type": "GLOBAL", "project": None},
     "isDefault": False,
     "transitions": [
         {
@@ -74,11 +65,7 @@ SOFTWARE_WORKFLOW = {
             "to": "10001",
             "type": "DIRECTED",
             "screen": None,
-            "rules": {
-                "conditions": [],
-                "validators": [],
-                "postFunctions": []
-            }
+            "rules": {"conditions": [], "validators": [], "postFunctions": []},
         },
         {
             "id": "21",
@@ -88,11 +75,7 @@ SOFTWARE_WORKFLOW = {
             "to": "10002",
             "type": "DIRECTED",
             "screen": None,
-            "rules": {
-                "conditions": [],
-                "validators": [],
-                "postFunctions": []
-            }
+            "rules": {"conditions": [], "validators": [], "postFunctions": []},
         },
         {
             "id": "31",
@@ -102,11 +85,7 @@ SOFTWARE_WORKFLOW = {
             "to": "10003",
             "type": "DIRECTED",
             "screen": None,
-            "rules": {
-                "conditions": [],
-                "validators": [],
-                "postFunctions": []
-            }
+            "rules": {"conditions": [], "validators": [], "postFunctions": []},
         },
         {
             "id": "41",
@@ -116,11 +95,7 @@ SOFTWARE_WORKFLOW = {
             "to": "10004",
             "type": "DIRECTED",
             "screen": None,
-            "rules": {
-                "conditions": [],
-                "validators": [],
-                "postFunctions": []
-            }
+            "rules": {"conditions": [], "validators": [], "postFunctions": []},
         },
         {
             "id": "51",
@@ -130,12 +105,8 @@ SOFTWARE_WORKFLOW = {
             "to": "10000",
             "type": "DIRECTED",
             "screen": None,
-            "rules": {
-                "conditions": [],
-                "validators": [],
-                "postFunctions": []
-            }
-        }
+            "rules": {"conditions": [], "validators": [], "postFunctions": []},
+        },
     ],
     "statuses": [
         {
@@ -143,55 +114,46 @@ SOFTWARE_WORKFLOW = {
             "name": "To Do",
             "statusCategory": "TODO",
             "statusReference": "1",
-            "layout": {"x": 100, "y": 200}
+            "layout": {"x": 100, "y": 200},
         },
         {
             "id": "10001",
             "name": "In Progress",
             "statusCategory": "IN_PROGRESS",
             "statusReference": "3",
-            "layout": {"x": 300, "y": 200}
+            "layout": {"x": 300, "y": 200},
         },
         {
             "id": "10002",
             "name": "Code Review",
             "statusCategory": "IN_PROGRESS",
             "statusReference": "10001",
-            "layout": {"x": 500, "y": 200}
+            "layout": {"x": 500, "y": 200},
         },
         {
             "id": "10003",
             "name": "Testing",
             "statusCategory": "IN_PROGRESS",
             "statusReference": "10002",
-            "layout": {"x": 700, "y": 200}
+            "layout": {"x": 700, "y": 200},
         },
         {
             "id": "10004",
             "name": "Done",
             "statusCategory": "DONE",
             "statusReference": "10003",
-            "layout": {"x": 900, "y": 200}
-        }
+            "layout": {"x": 900, "y": 200},
+        },
     ],
     "created": "2025-01-15T10:30:00.000+0000",
-    "updated": "2025-11-20T14:45:00.000+0000"
+    "updated": "2025-11-20T14:45:00.000+0000",
 }
 
 BUG_WORKFLOW = {
-    "id": {
-        "name": "Bug Workflow",
-        "entityId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-    },
+    "id": {"name": "Bug Workflow", "entityId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"},
     "description": "Simplified workflow for bug tracking",
-    "version": {
-        "versionNumber": 1,
-        "id": "12346"
-    },
-    "scope": {
-        "type": "GLOBAL",
-        "project": None
-    },
+    "version": {"versionNumber": 1, "id": "12346"},
+    "scope": {"type": "GLOBAL", "project": None},
     "isDefault": False,
     "transitions": [
         {
@@ -199,45 +161,29 @@ BUG_WORKFLOW = {
             "name": "Start Investigation",
             "from": ["1"],
             "to": "3",
-            "type": "DIRECTED"
+            "type": "DIRECTED",
         },
         {
             "id": "21",
             "name": "Resolve",
             "from": ["3"],
             "to": "10001",
-            "type": "DIRECTED"
+            "type": "DIRECTED",
         },
         {
             "id": "31",
             "name": "Close",
             "from": ["10001"],
             "to": "10002",
-            "type": "DIRECTED"
-        }
+            "type": "DIRECTED",
+        },
     ],
     "statuses": [
-        {
-            "id": "1",
-            "name": "Open",
-            "statusCategory": "TODO"
-        },
-        {
-            "id": "3",
-            "name": "In Progress",
-            "statusCategory": "IN_PROGRESS"
-        },
-        {
-            "id": "10001",
-            "name": "Resolved",
-            "statusCategory": "DONE"
-        },
-        {
-            "id": "10002",
-            "name": "Closed",
-            "statusCategory": "DONE"
-        }
-    ]
+        {"id": "1", "name": "Open", "statusCategory": "TODO"},
+        {"id": "3", "name": "In Progress", "statusCategory": "IN_PROGRESS"},
+        {"id": "10001", "name": "Resolved", "statusCategory": "DONE"},
+        {"id": "10002", "name": "Closed", "statusCategory": "DONE"},
+    ],
 }
 
 WORKFLOW_SEARCH_RESPONSE = {
@@ -246,10 +192,7 @@ WORKFLOW_SEARCH_RESPONSE = {
     "maxResults": 50,
     "total": 2,
     "isLast": True,
-    "values": [
-        SOFTWARE_WORKFLOW,
-        BUG_WORKFLOW
-    ]
+    "values": [SOFTWARE_WORKFLOW, BUG_WORKFLOW],
 }
 
 # ========== Workflow Scheme Responses ==========
@@ -268,21 +211,19 @@ WORKFLOW_SCHEMES_RESPONSE = {
             "defaultWorkflow": "jira",
             "issueTypeMappings": {
                 "10000": "Software Development Workflow",
-                "10001": "Bug Workflow"
+                "10001": "Bug Workflow",
             },
             "draft": False,
-            "self": "https://test.atlassian.net/rest/api/3/workflowscheme/10100"
+            "self": "https://test.atlassian.net/rest/api/3/workflowscheme/10100",
         },
         {
             "id": 10101,
             "name": "Agile Development Scheme",
             "description": "Workflow scheme for agile teams",
             "defaultWorkflow": "jira",
-            "issueTypeMappings": {
-                "10002": "Epic Workflow"
-            },
+            "issueTypeMappings": {"10002": "Epic Workflow"},
             "draft": False,
-            "self": "https://test.atlassian.net/rest/api/3/workflowscheme/10101"
+            "self": "https://test.atlassian.net/rest/api/3/workflowscheme/10101",
         },
         {
             "id": 10000,
@@ -291,9 +232,9 @@ WORKFLOW_SCHEMES_RESPONSE = {
             "defaultWorkflow": "jira",
             "issueTypeMappings": {},
             "draft": False,
-            "self": "https://test.atlassian.net/rest/api/3/workflowscheme/10000"
-        }
-    ]
+            "self": "https://test.atlassian.net/rest/api/3/workflowscheme/10000",
+        },
+    ],
 }
 
 SOFTWARE_SCHEME_DETAIL = {
@@ -304,32 +245,24 @@ SOFTWARE_SCHEME_DETAIL = {
     "issueTypeMappings": {
         "10000": "Software Development Workflow",
         "10001": "Bug Workflow",
-        "10002": "Epic Workflow"
+        "10002": "Epic Workflow",
     },
     "draft": False,
     "lastModified": "2025-11-15T09:20:00.000+0000",
     "lastModifiedUser": {
         "accountId": "557058:12345678-1234-1234-1234-123456789012",
-        "displayName": "John Admin"
+        "displayName": "John Admin",
     },
     "issueTypes": {
         "10000": {
             "id": "10000",
             "name": "Story",
-            "workflow": "Software Development Workflow"
+            "workflow": "Software Development Workflow",
         },
-        "10001": {
-            "id": "10001",
-            "name": "Bug",
-            "workflow": "Bug Workflow"
-        },
-        "10002": {
-            "id": "10002",
-            "name": "Epic",
-            "workflow": "Epic Workflow"
-        }
+        "10001": {"id": "10001", "name": "Bug", "workflow": "Bug Workflow"},
+        "10002": {"id": "10002", "name": "Epic", "workflow": "Epic Workflow"},
     },
-    "self": "https://test.atlassian.net/rest/api/3/workflowscheme/10100"
+    "self": "https://test.atlassian.net/rest/api/3/workflowscheme/10100",
 }
 
 PROJECT_WORKFLOW_SCHEME = {
@@ -338,7 +271,7 @@ PROJECT_WORKFLOW_SCHEME = {
         "name": "Software Development Scheme",
         "description": "Workflow scheme for software projects",
         "defaultWorkflow": "jira",
-        "self": "https://test.atlassian.net/rest/api/3/workflowscheme/10100"
+        "self": "https://test.atlassian.net/rest/api/3/workflowscheme/10100",
     }
 }
 
@@ -346,7 +279,7 @@ ASSIGN_SCHEME_TASK_RESPONSE = {
     "taskId": "10050",
     "self": "https://test.atlassian.net/rest/api/3/task/10050",
     "status": "ENQUEUED",
-    "message": "Workflow scheme assignment started"
+    "message": "Workflow scheme assignment started",
 }
 
 TASK_COMPLETE_RESPONSE = {
@@ -354,7 +287,7 @@ TASK_COMPLETE_RESPONSE = {
     "self": "https://test.atlassian.net/rest/api/3/task/10050",
     "status": "COMPLETE",
     "message": "Workflow scheme assigned successfully",
-    "progress": 100
+    "progress": 100,
 }
 
 TASK_IN_PROGRESS_RESPONSE = {
@@ -362,7 +295,7 @@ TASK_IN_PROGRESS_RESPONSE = {
     "self": "https://test.atlassian.net/rest/api/3/task/10050",
     "status": "RUNNING",
     "message": "Migrating issues to new workflow",
-    "progress": 45
+    "progress": 45,
 }
 
 TASK_FAILED_RESPONSE = {
@@ -373,8 +306,8 @@ TASK_FAILED_RESPONSE = {
     "progress": 45,
     "error": {
         "errorMessages": ["Status 'Old Status' not found in target workflow"],
-        "errors": {}
-    }
+        "errors": {},
+    },
 }
 
 # ========== Status Responses ==========
@@ -390,13 +323,10 @@ ALL_STATUSES_RESPONSE = [
             "key": "new",
             "colorName": "blue-gray",
             "name": "To Do",
-            "self": "https://test.atlassian.net/rest/api/3/statuscategory/2"
+            "self": "https://test.atlassian.net/rest/api/3/statuscategory/2",
         },
-        "scope": {
-            "type": "GLOBAL",
-            "project": None
-        },
-        "self": "https://test.atlassian.net/rest/api/3/status/10000"
+        "scope": {"type": "GLOBAL", "project": None},
+        "self": "https://test.atlassian.net/rest/api/3/status/10000",
     },
     {
         "id": "10001",
@@ -408,13 +338,10 @@ ALL_STATUSES_RESPONSE = [
             "key": "indeterminate",
             "colorName": "yellow",
             "name": "In Progress",
-            "self": "https://test.atlassian.net/rest/api/3/statuscategory/4"
+            "self": "https://test.atlassian.net/rest/api/3/statuscategory/4",
         },
-        "scope": {
-            "type": "GLOBAL",
-            "project": None
-        },
-        "self": "https://test.atlassian.net/rest/api/3/status/10001"
+        "scope": {"type": "GLOBAL", "project": None},
+        "self": "https://test.atlassian.net/rest/api/3/status/10001",
     },
     {
         "id": "10002",
@@ -426,13 +353,10 @@ ALL_STATUSES_RESPONSE = [
             "key": "indeterminate",
             "colorName": "yellow",
             "name": "In Progress",
-            "self": "https://test.atlassian.net/rest/api/3/statuscategory/4"
+            "self": "https://test.atlassian.net/rest/api/3/statuscategory/4",
         },
-        "scope": {
-            "type": "GLOBAL",
-            "project": None
-        },
-        "self": "https://test.atlassian.net/rest/api/3/status/10002"
+        "scope": {"type": "GLOBAL", "project": None},
+        "self": "https://test.atlassian.net/rest/api/3/status/10002",
     },
     {
         "id": "10003",
@@ -444,13 +368,10 @@ ALL_STATUSES_RESPONSE = [
             "key": "indeterminate",
             "colorName": "yellow",
             "name": "In Progress",
-            "self": "https://test.atlassian.net/rest/api/3/statuscategory/4"
+            "self": "https://test.atlassian.net/rest/api/3/statuscategory/4",
         },
-        "scope": {
-            "type": "GLOBAL",
-            "project": None
-        },
-        "self": "https://test.atlassian.net/rest/api/3/status/10003"
+        "scope": {"type": "GLOBAL", "project": None},
+        "self": "https://test.atlassian.net/rest/api/3/status/10003",
     },
     {
         "id": "10004",
@@ -462,13 +383,10 @@ ALL_STATUSES_RESPONSE = [
             "key": "done",
             "colorName": "green",
             "name": "Done",
-            "self": "https://test.atlassian.net/rest/api/3/statuscategory/3"
+            "self": "https://test.atlassian.net/rest/api/3/statuscategory/3",
         },
-        "scope": {
-            "type": "GLOBAL",
-            "project": None
-        },
-        "self": "https://test.atlassian.net/rest/api/3/status/10004"
+        "scope": {"type": "GLOBAL", "project": None},
+        "self": "https://test.atlassian.net/rest/api/3/status/10004",
     },
     {
         "id": "1",
@@ -480,13 +398,10 @@ ALL_STATUSES_RESPONSE = [
             "key": "new",
             "colorName": "blue-gray",
             "name": "To Do",
-            "self": "https://test.atlassian.net/rest/api/3/statuscategory/2"
+            "self": "https://test.atlassian.net/rest/api/3/statuscategory/2",
         },
-        "scope": {
-            "type": "GLOBAL",
-            "project": None
-        },
-        "self": "https://test.atlassian.net/rest/api/3/status/1"
+        "scope": {"type": "GLOBAL", "project": None},
+        "self": "https://test.atlassian.net/rest/api/3/status/1",
     },
     {
         "id": "3",
@@ -498,14 +413,11 @@ ALL_STATUSES_RESPONSE = [
             "key": "indeterminate",
             "colorName": "yellow",
             "name": "In Progress",
-            "self": "https://test.atlassian.net/rest/api/3/statuscategory/4"
+            "self": "https://test.atlassian.net/rest/api/3/statuscategory/4",
         },
-        "scope": {
-            "type": "GLOBAL",
-            "project": None
-        },
-        "self": "https://test.atlassian.net/rest/api/3/status/3"
-    }
+        "scope": {"type": "GLOBAL", "project": None},
+        "self": "https://test.atlassian.net/rest/api/3/status/3",
+    },
 ]
 
 STATUS_SEARCH_RESPONSE = {
@@ -514,7 +426,7 @@ STATUS_SEARCH_RESPONSE = {
     "maxResults": 200,
     "total": 5,
     "isLast": True,
-    "values": ALL_STATUSES_RESPONSE[:5]
+    "values": ALL_STATUSES_RESPONSE[:5],
 }
 
 SINGLE_STATUS = {
@@ -527,13 +439,10 @@ SINGLE_STATUS = {
         "key": "new",
         "colorName": "blue-gray",
         "name": "To Do",
-        "self": "https://test.atlassian.net/rest/api/3/statuscategory/2"
+        "self": "https://test.atlassian.net/rest/api/3/statuscategory/2",
     },
-    "scope": {
-        "type": "GLOBAL",
-        "project": None
-    },
-    "self": "https://test.atlassian.net/rest/api/3/status/10000"
+    "scope": {"type": "GLOBAL", "project": None},
+    "self": "https://test.atlassian.net/rest/api/3/status/10000",
 }
 
 # ========== Issue Workflow Responses ==========
@@ -560,9 +469,9 @@ ISSUE_TRANSITIONS = {
                     "id": 4,
                     "key": "indeterminate",
                     "colorName": "yellow",
-                    "name": "In Progress"
-                }
-            }
+                    "name": "In Progress",
+                },
+            },
         },
         {
             "id": "51",
@@ -583,11 +492,11 @@ ISSUE_TRANSITIONS = {
                     "id": 3,
                     "key": "done",
                     "colorName": "green",
-                    "name": "Done"
-                }
-            }
-        }
-    ]
+                    "name": "Done",
+                },
+            },
+        },
+    ],
 }
 
 ISSUE_WITH_STATUS = {
@@ -605,22 +514,22 @@ ISSUE_WITH_STATUS = {
                 "id": 2,
                 "key": "new",
                 "colorName": "blue-gray",
-                "name": "To Do"
-            }
+                "name": "To Do",
+            },
         },
         "issuetype": {
             "self": "https://test.atlassian.net/rest/api/3/issuetype/10000",
             "id": "10000",
             "name": "Story",
-            "subtask": False
+            "subtask": False,
         },
         "project": {
             "self": "https://test.atlassian.net/rest/api/3/project/10000",
             "id": "10000",
             "key": "PROJ",
-            "name": "Test Project"
-        }
-    }
+            "name": "Test Project",
+        },
+    },
 }
 
 # ========== Workflow Schemes for Workflow ==========
@@ -635,14 +544,14 @@ SCHEMES_FOR_WORKFLOW = {
         {
             "id": 10100,
             "name": "Software Development Scheme",
-            "description": "Workflow scheme for software projects"
+            "description": "Workflow scheme for software projects",
         },
         {
             "id": 10101,
             "name": "Agile Development Scheme",
-            "description": "Workflow scheme for agile teams"
-        }
-    ]
+            "description": "Workflow scheme for agile teams",
+        },
+    ],
 }
 
 # ========== Empty Response Variants ==========
@@ -653,7 +562,7 @@ EMPTY_WORKFLOWS_RESPONSE = {
     "maxResults": 50,
     "total": 0,
     "isLast": True,
-    "values": []
+    "values": [],
 }
 
 EMPTY_SCHEMES_RESPONSE = {
@@ -662,7 +571,7 @@ EMPTY_SCHEMES_RESPONSE = {
     "maxResults": 50,
     "total": 0,
     "isLast": True,
-    "values": []
+    "values": [],
 }
 
 EMPTY_STATUSES_RESPONSE = []
@@ -675,7 +584,7 @@ WORKFLOWS_PAGE_1 = {
     "maxResults": 2,
     "total": 4,
     "isLast": False,
-    "values": WORKFLOWS_RESPONSE["values"][:2]
+    "values": WORKFLOWS_RESPONSE["values"][:2],
 }
 
 WORKFLOWS_PAGE_2 = {
@@ -684,5 +593,5 @@ WORKFLOWS_PAGE_2 = {
     "maxResults": 2,
     "total": 4,
     "isLast": True,
-    "values": WORKFLOWS_RESPONSE["values"][2:]
+    "values": WORKFLOWS_RESPONSE["values"][2:],
 }

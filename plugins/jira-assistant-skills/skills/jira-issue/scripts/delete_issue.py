@@ -7,19 +7,21 @@ Usage:
     python delete_issue.py PROJ-123 --force
 """
 
-import sys
-import os
 import argparse
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    get_jira_client,
+    print_error,
+    print_success,
+    validate_issue_key,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import print_success, print_warning
-
-
-def delete_issue(issue_key: str, force: bool = False, profile: str = None) -> None:
+def delete_issue(
+    issue_key: str, force: bool = False, profile: str | None = None
+) -> None:
     """
     Delete a JIRA issue.
 
@@ -33,10 +35,12 @@ def delete_issue(issue_key: str, force: bool = False, profile: str = None) -> No
     if not force:
         client = get_jira_client(profile)
         try:
-            issue = client.get_issue(issue_key, fields=['summary', 'issuetype', 'status'])
-            summary = issue.get('fields', {}).get('summary', '')
-            issue_type = issue.get('fields', {}).get('issuetype', {}).get('name', '')
-            status = issue.get('fields', {}).get('status', {}).get('name', '')
+            issue = client.get_issue(
+                issue_key, fields=["summary", "issuetype", "status"]
+            )
+            summary = issue.get("fields", {}).get("summary", "")
+            issue_type = issue.get("fields", {}).get("issuetype", {}).get("name", "")
+            status = issue.get("fields", {}).get("status", {}).get("name", "")
 
             print(f"\nIssue: {issue_key}")
             print(f"Type: {issue_type}")
@@ -44,14 +48,14 @@ def delete_issue(issue_key: str, force: bool = False, profile: str = None) -> No
             print(f"Summary: {summary}")
             print()
 
-            response = input(f"Are you sure you want to delete this issue? (yes/no): ")
-            if response.lower() not in ['yes', 'y']:
+            response = input("Are you sure you want to delete this issue? (yes/no): ")
+            if response.lower() not in ["yes", "y"]:
                 print("Deletion cancelled.")
                 client.close()
                 return
         except JiraError:
             response = input(f"Are you sure you want to delete {issue_key}? (yes/no): ")
-            if response.lower() not in ['yes', 'y']:
+            if response.lower() not in ["yes", "y"]:
                 print("Deletion cancelled.")
                 client.close()
                 return
@@ -64,26 +68,20 @@ def delete_issue(issue_key: str, force: bool = False, profile: str = None) -> No
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Delete a JIRA issue',
-        epilog='Example: python delete_issue.py PROJ-123'
+        description="Delete a JIRA issue",
+        epilog="Example: python delete_issue.py PROJ-123",
     )
 
-    parser.add_argument('issue_key',
-                       help='Issue key (e.g., PROJ-123)')
-    parser.add_argument('--force', '-f',
-                       action='store_true',
-                       help='Skip confirmation prompt')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument("issue_key", help="Issue key (e.g., PROJ-123)")
+    parser.add_argument(
+        "--force", "-f", action="store_true", help="Skip confirmation prompt"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
-        delete_issue(
-            issue_key=args.issue_key,
-            force=args.force,
-            profile=args.profile
-        )
+        delete_issue(issue_key=args.issue_key, force=args.force, profile=args.profile)
 
         print_success(f"Deleted issue: {args.issue_key}")
 
@@ -98,5 +96,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -10,21 +10,26 @@ Supports:
 """
 
 import argparse
-import sys
 import json
-from pathlib import Path
-from typing import Dict, Any, Optional
+import sys
+from typing import Any
 
 # Add shared lib to path
+from jira_assistant_skills_lib import (
+    JiraError,
+    NotFoundError,
+    get_jira_client,
+    print_error,
+)
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, NotFoundError
 
-
-def add_user_to_group(client, account_id: str,
-                      group_name: Optional[str] = None,
-                      group_id: Optional[str] = None,
-                      dry_run: bool = False) -> Optional[Dict[str, Any]]:
+def add_user_to_group(
+    client,
+    account_id: str,
+    group_name: str | None = None,
+    group_id: str | None = None,
+    dry_run: bool = False,
+) -> dict[str, Any] | None:
     """
     Add a user to a group.
 
@@ -42,16 +47,17 @@ def add_user_to_group(client, account_id: str,
         return None
 
     return client.add_user_to_group(
-        account_id=account_id,
-        group_name=group_name,
-        group_id=group_id
+        account_id=account_id, group_name=group_name, group_id=group_id
     )
 
 
-def add_user_by_email(client, email: str,
-                      group_name: Optional[str] = None,
-                      group_id: Optional[str] = None,
-                      dry_run: bool = False) -> Optional[Dict[str, Any]]:
+def add_user_by_email(
+    client,
+    email: str,
+    group_name: str | None = None,
+    group_id: str | None = None,
+    dry_run: bool = False,
+) -> dict[str, Any] | None:
     """
     Add a user to a group by email lookup.
 
@@ -74,7 +80,7 @@ def add_user_by_email(client, email: str,
     # Find exact email match
     matched_user = None
     for user in users:
-        if user.get('emailAddress', '').lower() == email.lower():
+        if user.get("emailAddress", "").lower() == email.lower():
             matched_user = user
             break
 
@@ -83,17 +89,19 @@ def add_user_by_email(client, email: str,
 
     return add_user_to_group(
         client,
-        account_id=matched_user['accountId'],
+        account_id=matched_user["accountId"],
         group_name=group_name,
         group_id=group_id,
-        dry_run=dry_run
+        dry_run=dry_run,
     )
 
 
-def format_dry_run_preview(account_id: Optional[str] = None,
-                           email: Optional[str] = None,
-                           group_name: Optional[str] = None,
-                           group_id: Optional[str] = None) -> str:
+def format_dry_run_preview(
+    account_id: str | None = None,
+    email: str | None = None,
+    group_name: str | None = None,
+    group_id: str | None = None,
+) -> str:
     """
     Format dry-run preview message.
 
@@ -120,11 +128,12 @@ def format_dry_run_preview(account_id: Optional[str] = None,
     lines.append("")
     lines.append("This is a dry run. No changes will be made.")
     lines.append("Remove --dry-run to add the user to the group.")
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
-def format_success_message(account_id: str, group_name: Optional[str] = None,
-                           group_id: Optional[str] = None) -> str:
+def format_success_message(
+    account_id: str, group_name: str | None = None, group_id: str | None = None
+) -> str:
     """
     Format success message.
 
@@ -142,51 +151,61 @@ def format_success_message(account_id: str, group_name: Optional[str] = None,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Add a user to a JIRA group',
-        epilog='''
+        description="Add a user to a JIRA group",
+        epilog="""
 Examples:
   %(prog)s john@example.com --group "jira-developers"
   %(prog)s --account-id 5b10ac8d82e05b22cc7d4ef5 --group "jira-developers"
   %(prog)s john@example.com --group-id abc123
   %(prog)s john@example.com --group "mobile-team" --dry-run
-''',
-        formatter_class=argparse.RawDescriptionHelpFormatter
+""",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     # User identification
-    parser.add_argument('email', nargs='?', help='User email address')
-    parser.add_argument('--account-id', '-a', help='User account ID (alternative to email)')
+    parser.add_argument("email", nargs="?", help="User email address")
+    parser.add_argument(
+        "--account-id", "-a", help="User account ID (alternative to email)"
+    )
 
     # Group identification
-    parser.add_argument('--group', '-g', dest='group_name', help='Group name')
-    parser.add_argument('--group-id', '-i', help='Group ID (alternative to name)')
+    parser.add_argument("--group", "-g", dest="group_name", help="Group name")
+    parser.add_argument("--group-id", "-i", help="Group ID (alternative to name)")
 
     # Options
-    parser.add_argument('--dry-run', '-n', action='store_true',
-                        help='Preview without adding')
-    parser.add_argument('--output', '-o', choices=['text', 'json'],
-                        default='text', help='Output format (default: text)')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument(
+        "--dry-run", "-n", action="store_true", help="Preview without adding"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     # Validate user identification
     if not args.email and not args.account_id:
-        parser.error('Either email or --account-id is required')
+        parser.error("Either email or --account-id is required")
 
     # Validate group identification
     if not args.group_name and not args.group_id:
-        parser.error('Either --group or --group-id is required')
+        parser.error("Either --group or --group-id is required")
 
     try:
         # Dry run mode
         if args.dry_run:
-            print(format_dry_run_preview(
-                account_id=args.account_id,
-                email=args.email,
-                group_name=args.group_name,
-                group_id=args.group_id
-            ))
+            print(
+                format_dry_run_preview(
+                    account_id=args.account_id,
+                    email=args.email,
+                    group_name=args.group_name,
+                    group_id=args.group_id,
+                )
+            )
             sys.exit(0)
 
         client = get_jira_client(args.profile)
@@ -197,7 +216,7 @@ Examples:
                 client,
                 account_id=args.account_id,
                 group_name=args.group_name,
-                group_id=args.group_id
+                group_id=args.group_id,
             )
             account_id = args.account_id
         else:
@@ -205,25 +224,30 @@ Examples:
                 client,
                 email=args.email,
                 group_name=args.group_name,
-                group_id=args.group_id
+                group_id=args.group_id,
             )
             # Look up the account ID for the message
             users = client.search_users(query=args.email, max_results=10)
             account_id = next(
-                (u['accountId'] for u in users
-                 if u.get('emailAddress', '').lower() == args.email.lower()),
-                args.email
+                (
+                    u["accountId"]
+                    for u in users
+                    if u.get("emailAddress", "").lower() == args.email.lower()
+                ),
+                args.email,
             )
 
         # Output
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(result, indent=2))
         else:
-            print(format_success_message(
-                account_id=account_id,
-                group_name=args.group_name,
-                group_id=args.group_id
-            ))
+            print(
+                format_success_message(
+                    account_id=account_id,
+                    group_name=args.group_name,
+                    group_id=args.group_id,
+                )
+            )
 
         client.close()
 
@@ -235,5 +259,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

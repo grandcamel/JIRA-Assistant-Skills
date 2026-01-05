@@ -11,123 +11,158 @@ Usage:
     python jql_interactive.py --quick
 """
 
-import sys
 import argparse
-import json
-from pathlib import Path
-from typing import Dict, Any, List, Optional
+import sys
+from typing import Any
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import format_table, print_success, print_info
-
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    print_info,
+    print_success,
+)
 
 # Common JQL fields with their operators
 COMMON_FIELDS = {
-    'project': {
-        'operators': ['=', '!=', 'in', 'not in'],
-        'example': 'project = PROJ',
-        'description': 'Project key or name'
+    "project": {
+        "operators": ["=", "!=", "in", "not in"],
+        "example": "project = PROJ",
+        "description": "Project key or name",
     },
-    'status': {
-        'operators': ['=', '!=', 'in', 'not in', 'was', 'was in', 'was not', 'was not in', 'changed'],
-        'example': 'status = "In Progress"',
-        'description': 'Issue status'
+    "status": {
+        "operators": [
+            "=",
+            "!=",
+            "in",
+            "not in",
+            "was",
+            "was in",
+            "was not",
+            "was not in",
+            "changed",
+        ],
+        "example": 'status = "In Progress"',
+        "description": "Issue status",
     },
-    'assignee': {
-        'operators': ['=', '!=', 'in', 'not in', 'was', 'was in', 'was not', 'was not in', 'changed', 'is', 'is not'],
-        'example': 'assignee = currentUser()',
-        'description': 'Assigned user'
+    "assignee": {
+        "operators": [
+            "=",
+            "!=",
+            "in",
+            "not in",
+            "was",
+            "was in",
+            "was not",
+            "was not in",
+            "changed",
+            "is",
+            "is not",
+        ],
+        "example": "assignee = currentUser()",
+        "description": "Assigned user",
     },
-    'reporter': {
-        'operators': ['=', '!=', 'in', 'not in', 'was', 'was in', 'was not', 'was not in', 'changed', 'is', 'is not'],
-        'example': 'reporter = currentUser()',
-        'description': 'Issue reporter'
+    "reporter": {
+        "operators": [
+            "=",
+            "!=",
+            "in",
+            "not in",
+            "was",
+            "was in",
+            "was not",
+            "was not in",
+            "changed",
+            "is",
+            "is not",
+        ],
+        "example": "reporter = currentUser()",
+        "description": "Issue reporter",
     },
-    'priority': {
-        'operators': ['=', '!=', '>', '>=', '<', '<=', 'in', 'not in'],
-        'example': 'priority = High',
-        'description': 'Issue priority'
+    "priority": {
+        "operators": ["=", "!=", ">", ">=", "<", "<=", "in", "not in"],
+        "example": "priority = High",
+        "description": "Issue priority",
     },
-    'type': {
-        'operators': ['=', '!=', 'in', 'not in'],
-        'example': 'type = Bug',
-        'description': 'Issue type (Bug, Story, Task, etc.)'
+    "type": {
+        "operators": ["=", "!=", "in", "not in"],
+        "example": "type = Bug",
+        "description": "Issue type (Bug, Story, Task, etc.)",
     },
-    'created': {
-        'operators': ['=', '!=', '>', '>=', '<', '<='],
-        'example': 'created >= -7d',
-        'description': 'Creation date/time'
+    "created": {
+        "operators": ["=", "!=", ">", ">=", "<", "<="],
+        "example": "created >= -7d",
+        "description": "Creation date/time",
     },
-    'updated': {
-        'operators': ['=', '!=', '>', '>=', '<', '<='],
-        'example': 'updated >= startOfDay()',
-        'description': 'Last update date/time'
+    "updated": {
+        "operators": ["=", "!=", ">", ">=", "<", "<="],
+        "example": "updated >= startOfDay()",
+        "description": "Last update date/time",
     },
-    'resolved': {
-        'operators': ['=', '!=', '>', '>=', '<', '<=', 'is', 'is not'],
-        'example': 'resolved >= -30d',
-        'description': 'Resolution date/time'
+    "resolved": {
+        "operators": ["=", "!=", ">", ">=", "<", "<=", "is", "is not"],
+        "example": "resolved >= -30d",
+        "description": "Resolution date/time",
     },
-    'duedate': {
-        'operators': ['=', '!=', '>', '>=', '<', '<=', 'is', 'is not'],
-        'example': 'duedate < now()',
-        'description': 'Due date'
+    "duedate": {
+        "operators": ["=", "!=", ">", ">=", "<", "<=", "is", "is not"],
+        "example": "duedate < now()",
+        "description": "Due date",
     },
-    'labels': {
-        'operators': ['=', '!=', 'in', 'not in', 'is', 'is not'],
-        'example': 'labels = urgent',
-        'description': 'Issue labels'
+    "labels": {
+        "operators": ["=", "!=", "in", "not in", "is", "is not"],
+        "example": "labels = urgent",
+        "description": "Issue labels",
     },
-    'sprint': {
-        'operators': ['=', '!=', 'in', 'not in', 'is', 'is not'],
-        'example': 'sprint in openSprints()',
-        'description': 'Agile sprint'
+    "sprint": {
+        "operators": ["=", "!=", "in", "not in", "is", "is not"],
+        "example": "sprint in openSprints()",
+        "description": "Agile sprint",
     },
-    'text': {
-        'operators': ['~', '!~'],
-        'example': 'text ~ "search term"',
-        'description': 'Full text search'
+    "text": {
+        "operators": ["~", "!~"],
+        "example": 'text ~ "search term"',
+        "description": "Full text search",
     },
-    'summary': {
-        'operators': ['~', '!~', 'is', 'is not'],
-        'example': 'summary ~ "bug"',
-        'description': 'Issue summary text search'
+    "summary": {
+        "operators": ["~", "!~", "is", "is not"],
+        "example": 'summary ~ "bug"',
+        "description": "Issue summary text search",
     },
-    'description': {
-        'operators': ['~', '!~', 'is', 'is not'],
-        'example': 'description ~ "error"',
-        'description': 'Issue description text search'
-    }
+    "description": {
+        "operators": ["~", "!~", "is", "is not"],
+        "example": 'description ~ "error"',
+        "description": "Issue description text search",
+    },
 }
 
 
 # Common JQL functions
 JQL_FUNCTIONS = {
-    'currentUser()': 'The currently logged-in user',
-    'startOfDay()': 'Start of today',
-    'startOfDay(-1d)': 'Start of yesterday',
-    'startOfDay(-7d)': 'Start of 7 days ago',
-    'startOfWeek()': 'Start of current week',
-    'startOfMonth()': 'Start of current month',
-    'endOfDay()': 'End of today',
-    'endOfWeek()': 'End of current week',
-    'endOfMonth()': 'End of current month',
-    'now()': 'Current date/time',
-    'openSprints()': 'All open/active sprints',
-    'closedSprints()': 'All closed sprints',
-    'futureSprints()': 'All future sprints',
-    'membersOf("group")': 'Members of a JIRA group',
-    'EMPTY': 'Field has no value',
-    'NULL': 'Field has no value (same as EMPTY)'
+    "currentUser()": "The currently logged-in user",
+    "startOfDay()": "Start of today",
+    "startOfDay(-1d)": "Start of yesterday",
+    "startOfDay(-7d)": "Start of 7 days ago",
+    "startOfWeek()": "Start of current week",
+    "startOfMonth()": "Start of current month",
+    "endOfDay()": "End of today",
+    "endOfWeek()": "End of current week",
+    "endOfMonth()": "End of current month",
+    "now()": "Current date/time",
+    "openSprints()": "All open/active sprints",
+    "closedSprints()": "All closed sprints",
+    "futureSprints()": "All future sprints",
+    'membersOf("group")': "Members of a JIRA group",
+    "EMPTY": "Field has no value",
+    "NULL": "Field has no value (same as EMPTY)",
 }
 
 
 class InteractiveBuilder:
     """Interactive JQL query builder."""
 
-    def __init__(self, profile: str = None):
+    def __init__(self, profile: str | None = None):
         self.profile = profile
         self.clauses = []
         self.order_by = None
@@ -149,13 +184,13 @@ class InteractiveBuilder:
     def build_jql(self) -> str:
         """Build the current JQL query string."""
         if not self.clauses:
-            return ''
+            return ""
 
-        jql = ' AND '.join(self.clauses)
+        jql = " AND ".join(self.clauses)
 
         if self.order_by:
-            direction = 'DESC' if self.order_desc else 'ASC'
-            jql = f'{jql} ORDER BY {self.order_by} {direction}'
+            direction = "DESC" if self.order_desc else "ASC"
+            jql = f"{jql} ORDER BY {self.order_by} {direction}"
 
         return jql
 
@@ -181,24 +216,20 @@ class InteractiveBuilder:
         self.order_by = field
         self.order_desc = desc
 
-    def validate(self) -> Dict[str, Any]:
+    def validate(self) -> dict[str, Any]:
         """Validate the current query."""
         jql = self.build_jql()
         if not jql:
-            return {'valid': False, 'errors': ['No query to validate']}
+            return {"valid": False, "errors": ["No query to validate"]}
 
         client = self.get_client()
         result = client.parse_jql([jql])
-        parsed = result.get('queries', [{}])[0]
-        errors = parsed.get('errors', [])
+        parsed = result.get("queries", [{}])[0]
+        errors = parsed.get("errors", [])
 
-        return {
-            'valid': len(errors) == 0,
-            'errors': errors,
-            'jql': jql
-        }
+        return {"valid": len(errors) == 0, "errors": errors, "jql": jql}
 
-    def run_query(self, max_results: int = 20) -> Dict[str, Any]:
+    def run_query(self, max_results: int = 20) -> dict[str, Any]:
         """Run the current query."""
         jql = self.build_jql()
         if not jql:
@@ -207,30 +238,30 @@ class InteractiveBuilder:
         client = self.get_client()
         return client.search_issues(
             jql,
-            fields=['key', 'summary', 'status', 'priority', 'issuetype'],
-            max_results=max_results
+            fields=["key", "summary", "status", "priority", "issuetype"],
+            max_results=max_results,
         )
 
-    def get_projects(self) -> List[str]:
+    def get_projects(self) -> list[str]:
         """Get available projects."""
         client = self.get_client()
         projects = client.get_projects()
-        return [p.get('key', '') for p in projects]
+        return [p.get("key", "") for p in projects]
 
-    def get_statuses(self) -> List[str]:
+    def get_statuses(self) -> list[str]:
         """Get available statuses."""
         client = self.get_client()
-        statuses = client.get('/rest/api/3/status')
-        return list(set(s.get('name', '') for s in statuses))
+        statuses = client.get("/rest/api/3/status")
+        return list({s.get("name", "") for s in statuses})
 
-    def get_priorities(self) -> List[str]:
+    def get_priorities(self) -> list[str]:
         """Get available priorities."""
         client = self.get_client()
-        priorities = client.get('/rest/api/3/priority')
-        return [p.get('name', '') for p in priorities]
+        priorities = client.get("/rest/api/3/priority")
+        return [p.get("name", "") for p in priorities]
 
 
-def prompt(message: str, default: str = None) -> str:
+def prompt(message: str, default: str | None = None) -> str:
     """Prompt user for input."""
     if default:
         result = input(f"{message} [{default}]: ").strip()
@@ -238,18 +269,18 @@ def prompt(message: str, default: str = None) -> str:
     return input(f"{message}: ").strip()
 
 
-def prompt_choice(message: str, choices: List[str], allow_custom: bool = False) -> str:
+def prompt_choice(message: str, choices: list[str], allow_custom: bool = False) -> str:
     """Prompt user to select from choices."""
     print(f"\n{message}")
     for i, choice in enumerate(choices, 1):
         print(f"  [{i}] {choice}")
     if allow_custom:
-        print(f"  [c] Enter custom value")
+        print("  [c] Enter custom value")
 
     while True:
         selection = input("Select: ").strip().lower()
 
-        if allow_custom and selection == 'c':
+        if allow_custom and selection == "c":
             return input("Enter value: ").strip()
 
         try:
@@ -300,15 +331,27 @@ def add_field_clause(builder: InteractiveBuilder):
     field = prompt_choice("Select field", fields, allow_custom=True)
 
     if field in COMMON_FIELDS:
-        operators = COMMON_FIELDS[field]['operators']
+        operators = COMMON_FIELDS[field]["operators"]
         print(f"\nExample: {COMMON_FIELDS[field]['example']}")
     else:
-        operators = ['=', '!=', '~', 'in', 'not in', 'is', 'is not', '>', '>=', '<', '<=']
+        operators = [
+            "=",
+            "!=",
+            "~",
+            "in",
+            "not in",
+            "is",
+            "is not",
+            ">",
+            ">=",
+            "<",
+            "<=",
+        ]
 
     operator = prompt_choice("Select operator", operators)
 
     # Get value with suggestions for certain fields
-    if field == 'project':
+    if field == "project":
         try:
             projects = builder.get_projects()
             if projects:
@@ -316,7 +359,7 @@ def add_field_clause(builder: InteractiveBuilder):
         except Exception:
             pass
 
-    if field == 'status':
+    if field == "status":
         try:
             statuses = builder.get_statuses()
             if statuses:
@@ -324,7 +367,7 @@ def add_field_clause(builder: InteractiveBuilder):
         except Exception:
             pass
 
-    if field == 'priority':
+    if field == "priority":
         try:
             priorities = builder.get_priorities()
             if priorities:
@@ -332,26 +375,26 @@ def add_field_clause(builder: InteractiveBuilder):
         except Exception:
             pass
 
-    if field in ['assignee', 'reporter']:
+    if field in ["assignee", "reporter"]:
         print("\nCommon values: currentUser(), EMPTY")
 
-    if field in ['created', 'updated', 'resolved', 'duedate']:
+    if field in ["created", "updated", "resolved", "duedate"]:
         print("\nCommon values: -7d, startOfDay(), now(), startOfWeek()")
 
     value = prompt("Enter value")
 
     # Format the clause
-    if operator in ['in', 'not in']:
+    if operator in ["in", "not in"]:
         # Check if value looks like a list
-        if ',' in value and not value.startswith('('):
+        if "," in value and not value.startswith("("):
             value = f"({value})"
-    elif operator in ['~', '!~']:
+    elif operator in ["~", "!~"]:
         # Text search - quote if needed
         if '"' not in value and "'" not in value:
             value = f'"{value}"'
-    elif operator in ['=', '!='] and field in ['status', 'type', 'priority']:
+    elif operator in ["=", "!="] and field in ["status", "type", "priority"]:
         # Quote values with spaces
-        if ' ' in value and '"' not in value:
+        if " " in value and '"' not in value:
             value = f'"{value}"'
 
     clause = f"{field} {operator} {value}"
@@ -390,7 +433,7 @@ def show_help():
     input("\nPress Enter to continue...")
 
 
-def run_interactive(builder: InteractiveBuilder, start_with: str = None):
+def run_interactive(builder: InteractiveBuilder, start_with: str | None = None):
     """Run the interactive builder loop."""
     if start_with:
         builder.add_clause(start_with)
@@ -401,22 +444,22 @@ def run_interactive(builder: InteractiveBuilder, start_with: str = None):
             display_menu(builder)
             choice = input("\nSelect action: ").strip()
 
-            if choice == '1':
+            if choice == "1":
                 add_field_clause(builder)
 
-            elif choice == '2':
+            elif choice == "2":
                 clause = prompt("Enter custom clause (e.g., 'project = PROJ')")
                 if clause:
                     builder.add_clause(clause)
                     print_success(f"Added: {clause}")
 
-            elif choice == '3':
+            elif choice == "3":
                 field = prompt("ORDER BY field", "created")
-                desc = prompt("Descending? (y/n)", "y").lower() == 'y'
+                desc = prompt("Descending? (y/n)", "y").lower() == "y"
                 builder.set_order(field, desc)
                 print_success(f"Set ORDER BY {field} {'DESC' if desc else 'ASC'}")
 
-            elif choice == '4':
+            elif choice == "4":
                 if builder.clauses:
                     idx = prompt("Clause index to remove")
                     try:
@@ -429,32 +472,34 @@ def run_interactive(builder: InteractiveBuilder, start_with: str = None):
                 else:
                     print("No clauses to remove")
 
-            elif choice == '5':
+            elif choice == "5":
                 builder.clear_clauses()
                 print_success("Cleared all clauses")
 
-            elif choice == '6':
+            elif choice == "6":
                 result = builder.validate()
-                if result['valid']:
+                if result["valid"]:
                     print_success("Query is valid!")
                 else:
                     print("Validation errors:")
-                    for error in result['errors']:
+                    for error in result["errors"]:
                         print(f"  - {error}")
 
-            elif choice == '7':
+            elif choice == "7":
                 try:
                     results = builder.run_query()
-                    issues = results.get('issues', [])
-                    total = results.get('total', 0)
+                    issues = results.get("issues", [])
+                    total = results.get("total", 0)
 
                     if issues:
-                        print(f"\nFound {total} issue(s), showing first {len(issues)}:\n")
+                        print(
+                            f"\nFound {total} issue(s), showing first {len(issues)}:\n"
+                        )
                         for issue in issues:
-                            fields = issue.get('fields', {})
-                            key = issue.get('key', '')
-                            summary = fields.get('summary', '')[:50]
-                            status = fields.get('status', {}).get('name', '')
+                            fields = issue.get("fields", {})
+                            key = issue.get("key", "")
+                            summary = fields.get("summary", "")[:50]
+                            status = fields.get("status", {}).get("name", "")
                             print(f"  {key} [{status}] {summary}")
                     else:
                         print("\nNo issues found.")
@@ -462,17 +507,17 @@ def run_interactive(builder: InteractiveBuilder, start_with: str = None):
                 except Exception as e:
                     print(f"Error running query: {e}")
 
-            elif choice == '8':
+            elif choice == "8":
                 jql = builder.build_jql()
                 if jql:
                     print(f"\nCopy this JQL:\n{jql}")
                 else:
                     print("No query to copy")
 
-            elif choice == '9':
+            elif choice == "9":
                 show_help()
 
-            elif choice == '0':
+            elif choice == "0":
                 jql = builder.build_jql()
                 if jql:
                     print(f"\nFinal query:\n{jql}")
@@ -490,22 +535,23 @@ def run_interactive(builder: InteractiveBuilder, start_with: str = None):
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Interactive JQL query builder',
-        epilog='''
+        description="Interactive JQL query builder",
+        epilog="""
 Examples:
   %(prog)s
   %(prog)s --start-with "project = PROJ"
   %(prog)s --quick
-        '''
+        """,
     )
 
-    parser.add_argument('--start-with', '-s',
-                       help='Start with an existing JQL clause')
-    parser.add_argument('--quick', '-q',
-                       action='store_true',
-                       help='Quick mode with common field prompts')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use')
+    parser.add_argument("--start-with", "-s", help="Start with an existing JQL clause")
+    parser.add_argument(
+        "--quick",
+        "-q",
+        action="store_true",
+        help="Quick mode with common field prompts",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -524,7 +570,7 @@ Examples:
 
             status = prompt("Status (e.g., Open, 'In Progress')")
             if status:
-                if ' ' in status and '"' not in status:
+                if " " in status and '"' not in status:
                     status = f'"{status}"'
                 builder.add_clause(f"status = {status}")
 
@@ -542,16 +588,16 @@ Examples:
                 print(f"\nBuilt query:\n{jql}")
 
                 validate = prompt("\nValidate and run? (y/n)", "y")
-                if validate.lower() == 'y':
+                if validate.lower() == "y":
                     result = builder.validate()
-                    if result['valid']:
+                    if result["valid"]:
                         print_success("Query is valid!")
                         results = builder.run_query()
-                        total = results.get('total', 0)
+                        total = results.get("total", 0)
                         print(f"Found {total} issue(s)")
                     else:
                         print("Validation errors:")
-                        for error in result['errors']:
+                        for error in result["errors"]:
                             print(f"  - {error}")
             else:
                 print("\nNo query built (all fields skipped)")
@@ -569,5 +615,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -6,13 +6,13 @@ Provides reusable utilities for resolving user identifiers
 (email addresses, usernames) to JIRA account IDs.
 """
 
-from typing import Optional, Dict, Any
+from typing import Any
 
 
 class UserNotFoundError(Exception):
     """Raised when a user cannot be found in JIRA."""
 
-    def __init__(self, identifier: str, message: Optional[str] = None):
+    def __init__(self, identifier: str, message: str | None = None):
         self.identifier = identifier
         if message:
             super().__init__(message)
@@ -42,18 +42,18 @@ def resolve_user_to_account_id(client, user_identifier: str) -> str:
         >>> account_id = resolve_user_to_account_id(client, "user@example.com")
         >>> print(account_id)  # e.g., "5b10ac8d82e05b22cc7d4ef5"
     """
-    if '@' in user_identifier:
+    if "@" in user_identifier:
         # Treat as email - perform user search
         users = client.search_users(user_identifier, max_results=1)
         if not users:
             raise UserNotFoundError(user_identifier)
-        return users[0]['accountId']
+        return users[0]["accountId"]
     else:
         # Assume it's already an account ID
         return user_identifier
 
 
-def get_user_display_info(client, account_id: str) -> Dict[str, Any]:
+def get_user_display_info(client, account_id: str) -> dict[str, Any]:
     """
     Get display information for a user by account ID.
 
@@ -76,13 +76,13 @@ def get_user_display_info(client, account_id: str) -> Dict[str, Any]:
         >>> print(info['displayName'])  # e.g., "John Doe"
     """
     return client.get(
-        '/rest/api/3/user',
-        params={'accountId': account_id},
-        operation=f"get user {account_id}"
+        "/rest/api/3/user",
+        params={"accountId": account_id},
+        operation=f"get user {account_id}",
     )
 
 
-def resolve_users_batch(client, user_identifiers: list) -> Dict[str, str]:
+def resolve_users_batch(client, user_identifiers: list) -> dict[str, str]:
     """
     Resolve multiple user identifiers to account IDs.
 

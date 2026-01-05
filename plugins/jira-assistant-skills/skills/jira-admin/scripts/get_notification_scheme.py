@@ -13,25 +13,29 @@ Usage:
     python get_notification_scheme.py 10000 --profile production
 """
 
-import sys
 import argparse
 import json
-from pathlib import Path
-from typing import Dict, Any, Optional, List
+import sys
+from typing import Any
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, NotFoundError, ValidationError
 from notification_utils import format_recipient, get_event_name
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    NotFoundError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
 
 def get_notification_scheme(
     client=None,
-    scheme_id: Optional[str] = None,
-    scheme_name: Optional[str] = None,
+    scheme_id: str | None = None,
+    scheme_name: str | None = None,
     show_projects: bool = False,
-    profile: Optional[str] = None
-) -> Dict[str, Any]:
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Get notification scheme details.
 
@@ -59,19 +63,17 @@ def get_notification_scheme(
         if not scheme_id and scheme_name:
             found = client.lookup_notification_scheme_by_name(scheme_name)
             if found:
-                scheme_id = found.get('id')
+                scheme_id = found.get("id")
             else:
                 raise NotFoundError(
-                    resource_type="Notification scheme",
-                    resource_id=scheme_name
+                    resource_type="Notification scheme", resource_id=scheme_name
                 )
         elif not scheme_id:
             raise ValidationError("Either scheme_id or scheme_name must be provided")
 
         # Get scheme details with expanded events
         result = client.get_notification_scheme(
-            scheme_id,
-            expand='notificationSchemeEvents'
+            scheme_id, expand="notificationSchemeEvents"
         )
 
         # Add project count if requested
@@ -79,18 +81,18 @@ def get_notification_scheme(
             project_mappings = client.get_notification_scheme_projects(
                 notification_scheme_id=[scheme_id]
             )
-            projects = project_mappings.get('values', [])
-            result['projects'] = projects
-            result['project_count'] = len(projects)
+            projects = project_mappings.get("values", [])
+            result["projects"] = projects
+            result["project_count"] = len(projects)
 
         return result
 
     finally:
-        if close_client and hasattr(client, 'close'):
+        if close_client and hasattr(client, "close"):
             client.close()
 
 
-def format_text_output(result: Dict[str, Any], show_projects: bool = False) -> str:
+def format_text_output(result: dict[str, Any], show_projects: bool = False) -> str:
     """
     Format result as human-readable text.
 
@@ -108,21 +110,21 @@ def format_text_output(result: Dict[str, Any], show_projects: bool = False) -> s
     output.append(f"Description: {result.get('description', 'N/A')}")
     output.append("")
 
-    events = result.get('notificationSchemeEvents', [])
+    events = result.get("notificationSchemeEvents", [])
 
     if events:
         output.append("Event Configurations:")
         output.append("-" * 70)
 
         for event_config in events:
-            event = event_config.get('event', {})
-            event_name = event.get('name', get_event_name(event.get('id', 'unknown')))
-            event_id = event.get('id', 'N/A')
+            event = event_config.get("event", {})
+            event_name = event.get("name", get_event_name(event.get("id", "unknown")))
+            event_id = event.get("id", "N/A")
 
             output.append(f"\nEvent: {event_name} (ID: {event_id})")
             output.append("  Recipients:")
 
-            notifications = event_config.get('notifications', [])
+            notifications = event_config.get("notifications", [])
             if notifications:
                 for notification in notifications:
                     recipient_str = format_recipient(notification)
@@ -135,13 +137,13 @@ def format_text_output(result: Dict[str, Any], show_projects: bool = False) -> s
     else:
         output.append("No events configured for this scheme.")
 
-    if show_projects and 'project_count' in result:
+    if show_projects and "project_count" in result:
         output.append(f"Projects using this scheme: {result['project_count']}")
 
-    return '\n'.join(output)
+    return "\n".join(output)
 
 
-def format_json_output(result: Dict[str, Any]) -> str:
+def format_json_output(result: dict[str, Any]) -> str:
     """
     Format result as JSON.
 
@@ -157,25 +159,37 @@ def format_json_output(result: Dict[str, Any]) -> str:
 def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Get notification scheme details from JIRA',
-        epilog='''
+        description="Get notification scheme details from JIRA",
+        epilog="""
 Examples:
     python get_notification_scheme.py 10000
     python get_notification_scheme.py 10000 --output json
     python get_notification_scheme.py 10000 --show-projects
     python get_notification_scheme.py --name "Default Notification Scheme"
     python get_notification_scheme.py 10000 --profile production
-        '''
+        """,
     )
-    parser.add_argument('scheme_id', nargs='?',
-                        help='Notification scheme ID')
-    parser.add_argument('--name', '-n', dest='scheme_name',
-                        help='Notification scheme name (alternative to ID)')
-    parser.add_argument('--output', '-o', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--show-projects', '-p', action='store_true',
-                        help='Show projects using this scheme')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument("scheme_id", nargs="?", help="Notification scheme ID")
+    parser.add_argument(
+        "--name",
+        "-n",
+        dest="scheme_name",
+        help="Notification scheme name (alternative to ID)",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument(
+        "--show-projects",
+        "-p",
+        action="store_true",
+        help="Show projects using this scheme",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -187,10 +201,10 @@ Examples:
             scheme_id=args.scheme_id,
             scheme_name=args.scheme_name,
             show_projects=args.show_projects,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_json_output(result))
         else:
             print(format_text_output(result, show_projects=args.show_projects))
@@ -203,5 +217,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

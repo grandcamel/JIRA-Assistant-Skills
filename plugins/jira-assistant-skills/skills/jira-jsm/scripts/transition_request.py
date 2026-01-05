@@ -9,24 +9,26 @@ Usage:
     python transition_request.py SD-101 --show-transitions
 """
 
-import sys
-import os
 import argparse
-import json
-from pathlib import Path
-from typing import Optional, Dict, Any
+import sys
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    NotFoundError,
+    get_jira_client,
+    print_error,
+    print_success,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, NotFoundError
-from jira_assistant_skills_lib import print_success
-
-
-def transition_service_request(issue_key: str, transition_id: Optional[str] = None,
-                               transition_name: Optional[str] = None,
-                               comment: Optional[str] = None,
-                               public: bool = True,
-                               profile: Optional[str] = None) -> None:
+def transition_service_request(
+    issue_key: str,
+    transition_id: str | None = None,
+    transition_name: str | None = None,
+    comment: str | None = None,
+    public: bool = True,
+    profile: str | None = None,
+) -> None:
     """
     Transition a service request.
 
@@ -46,24 +48,26 @@ def transition_service_request(issue_key: str, transition_id: Optional[str] = No
         # Lookup transition ID if name provided
         if transition_name and not transition_id:
             transitions = client.get_request_transitions(issue_key)
-            matching = [t for t in transitions if t['name'] == transition_name]
+            matching = [t for t in transitions if t["name"] == transition_name]
 
             if not matching:
-                available = [t['name'] for t in transitions]
+                available = [t["name"] for t in transitions]
                 raise ValueError(
                     f"Transition '{transition_name}' not found. "
                     f"Available: {', '.join(available)}"
                 )
 
-            transition_id = matching[0]['id']
+            transition_id = matching[0]["id"]
 
         if not transition_id:
             raise ValueError("Either transition_id or transition_name must be provided")
 
-        client.transition_request(issue_key, transition_id, comment=comment, public=public)
+        client.transition_request(
+            issue_key, transition_id, comment=comment, public=public
+        )
 
 
-def list_transitions(issue_key: str, profile: Optional[str] = None) -> list:
+def list_transitions(issue_key: str, profile: str | None = None) -> list:
     """
     List available transitions for a request.
 
@@ -81,7 +85,7 @@ def list_transitions(issue_key: str, profile: Optional[str] = None) -> list:
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Transition a JSM service request',
+        description="Transition a JSM service request",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -101,27 +105,35 @@ Examples:
 
   Show available transitions:
     %(prog)s SD-101 --show-transitions
-        """
+        """,
     )
 
-    parser.add_argument('request_key',
-                        help='Request key (e.g., SD-101)')
-    parser.add_argument('--to', '--transition-name', dest='transition_name',
-                        help='Transition name')
-    parser.add_argument('--transition-id',
-                        help='Transition ID')
-    parser.add_argument('--comment',
-                        help='Comment to add during transition')
-    parser.add_argument('--public', action='store_true', default=None,
-                        help='Make comment public (customer-visible)')
-    parser.add_argument('--internal', action='store_true',
-                        help='Make comment internal (agent-only)')
-    parser.add_argument('--show-transitions', action='store_true',
-                        help='Show available transitions and exit')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Show what would be done without doing it')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use from config')
+    parser.add_argument("request_key", help="Request key (e.g., SD-101)")
+    parser.add_argument(
+        "--to", "--transition-name", dest="transition_name", help="Transition name"
+    )
+    parser.add_argument("--transition-id", help="Transition ID")
+    parser.add_argument("--comment", help="Comment to add during transition")
+    parser.add_argument(
+        "--public",
+        action="store_true",
+        default=None,
+        help="Make comment public (customer-visible)",
+    )
+    parser.add_argument(
+        "--internal", action="store_true", help="Make comment internal (agent-only)"
+    )
+    parser.add_argument(
+        "--show-transitions",
+        action="store_true",
+        help="Show available transitions and exit",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be done without doing it",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -135,9 +147,9 @@ Examples:
             print("-" * 60)
 
             for t in transitions:
-                tid = t.get('id', 'N/A')
-                name = t.get('name', 'N/A')
-                to_status = t.get('to', {}).get('name', 'N/A')
+                tid = t.get("id", "N/A")
+                name = t.get("name", "N/A")
+                to_status = t.get("to", {}).get("name", "N/A")
                 print(f"{tid:<6} {name:<30} {to_status}")
 
             return 0
@@ -162,7 +174,9 @@ Examples:
             if args.transition_id:
                 print(f"  Transition ID: {args.transition_id}")
             if args.comment:
-                visibility = "Public (customer-visible)" if public else "Internal (agent-only)"
+                visibility = (
+                    "Public (customer-visible)" if public else "Internal (agent-only)"
+                )
                 print(f"  Comment: {args.comment}")
                 print(f"  Visibility: {visibility}")
             return 0
@@ -173,7 +187,7 @@ Examples:
             transition_name=args.transition_name,
             comment=args.comment,
             public=public,
-            profile=args.profile
+            profile=args.profile,
         )
 
         print_success(f"Request {args.request_key} transitioned successfully!")
@@ -195,5 +209,5 @@ Examples:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

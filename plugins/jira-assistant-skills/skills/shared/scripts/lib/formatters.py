@@ -5,26 +5,31 @@ Provides functions to format JIRA API responses as tables, JSON,
 CSV, and human-readable text.
 """
 
-import json
 import csv
+import json
 import sys
-from typing import Dict, Any, List, Optional
 from io import StringIO
+from typing import Any
+
 from adf_helper import adf_to_text
 
 try:
     from tabulate import tabulate
+
     HAS_TABULATE = True
 except ImportError:
     HAS_TABULATE = False
-    print("Warning: 'tabulate' not installed. Table formatting will be basic.", file=sys.stderr)
+    print(
+        "Warning: 'tabulate' not installed. Table formatting will be basic.",
+        file=sys.stderr,
+    )
 
 
-EPIC_LINK_FIELD = 'customfield_10014'
-STORY_POINTS_FIELD = 'customfield_10016'
+EPIC_LINK_FIELD = "customfield_10014"
+STORY_POINTS_FIELD = "customfield_10016"
 
 
-def format_issue(issue: Dict[str, Any], detailed: bool = False) -> str:
+def format_issue(issue: dict[str, Any], detailed: bool = False) -> str:
     """
     Format a JIRA issue for display.
 
@@ -35,16 +40,28 @@ def format_issue(issue: Dict[str, Any], detailed: bool = False) -> str:
     Returns:
         Formatted issue string
     """
-    fields = issue.get('fields', {})
-    key = issue.get('key', 'N/A')
-    summary = fields.get('summary', 'N/A')
-    status = fields.get('status', {}).get('name', 'N/A')
-    issue_type = fields.get('issuetype', {}).get('name', 'N/A')
-    priority = fields.get('priority', {}).get('name', 'N/A') if fields.get('priority') else 'None'
-    assignee = fields.get('assignee', {}).get('displayName', 'Unassigned') if fields.get('assignee') else 'Unassigned'
-    reporter = fields.get('reporter', {}).get('displayName', 'N/A') if fields.get('reporter') else 'N/A'
-    created = fields.get('created', 'N/A')
-    updated = fields.get('updated', 'N/A')
+    fields = issue.get("fields", {})
+    key = issue.get("key", "N/A")
+    summary = fields.get("summary", "N/A")
+    status = fields.get("status", {}).get("name", "N/A")
+    issue_type = fields.get("issuetype", {}).get("name", "N/A")
+    priority = (
+        fields.get("priority", {}).get("name", "N/A")
+        if fields.get("priority")
+        else "None"
+    )
+    assignee = (
+        fields.get("assignee", {}).get("displayName", "Unassigned")
+        if fields.get("assignee")
+        else "Unassigned"
+    )
+    reporter = (
+        fields.get("reporter", {}).get("displayName", "N/A")
+        if fields.get("reporter")
+        else "N/A"
+    )
+    created = fields.get("created", "N/A")
+    updated = fields.get("updated", "N/A")
 
     output = []
     output.append(f"Key:      {key}")
@@ -64,21 +81,25 @@ def format_issue(issue: Dict[str, Any], detailed: bool = False) -> str:
         output.append(f"Points:   {story_points}")
 
     # Sprint info (from customfield or sprint field)
-    sprint = fields.get('sprint')
+    sprint = fields.get("sprint")
     if sprint:
         if isinstance(sprint, dict):
-            sprint_name = sprint.get('name', str(sprint))
+            sprint_name = sprint.get("name", str(sprint))
         elif isinstance(sprint, list) and sprint:
-            sprint_name = sprint[0].get('name', str(sprint[0])) if isinstance(sprint[0], dict) else str(sprint[0])
+            sprint_name = (
+                sprint[0].get("name", str(sprint[0]))
+                if isinstance(sprint[0], dict)
+                else str(sprint[0])
+            )
         else:
             sprint_name = str(sprint)
         output.append(f"Sprint:   {sprint_name}")
 
     # Parent (for subtasks)
-    parent = fields.get('parent')
+    parent = fields.get("parent")
     if parent:
-        parent_key = parent.get('key', '')
-        parent_summary = parent.get('fields', {}).get('summary', '')
+        parent_key = parent.get("key", "")
+        parent_summary = parent.get("fields", {}).get("summary", "")
         if parent_key:
             output.append(f"Parent:   {parent_key} - {parent_summary}")
 
@@ -87,7 +108,7 @@ def format_issue(issue: Dict[str, Any], detailed: bool = False) -> str:
         output.append(f"Created:  {created}")
         output.append(f"Updated:  {updated}")
 
-        description = fields.get('description')
+        description = fields.get("description")
         if description:
             if isinstance(description, dict):
                 desc_text = adf_to_text(description)
@@ -95,51 +116,58 @@ def format_issue(issue: Dict[str, Any], detailed: bool = False) -> str:
                 desc_text = str(description)
 
             if desc_text:
-                output.append(f"\nDescription:")
-                for line in desc_text.split('\n'):
+                output.append("\nDescription:")
+                for line in desc_text.split("\n"):
                     output.append(f"  {line}")
 
-        labels = fields.get('labels', [])
+        labels = fields.get("labels", [])
         if labels:
             output.append(f"\nLabels: {', '.join(labels)}")
 
-        components = fields.get('components', [])
+        components = fields.get("components", [])
         if components:
-            comp_names = [c.get('name', '') for c in components]
+            comp_names = [c.get("name", "") for c in components]
             output.append(f"Components: {', '.join(comp_names)}")
 
         # Subtasks
-        subtasks = fields.get('subtasks', [])
+        subtasks = fields.get("subtasks", [])
         if subtasks:
             output.append(f"\nSubtasks ({len(subtasks)}):")
             for st in subtasks:
-                st_key = st.get('key', '')
-                st_summary = st.get('fields', {}).get('summary', '')
-                st_status = st.get('fields', {}).get('status', {}).get('name', '')
+                st_key = st.get("key", "")
+                st_summary = st.get("fields", {}).get("summary", "")
+                st_status = st.get("fields", {}).get("status", {}).get("name", "")
                 output.append(f"  [{st_status}] {st_key} - {st_summary}")
 
         # Issue links
-        issue_links = fields.get('issuelinks', [])
+        issue_links = fields.get("issuelinks", [])
         if issue_links:
             output.append(f"\nLinks ({len(issue_links)}):")
             for link in issue_links:
-                link_type = link.get('type', {}).get('name', 'Unknown')
-                if 'outwardIssue' in link:
-                    direction = link.get('type', {}).get('outward', 'links to')
-                    linked = link['outwardIssue']
+                link.get("type", {}).get("name", "Unknown")
+                if "outwardIssue" in link:
+                    direction = link.get("type", {}).get("outward", "links to")
+                    linked = link["outwardIssue"]
                 else:
-                    direction = link.get('type', {}).get('inward', 'linked from')
-                    linked = link.get('inwardIssue', {})
-                linked_key = linked.get('key', '')
-                linked_summary = linked.get('fields', {}).get('summary', '')[:40]
-                linked_status = linked.get('fields', {}).get('status', {}).get('name', '')
-                output.append(f"  {direction} {linked_key} [{linked_status}] {linked_summary}")
+                    direction = link.get("type", {}).get("inward", "linked from")
+                    linked = link.get("inwardIssue", {})
+                linked_key = linked.get("key", "")
+                linked_summary = linked.get("fields", {}).get("summary", "")[:40]
+                linked_status = (
+                    linked.get("fields", {}).get("status", {}).get("name", "")
+                )
+                output.append(
+                    f"  {direction} {linked_key} [{linked_status}] {linked_summary}"
+                )
 
-    return '\n'.join(output)
+    return "\n".join(output)
 
 
-def format_table(data: List[Dict[str, Any]], columns: Optional[List[str]] = None,
-                 headers: Optional[List[str]] = None) -> str:
+def format_table(
+    data: list[dict[str, Any]],
+    columns: list[str] | None = None,
+    headers: list[str] | None = None,
+) -> str:
     """
     Format data as a table.
 
@@ -164,29 +192,29 @@ def format_table(data: List[Dict[str, Any]], columns: Optional[List[str]] = None
     for item in data:
         row = []
         for col in columns:
-            value = item.get(col, '')
+            value = item.get(col, "")
 
             if isinstance(value, dict):
-                value = value.get('name', str(value))
+                value = value.get("name", str(value))
             elif isinstance(value, list):
-                value = ', '.join(str(v) for v in value)
+                value = ", ".join(str(v) for v in value)
             elif value is None:
-                value = ''
+                value = ""
 
             value_str = str(value)
             if len(value_str) > 50:
-                value_str = value_str[:47] + '...'
+                value_str = value_str[:47] + "..."
 
             row.append(value_str)
         rows.append(row)
 
     if HAS_TABULATE:
-        return tabulate(rows, headers=headers, tablefmt='simple')
+        return tabulate(rows, headers=headers, tablefmt="simple")
     else:
         return _format_basic_table(rows, headers)
 
 
-def _format_basic_table(rows: List[List[str]], headers: List[str]) -> str:
+def _format_basic_table(rows: list[list[str]], headers: list[str]) -> str:
     """
     Basic table formatting without tabulate library.
 
@@ -203,25 +231,27 @@ def _format_basic_table(rows: List[List[str]], headers: List[str]) -> str:
         for i, cell in enumerate(row):
             col_widths[i] = max(col_widths[i], len(str(cell)))
 
-    separator = '-' * (sum(col_widths) + len(col_widths) * 3 + 1)
+    separator = "-" * (sum(col_widths) + len(col_widths) * 3 + 1)
 
     lines = []
     lines.append(separator)
 
-    header_line = '| ' + ' | '.join(
-        h.ljust(col_widths[i]) for i, h in enumerate(headers)
-    ) + ' |'
+    header_line = (
+        "| " + " | ".join(h.ljust(col_widths[i]) for i, h in enumerate(headers)) + " |"
+    )
     lines.append(header_line)
     lines.append(separator)
 
     for row in rows:
-        row_line = '| ' + ' | '.join(
-            str(cell).ljust(col_widths[i]) for i, cell in enumerate(row)
-        ) + ' |'
+        row_line = (
+            "| "
+            + " | ".join(str(cell).ljust(col_widths[i]) for i, cell in enumerate(row))
+            + " |"
+        )
         lines.append(row_line)
 
     lines.append(separator)
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def format_json(data: Any, pretty: bool = True) -> str:
@@ -241,8 +271,9 @@ def format_json(data: Any, pretty: bool = True) -> str:
         return json.dumps(data, ensure_ascii=False)
 
 
-def export_csv(data: List[Dict[str, Any]], file_path: str,
-               columns: Optional[List[str]] = None) -> None:
+def export_csv(
+    data: list[dict[str, Any]], file_path: str, columns: list[str] | None = None
+) -> None:
     """
     Export data to CSV file.
 
@@ -257,28 +288,28 @@ def export_csv(data: List[Dict[str, Any]], file_path: str,
     if columns is None:
         columns = list(data[0].keys())
 
-    with open(file_path, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=columns, extrasaction='ignore')
+    with open(file_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=columns, extrasaction="ignore")
         writer.writeheader()
 
         for item in data:
             row = {}
             for col in columns:
-                value = item.get(col, '')
+                value = item.get(col, "")
 
                 if isinstance(value, dict):
-                    value = value.get('name', str(value))
+                    value = value.get("name", str(value))
                 elif isinstance(value, list):
-                    value = ', '.join(str(v) for v in value)
+                    value = ", ".join(str(v) for v in value)
                 elif value is None:
-                    value = ''
+                    value = ""
 
                 row[col] = str(value)
 
             writer.writerow(row)
 
 
-def get_csv_string(data: List[Dict[str, Any]], columns: Optional[List[str]] = None) -> str:
+def get_csv_string(data: list[dict[str, Any]], columns: list[str] | None = None) -> str:
     """
     Get CSV formatted string.
 
@@ -296,20 +327,20 @@ def get_csv_string(data: List[Dict[str, Any]], columns: Optional[List[str]] = No
         columns = list(data[0].keys())
 
     output = StringIO()
-    writer = csv.DictWriter(output, fieldnames=columns, extrasaction='ignore')
+    writer = csv.DictWriter(output, fieldnames=columns, extrasaction="ignore")
     writer.writeheader()
 
     for item in data:
         row = {}
         for col in columns:
-            value = item.get(col, '')
+            value = item.get(col, "")
 
             if isinstance(value, dict):
-                value = value.get('name', str(value))
+                value = value.get("name", str(value))
             elif isinstance(value, list):
-                value = ', '.join(str(v) for v in value)
+                value = ", ".join(str(v) for v in value)
             elif value is None:
-                value = ''
+                value = ""
 
             row[col] = str(value)
 
@@ -318,7 +349,7 @@ def get_csv_string(data: List[Dict[str, Any]], columns: Optional[List[str]] = No
     return output.getvalue()
 
 
-def format_transitions(transitions: List[Dict[str, Any]]) -> str:
+def format_transitions(transitions: list[dict[str, Any]]) -> str:
     """
     Format available transitions for display.
 
@@ -333,16 +364,18 @@ def format_transitions(transitions: List[Dict[str, Any]]) -> str:
 
     data = []
     for t in transitions:
-        data.append({
-            'ID': t.get('id', ''),
-            'Name': t.get('name', ''),
-            'To Status': t.get('to', {}).get('name', '')
-        })
+        data.append(
+            {
+                "ID": t.get("id", ""),
+                "Name": t.get("name", ""),
+                "To Status": t.get("to", {}).get("name", ""),
+            }
+        )
 
-    return format_table(data, columns=['ID', 'Name', 'To Status'])
+    return format_table(data, columns=["ID", "Name", "To Status"])
 
 
-def format_comments(comments: List[Dict[str, Any]], limit: Optional[int] = None) -> str:
+def format_comments(comments: list[dict[str, Any]], limit: int | None = None) -> str:
     """
     Format issue comments for display.
 
@@ -361,25 +394,29 @@ def format_comments(comments: List[Dict[str, Any]], limit: Optional[int] = None)
 
     output = []
     for i, comment in enumerate(comments, 1):
-        author = comment.get('author', {}).get('displayName', 'Unknown')
-        created = comment.get('created', 'N/A')
-        body = comment.get('body')
+        author = comment.get("author", {}).get("displayName", "Unknown")
+        created = comment.get("created", "N/A")
+        body = comment.get("body")
 
         if isinstance(body, dict):
             body_text = adf_to_text(body)
         else:
-            body_text = str(body) if body else ''
+            body_text = str(body) if body else ""
 
         output.append(f"Comment #{i} by {author} at {created}:")
-        for line in body_text.split('\n'):
+        for line in body_text.split("\n"):
             output.append(f"  {line}")
         output.append("")
 
-    return '\n'.join(output)
+    return "\n".join(output)
 
 
-def format_search_results(issues: List[Dict[str, Any]], show_agile: bool = False,
-                          show_links: bool = False, show_time: bool = False) -> str:
+def format_search_results(
+    issues: list[dict[str, Any]],
+    show_agile: bool = False,
+    show_links: bool = False,
+    show_time: bool = False,
+) -> str:
     """
     Format search results as a table.
 
@@ -397,50 +434,83 @@ def format_search_results(issues: List[Dict[str, Any]], show_agile: bool = False
 
     data = []
     for issue in issues:
-        fields = issue.get('fields', {})
+        fields = issue.get("fields", {})
         row = {
-            'Key': issue.get('key', ''),
-            'Type': fields.get('issuetype', {}).get('name', ''),
-            'Status': fields.get('status', {}).get('name', ''),
-            'Priority': fields.get('priority', {}).get('name', '') if fields.get('priority') else '',
-            'Assignee': fields.get('assignee', {}).get('displayName', '') if fields.get('assignee') else '',
-            'Reporter': fields.get('reporter', {}).get('displayName', '') if fields.get('reporter') else '',
-            'Summary': fields.get('summary', '')[:50]
+            "Key": issue.get("key", ""),
+            "Type": fields.get("issuetype", {}).get("name", ""),
+            "Status": fields.get("status", {}).get("name", ""),
+            "Priority": fields.get("priority", {}).get("name", "")
+            if fields.get("priority")
+            else "",
+            "Assignee": fields.get("assignee", {}).get("displayName", "")
+            if fields.get("assignee")
+            else "",
+            "Reporter": fields.get("reporter", {}).get("displayName", "")
+            if fields.get("reporter")
+            else "",
+            "Summary": fields.get("summary", "")[:50],
         }
 
         if show_agile:
-            epic = fields.get(EPIC_LINK_FIELD, '')
-            points = fields.get(STORY_POINTS_FIELD, '')
-            row['Epic'] = epic if epic else ''
-            row['Pts'] = str(points) if points else ''
+            epic = fields.get(EPIC_LINK_FIELD, "")
+            points = fields.get(STORY_POINTS_FIELD, "")
+            row["Epic"] = epic if epic else ""
+            row["Pts"] = str(points) if points else ""
 
         if show_links:
-            links = fields.get('issuelinks', [])
+            links = fields.get("issuelinks", [])
             link_count = len(links)
             if link_count > 0:
                 link_types = set()
                 for link in links:
-                    link_types.add(link.get('type', {}).get('name', ''))
-                row['Links'] = f"{link_count} ({', '.join(link_types)})"
+                    link_types.add(link.get("type", {}).get("name", ""))
+                row["Links"] = f"{link_count} ({', '.join(link_types)})"
             else:
-                row['Links'] = ''
+                row["Links"] = ""
 
         if show_time:
-            tt = fields.get('timetracking', {})
-            row['Est'] = tt.get('originalEstimate', '')
-            row['Rem'] = tt.get('remainingEstimate', '')
-            row['Spent'] = tt.get('timeSpent', '')
+            tt = fields.get("timetracking", {})
+            row["Est"] = tt.get("originalEstimate", "")
+            row["Rem"] = tt.get("remainingEstimate", "")
+            row["Spent"] = tt.get("timeSpent", "")
 
         data.append(row)
 
     if show_agile:
-        columns = ['Key', 'Type', 'Status', 'Pts', 'Epic', 'Assignee', 'Reporter', 'Summary']
+        columns = [
+            "Key",
+            "Type",
+            "Status",
+            "Pts",
+            "Epic",
+            "Assignee",
+            "Reporter",
+            "Summary",
+        ]
     elif show_links:
-        columns = ['Key', 'Type', 'Status', 'Links', 'Assignee', 'Reporter', 'Summary']
+        columns = ["Key", "Type", "Status", "Links", "Assignee", "Reporter", "Summary"]
     elif show_time:
-        columns = ['Key', 'Type', 'Status', 'Est', 'Rem', 'Spent', 'Assignee', 'Reporter', 'Summary']
+        columns = [
+            "Key",
+            "Type",
+            "Status",
+            "Est",
+            "Rem",
+            "Spent",
+            "Assignee",
+            "Reporter",
+            "Summary",
+        ]
     else:
-        columns = ['Key', 'Type', 'Status', 'Priority', 'Assignee', 'Reporter', 'Summary']
+        columns = [
+            "Key",
+            "Type",
+            "Status",
+            "Priority",
+            "Assignee",
+            "Reporter",
+            "Summary",
+        ]
 
     return format_table(data, columns=columns)
 
@@ -454,6 +524,7 @@ def print_success(message: str) -> None:
     """
     try:
         from colorama import Fore, Style, init
+
         init(autoreset=True)
         print(f"{Fore.GREEN}{message}{Style.RESET_ALL}")
     except ImportError:
@@ -469,6 +540,7 @@ def print_warning(message: str) -> None:
     """
     try:
         from colorama import Fore, Style, init
+
         init(autoreset=True)
         print(f"{Fore.YELLOW}Warning: {message}{Style.RESET_ALL}")
     except ImportError:
@@ -484,6 +556,7 @@ def print_info(message: str) -> None:
     """
     try:
         from colorama import Fore, Style, init
+
         init(autoreset=True)
         print(f"{Fore.BLUE}{message}{Style.RESET_ALL}")
     except ImportError:

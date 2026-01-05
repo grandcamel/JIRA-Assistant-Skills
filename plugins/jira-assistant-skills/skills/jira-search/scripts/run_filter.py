@@ -7,19 +7,26 @@ Usage:
     python run_filter.py --name "My Open Issues"
 """
 
-import sys
 import argparse
-import json
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    format_json,
+    format_search_results,
+    get_jira_client,
+    print_error,
+    print_info,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import format_search_results, format_json, print_info
-
-
-def run_filter(filter_id: str = None, filter_name: str = None,
-              max_results: int = 50, profile: str = None) -> dict:
+def run_filter(
+    filter_id: str | None = None,
+    filter_name: str | None = None,
+    max_results: int = 50,
+    profile: str | None = None,
+) -> dict:
     """
     Execute a saved filter.
 
@@ -38,17 +45,21 @@ def run_filter(filter_id: str = None, filter_name: str = None,
     client = get_jira_client(profile)
 
     if filter_name:
-        filters = client.get('/rest/api/3/filter/my', operation="get filters")
+        filters = client.get("/rest/api/3/filter/my", operation="get filters")
         if isinstance(filters, list):
-            matching = [f for f in filters if f.get('name', '').lower() == filter_name.lower()]
+            matching = [
+                f for f in filters if f.get("name", "").lower() == filter_name.lower()
+            ]
             if not matching:
                 raise ValidationError(f"Filter '{filter_name}' not found")
-            filter_id = matching[0]['id']
+            filter_id = matching[0]["id"]
         else:
             raise ValidationError("Could not retrieve filters")
 
-    filter_data = client.get(f'/rest/api/3/filter/{filter_id}', operation=f"get filter {filter_id}")
-    jql = filter_data.get('jql', '')
+    filter_data = client.get(
+        f"/rest/api/3/filter/{filter_id}", operation=f"get filter {filter_id}"
+    )
+    jql = filter_data.get("jql", "")
 
     if not jql:
         raise ValidationError(f"Filter {filter_id} has no JQL query")
@@ -61,26 +72,29 @@ def run_filter(filter_id: str = None, filter_name: str = None,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Run a saved JIRA filter',
-        epilog='Example: python run_filter.py --name "My Open Issues"'
+        description="Run a saved JIRA filter",
+        epilog='Example: python run_filter.py --name "My Open Issues"',
     )
 
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--id',
-                      help='Filter ID')
-    group.add_argument('--name', '-n',
-                      help='Filter name')
+    group.add_argument("--id", help="Filter ID")
+    group.add_argument("--name", "-n", help="Filter name")
 
-    parser.add_argument('--max-results', '-m',
-                       type=int,
-                       default=50,
-                       help='Maximum number of results (default: 50)')
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format (default: text)')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument(
+        "--max-results",
+        "-m",
+        type=int,
+        default=50,
+        help="Maximum number of results (default: 50)",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -89,13 +103,13 @@ def main(argv: list[str] | None = None):
             filter_id=args.id,
             filter_name=args.name,
             max_results=args.max_results,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        issues = results.get('issues', [])
-        total = results.get('total', 0)
+        issues = results.get("issues", [])
+        total = results.get("total", 0)
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_json(results))
         else:
             print_info(f"Found {total} issue(s)")
@@ -111,5 +125,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

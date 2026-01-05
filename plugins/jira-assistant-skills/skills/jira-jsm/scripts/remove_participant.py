@@ -8,15 +8,15 @@ Usage:
     python remove_participant.py REQ-123 --account-id id1 --dry-run
 """
 
-import sys
-import os
 import argparse
-from pathlib import Path
+import sys
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import print_success
+from jira_assistant_skills_lib import (
+    JiraError,
+    get_jira_client,
+    print_error,
+    print_success,
+)
 
 
 def parse_account_ids(account_id_string: str) -> list:
@@ -29,11 +29,15 @@ def parse_account_ids(account_id_string: str) -> list:
     Returns:
         List of account IDs
     """
-    return [id.strip() for id in account_id_string.split(',') if id.strip()]
+    return [id.strip() for id in account_id_string.split(",") if id.strip()]
 
 
-def remove_participant_func(issue_key: str, account_ids: list = None,
-                             usernames: list = None, profile: str = None) -> dict:
+def remove_participant_func(
+    issue_key: str,
+    account_ids: list | None = None,
+    usernames: list | None = None,
+    profile: str | None = None,
+) -> dict:
     """
     Remove participants from a request.
 
@@ -47,14 +51,15 @@ def remove_participant_func(issue_key: str, account_ids: list = None,
         Updated participants data
     """
     with get_jira_client(profile) as client:
-        return client.remove_request_participants(issue_key, account_ids=account_ids,
-                                                   usernames=usernames)
+        return client.remove_request_participants(
+            issue_key, account_ids=account_ids, usernames=usernames
+        )
 
 
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Remove participants from a request',
+        description="Remove participants from a request",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -66,21 +71,21 @@ Examples:
 
   Dry-run:
     %(prog)s REQ-123 --account-id id1 --dry-run
-        """
+        """,
     )
 
-    parser.add_argument('issue_key',
-                        help='Request issue key (e.g., REQ-123)')
-    parser.add_argument('--account-id',
-                        help='User account ID(s) (comma-separated)')
-    parser.add_argument('--username',
-                        help='Username(s) (comma-separated, legacy)')
-    parser.add_argument('--yes', '-y', action='store_true',
-                        help='Skip confirmation prompt')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Show what would be removed without removing')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use from config')
+    parser.add_argument("issue_key", help="Request issue key (e.g., REQ-123)")
+    parser.add_argument("--account-id", help="User account ID(s) (comma-separated)")
+    parser.add_argument("--username", help="Username(s) (comma-separated, legacy)")
+    parser.add_argument(
+        "--yes", "-y", action="store_true", help="Skip confirmation prompt"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be removed without removing",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -94,10 +99,14 @@ Examples:
 
         # Validate parsed lists are non-empty
         if account_ids is not None and len(account_ids) == 0:
-            print_error("Account ID list is empty after parsing. Provide valid comma-separated IDs.")
+            print_error(
+                "Account ID list is empty after parsing. Provide valid comma-separated IDs."
+            )
             return 1
         if usernames is not None and len(usernames) == 0:
-            print_error("Username list is empty after parsing. Provide valid comma-separated usernames.")
+            print_error(
+                "Username list is empty after parsing. Provide valid comma-separated usernames."
+            )
             return 1
 
         if args.dry_run:
@@ -117,11 +126,15 @@ Examples:
             issue_key=args.issue_key,
             account_ids=account_ids,
             usernames=usernames,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        count = (len(account_ids) if account_ids else 0) + (len(usernames) if usernames else 0)
-        print_success(f"Successfully removed {count} participant(s) from request {args.issue_key}")
+        count = (len(account_ids) if account_ids else 0) + (
+            len(usernames) if usernames else 0
+        )
+        print_success(
+            f"Successfully removed {count} participant(s) from request {args.issue_key}"
+        )
 
         return 0
 
@@ -133,5 +146,5 @@ Examples:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

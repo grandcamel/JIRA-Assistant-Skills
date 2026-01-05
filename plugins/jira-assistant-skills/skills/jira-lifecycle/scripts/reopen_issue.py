@@ -7,24 +7,28 @@ Usage:
     python reopen_issue.py PROJ-123 --comment "Regression found"
 """
 
-import sys
 import argparse
-from pathlib import Path
+import sys
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import print_success, format_transitions
-from jira_assistant_skills_lib import text_to_adf
-from jira_assistant_skills_lib import find_transition_by_keywords
-
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    find_transition_by_keywords,
+    format_transitions,
+    get_jira_client,
+    print_error,
+    print_success,
+    text_to_adf,
+    validate_issue_key,
+)
 
 # Keywords that indicate a reopen/backlog transition
-REOPEN_KEYWORDS = ['reopen', 'to do', 'todo', 'open', 'backlog']
+REOPEN_KEYWORDS = ["reopen", "to do", "todo", "open", "backlog"]
 
 
-def reopen_issue(issue_key: str, comment: str = None, profile: str = None) -> None:
+def reopen_issue(
+    issue_key: str, comment: str | None = None, profile: str | None = None
+) -> None:
     """
     Reopen a closed or resolved issue.
 
@@ -46,17 +50,13 @@ def reopen_issue(issue_key: str, comment: str = None, profile: str = None) -> No
 
     # Try to find reopen transition, preferring 'reopen' exact match, then 'to do'
     transition = find_transition_by_keywords(
-        transitions,
-        REOPEN_KEYWORDS,
-        prefer_exact='reopen'
+        transitions, REOPEN_KEYWORDS, prefer_exact="reopen"
     )
 
     # If no exact 'reopen', try 'to do' as secondary preference
-    if transition and 'reopen' not in transition['name'].lower():
+    if transition and "reopen" not in transition["name"].lower():
         todo_trans = find_transition_by_keywords(
-            transitions,
-            ['to do', 'todo'],
-            prefer_exact='to do'
+            transitions, ["to do", "todo"], prefer_exact="to do"
         )
         if todo_trans:
             transition = todo_trans
@@ -70,32 +70,29 @@ def reopen_issue(issue_key: str, comment: str = None, profile: str = None) -> No
 
     fields = None
     if comment:
-        fields = {'comment': text_to_adf(comment)}
+        fields = {"comment": text_to_adf(comment)}
 
-    client.transition_issue(issue_key, transition['id'], fields=fields)
+    client.transition_issue(issue_key, transition["id"], fields=fields)
     client.close()
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Reopen a closed or resolved JIRA issue',
-        epilog='Example: python reopen_issue.py PROJ-123 --comment "Regression found"'
+        description="Reopen a closed or resolved JIRA issue",
+        epilog='Example: python reopen_issue.py PROJ-123 --comment "Regression found"',
     )
 
-    parser.add_argument('issue_key',
-                       help='Issue key (e.g., PROJ-123)')
-    parser.add_argument('--comment', '-c',
-                       help='Comment explaining why issue was reopened')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument("issue_key", help="Issue key (e.g., PROJ-123)")
+    parser.add_argument(
+        "--comment", "-c", help="Comment explaining why issue was reopened"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
         reopen_issue(
-            issue_key=args.issue_key,
-            comment=args.comment,
-            profile=args.profile
+            issue_key=args.issue_key, comment=args.comment, profile=args.profile
         )
 
         print_success(f"Reopened {args.issue_key}")
@@ -108,5 +105,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

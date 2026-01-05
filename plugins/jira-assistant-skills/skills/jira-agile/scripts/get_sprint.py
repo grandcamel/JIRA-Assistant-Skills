@@ -9,25 +9,28 @@ Usage:
     python get_sprint.py 456 --output json
 """
 
-import sys
 import argparse
 import json
-from pathlib import Path
+import sys
 from datetime import datetime
-from typing import Optional, Dict
 
 # Add shared lib to path
-
 # Imports from shared library
-from jira_assistant_skills_lib import get_jira_client, get_agile_field
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import print_success
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_agile_field,
+    get_jira_client,
+    print_error,
+)
 
 
-def get_sprint(sprint_id: int,
-               with_issues: bool = False,
-               profile: str = None,
-               client=None) -> dict:
+def get_sprint(
+    sprint_id: int,
+    with_issues: bool = False,
+    profile: str | None = None,
+    client=None,
+) -> dict:
     """
     Get sprint details and optionally calculate progress.
 
@@ -55,32 +58,36 @@ def get_sprint(sprint_id: int,
 
     try:
         # Get Story Points field ID from configuration
-        story_points_field = get_agile_field('story_points', profile)
+        story_points_field = get_agile_field("story_points", profile)
 
         # Fetch sprint details
         sprint = client.get_sprint(sprint_id)
 
         result = dict(sprint)
         # Store field ID for use in formatting
-        result['_story_points_field'] = story_points_field
+        result["_story_points_field"] = story_points_field
 
         # Fetch issues if requested
         if with_issues:
             issues_response = client.get_sprint_issues(sprint_id)
-            issues = issues_response.get('issues', [])
-            result['issues'] = issues
+            issues = issues_response.get("issues", [])
+            result["issues"] = issues
 
             # Calculate progress
             total_issues = len(issues)
             done_issues = sum(
-                1 for issue in issues
-                if issue['fields']['status']['name'].lower() in ['done', 'closed', 'resolved']
+                1
+                for issue in issues
+                if issue["fields"]["status"]["name"].lower()
+                in ["done", "closed", "resolved"]
             )
 
-            result['progress'] = {
-                'total': total_issues,
-                'done': done_issues,
-                'percentage': int((done_issues / total_issues * 100) if total_issues > 0 else 0)
+            result["progress"] = {
+                "total": total_issues,
+                "done": done_issues,
+                "percentage": int(
+                    (done_issues / total_issues * 100) if total_issues > 0 else 0
+                ),
             }
 
             # Calculate story points
@@ -88,17 +95,21 @@ def get_sprint(sprint_id: int,
             done_points = 0
 
             for issue in issues:
-                points = issue['fields'].get(story_points_field)
+                points = issue["fields"].get(story_points_field)
                 if points is not None:
                     total_points += points
-                    if issue['fields']['status']['name'].lower() in ['done', 'closed', 'resolved']:
+                    if issue["fields"]["status"]["name"].lower() in [
+                        "done",
+                        "closed",
+                        "resolved",
+                    ]:
                         done_points += points
 
             if total_points > 0:
-                result['story_points'] = {
-                    'total': total_points,
-                    'done': done_points,
-                    'percentage': int((done_points / total_points * 100))
+                result["story_points"] = {
+                    "total": total_points,
+                    "done": done_points,
+                    "percentage": int(done_points / total_points * 100),
                 }
 
         return result
@@ -108,9 +119,9 @@ def get_sprint(sprint_id: int,
             client.close()
 
 
-def get_active_sprint_for_board(board_id: int,
-                                profile: str = None,
-                                client=None) -> dict:
+def get_active_sprint_for_board(
+    board_id: int, profile: str | None = None, client=None
+) -> dict:
     """
     Get the currently active sprint for a board.
 
@@ -136,8 +147,8 @@ def get_active_sprint_for_board(board_id: int,
         should_close = False
 
     try:
-        result = client.get_board_sprints(board_id, state='active')
-        sprints = result.get('values', [])
+        result = client.get_board_sprints(board_id, state="active")
+        sprints = result.get("values", [])
         if sprints:
             return sprints[0]
         return None
@@ -147,7 +158,7 @@ def get_active_sprint_for_board(board_id: int,
             client.close()
 
 
-def format_sprint_output(sprint_data: dict, format: str = 'text') -> str:
+def format_sprint_output(sprint_data: dict, format: str = "text") -> str:
     """
     Format sprint data for output.
 
@@ -158,13 +169,13 @@ def format_sprint_output(sprint_data: dict, format: str = 'text') -> str:
     Returns:
         Formatted string
     """
-    if format == 'json':
+    if format == "json":
         # Remove internal fields before JSON output
-        output = {k: v for k, v in sprint_data.items() if not k.startswith('_')}
+        output = {k: v for k, v in sprint_data.items() if not k.startswith("_")}
         return json.dumps(output, indent=2)
 
     # Get story points field ID (stored in result or use default)
-    story_points_field = sprint_data.get('_story_points_field', 'customfield_10016')
+    story_points_field = sprint_data.get("_story_points_field", "customfield_10016")
 
     # Text format
     lines = []
@@ -172,46 +183,52 @@ def format_sprint_output(sprint_data: dict, format: str = 'text') -> str:
     lines.append(f"State: {sprint_data.get('state', 'unknown')}")
 
     # Dates
-    start_date = sprint_data.get('startDate')
-    end_date = sprint_data.get('endDate')
+    start_date = sprint_data.get("startDate")
+    end_date = sprint_data.get("endDate")
     if start_date and end_date:
         # Parse dates for display
         try:
-            start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
-            end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+            start = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
+            end = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
             now = datetime.now(start.tzinfo)
 
             if end > now:
                 days_remaining = (end - now).days
-                lines.append(f"Dates: {start.strftime('%Y-%m-%d')} -> {end.strftime('%Y-%m-%d')} ({days_remaining} days remaining)")
+                lines.append(
+                    f"Dates: {start.strftime('%Y-%m-%d')} -> {end.strftime('%Y-%m-%d')} ({days_remaining} days remaining)"
+                )
             else:
-                lines.append(f"Dates: {start.strftime('%Y-%m-%d')} -> {end.strftime('%Y-%m-%d')}")
+                lines.append(
+                    f"Dates: {start.strftime('%Y-%m-%d')} -> {end.strftime('%Y-%m-%d')}"
+                )
         except (ValueError, TypeError):
             lines.append(f"Dates: {start_date} -> {end_date}")
 
     # Goal
-    goal = sprint_data.get('goal')
+    goal = sprint_data.get("goal")
     if goal:
         lines.append(f"Goal: {goal}")
 
     # Progress
-    if 'progress' in sprint_data:
-        prog = sprint_data['progress']
-        lines.append(f"Progress: {prog['done']}/{prog['total']} issues ({prog['percentage']}%)")
+    if "progress" in sprint_data:
+        prog = sprint_data["progress"]
+        lines.append(
+            f"Progress: {prog['done']}/{prog['total']} issues ({prog['percentage']}%)"
+        )
 
     # Story points
-    if 'story_points' in sprint_data:
-        sp = sprint_data['story_points']
+    if "story_points" in sprint_data:
+        sp = sprint_data["story_points"]
         lines.append(f"Story Points: {sp['done']}/{sp['total']} ({sp['percentage']}%)")
 
     # Issues
-    if 'issues' in sprint_data and sprint_data['issues']:
+    if sprint_data.get("issues"):
         lines.append("")
         lines.append("Issues:")
-        for issue in sprint_data['issues']:
-            status = issue['fields']['status']['name']
-            summary = issue['fields']['summary']
-            points = issue['fields'].get(story_points_field)
+        for issue in sprint_data["issues"]:
+            status = issue["fields"]["status"]["name"]
+            summary = issue["fields"]["summary"]
+            points = issue["fields"].get(story_points_field)
             points_str = f" ({points} pts)" if points else ""
             lines.append(f"  [{status}] {issue['key']} - {summary}{points_str}")
 
@@ -220,24 +237,25 @@ def format_sprint_output(sprint_data: dict, format: str = 'text') -> str:
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Get Sprint details and progress from JIRA',
-        epilog='Example: python get_sprint.py 456 --with-issues'
+        description="Get Sprint details and progress from JIRA",
+        epilog="Example: python get_sprint.py 456 --with-issues",
     )
 
-    parser.add_argument('sprint_id', nargs='?', type=int,
-                       help='Sprint ID')
-    parser.add_argument('--board', '-b', type=int,
-                       help='Board ID (with --active)')
-    parser.add_argument('--active', '-a', action='store_true',
-                       help='Get active sprint for board')
-    parser.add_argument('--with-issues', '-i', action='store_true',
-                       help='Include issues and calculate progress')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use')
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format')
+    parser.add_argument("sprint_id", nargs="?", type=int, help="Sprint ID")
+    parser.add_argument("--board", "-b", type=int, help="Board ID (with --active)")
+    parser.add_argument(
+        "--active", "-a", action="store_true", help="Get active sprint for board"
+    )
+    parser.add_argument(
+        "--with-issues",
+        "-i",
+        action="store_true",
+        help="Include issues and calculate progress",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
+    parser.add_argument(
+        "--output", "-o", choices=["text", "json"], default="text", help="Output format"
+    )
 
     args = parser.parse_args(argv)
 
@@ -248,8 +266,7 @@ def main(argv: list[str] | None = None):
             if not args.board:
                 parser.error("--board is required with --active")
             result = get_active_sprint_for_board(
-                board_id=args.board,
-                profile=args.profile
+                board_id=args.board, profile=args.profile
             )
             if not result:
                 print("No active sprint found for this board")
@@ -260,7 +277,7 @@ def main(argv: list[str] | None = None):
             result = get_sprint(
                 sprint_id=args.sprint_id,
                 with_issues=args.with_issues,
-                profile=args.profile
+                profile=args.profile,
             )
 
         output = format_sprint_output(result, format=args.output)
@@ -277,5 +294,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

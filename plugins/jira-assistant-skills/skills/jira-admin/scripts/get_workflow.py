@@ -9,25 +9,27 @@ Requires 'Administer Jira' global permission.
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, NotFoundError, ValidationError
-from jira_assistant_skills_lib import format_table
+from jira_assistant_skills_lib import (
+    JiraError,
+    NotFoundError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
 
 def get_workflow(
     client,
-    name: Optional[str] = None,
-    entity_id: Optional[str] = None,
+    name: str | None = None,
+    entity_id: str | None = None,
     show_statuses: bool = False,
     show_transitions: bool = False,
     show_rules: bool = False,
-    show_schemes: bool = False
-) -> Dict[str, Any]:
+    show_schemes: bool = False,
+) -> dict[str, Any]:
     """
     Get detailed workflow information.
 
@@ -56,28 +58,28 @@ def get_workflow(
         # Get workflow by entity ID using bulk endpoint
         response = client.get_workflow_bulk(
             workflow_ids=[entity_id],
-            expand='transitions,transitions.rules,statuses' if (show_statuses or show_transitions or show_rules) else None
+            expand="transitions,transitions.rules,statuses"
+            if (show_statuses or show_transitions or show_rules)
+            else None,
         )
-        workflows = response.get('workflows', [])
+        workflows = response.get("workflows", [])
         if not workflows:
             raise NotFoundError(f"Workflow with entity ID '{entity_id}' not found")
         workflow_data = workflows[0]
     else:
         # Search for workflow by name
-        expand = 'transitions,statuses'
+        expand = "transitions,statuses"
         if show_rules:
-            expand = 'transitions,transitions.rules,statuses'
+            expand = "transitions,transitions.rules,statuses"
 
         response = client.search_workflows(
-            workflow_name=name,
-            expand=expand,
-            max_results=100
+            workflow_name=name, expand=expand, max_results=100
         )
 
-        workflows = response.get('values', [])
+        workflows = response.get("values", [])
         # Find exact match
         for wf in workflows:
-            wf_name = wf.get('id', {}).get('name', wf.get('name', ''))
+            wf_name = wf.get("id", {}).get("name", wf.get("name", ""))
             if wf_name.lower() == name.lower():
                 workflow_data = wf
                 break
@@ -90,106 +92,111 @@ def get_workflow(
 
     # Add statuses if requested
     if show_statuses or show_transitions or show_rules:
-        statuses = workflow_data.get('statuses', [])
-        result['statuses'] = _parse_statuses(statuses)
+        statuses = workflow_data.get("statuses", [])
+        result["statuses"] = _parse_statuses(statuses)
 
     # Add transitions if requested
     if show_transitions or show_rules:
-        transitions = workflow_data.get('transitions', [])
-        result['transitions'] = _parse_transitions(transitions, show_rules)
+        transitions = workflow_data.get("transitions", [])
+        result["transitions"] = _parse_transitions(transitions, show_rules)
 
     # Add schemes if requested
     if show_schemes:
         try:
             schemes_response = client.get_workflow_schemes_for_workflow(
-                result['entity_id'],
-                max_results=100
+                result["entity_id"], max_results=100
             )
-            result['schemes'] = [
+            result["schemes"] = [
                 {
-                    'id': s.get('id'),
-                    'name': s.get('name', 'Unknown'),
-                    'description': s.get('description', '')
+                    "id": s.get("id"),
+                    "name": s.get("name", "Unknown"),
+                    "description": s.get("description", ""),
                 }
-                for s in schemes_response.get('values', [])
+                for s in schemes_response.get("values", [])
             ]
         except JiraError:
-            result['schemes'] = []
+            result["schemes"] = []
 
     return result
 
 
-def _parse_workflow_details(workflow_data: Dict[str, Any]) -> Dict[str, Any]:
+def _parse_workflow_details(workflow_data: dict[str, Any]) -> dict[str, Any]:
     """Parse basic workflow details from API response."""
     # Handle different response formats
-    if 'id' in workflow_data and isinstance(workflow_data['id'], dict):
-        name = workflow_data['id'].get('name', 'Unknown')
-        entity_id = workflow_data['id'].get('entityId', '')
+    if "id" in workflow_data and isinstance(workflow_data["id"], dict):
+        name = workflow_data["id"].get("name", "Unknown")
+        entity_id = workflow_data["id"].get("entityId", "")
     else:
-        name = workflow_data.get('name', 'Unknown')
-        entity_id = workflow_data.get('entityId', workflow_data.get('id', {}).get('entityId', ''))
+        name = workflow_data.get("name", "Unknown")
+        entity_id = workflow_data.get(
+            "entityId", workflow_data.get("id", {}).get("entityId", "")
+        )
 
     result = {
-        'name': name,
-        'entity_id': entity_id,
-        'description': workflow_data.get('description', ''),
-        'is_default': workflow_data.get('isDefault', False)
+        "name": name,
+        "entity_id": entity_id,
+        "description": workflow_data.get("description", ""),
+        "is_default": workflow_data.get("isDefault", False),
     }
 
     # Handle scope
-    scope = workflow_data.get('scope', {})
-    result['scope_type'] = scope.get('type', 'GLOBAL')
-    if scope.get('project'):
-        result['scope_project'] = scope['project'].get('key', '')
+    scope = workflow_data.get("scope", {})
+    result["scope_type"] = scope.get("type", "GLOBAL")
+    if scope.get("project"):
+        result["scope_project"] = scope["project"].get("key", "")
 
     # Handle version
-    version = workflow_data.get('version', {})
-    result['version'] = version.get('versionNumber', 1) if version else 1
+    version = workflow_data.get("version", {})
+    result["version"] = version.get("versionNumber", 1) if version else 1
 
     # Handle dates
-    result['created'] = workflow_data.get('created', '')
-    result['updated'] = workflow_data.get('updated', '')
+    result["created"] = workflow_data.get("created", "")
+    result["updated"] = workflow_data.get("updated", "")
 
     return result
 
 
-def _parse_statuses(statuses: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _parse_statuses(statuses: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Parse status list from workflow data."""
     result = []
     for status in statuses:
-        result.append({
-            'id': status.get('id', ''),
-            'name': status.get('name', 'Unknown'),
-            'statusCategory': status.get('statusCategory', 'UNKNOWN'),
-            'statusReference': status.get('statusReference', '')
-        })
+        result.append(
+            {
+                "id": status.get("id", ""),
+                "name": status.get("name", "Unknown"),
+                "statusCategory": status.get("statusCategory", "UNKNOWN"),
+                "statusReference": status.get("statusReference", ""),
+            }
+        )
 
     # Sort by category: TODO, IN_PROGRESS, DONE
-    category_order = {'TODO': 0, 'IN_PROGRESS': 1, 'DONE': 2}
-    result.sort(key=lambda s: category_order.get(s['statusCategory'], 99))
+    category_order = {"TODO": 0, "IN_PROGRESS": 1, "DONE": 2}
+    result.sort(key=lambda s: category_order.get(s["statusCategory"], 99))
 
     return result
 
 
-def _parse_transitions(transitions: List[Dict[str, Any]], include_rules: bool = False) -> List[Dict[str, Any]]:
+def _parse_transitions(
+    transitions: list[dict[str, Any]], include_rules: bool = False
+) -> list[dict[str, Any]]:
     """Parse transition list from workflow data."""
     result = []
     for transition in transitions:
         t = {
-            'id': transition.get('id', ''),
-            'name': transition.get('name', 'Unknown'),
-            'description': transition.get('description', ''),
-            'from': transition.get('from', []),
-            'to': transition.get('to', ''),
-            'type': transition.get('type', 'DIRECTED')
+            "id": transition.get("id", ""),
+            "name": transition.get("name", "Unknown"),
+            "description": transition.get("description", ""),
+            "from": transition.get("from", []),
+            "to": transition.get("to", ""),
+            "type": transition.get("type", "DIRECTED"),
         }
 
         if include_rules:
-            rules = transition.get('rules', {})
-            t['rules'] = {
-                'conditions': rules.get('conditions', []),
-                'validators': rules.get('validators', []),
-                'postFunctions': rules.get('postFunctions', [])
+            rules = transition.get("rules", {})
+            t["rules"] = {
+                "conditions": rules.get("conditions", []),
+                "validators": rules.get("validators", []),
+                "postFunctions": rules.get("postFunctions", []),
             }
 
         result.append(t)
@@ -197,13 +204,13 @@ def _parse_transitions(transitions: List[Dict[str, Any]], include_rules: bool = 
     return result
 
 
-def format_workflow_details(workflow: Dict[str, Any]) -> str:
+def format_workflow_details(workflow: dict[str, Any]) -> str:
     """Format workflow details as human-readable text."""
     lines = []
 
     # Header
     lines.append(f"Workflow: {workflow['name']}")
-    lines.append("=" * (len(workflow['name']) + 10))
+    lines.append("=" * (len(workflow["name"]) + 10))
 
     # Basic info
     lines.append(f"Entity ID:   {workflow.get('entity_id', 'N/A')}")
@@ -212,53 +219,55 @@ def format_workflow_details(workflow: Dict[str, Any]) -> str:
     lines.append(f"Default:     {'Yes' if workflow.get('is_default') else 'No'}")
     lines.append(f"Version:     {workflow.get('version', 1)}")
 
-    if workflow.get('created'):
+    if workflow.get("created"):
         lines.append(f"Created:     {workflow['created']}")
-    if workflow.get('updated'):
+    if workflow.get("updated"):
         lines.append(f"Updated:     {workflow['updated']}")
 
     # Statuses
-    if 'statuses' in workflow:
+    if "statuses" in workflow:
         lines.append("")
         lines.append(f"Statuses ({len(workflow['statuses'])})")
         lines.append("-" * 20)
 
-        for status in workflow['statuses']:
-            category = status.get('statusCategory', 'UNKNOWN')
+        for status in workflow["statuses"]:
+            category = status.get("statusCategory", "UNKNOWN")
             lines.append(f"  - {status['name']} [{category}]")
 
     # Transitions
-    if 'transitions' in workflow:
+    if "transitions" in workflow:
         lines.append("")
         lines.append(f"Transitions ({len(workflow['transitions'])})")
         lines.append("-" * 20)
 
-        for t in workflow['transitions']:
-            from_states = ', '.join(t.get('from', [])) or 'Any'
-            to_state = t.get('to', 'Unknown')
+        for t in workflow["transitions"]:
+            from_states = ", ".join(t.get("from", [])) or "Any"
+            to_state = t.get("to", "Unknown")
             lines.append(f"  - {t['name']}: {from_states} -> {to_state}")
 
-            if t.get('description'):
+            if t.get("description"):
                 lines.append(f"    {t['description']}")
 
             # Show rules if present
-            if 'rules' in t:
-                rules = t['rules']
-                if rules.get('conditions'):
+            if "rules" in t:
+                rules = t["rules"]
+                if rules.get("conditions"):
                     lines.append(f"    Conditions: {len(rules['conditions'])}")
-                if rules.get('validators'):
+                if rules.get("validators"):
                     lines.append(f"    Validators: {len(rules['validators'])}")
-                if rules.get('postFunctions'):
+                if rules.get("postFunctions"):
                     lines.append(f"    Post-functions: {len(rules['postFunctions'])}")
 
     # Schemes
-    if 'schemes' in workflow:
+    if "schemes" in workflow:
         lines.append("")
-        lines.append(f"Workflow Schemes Using This Workflow ({len(workflow['schemes'])})")
+        lines.append(
+            f"Workflow Schemes Using This Workflow ({len(workflow['schemes'])})"
+        )
         lines.append("-" * 40)
 
-        if workflow['schemes']:
-            for scheme in workflow['schemes']:
+        if workflow["schemes"]:
+            for scheme in workflow["schemes"]:
                 lines.append(f"  - {scheme['name']}")
         else:
             lines.append("  (Not used by any workflow schemes)")
@@ -266,14 +275,14 @@ def format_workflow_details(workflow: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def format_workflow_json(workflow: Dict[str, Any]) -> str:
+def format_workflow_json(workflow: dict[str, Any]) -> str:
     """Format workflow as JSON."""
     return json.dumps(workflow, indent=2, default=str)
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Get detailed workflow information',
+        description="Get detailed workflow information",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -302,49 +311,47 @@ Examples:
   python get_workflow.py "Software Development Workflow" --output json
 
 Note: Requires 'Administer Jira' global permission.
-        """
+        """,
     )
 
+    parser.add_argument("name", nargs="?", help="Workflow name to look up")
     parser.add_argument(
-        'name',
-        nargs='?',
-        help='Workflow name to look up'
+        "--entity-id",
+        "-e",
+        dest="entity_id",
+        help="Workflow entity ID (alternative to name)",
     )
     parser.add_argument(
-        '--entity-id', '-e',
-        dest='entity_id',
-        help='Workflow entity ID (alternative to name)'
+        "--show-statuses",
+        "-s",
+        action="store_true",
+        help="Show all statuses in the workflow",
     )
     parser.add_argument(
-        '--show-statuses', '-s',
-        action='store_true',
-        help='Show all statuses in the workflow'
+        "--show-transitions",
+        "-t",
+        action="store_true",
+        help="Show all transitions in the workflow",
     )
     parser.add_argument(
-        '--show-transitions', '-t',
-        action='store_true',
-        help='Show all transitions in the workflow'
+        "--show-rules",
+        "-r",
+        action="store_true",
+        help="Show transition rules (conditions, validators, post-functions)",
     )
     parser.add_argument(
-        '--show-rules', '-r',
-        action='store_true',
-        help='Show transition rules (conditions, validators, post-functions)'
+        "--show-schemes",
+        action="store_true",
+        help="Show which workflow schemes use this workflow",
     )
     parser.add_argument(
-        '--show-schemes',
-        action='store_true',
-        help='Show which workflow schemes use this workflow'
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
     )
-    parser.add_argument(
-        '--output', '-o',
-        choices=['text', 'json'],
-        default='text',
-        help='Output format (default: text)'
-    )
-    parser.add_argument(
-        '--profile', '-p',
-        help='Configuration profile to use'
-    )
+    parser.add_argument("--profile", "-p", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -361,10 +368,10 @@ Note: Requires 'Administer Jira' global permission.
             show_statuses=args.show_statuses,
             show_transitions=args.show_transitions,
             show_rules=args.show_rules,
-            show_schemes=args.show_schemes
+            show_schemes=args.show_schemes,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_workflow_json(result))
         else:
             print(format_workflow_details(result))
@@ -373,9 +380,9 @@ Note: Requires 'Administer Jira' global permission.
         print_error(e)
         sys.exit(1)
     finally:
-        if 'client' in locals():
+        if "client" in locals():
             client.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -19,22 +19,21 @@ Examples:
 """
 
 import argparse
-import sys
 import json
-from pathlib import Path
-from typing import Dict, Any
+import sys
+from typing import Any
 
 # Add shared lib to path
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    validate_project_key,
+)
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, ValidationError, print_error
-from jira_assistant_skills_lib import validate_project_key
 
-
-def restore_project(
-    project_key: str,
-    client=None
-) -> Dict[str, Any]:
+def restore_project(project_key: str, client=None) -> dict[str, Any]:
     """
     Restore an archived or deleted project.
 
@@ -67,7 +66,7 @@ def restore_project(
             client.close()
 
 
-def format_output(project: Dict[str, Any], output_format: str = "text") -> str:
+def format_output(project: dict[str, Any], output_format: str = "text") -> str:
     """Format restore result for output."""
     if output_format == "json":
         return json.dumps(project, indent=2)
@@ -81,16 +80,18 @@ def format_output(project: Dict[str, Any], output_format: str = "text") -> str:
         f"  Type: {project.get('projectTypeKey', 'N/A')}",
     ]
 
-    if project.get('lead'):
-        lead = project.get('lead', {})
+    if project.get("lead"):
+        lead = project.get("lead", {})
         lines.append(f"  Lead: {lead.get('displayName', 'N/A')}")
 
-    lines.extend([
-        "",
-        "The project is now active and editable.",
-        "",
-        f"URL: {project.get('self', 'N/A').replace('/rest/api/3/project/', '/browse/')}"
-    ])
+    lines.extend(
+        [
+            "",
+            "The project is now active and editable.",
+            "",
+            f"URL: {project.get('self', 'N/A').replace('/rest/api/3/project/', '/browse/')}",
+        ]
+    )
 
     return "\n".join(lines)
 
@@ -110,33 +111,26 @@ Examples:
 
   # Skip confirmation
   %(prog)s PROJ --yes
-        """
+        """,
     )
 
     # Required arguments
-    parser.add_argument(
-        "project_key",
-        help="Project key to restore (e.g., PROJ)"
-    )
+    parser.add_argument("project_key", help="Project key to restore (e.g., PROJ)")
 
     # Optional arguments
     parser.add_argument(
-        "--yes", "-y",
-        action="store_true",
-        help="Skip confirmation prompt"
+        "--yes", "-y", action="store_true", help="Skip confirmation prompt"
     )
 
     # Output options
     parser.add_argument(
-        "--output", "-o",
-        choices=['text', 'json'],
-        default='text',
-        help="Output format (default: text)"
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
     )
-    parser.add_argument(
-        "--profile",
-        help="Configuration profile to use"
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -149,15 +143,14 @@ Examples:
             print()
             print("This will make the project active and editable again.")
             print()
-            response = input("Are you sure you want to restore this project? (yes/no): ")
-            if response.lower() not in ['yes', 'y']:
+            response = input(
+                "Are you sure you want to restore this project? (yes/no): "
+            )
+            if response.lower() not in ["yes", "y"]:
                 print("Operation cancelled.")
                 sys.exit(0)
 
-        result = restore_project(
-            project_key=args.project_key,
-            client=client
-        )
+        result = restore_project(project_key=args.project_key, client=client)
 
         print(format_output(result, args.output))
 
@@ -168,7 +161,7 @@ Examples:
         print_error(e)
         sys.exit(1)
     finally:
-        if 'client' in locals():
+        if "client" in locals():
             client.close()
 
 

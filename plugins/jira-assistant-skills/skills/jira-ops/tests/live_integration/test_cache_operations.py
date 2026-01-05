@@ -5,17 +5,18 @@ Tests for cache management operations against a real JIRA instance.
 """
 
 import sys
-import pytest
-import tempfile
-import shutil
 from pathlib import Path
-from typing import Dict, Any
 
 # Add scripts to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts'))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
 
-from jira_assistant_skills_lib import JiraCache
-from cache_warm import warm_projects, warm_fields, warm_issue_types, warm_priorities, warm_statuses
+from cache_warm import (
+    warm_fields,
+    warm_issue_types,
+    warm_priorities,
+    warm_projects,
+    warm_statuses,
+)
 
 
 class TestCacheWarmProjects:
@@ -43,12 +44,12 @@ class TestCacheWarmProjects:
 
     def test_warm_projects_cacheable(self, jira_client, test_cache):
         """Test that projects are properly cached."""
-        count, _ = warm_projects(jira_client, test_cache, verbose=False)
+        _count, _ = warm_projects(jira_client, test_cache, verbose=False)
 
         # Get a project from cache
         # Projects are cached by key
         stats = test_cache.get_stats()
-        assert stats.by_category.get('project', {}).get('count', 0) > 0
+        assert stats.by_category.get("project", {}).get("count", 0) > 0
 
 
 class TestCacheWarmFields:
@@ -63,7 +64,7 @@ class TestCacheWarmFields:
 
         # Verify cache has field data
         stats = test_cache.get_stats()
-        assert stats.by_category.get('field', {}).get('count', 0) > 0
+        assert stats.by_category.get("field", {}).get("count", 0) > 0
 
     def test_warm_fields_with_verbose(self, jira_client, test_cache, capsys):
         """Test verbose output during field cache warming."""
@@ -215,17 +216,14 @@ class TestCacheIntegration:
     def test_cache_issue_data(self, jira_client, test_cache):
         """Test caching issue search results."""
         # Perform a search
-        result = jira_client.search_issues(
-            "created >= -7d",
-            max_results=5
-        )
+        result = jira_client.search_issues("created >= -7d", max_results=5)
 
         # Cache the results - handle both old and new API response formats
-        issues = result.get('issues', [])
+        issues = result.get("issues", [])
         cached_count = 0
         for issue in issues:
             # Handle different response formats
-            issue_key = issue.get('key') or issue.get('id')
+            issue_key = issue.get("key") or issue.get("id")
             if issue_key:
                 cache_key = test_cache.generate_key("issue", str(issue_key))
                 test_cache.set(cache_key, issue, category="issue")
@@ -233,7 +231,7 @@ class TestCacheIntegration:
 
         # Verify caching
         stats = test_cache.get_stats()
-        cached_issues = stats.by_category.get('issue', {}).get('count', 0)
+        cached_issues = stats.by_category.get("issue", {}).get("count", 0)
         assert cached_issues >= 0  # May be 0 if no issues found
 
     def test_cache_project_lookup(self, jira_client, test_cache):
@@ -243,18 +241,20 @@ class TestCacheIntegration:
 
         if response and len(response) > 0:
             project = response[0]
-            key = test_cache.generate_key("project", project['key'])
+            key = test_cache.generate_key("project", project["key"])
             test_cache.set(key, project, category="project")
 
             # Retrieve from cache (need to pass category)
             cached = test_cache.get(key, category="project")
             assert cached is not None
-            assert cached['key'] == project['key']
+            assert cached["key"] == project["key"]
 
     def test_cache_warm_all(self, jira_client, test_cache):
         """Test warming all caches."""
         # Warm all cache types
-        project_count, project_error = warm_projects(jira_client, test_cache, verbose=False)
+        project_count, project_error = warm_projects(
+            jira_client, test_cache, verbose=False
+        )
         field_count, field_error = warm_fields(jira_client, test_cache, verbose=False)
 
         # Verify no errors
@@ -292,7 +292,9 @@ class TestCachePerformance:
         """Test cache size tracking."""
         # Add entries
         for i in range(10):
-            test_cache.set(f"size_test_{i}", {"index": i, "data": "x" * 100}, category="test")
+            test_cache.set(
+                f"size_test_{i}", {"index": i, "data": "x" * 100}, category="test"
+            )
 
         stats = test_cache.get_stats()
         assert stats.entry_count >= 10

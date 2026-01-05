@@ -11,20 +11,22 @@ Tests cover:
 - Cache statistics
 """
 
-import pytest
-import time
+import sys
 import threading
-import json
+import time
 from datetime import timedelta
 from pathlib import Path
-import sys
+
+import pytest
 
 # Add shared lib to path (absolute path)
-shared_lib_path = str(Path(__file__).resolve().parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(
+    Path(__file__).resolve().parent.parent.parent / "shared" / "scripts" / "lib"
+)
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
-from jira_assistant_skills_lib import JiraCache, CacheStats
+from jira_assistant_skills_lib import JiraCache
 
 
 @pytest.mark.ops
@@ -43,7 +45,9 @@ class TestCacheGetHit:
         assert result == sample_issue_data
         assert result["key"] == "PROJ-123"
 
-    def test_cache_get_hit_different_categories(self, temp_cache_dir, sample_issue_data, sample_project_data):
+    def test_cache_get_hit_different_categories(
+        self, temp_cache_dir, sample_issue_data, sample_project_data
+    ):
         """Test cache hit works correctly across different categories."""
         cache = JiraCache(cache_dir=temp_cache_dir)
         cache.set("PROJ-123", sample_issue_data, category="issue")
@@ -112,7 +116,7 @@ class TestCacheSet:
             "number": 42,
             "string": "test",
             "boolean": True,
-            "null": None
+            "null": None,
         }
 
         cache.set("complex", complex_data, category="issue")
@@ -130,7 +134,9 @@ class TestCacheTTLExpiration:
         """Test that cache returns None after TTL expires."""
         cache = JiraCache(cache_dir=temp_cache_dir)
         # Use a very short TTL for testing
-        cache.set("key", {"value": "test"}, category="issue", ttl=timedelta(milliseconds=50))
+        cache.set(
+            "key", {"value": "test"}, category="issue", ttl=timedelta(milliseconds=50)
+        )
 
         # Value should be available immediately
         assert cache.get("key", category="issue") is not None
@@ -393,7 +399,11 @@ class TestCacheConcurrentAccess:
         def write_cache(thread_id):
             try:
                 for i in range(50):
-                    cache.set(f"key_{thread_id}_{i}", {"thread": thread_id, "index": i}, category="issue")
+                    cache.set(
+                        f"key_{thread_id}_{i}",
+                        {"thread": thread_id, "index": i},
+                        category="issue",
+                    )
             except Exception as e:
                 errors.append(str(e))
 
@@ -508,13 +518,19 @@ class TestCacheKeyGeneration:
     def test_generate_search_cache_key(self, temp_cache_dir):
         """Test generating cache key for search results."""
         cache = JiraCache(cache_dir=temp_cache_dir)
-        key = cache.generate_key("search", jql="project = PROJ", start_at=0, max_results=50)
+        key = cache.generate_key(
+            "search", jql="project = PROJ", start_at=0, max_results=50
+        )
 
         assert key is not None
         # Same params should generate same key
-        key2 = cache.generate_key("search", jql="project = PROJ", start_at=0, max_results=50)
+        key2 = cache.generate_key(
+            "search", jql="project = PROJ", start_at=0, max_results=50
+        )
         assert key == key2
 
         # Different params should generate different key
-        key3 = cache.generate_key("search", jql="project = PROJ", start_at=50, max_results=50)
+        key3 = cache.generate_key(
+            "search", jql="project = PROJ", start_at=50, max_results=50
+        )
         assert key != key3

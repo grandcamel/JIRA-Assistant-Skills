@@ -9,13 +9,15 @@ Requires 'Administer Jira' global permission.
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, ValidationError, print_error
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
 
 def validate_issue_type_name(name: str) -> str:
@@ -25,19 +27,21 @@ def validate_issue_type_name(name: str) -> str:
 
     name = name.strip()
     if len(name) > 60:
-        raise ValidationError(f"Issue type name must be 60 characters or less (got {len(name)})")
+        raise ValidationError(
+            f"Issue type name must be 60 characters or less (got {len(name)})"
+        )
 
     return name
 
 
 def update_issue_type(
     issue_type_id: str,
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    avatar_id: Optional[int] = None,
+    name: str | None = None,
+    description: str | None = None,
+    avatar_id: int | None = None,
     client=None,
-    profile: Optional[str] = None
-) -> Dict[str, Any]:
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Update an issue type.
 
@@ -60,7 +64,9 @@ def update_issue_type(
     """
     # Validate at least one field is being updated
     if name is None and description is None and avatar_id is None:
-        raise ValidationError("At least one field (name, description, or avatar_id) must be specified")
+        raise ValidationError(
+            "At least one field (name, description, or avatar_id) must be specified"
+        )
 
     # Validate name if provided
     if name is not None:
@@ -74,7 +80,7 @@ def update_issue_type(
             issue_type_id=issue_type_id,
             name=name,
             description=description,
-            avatar_id=avatar_id
+            avatar_id=avatar_id,
         )
         return result
     finally:
@@ -82,9 +88,11 @@ def update_issue_type(
             client.close()
 
 
-def format_updated_issue_type(issue_type: Dict[str, Any], output_format: str = 'detail') -> str:
+def format_updated_issue_type(
+    issue_type: dict[str, Any], output_format: str = "detail"
+) -> str:
     """Format updated issue type for display."""
-    if output_format == 'json':
+    if output_format == "json":
         return json.dumps(issue_type, indent=2)
 
     lines = []
@@ -96,16 +104,16 @@ def format_updated_issue_type(issue_type: Dict[str, Any], output_format: str = '
     lines.append(f"Subtask:     {'Yes' if issue_type.get('subtask') else 'No'}")
     lines.append(f"Hierarchy:   {issue_type.get('hierarchyLevel', 0)}")
 
-    if issue_type.get('avatarId'):
+    if issue_type.get("avatarId"):
         lines.append(f"Avatar ID:   {issue_type.get('avatarId')}")
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Update an issue type in JIRA',
+        description="Update an issue type in JIRA",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -130,36 +138,20 @@ Examples:
 Note:
   Requires 'Administer Jira' global permission.
   At least one field must be specified.
-"""
+""",
     )
 
+    parser.add_argument("issue_type_id", help="Issue type ID to update")
+    parser.add_argument("--name", help="New name (max 60 characters)")
+    parser.add_argument("--description", help="New description")
+    parser.add_argument("--avatar-id", type=int, help="New avatar ID")
     parser.add_argument(
-        'issue_type_id',
-        help='Issue type ID to update'
+        "--format",
+        choices=["detail", "json"],
+        default="detail",
+        help="Output format (default: detail)",
     )
-    parser.add_argument(
-        '--name',
-        help='New name (max 60 characters)'
-    )
-    parser.add_argument(
-        '--description',
-        help='New description'
-    )
-    parser.add_argument(
-        '--avatar-id',
-        type=int,
-        help='New avatar ID'
-    )
-    parser.add_argument(
-        '--format',
-        choices=['detail', 'json'],
-        default='detail',
-        help='Output format (default: detail)'
-    )
-    parser.add_argument(
-        '--profile',
-        help='Configuration profile to use'
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -169,7 +161,7 @@ Note:
             name=args.name,
             description=args.description,
             avatar_id=args.avatar_id,
-            profile=args.profile
+            profile=args.profile,
         )
 
         output = format_updated_issue_type(issue_type, args.format)
@@ -180,5 +172,5 @@ Note:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

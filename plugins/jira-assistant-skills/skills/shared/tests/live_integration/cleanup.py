@@ -14,28 +14,32 @@ Warning:
     This script permanently deletes projects. Use with caution!
 """
 
-import sys
 import argparse
+import sys
 from pathlib import Path
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts' / 'lib'))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts" / "lib"))
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, NotFoundError
+from jira_assistant_skills_lib import (
+    JiraError,
+    NotFoundError,
+    get_jira_client,
+    print_error,
+)
 
 
-def list_test_projects(client, prefix='INT'):
+def list_test_projects(client, prefix="INT"):
     """List all projects matching the prefix."""
     print(f"\nProjects matching prefix '{prefix}':")
     print("-" * 50)
 
     # Get all projects
-    projects = client.get('/rest/api/3/project', operation='list projects')
+    projects = client.get("/rest/api/3/project", operation="list projects")
 
     matching = []
     for project in projects:
-        if project['key'].startswith(prefix):
+        if project["key"].startswith(prefix):
             matching.append(project)
             print(f"  {project['key']}: {project['name']}")
 
@@ -60,11 +64,9 @@ def cleanup_single_project(client, project_key, dry_run=False):
     # Step 1: Count and delete issues
     try:
         result = client.search_issues(
-            f"project = {project_key}",
-            fields=['key'],
-            max_results=0
+            f"project = {project_key}", fields=["key"], max_results=0
         )
-        issue_count = result.get('total', 0)
+        issue_count = result.get("total", 0)
         print(f"  Issues to delete: {issue_count}")
 
         if not dry_run and issue_count > 0:
@@ -72,20 +74,26 @@ def cleanup_single_project(client, project_key, dry_run=False):
             while True:
                 result = client.search_issues(
                     f"project = {project_key} ORDER BY created DESC",
-                    fields=['key', 'issuetype'],
-                    max_results=50
+                    fields=["key", "issuetype"],
+                    max_results=50,
                 )
-                issues = result.get('issues', [])
+                issues = result.get("issues", [])
                 if not issues:
                     break
 
                 # Delete subtasks first
-                subtasks = [i for i in issues if i['fields']['issuetype'].get('subtask', False)]
-                parents = [i for i in issues if not i['fields']['issuetype'].get('subtask', False)]
+                subtasks = [
+                    i for i in issues if i["fields"]["issuetype"].get("subtask", False)
+                ]
+                parents = [
+                    i
+                    for i in issues
+                    if not i["fields"]["issuetype"].get("subtask", False)
+                ]
 
                 for issue in subtasks + parents:
                     try:
-                        client.delete_issue(issue['key'])
+                        client.delete_issue(issue["key"])
                         deleted += 1
                     except Exception as e:
                         print(f"    Warning: Could not delete {issue['key']}: {e}")
@@ -97,15 +105,17 @@ def cleanup_single_project(client, project_key, dry_run=False):
     # Step 2: Delete future sprints
     try:
         boards = client.get_all_boards(project_key=project_key)
-        for board in boards.get('values', []):
-            sprints = client.get_board_sprints(board['id'], state='future')
-            for sprint in sprints.get('values', []):
+        for board in boards.get("values", []):
+            sprints = client.get_board_sprints(board["id"], state="future")
+            for sprint in sprints.get("values", []):
                 if not dry_run:
                     try:
-                        client.delete_sprint(sprint['id'])
+                        client.delete_sprint(sprint["id"])
                         print(f"  Deleted sprint: {sprint['name']}")
                     except Exception as e:
-                        print(f"    Warning: Could not delete sprint {sprint['id']}: {e}")
+                        print(
+                            f"    Warning: Could not delete sprint {sprint['id']}: {e}"
+                        )
                 else:
                     print(f"  Would delete sprint: {sprint['name']}")
     except Exception as e:
@@ -135,7 +145,7 @@ def cleanup_by_prefix(client, prefix, dry_run=False):
     if not dry_run:
         print(f"\nWill delete {len(projects)} project(s)")
         confirm = input("Are you sure? (yes/no): ")
-        if confirm.lower() != 'yes':
+        if confirm.lower() != "yes":
             print("Aborted")
             return
 
@@ -143,7 +153,7 @@ def cleanup_by_prefix(client, prefix, dry_run=False):
     failed = 0
 
     for project in projects:
-        if cleanup_single_project(client, project['key'], dry_run):
+        if cleanup_single_project(client, project["key"], dry_run):
             success += 1
         else:
             failed += 1
@@ -153,21 +163,29 @@ def cleanup_by_prefix(client, prefix, dry_run=False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Clean up test projects in JIRA',
-        epilog='Example: python cleanup.py INT123ABC --profile development'
+        description="Clean up test projects in JIRA",
+        epilog="Example: python cleanup.py INT123ABC --profile development",
     )
 
-    parser.add_argument('project_key', nargs='?',
-                       help='Specific project key to delete')
-    parser.add_argument('--prefix', '-p',
-                       help='Delete all projects with this prefix')
-    parser.add_argument('--list', '-l', action='store_true',
-                       help='List projects matching prefix (default: INT)')
-    parser.add_argument('--dry-run', '-n', action='store_true',
-                       help='Show what would be deleted without doing it')
-    parser.add_argument('--profile',
-                       default='development',
-                       help='JIRA profile to use (default: development)')
+    parser.add_argument("project_key", nargs="?", help="Specific project key to delete")
+    parser.add_argument("--prefix", "-p", help="Delete all projects with this prefix")
+    parser.add_argument(
+        "--list",
+        "-l",
+        action="store_true",
+        help="List projects matching prefix (default: INT)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        "-n",
+        action="store_true",
+        help="Show what would be deleted without doing it",
+    )
+    parser.add_argument(
+        "--profile",
+        default="development",
+        help="JIRA profile to use (default: development)",
+    )
 
     args = parser.parse_args()
 
@@ -180,7 +198,7 @@ def main():
         client = get_jira_client(args.profile)
 
         if args.list:
-            prefix = args.prefix if args.prefix else 'INT'
+            prefix = args.prefix if args.prefix else "INT"
             list_test_projects(client, prefix)
 
         elif args.prefix:
@@ -201,5 +219,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

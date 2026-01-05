@@ -11,25 +11,25 @@ This script iteratively fixes failing routing tests by:
 """
 
 import argparse
-import json
 import logging
 import os
 import subprocess
 import sys
-from datetime import datetime
 from pathlib import Path
 
 # Add tests directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from state_tracker import StateTracker, TestStatus, RemediationState
+from claude_analyzer import ClaudeAnalyzer, FixProposal, TestCase
 from skill_editor import SkillEditor
-from claude_analyzer import ClaudeAnalyzer, TestCase, FixProposal
-from test_runner import TestRunner, TestResult, TestSuiteResult
+from state_tracker import StateTracker, TestStatus
+from test_runner import TestRunner, TestSuiteResult
 
 
 # Configure logging
-def setup_logging(log_file: Path | None = None, verbose: bool = False) -> logging.Logger:
+def setup_logging(
+    log_file: Path | None = None, verbose: bool = False
+) -> logging.Logger:
     """Set up logging configuration."""
     level = logging.DEBUG if verbose else logging.INFO
 
@@ -58,19 +58,25 @@ def setup_otel() -> bool:
         return False
 
     try:
-        from opentelemetry import trace, metrics
-        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry import metrics, trace
+        from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
+            OTLPMetricExporter,
+        )
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+            OTLPSpanExporter,
+        )
         from opentelemetry.sdk.metrics import MeterProvider
-        from opentelemetry.sdk.resources import Resource
-        from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-        from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
-        from opentelemetry.sdk.trace.export import BatchSpanProcessor
         from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+        from opentelemetry.sdk.resources import Resource
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-        resource = Resource.create({
-            "service.name": "routing-test-remediation",
-            "service.version": "1.0.0",
-        })
+        resource = Resource.create(
+            {
+                "service.name": "routing-test-remediation",
+                "service.version": "1.0.0",
+            }
+        )
 
         # Traces
         trace_provider = TracerProvider(resource=resource)
@@ -84,7 +90,9 @@ def setup_otel() -> bool:
             OTLPMetricExporter(endpoint=f"{endpoint}/v1/metrics"),
             export_interval_millis=10000,
         )
-        metrics.set_meter_provider(MeterProvider(resource=resource, metric_readers=[metric_reader]))
+        metrics.set_meter_provider(
+            MeterProvider(resource=resource, metric_readers=[metric_reader])
+        )
 
         logging.info(f"OpenTelemetry configured with endpoint: {endpoint}")
         return True
@@ -144,6 +152,7 @@ class RemediationEngine:
         # OTel instruments
         if self.otel_enabled:
             from opentelemetry import metrics, trace
+
             self.tracer = trace.get_tracer(__name__)
             meter = metrics.get_meter(__name__)
             self.tests_fixed_counter = meter.create_counter(
@@ -172,7 +181,9 @@ class RemediationEngine:
         # Load or create state
         if resume and self.state_tracker.state_file.exists():
             state = self.state_tracker.load()
-            self.logger.info(f"Resuming run {state.run_id}, iteration {state.iteration}")
+            self.logger.info(
+                f"Resuming run {state.run_id}, iteration {state.iteration}"
+            )
         else:
             state = self.state_tracker.reset(max_attempts=self.max_attempts)
             self.logger.info(f"Starting new run {state.run_id}")
@@ -185,9 +196,9 @@ class RemediationEngine:
             self.state_tracker.state.iteration = iteration
             self.state_tracker.save()
 
-            self.logger.info(f"\n{'='*60}")
+            self.logger.info(f"\n{'=' * 60}")
             self.logger.info(f"ITERATION {iteration}")
-            self.logger.info(f"{'='*60}")
+            self.logger.info(f"{'=' * 60}")
 
             # Run initial/current test suite
             self.logger.info("Running full test suite (fast mode)...")
@@ -290,7 +301,9 @@ class RemediationEngine:
         )
 
         # Run initial test to get actual skill
-        initial_result = self.test_runner.run_single_test(test_id, model=self.fast_model)
+        initial_result = self.test_runner.run_single_test(
+            test_id, model=self.fast_model
+        )
         if initial_result.passed:
             self.logger.info(f"{test_id}: Already passing!")
             self.state_tracker.update_test(test_id, status=TestStatus.FIXED)
@@ -305,7 +318,9 @@ class RemediationEngine:
 
         if self.fix_attempts[test_id]:
             # Generate alternative fix
-            self.logger.info(f"{test_id}: Generating alternative fix (attempt {test_state.attempts + 1})")
+            self.logger.info(
+                f"{test_id}: Generating alternative fix (attempt {test_state.attempts + 1})"
+            )
             fix = self.claude_analyzer.generate_alternative_fix(
                 test_case, self.fix_attempts[test_id]
             )
@@ -356,7 +371,9 @@ class RemediationEngine:
 
         # Test with production model
         self.logger.info(f"{test_id}: Testing with {self.production_model}...")
-        prod_result = self.test_runner.run_single_test(test_id, model=self.production_model)
+        prod_result = self.test_runner.run_single_test(
+            test_id, model=self.production_model
+        )
 
         if not prod_result.passed:
             self.logger.warning(f"{test_id}: Production test failed, rolling back")
@@ -377,7 +394,9 @@ class RemediationEngine:
         )
 
         baseline_passing = self.state_tracker.state.baseline_passing
-        regressions = self.test_runner.detect_regressions(baseline_passing, regression_result)
+        regressions = self.test_runner.detect_regressions(
+            baseline_passing, regression_result
+        )
 
         if regressions:
             self.logger.warning(f"{test_id}: Caused regressions: {regressions}")
@@ -443,7 +462,9 @@ class RemediationEngine:
         Returns:
             True if conflict was resolved, False otherwise
         """
-        self.logger.info(f"Resolving conflict between {test_a_id} and {regressed_test_id}")
+        self.logger.info(
+            f"Resolving conflict between {test_a_id} and {regressed_test_id}"
+        )
 
         # Rollback first
         self.skill_editor.restore_all()
@@ -451,7 +472,9 @@ class RemediationEngine:
         # Get info for regressed test
         regressed_info = self.test_runner.get_test_info(regressed_test_id)
         if not regressed_info:
-            self.logger.error(f"Could not find info for regressed test {regressed_test_id}")
+            self.logger.error(
+                f"Could not find info for regressed test {regressed_test_id}"
+            )
             return False
 
         test_b_case = TestCase(
@@ -486,7 +509,9 @@ class RemediationEngine:
         # Test both tests
         self.logger.info(f"Testing both {test_a_id} and {regressed_test_id}...")
         result_a = self.test_runner.run_single_test(test_a_id, model=self.fast_model)
-        result_b = self.test_runner.run_single_test(regressed_test_id, model=self.fast_model)
+        result_b = self.test_runner.run_single_test(
+            regressed_test_id, model=self.fast_model
+        )
 
         if not result_a.passed or not result_b.passed:
             self.logger.warning("Conflict resolution failed")
@@ -500,8 +525,12 @@ class RemediationEngine:
 
         # Verify with production model
         self.logger.info("Verifying conflict resolution with production model...")
-        result_a = self.test_runner.run_single_test(test_a_id, model=self.production_model)
-        result_b = self.test_runner.run_single_test(regressed_test_id, model=self.production_model)
+        result_a = self.test_runner.run_single_test(
+            test_a_id, model=self.production_model
+        )
+        result_b = self.test_runner.run_single_test(
+            regressed_test_id, model=self.production_model
+        )
 
         if not result_a.passed or not result_b.passed:
             self.logger.warning("Conflict resolution failed production validation")
@@ -521,10 +550,14 @@ class RemediationEngine:
         )
 
         baseline = self.state_tracker.state.baseline_passing
-        new_regressions = self.test_runner.detect_regressions(baseline, regression_result)
+        new_regressions = self.test_runner.detect_regressions(
+            baseline, regression_result
+        )
 
         if new_regressions:
-            self.logger.warning(f"Conflict resolution caused new regressions: {new_regressions}")
+            self.logger.warning(
+                f"Conflict resolution caused new regressions: {new_regressions}"
+            )
             self.skill_editor.restore_all()
             self.state_tracker.update_test(
                 test_a_id,
@@ -548,7 +581,9 @@ class RemediationEngine:
 
         self.skill_editor.cleanup_backups(keep_latest=0)
 
-        self.logger.info(f"Conflict between {test_a_id} and {regressed_test_id} resolved!")
+        self.logger.info(
+            f"Conflict between {test_a_id} and {regressed_test_id} resolved!"
+        )
         return True
 
     def _commit_fix(
@@ -576,7 +611,7 @@ class RemediationEngine:
 
         # Build commit message
         if len(skills_modified) == 1:
-            scope = f"jira-{list(skills_modified)[0]}"
+            scope = f"jira-{next(iter(skills_modified))}"
         else:
             scope = "jira-assistant"
 
@@ -599,7 +634,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"""
             )
 
             # Commit
-            result = subprocess.run(
+            subprocess.run(
                 ["git", "commit", "-m", message],
                 cwd=self.skill_editor.skills_base_path,
                 check=True,

@@ -18,17 +18,16 @@ Note:
     Tests requiring premium features are marked with @pytest.mark.jsm_premium.
 """
 
+import contextlib
 import os
-import sys
-import uuid
 import time
+import uuid
+from collections.abc import Generator
+from typing import Any
+
 import pytest
-from pathlib import Path
-from typing import Generator, Dict, Any, Optional, List
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraClient
+from jira_assistant_skills_lib import JiraClient, get_jira_client
 
 
 def pytest_addoption(parser):
@@ -37,25 +36,25 @@ def pytest_addoption(parser):
         "--profile",
         action="store",
         default=os.environ.get("JIRA_PROFILE", "development"),
-        help="JIRA profile to use (default: development)"
+        help="JIRA profile to use (default: development)",
     )
     parser.addoption(
         "--keep-project",
         action="store_true",
         default=False,
-        help="Keep the test service desk after tests complete (for debugging)"
+        help="Keep the test service desk after tests complete (for debugging)",
     )
     parser.addoption(
         "--service-desk-id",
         action="store",
         default=None,
-        help="Use existing service desk ID instead of creating one (skips cleanup)"
+        help="Use existing service desk ID instead of creating one (skips cleanup)",
     )
     parser.addoption(
         "--skip-premium",
         action="store_true",
         default=False,
-        help="Skip tests requiring JSM Premium license"
+        help="Skip tests requiring JSM Premium license",
     )
 
 
@@ -85,7 +84,7 @@ def keep_project(request) -> bool:
 
 
 @pytest.fixture(scope="session")
-def existing_service_desk_id(request) -> Optional[str]:
+def existing_service_desk_id(request) -> str | None:
     """Get existing service desk ID if specified."""
     return request.config.getoption("--service-desk-id")
 
@@ -99,7 +98,9 @@ def jira_client(jira_profile) -> Generator[JiraClient, None, None]:
 
 
 @pytest.fixture(scope="session")
-def test_service_desk(jira_client, keep_project, existing_service_desk_id) -> Generator[Dict[str, Any], None, None]:
+def test_service_desk(
+    jira_client, keep_project, existing_service_desk_id
+) -> Generator[dict[str, Any], None, None]:
     """
     Create a unique test service desk for the session.
 
@@ -112,11 +113,11 @@ def test_service_desk(jira_client, keep_project, existing_service_desk_id) -> Ge
         # Use existing service desk - no cleanup
         service_desk = jira_client.get_service_desk(existing_service_desk_id)
         yield {
-            'id': service_desk['id'],
-            'projectId': service_desk['projectId'],
-            'projectKey': service_desk['projectKey'],
-            'projectName': service_desk['projectName'],
-            'is_temporary': False
+            "id": service_desk["id"],
+            "projectId": service_desk["projectId"],
+            "projectKey": service_desk["projectKey"],
+            "projectName": service_desk["projectName"],
+            "is_temporary": False,
         }
         return
 
@@ -125,45 +126,46 @@ def test_service_desk(jira_client, keep_project, existing_service_desk_id) -> Ge
     project_key = f"JSM{unique_suffix}"
     project_name = f"JSM Integration Test {project_key}"
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Creating test service desk: {project_key}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Create the service desk project
     try:
         service_desk = jira_client.create_service_desk(
-            project_key=project_key,
-            project_name=project_name,
-            project_type='software'
+            project_key=project_key, project_name=project_name, project_type="software"
         )
     except Exception as e:
         # Fallback: Create via project API with JSM template
         print(f"Service Desk API failed, trying project API: {e}")
-        project = jira_client.create_project(
+        jira_client.create_project(
             key=project_key,
             name=project_name,
-            project_type_key='service_desk',
-            template_key='com.atlassian.servicedesk:itil-v2-service-desk-project',
-            description='Temporary service desk for live integration tests'
+            project_type_key="service_desk",
+            template_key="com.atlassian.servicedesk:itil-v2-service-desk-project",
+            description="Temporary service desk for live integration tests",
         )
         # Wait for service desk to be created
         time.sleep(3)
         # Get service desk by project key
         service_desks = jira_client.get_service_desks()
         service_desk = next(
-            (sd for sd in service_desks.get('values', [])
-             if sd.get('projectKey') == project_key),
-            None
+            (
+                sd
+                for sd in service_desks.get("values", [])
+                if sd.get("projectKey") == project_key
+            ),
+            None,
         )
         if not service_desk:
             raise RuntimeError(f"Failed to find service desk for project {project_key}")
 
     service_desk_data = {
-        'id': service_desk['id'],
-        'projectId': service_desk['projectId'],
-        'projectKey': service_desk.get('projectKey', project_key),
-        'projectName': service_desk.get('projectName', project_name),
-        'is_temporary': True
+        "id": service_desk["id"],
+        "projectId": service_desk["projectId"],
+        "projectKey": service_desk.get("projectKey", project_key),
+        "projectName": service_desk.get("projectName", project_name),
+        "is_temporary": True,
     }
 
     print(f"Service desk created: {project_key} (ID: {service_desk['id']})")
@@ -171,14 +173,16 @@ def test_service_desk(jira_client, keep_project, existing_service_desk_id) -> Ge
     yield service_desk_data
 
     # Cleanup
-    if not keep_project and service_desk_data.get('is_temporary', True):
-        print(f"\n{'='*60}")
+    if not keep_project and service_desk_data.get("is_temporary", True):
+        print(f"\n{'=' * 60}")
         print(f"Cleaning up test service desk: {project_key}")
-        print(f"{'='*60}")
-        cleanup_service_desk(jira_client, project_key, service_desk_data['id'])
+        print(f"{'=' * 60}")
+        cleanup_service_desk(jira_client, project_key, service_desk_data["id"])
 
 
-def cleanup_service_desk(client: JiraClient, project_key: str, service_desk_id: str) -> None:
+def cleanup_service_desk(
+    client: JiraClient, project_key: str, service_desk_id: str
+) -> None:
     """
     Clean up all resources in a service desk before deletion.
 
@@ -189,13 +193,13 @@ def cleanup_service_desk(client: JiraClient, project_key: str, service_desk_id: 
     """
     try:
         # Step 1: Delete organizations created for this project
-        print(f"  Checking for test organizations...")
+        print("  Checking for test organizations...")
         try:
             orgs = client.get_service_desk_organizations(service_desk_id)
-            for org in orgs.get('values', []):
-                if org.get('name', '').startswith('Test Org'):
+            for org in orgs.get("values", []):
+                if org.get("name", "").startswith("Test Org"):
                     try:
-                        client.delete_organization(org['id'])
+                        client.delete_organization(org["id"])
                         print(f"    Deleted organization: {org['name']}")
                     except Exception as e:
                         print(f"    Warning: Could not delete org {org['id']}: {e}")
@@ -209,16 +213,16 @@ def cleanup_service_desk(client: JiraClient, project_key: str, service_desk_id: 
         while True:
             result = client.search_issues(
                 f"project = {project_key} ORDER BY created DESC",
-                fields=['key', 'issuetype'],
-                max_results=50
+                fields=["key", "issuetype"],
+                max_results=50,
             )
-            issues = result.get('issues', [])
+            issues = result.get("issues", [])
             if not issues:
                 break
 
             for issue in issues:
                 try:
-                    client.delete_issue(issue['key'])
+                    client.delete_issue(issue["key"])
                     issues_deleted += 1
                 except Exception as e:
                     print(f"    Warning: Could not delete {issue['key']}: {e}")
@@ -236,36 +240,37 @@ def cleanup_service_desk(client: JiraClient, project_key: str, service_desk_id: 
 
 
 @pytest.fixture(scope="session")
-def default_request_type(jira_client, test_service_desk) -> Dict[str, Any]:
+def default_request_type(jira_client, test_service_desk) -> dict[str, Any]:
     """
     Get the default request type for the service desk.
 
     Returns the first available request type (usually 'Get IT help' or similar).
     """
-    request_types = jira_client.get_request_types(test_service_desk['id'])
-    types = request_types.get('values', [])
+    request_types = jira_client.get_request_types(test_service_desk["id"])
+    types = request_types.get("values", [])
     if not types:
         pytest.skip("No request types available in service desk")
     return types[0]
 
 
 @pytest.fixture(scope="session")
-def request_type_with_priority(jira_client, test_service_desk) -> Optional[Dict[str, Any]]:
+def request_type_with_priority(jira_client, test_service_desk) -> dict[str, Any] | None:
     """
     Find a request type that supports the priority field.
 
     Returns None if no request type supports priority (test should skip).
     """
-    request_types = jira_client.get_request_types(test_service_desk['id'])
+    request_types = jira_client.get_request_types(test_service_desk["id"])
 
-    for rt in request_types.get('values', []):
+    for rt in request_types.get("values", []):
         try:
             fields = jira_client.get_request_type_fields(
-                test_service_desk['id'],
-                rt['id']
+                test_service_desk["id"], rt["id"]
             )
-            field_ids = [f.get('fieldId', '') for f in fields.get('requestTypeFields', [])]
-            if 'priority' in field_ids:
+            field_ids = [
+                f.get("fieldId", "") for f in fields.get("requestTypeFields", [])
+            ]
+            if "priority" in field_ids:
                 return rt
         except Exception:
             continue
@@ -274,23 +279,25 @@ def request_type_with_priority(jira_client, test_service_desk) -> Optional[Dict[
 
 
 @pytest.fixture(scope="session")
-def request_type_with_approval(jira_client, test_service_desk) -> Optional[Dict[str, Any]]:
+def request_type_with_approval(jira_client, test_service_desk) -> dict[str, Any] | None:
     """
     Find a request type that has an approval workflow configured.
 
     Returns None if no request type has approval workflow (test should skip).
     """
-    request_types = jira_client.get_request_types(test_service_desk['id'])
+    request_types = jira_client.get_request_types(test_service_desk["id"])
 
-    for rt in request_types.get('values', []):
+    for rt in request_types.get("values", []):
         try:
             fields = jira_client.get_request_type_fields(
-                test_service_desk['id'],
-                rt['id']
+                test_service_desk["id"], rt["id"]
             )
-            field_ids = [f.get('fieldId', '').lower() for f in fields.get('requestTypeFields', [])]
+            field_ids = [
+                f.get("fieldId", "").lower()
+                for f in fields.get("requestTypeFields", [])
+            ]
             # Look for approval-related fields
-            if any('approv' in fid for fid in field_ids):
+            if any("approv" in fid for fid in field_ids):
                 return rt
         except Exception:
             continue
@@ -299,7 +306,7 @@ def request_type_with_approval(jira_client, test_service_desk) -> Optional[Dict[
 
 
 @pytest.fixture(scope="session")
-def kb_article(jira_client, test_service_desk) -> Optional[Dict[str, Any]]:
+def kb_article(jira_client, test_service_desk) -> dict[str, Any] | None:
     """
     Find an existing knowledge base article for testing.
 
@@ -307,24 +314,20 @@ def kb_article(jira_client, test_service_desk) -> Optional[Dict[str, Any]]:
     """
     try:
         # Search for any article
-        result = jira_client.search_knowledge_base(
-            test_service_desk['id'],
-            query='*'
-        )
-        articles = result.get('values', [])
+        result = jira_client.search_knowledge_base(test_service_desk["id"], query="*")
+        articles = result.get("values", [])
         if articles:
             return articles[0]
     except Exception:
         pass
 
     # Try common search terms
-    for query in ['help', 'guide', 'how to', 'password', 'access']:
+    for query in ["help", "guide", "how to", "password", "access"]:
         try:
             result = jira_client.search_knowledge_base(
-                test_service_desk['id'],
-                query=query
+                test_service_desk["id"], query=query
             )
-            articles = result.get('values', [])
+            articles = result.get("values", [])
             if articles:
                 return articles[0]
         except Exception:
@@ -334,39 +337,41 @@ def kb_article(jira_client, test_service_desk) -> Optional[Dict[str, Any]]:
 
 
 @pytest.fixture(scope="session")
-def request_with_sla(jira_client, test_service_desk, default_request_type) -> Optional[Dict[str, Any]]:
+def request_with_sla(
+    jira_client, test_service_desk, default_request_type
+) -> dict[str, Any] | None:
     """
     Create a request and check if it has SLAs configured.
 
     Returns the request if SLAs are available, None otherwise.
     """
     request = jira_client.create_request(
-        service_desk_id=test_service_desk['id'],
-        request_type_id=default_request_type['id'],
-        summary=f'SLA Test Request {uuid.uuid4().hex[:8]}',
-        description='Request for SLA testing'
+        service_desk_id=test_service_desk["id"],
+        request_type_id=default_request_type["id"],
+        summary=f"SLA Test Request {uuid.uuid4().hex[:8]}",
+        description="Request for SLA testing",
     )
 
     try:
         # Check if SLAs are configured
-        sla_result = jira_client.get_request_sla(request['issueKey'])
-        if sla_result.get('values'):
+        sla_result = jira_client.get_request_sla(request["issueKey"])
+        if sla_result.get("values"):
             # Has SLAs - return the request
             return request
     except Exception:
         pass
 
     # No SLAs - cleanup and return None
-    try:
-        jira_client.delete_issue(request['issueKey'])
-    except Exception:
-        pass
+    with contextlib.suppress(Exception):
+        jira_client.delete_issue(request["issueKey"])
 
     return None
 
 
 @pytest.fixture(scope="function")
-def test_request(jira_client, test_service_desk, default_request_type) -> Generator[Dict[str, Any], None, None]:
+def test_request(
+    jira_client, test_service_desk, default_request_type
+) -> Generator[dict[str, Any], None, None]:
     """
     Create a test request for individual tests.
 
@@ -374,53 +379,50 @@ def test_request(jira_client, test_service_desk, default_request_type) -> Genera
         Request data with 'issueKey', 'issueId', etc.
     """
     request = jira_client.create_request(
-        service_desk_id=test_service_desk['id'],
-        request_type_id=default_request_type['id'],
-        summary=f'Test Request {uuid.uuid4().hex[:8]}',
-        description='Test request for live integration tests'
+        service_desk_id=test_service_desk["id"],
+        request_type_id=default_request_type["id"],
+        summary=f"Test Request {uuid.uuid4().hex[:8]}",
+        description="Test request for live integration tests",
     )
 
     yield request
 
     # Cleanup
     try:
-        jira_client.delete_issue(request['issueKey'])
+        jira_client.delete_issue(request["issueKey"])
     except Exception:
         pass  # Request may have been deleted by test
 
 
 @pytest.fixture(scope="function")
-def test_organization(jira_client, test_service_desk) -> Generator[Dict[str, Any], None, None]:
+def test_organization(
+    jira_client, test_service_desk
+) -> Generator[dict[str, Any], None, None]:
     """
     Create a test organization for individual tests.
 
     Yields:
         Organization data with 'id', 'name', etc.
     """
-    org = jira_client.create_organization(
-        name=f'Test Org {uuid.uuid4().hex[:8]}'
-    )
+    org = jira_client.create_organization(name=f"Test Org {uuid.uuid4().hex[:8]}")
 
     # Add organization to service desk
     try:
-        jira_client.add_organization_to_service_desk(
-            test_service_desk['id'],
-            org['id']
-        )
+        jira_client.add_organization_to_service_desk(test_service_desk["id"], org["id"])
     except Exception:
         pass  # May already be added or feature not available
 
     yield org
 
     # Cleanup
-    try:
-        jira_client.delete_organization(org['id'])
-    except Exception:
-        pass
+    with contextlib.suppress(Exception):
+        jira_client.delete_organization(org["id"])
 
 
 @pytest.fixture(scope="function")
-def test_customer(jira_client, test_service_desk) -> Generator[Dict[str, Any], None, None]:
+def test_customer(
+    jira_client, test_service_desk
+) -> Generator[dict[str, Any], None, None]:
     """
     Create a test customer for individual tests.
 
@@ -436,8 +438,8 @@ def test_customer(jira_client, test_service_desk) -> Generator[Dict[str, Any], N
     try:
         customer = jira_client.create_customer(
             email=email,
-            display_name=f'Test Customer {unique_id}',
-            service_desk_id=test_service_desk['id']
+            display_name=f"Test Customer {unique_id}",
+            service_desk_id=test_service_desk["id"],
         )
     except Exception as e:
         pytest.skip(f"Cannot create test customer: {e}")
@@ -448,7 +450,9 @@ def test_customer(jira_client, test_service_desk) -> Generator[Dict[str, Any], N
 
 
 @pytest.fixture(scope="function")
-def request_with_comments(jira_client, test_service_desk, default_request_type) -> Generator[Dict[str, Any], None, None]:
+def request_with_comments(
+    jira_client, test_service_desk, default_request_type
+) -> Generator[dict[str, Any], None, None]:
     """
     Create a test request with comments for testing comment functionality.
 
@@ -456,46 +460,47 @@ def request_with_comments(jira_client, test_service_desk, default_request_type) 
         Request data with added comments
     """
     request = jira_client.create_request(
-        service_desk_id=test_service_desk['id'],
-        request_type_id=default_request_type['id'],
-        summary=f'Request with Comments {uuid.uuid4().hex[:8]}',
-        description='Test request with comments'
+        service_desk_id=test_service_desk["id"],
+        request_type_id=default_request_type["id"],
+        summary=f"Request with Comments {uuid.uuid4().hex[:8]}",
+        description="Test request with comments",
     )
 
     # Add a public comment
     jira_client.add_request_comment(
-        request['issueKey'],
-        'Public test comment for integration tests',
-        public=True
+        request["issueKey"], "Public test comment for integration tests", public=True
     )
 
     # Add an internal comment
     jira_client.add_request_comment(
-        request['issueKey'],
-        'Internal test comment for integration tests',
-        public=False
+        request["issueKey"], "Internal test comment for integration tests", public=False
     )
 
     yield request
 
     # Cleanup
-    try:
-        jira_client.delete_issue(request['issueKey'])
-    except Exception:
-        pass
+    with contextlib.suppress(Exception):
+        jira_client.delete_issue(request["issueKey"])
 
 
 @pytest.fixture(scope="session")
-def current_user(jira_client) -> Dict[str, Any]:
+def current_user(jira_client) -> dict[str, Any]:
     """Get the current authenticated user."""
     return jira_client.get_current_user()
 
 
-def get_available_transitions(client: JiraClient, issue_key: str) -> List[Dict[str, Any]]:
+def get_available_transitions(
+    client: JiraClient, issue_key: str
+) -> list[dict[str, Any]]:
     """Helper to get available transitions for a request."""
     return client.get_request_transitions(issue_key)
 
 
-def transition_request(client: JiraClient, issue_key: str, transition_id: str, comment: Optional[str] = None) -> None:
+def transition_request(
+    client: JiraClient,
+    issue_key: str,
+    transition_id: str,
+    comment: str | None = None,
+) -> None:
     """Helper to transition a request to a new status."""
     client.transition_request(issue_key, transition_id, comment=comment)

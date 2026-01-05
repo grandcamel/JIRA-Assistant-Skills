@@ -3,14 +3,15 @@
 
 import re
 import shutil
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from dataclasses import dataclass
 
 
 @dataclass
 class SkillContent:
     """Parsed content of a SKILL.md file."""
+
     frontmatter: dict[str, str]
     body: str
     raw_frontmatter: str
@@ -67,7 +68,9 @@ class SkillEditor:
         skill_md = skill_dir / "SKILL.md"
 
         if not skill_md.exists():
-            raise FileNotFoundError(f"SKILL.md not found for {skill_name} at {skill_md}")
+            raise FileNotFoundError(
+                f"SKILL.md not found for {skill_name} at {skill_md}"
+            )
 
         return skill_md
 
@@ -93,7 +96,7 @@ class SkillEditor:
             end_match = re.search(r"\n---\s*\n", content[3:])
             if end_match:
                 end_pos = end_match.end() + 3
-                raw_frontmatter = content[3:end_match.start() + 3].strip()
+                raw_frontmatter = content[3 : end_match.start() + 3].strip()
                 body = content[end_pos:]
 
                 # Parse frontmatter (simple key: value parsing)
@@ -103,9 +106,9 @@ class SkillEditor:
                         key = key.strip()
                         value = value.strip()
                         # Remove quotes if present
-                        if value.startswith('"') and value.endswith('"'):
-                            value = value[1:-1]
-                        elif value.startswith("'") and value.endswith("'"):
+                        if (value.startswith('"') and value.endswith('"')) or (
+                            value.startswith("'") and value.endswith("'")
+                        ):
                             value = value[1:-1]
                         frontmatter[key] = value
 
@@ -284,7 +287,9 @@ class SkillEditor:
                 new_section_content = new_section_content + "\n"
 
             new_full_section = header + new_section_content + next_section
-            content = content[:match.start()] + new_full_section + content[match.end():]
+            content = (
+                content[: match.start()] + new_full_section + content[match.end() :]
+            )
         else:
             raise ValueError(f"Section '{section_header}' not found in {skill_name}")
 
@@ -413,7 +418,9 @@ class SkillEditor:
             skill_backups: dict[str, list[Path]] = {}
             for backup_file in self.BACKUP_DIR.glob("*.md"):
                 # Extract skill name from filename
-                skill_name = "_".join(backup_file.stem.split("_")[:-3])  # Remove timestamp
+                skill_name = "_".join(
+                    backup_file.stem.split("_")[:-3]
+                )  # Remove timestamp
                 if skill_name not in skill_backups:
                     skill_backups[skill_name] = []
                 skill_backups[skill_name].append(backup_file)

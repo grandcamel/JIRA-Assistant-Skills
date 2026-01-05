@@ -16,24 +16,26 @@ Examples:
 """
 
 import argparse
-import sys
 import json
-from pathlib import Path
-from typing import Dict, Any, Optional
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, ValidationError, print_error
-from jira_assistant_skills_lib import validate_project_key
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    validate_project_key,
+)
 
 
 def set_project_lead(
     project_key: str,
-    lead_email: Optional[str] = None,
-    lead_account_id: Optional[str] = None,
-    client=None
-) -> Dict[str, Any]:
+    lead_email: str | None = None,
+    lead_account_id: str | None = None,
+    client=None,
+) -> dict[str, Any]:
     """
     Set the project lead.
 
@@ -53,9 +55,7 @@ def set_project_lead(
     project_key = validate_project_key(project_key)
 
     if not lead_email and not lead_account_id:
-        raise ValidationError(
-            "Must specify either --lead (email) or --account-id"
-        )
+        raise ValidationError("Must specify either --lead (email) or --account-id")
 
     should_close = False
     if client is None:
@@ -72,7 +72,7 @@ def set_project_lead(
             # Find exact email match
             found = None
             for user in users:
-                if user.get('emailAddress', '').lower() == lead_email.lower():
+                if user.get("emailAddress", "").lower() == lead_email.lower():
                     found = user
                     break
 
@@ -82,7 +82,7 @@ def set_project_lead(
                     f"Make sure the user has access to the JIRA instance."
                 )
 
-            account_id = found.get('accountId')
+            account_id = found.get("accountId")
 
         # Update project with new lead
         result = client.update_project(project_key, lead=account_id)
@@ -93,20 +93,20 @@ def set_project_lead(
             client.close()
 
 
-def format_output(project: Dict[str, Any], output_format: str = "text") -> str:
+def format_output(project: dict[str, Any], output_format: str = "text") -> str:
     """Format result for output."""
     if output_format == "json":
         return json.dumps(project, indent=2)
 
     # Text output
-    lead = project.get('lead', {})
+    lead = project.get("lead", {})
     lines = [
         f"Project lead updated for {project.get('key', 'Unknown')}",
         "",
         f"  New Lead: {lead.get('displayName', 'N/A')}",
     ]
 
-    if lead.get('emailAddress'):
+    if lead.get("emailAddress"):
         lines.append(f"  Email:    {lead.get('emailAddress')}")
 
     lines.append(f"  Account:  {lead.get('accountId', 'N/A')}")
@@ -126,39 +126,30 @@ Examples:
 
   # Set lead by account ID
   %(prog)s PROJ --account-id 557058:test-user-id
-        """
+        """,
     )
 
     # Required arguments
-    parser.add_argument(
-        "project_key",
-        help="Project key (e.g., PROJ)"
-    )
+    parser.add_argument("project_key", help="Project key (e.g., PROJ)")
 
     # Lead specification (at least one required)
     lead_group = parser.add_mutually_exclusive_group(required=True)
     lead_group.add_argument(
-        "--lead", "-l",
-        dest="lead_email",
-        help="Lead's email address"
+        "--lead", "-l", dest="lead_email", help="Lead's email address"
     )
     lead_group.add_argument(
-        "--account-id", "-a",
-        dest="account_id",
-        help="Lead's account ID"
+        "--account-id", "-a", dest="account_id", help="Lead's account ID"
     )
 
     # Output options
     parser.add_argument(
-        "--output", "-o",
-        choices=['text', 'json'],
-        default='text',
-        help="Output format (default: text)"
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
     )
-    parser.add_argument(
-        "--profile",
-        help="Configuration profile to use"
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -169,7 +160,7 @@ Examples:
             project_key=args.project_key,
             lead_email=args.lead_email,
             lead_account_id=args.account_id,
-            client=client
+            client=client,
         )
 
         print(format_output(result, args.output))
@@ -181,7 +172,7 @@ Examples:
         print_error(e)
         sys.exit(1)
     finally:
-        if 'client' in locals():
+        if "client" in locals():
             client.close()
 
 

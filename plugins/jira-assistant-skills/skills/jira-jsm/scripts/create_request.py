@@ -8,25 +8,30 @@ Usage:
     python create_request.py --service-desk 1 --request-type 10 --summary "Test" --field priority=High --dry-run
 """
 
-import sys
-import os
 import argparse
 import json
-from pathlib import Path
-from typing import Optional, Dict, Any, List
+import sys
+from typing import Any
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    NotFoundError,
+    get_jira_client,
+    print_error,
+    print_success,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, NotFoundError
-from jira_assistant_skills_lib import print_success
-
-
-def create_service_request(service_desk_id: str, request_type_id: str,
-                           summary: str, description: str,
-                           custom_fields: Optional[Dict[str, Any]] = None,
-                           participants: Optional[List[str]] = None,
-                           on_behalf_of: Optional[str] = None,
-                           profile: Optional[str] = None) -> Dict[str, Any]:
+def create_service_request(
+    service_desk_id: str,
+    request_type_id: str,
+    summary: str,
+    description: str,
+    custom_fields: dict[str, Any] | None = None,
+    participants: list[str] | None = None,
+    on_behalf_of: str | None = None,
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Create a service request.
 
@@ -54,10 +59,7 @@ def create_service_request(service_desk_id: str, request_type_id: str,
         raise ValueError("description is required")
 
     # Build request field values
-    fields = {
-        'summary': summary,
-        'description': description
-    }
+    fields = {"summary": summary, "description": description}
 
     # Add custom fields
     if custom_fields:
@@ -69,11 +71,11 @@ def create_service_request(service_desk_id: str, request_type_id: str,
             request_type_id=request_type_id,
             fields=fields,
             participants=participants,
-            on_behalf_of=on_behalf_of
+            on_behalf_of=on_behalf_of,
         )
 
 
-def parse_custom_fields(field_args: List[str]) -> Dict[str, Any]:
+def parse_custom_fields(field_args: list[str]) -> dict[str, Any]:
     """
     Parse custom field arguments from command line.
 
@@ -85,10 +87,10 @@ def parse_custom_fields(field_args: List[str]) -> Dict[str, Any]:
     """
     fields = {}
     for arg in field_args:
-        if '=' not in arg:
+        if "=" not in arg:
             raise ValueError(f"Invalid field format: {arg}. Use field=value")
 
-        key, value = arg.split('=', 1)
+        key, value = arg.split("=", 1)
         fields[key.strip()] = value.strip()
 
     return fields
@@ -97,7 +99,7 @@ def parse_custom_fields(field_args: List[str]) -> Dict[str, Any]:
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Create a JSM service request',
+        description="Create a JSM service request",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -115,29 +117,35 @@ Examples:
 
   Dry-run:
     %(prog)s --service-desk 1 --request-type 10 --summary "Test" --description "Test" --dry-run
-        """
+        """,
     )
 
-    parser.add_argument('--service-desk', required=True,
-                        help='Service desk ID or key')
-    parser.add_argument('--request-type', required=True,
-                        help='Request type ID')
-    parser.add_argument('--summary', required=True,
-                        help='Request summary')
-    parser.add_argument('--description', required=True,
-                        help='Request description')
-    parser.add_argument('--field', action='append', default=[],
-                        help='Custom field (format: field=value)')
-    parser.add_argument('--participants',
-                        help='Comma-separated list of participant emails')
-    parser.add_argument('--on-behalf-of',
-                        help='Create request on behalf of user email')
-    parser.add_argument('--output', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Show what would be created without creating')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use from config')
+    parser.add_argument("--service-desk", required=True, help="Service desk ID or key")
+    parser.add_argument("--request-type", required=True, help="Request type ID")
+    parser.add_argument("--summary", required=True, help="Request summary")
+    parser.add_argument("--description", required=True, help="Request description")
+    parser.add_argument(
+        "--field",
+        action="append",
+        default=[],
+        help="Custom field (format: field=value)",
+    )
+    parser.add_argument(
+        "--participants", help="Comma-separated list of participant emails"
+    )
+    parser.add_argument("--on-behalf-of", help="Create request on behalf of user email")
+    parser.add_argument(
+        "--output",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be created without creating",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -148,10 +156,14 @@ Examples:
         # Parse participants
         participants = None
         if args.participants:
-            participants = [p.strip() for p in args.participants.split(',') if p.strip()]
+            participants = [
+                p.strip() for p in args.participants.split(",") if p.strip()
+            ]
             # Validate parsed list is non-empty
             if len(participants) == 0:
-                print_error("Participant list is empty after parsing. Provide valid comma-separated emails.")
+                print_error(
+                    "Participant list is empty after parsing. Provide valid comma-separated emails."
+                )
                 return 1
 
         if args.dry_run:
@@ -177,34 +189,34 @@ Examples:
             custom_fields=custom_fields,
             participants=participants,
             on_behalf_of=args.on_behalf_of,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(request, indent=2))
         else:
             print_success("Service request created successfully!\n")
             print(f"Request Key: {request.get('issueKey')}")
 
-            req_type = request.get('requestType', {})
+            req_type = request.get("requestType", {})
             print(f"Request Type: {req_type.get('name', 'N/A')}")
 
-            status = request.get('currentStatus', {})
+            status = request.get("currentStatus", {})
             print(f"Status: {status.get('status', 'N/A')}")
 
             print(f"\nSummary: {args.summary}")
             print(f"Description: {args.description}")
 
-            reporter = request.get('reporter', {})
+            reporter = request.get("reporter", {})
             print(f"\nReporter: {reporter.get('emailAddress', 'N/A')}")
 
-            created = request.get('createdDate', {})
+            created = request.get("createdDate", {})
             print(f"Created: {created.get('friendly', 'N/A')}")
 
-            links = request.get('_links', {})
-            if 'web' in links:
+            links = request.get("_links", {})
+            if "web" in links:
                 print(f"\nCustomer Portal: {links['web']}")
-            if 'agent' in links:
+            if "agent" in links:
                 print(f"Agent View: {links['agent']}")
 
         return 0
@@ -220,5 +232,5 @@ Examples:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

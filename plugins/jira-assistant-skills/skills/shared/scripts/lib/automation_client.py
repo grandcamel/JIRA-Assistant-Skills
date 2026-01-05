@@ -7,8 +7,9 @@ which uses a different base URL than the standard Jira REST API.
 API Documentation: https://developer.atlassian.com/cloud/automation/rest/
 """
 
+from typing import Any
+
 import requests
-from typing import Dict, Any, Optional, List
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
@@ -33,12 +34,12 @@ class AutomationClient:
         site_url: str,
         email: str,
         api_token: str,
-        cloud_id: Optional[str] = None,
-        product: str = 'jira',
+        cloud_id: str | None = None,
+        product: str = "jira",
         use_gateway: bool = False,
         timeout: int = 30,
         max_retries: int = 3,
-        retry_backoff: float = 2.0
+        retry_backoff: float = 2.0,
     ):
         """
         Initialize Automation API client.
@@ -54,7 +55,7 @@ class AutomationClient:
             max_retries: Maximum number of retry attempts
             retry_backoff: Backoff factor for retries (exponential)
         """
-        self.site_url = site_url.rstrip('/')
+        self.site_url = site_url.rstrip("/")
         self.email = email
         self.api_token = api_token
         self.product = product
@@ -92,17 +93,27 @@ class AutomationClient:
 
         session.auth = (self.email, self.api_token)
 
-        session.headers.update({
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        })
+        session.headers.update(
+            {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            }
+        )
 
         retry_strategy = Retry(
             total=self.max_retries,
             backoff_factor=self.retry_backoff,
             status_forcelist=[429, 500, 502, 503, 504],
-            allowed_methods=["HEAD", "GET", "PUT", "DELETE", "OPTIONS", "TRACE", "POST"],
-            raise_on_status=False
+            allowed_methods=[
+                "HEAD",
+                "GET",
+                "PUT",
+                "DELETE",
+                "OPTIONS",
+                "TRACE",
+                "POST",
+            ],
+            raise_on_status=False,
         )
 
         adapter = HTTPAdapter(max_retries=retry_strategy)
@@ -127,18 +138,22 @@ class AutomationClient:
             response = self.session.get(tenant_url, timeout=self.timeout)
             if response.ok:
                 data = response.json()
-                return data['cloudId']
+                return data["cloudId"]
             else:
                 from jira_assistant_skills_lib import AutomationError
+
                 raise AutomationError(
                     f"Failed to fetch cloud ID: HTTP {response.status_code}",
-                    status_code=response.status_code
+                    status_code=response.status_code,
                 )
         except requests.RequestException as e:
             from jira_assistant_skills_lib import AutomationError
-            raise AutomationError(f"Failed to fetch cloud ID: {str(e)}")
 
-    def _handle_response(self, response: requests.Response, operation: str) -> Dict[str, Any]:
+            raise AutomationError(f"Failed to fetch cloud ID: {e!s}")
+
+    def _handle_response(
+        self, response: requests.Response, operation: str
+    ) -> dict[str, Any]:
         """
         Handle API response and raise appropriate exceptions.
 
@@ -162,15 +177,17 @@ class AutomationClient:
 
         # Import error classes here to avoid circular imports
         from jira_assistant_skills_lib import (
-            AutomationError, AutomationNotFoundError,
-            AutomationPermissionError, AutomationValidationError
+            AutomationError,
+            AutomationNotFoundError,
+            AutomationPermissionError,
+            AutomationValidationError,
         )
 
         status_code = response.status_code
 
         try:
             error_data = response.json()
-            message = error_data.get('message', response.text or 'Unknown error')
+            message = error_data.get("message", response.text or "Unknown error")
         except ValueError:
             message = response.text or f"HTTP {status_code} error"
             error_data = {}
@@ -178,30 +195,52 @@ class AutomationClient:
         message = f"Failed to {operation}: {message}"
 
         if status_code == 400:
-            raise AutomationValidationError(message, status_code=status_code, response_data=error_data)
+            raise AutomationValidationError(
+                message, status_code=status_code, response_data=error_data
+            )
         elif status_code == 401:
             from jira_assistant_skills_lib import AuthenticationError
-            raise AuthenticationError(message, status_code=status_code, response_data=error_data)
+
+            raise AuthenticationError(
+                message, status_code=status_code, response_data=error_data
+            )
         elif status_code == 403:
-            raise AutomationPermissionError(message, status_code=status_code, response_data=error_data)
+            raise AutomationPermissionError(
+                message, status_code=status_code, response_data=error_data
+            )
         elif status_code == 404:
-            raise AutomationNotFoundError("Automation resource", message, status_code=status_code, response_data=error_data)
+            raise AutomationNotFoundError(
+                "Automation resource",
+                message,
+                status_code=status_code,
+                response_data=error_data,
+            )
         elif status_code == 429:
             from jira_assistant_skills_lib import RateLimitError
-            retry_after = response.headers.get('Retry-After')
+
+            retry_after = response.headers.get("Retry-After")
             raise RateLimitError(
                 retry_after=int(retry_after) if retry_after else None,
                 status_code=status_code,
-                response_data=error_data
+                response_data=error_data,
             )
         elif status_code >= 500:
             from jira_assistant_skills_lib import ServerError
-            raise ServerError(message, status_code=status_code, response_data=error_data)
-        else:
-            raise AutomationError(message, status_code=status_code, response_data=error_data)
 
-    def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None,
-            operation: str = "fetch automation data") -> Dict[str, Any]:
+            raise ServerError(
+                message, status_code=status_code, response_data=error_data
+            )
+        else:
+            raise AutomationError(
+                message, status_code=status_code, response_data=error_data
+            )
+
+    def get(
+        self,
+        endpoint: str,
+        params: dict[str, Any] | None = None,
+        operation: str = "fetch automation data",
+    ) -> dict[str, Any]:
         """
         Perform GET request to Automation API.
 
@@ -217,8 +256,12 @@ class AutomationClient:
         response = self.session.get(url, params=params, timeout=self.timeout)
         return self._handle_response(response, operation)
 
-    def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None,
-             operation: str = "create automation resource") -> Dict[str, Any]:
+    def post(
+        self,
+        endpoint: str,
+        data: dict[str, Any] | None = None,
+        operation: str = "create automation resource",
+    ) -> dict[str, Any]:
         """
         Perform POST request to Automation API.
 
@@ -234,8 +277,12 @@ class AutomationClient:
         response = self.session.post(url, json=data, timeout=self.timeout)
         return self._handle_response(response, operation)
 
-    def put(self, endpoint: str, data: Optional[Dict[str, Any]] = None,
-            operation: str = "update automation resource") -> Dict[str, Any]:
+    def put(
+        self,
+        endpoint: str,
+        data: dict[str, Any] | None = None,
+        operation: str = "update automation resource",
+    ) -> dict[str, Any]:
         """
         Perform PUT request to Automation API.
 
@@ -251,7 +298,9 @@ class AutomationClient:
         response = self.session.put(url, json=data, timeout=self.timeout)
         return self._handle_response(response, operation)
 
-    def delete(self, endpoint: str, operation: str = "delete automation resource") -> Dict[str, Any]:
+    def delete(
+        self, endpoint: str, operation: str = "delete automation resource"
+    ) -> dict[str, Any]:
         """
         Perform DELETE request to Automation API.
 
@@ -270,7 +319,7 @@ class AutomationClient:
     # Rule Discovery & Inspection
     # -------------------------------------------------------------------------
 
-    def get_rules(self, limit: int = 50, cursor: Optional[str] = None) -> Dict[str, Any]:
+    def get_rules(self, limit: int = 50, cursor: str | None = None) -> dict[str, Any]:
         """
         List automation rules with pagination.
 
@@ -281,20 +330,22 @@ class AutomationClient:
         Returns:
             Dictionary with 'values' (rules), 'links' (pagination), 'hasMore'
         """
-        params = {'limit': min(max(1, limit), 100)}
+        params = {"limit": min(max(1, limit), 100)}
         if cursor:
-            params['cursor'] = cursor
+            params["cursor"] = cursor
 
-        return self.get('/rest/v1/rule/summary', params=params, operation='list automation rules')
+        return self.get(
+            "/rest/v1/rule/summary", params=params, operation="list automation rules"
+        )
 
     def search_rules(
         self,
-        trigger: Optional[str] = None,
-        state: Optional[str] = None,
-        scope: Optional[str] = None,
+        trigger: str | None = None,
+        state: str | None = None,
+        scope: str | None = None,
         limit: int = 50,
-        cursor: Optional[str] = None
-    ) -> Dict[str, Any]:
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
         """
         Search automation rules with filters.
 
@@ -310,27 +361,27 @@ class AutomationClient:
         """
         filters = {}
         if trigger:
-            filters['trigger'] = trigger
+            filters["trigger"] = trigger
         if state:
-            filters['state'] = state.upper()
+            filters["state"] = state.upper()
         if scope:
-            filters['scope'] = scope
+            filters["scope"] = scope
 
-        params = {'limit': min(max(1, limit), 100)}
+        params = {"limit": min(max(1, limit), 100)}
         if cursor:
-            params['cursor'] = cursor
+            params["cursor"] = cursor
 
-        data = {'filters': filters} if filters else {}
+        data = {"filters": filters} if filters else {}
 
         # Use POST for search with filters
         url = f"{self.base_url}/rest/v1/rule/summary"
         if params:
-            url += '?' + '&'.join(f"{k}={v}" for k, v in params.items())
+            url += "?" + "&".join(f"{k}={v}" for k, v in params.items())
 
         response = self.session.post(url, json=data, timeout=self.timeout)
-        return self._handle_response(response, 'search automation rules')
+        return self._handle_response(response, "search automation rules")
 
-    def get_rule(self, rule_uuid: str) -> Dict[str, Any]:
+    def get_rule(self, rule_uuid: str) -> dict[str, Any]:
         """
         Get detailed automation rule configuration.
 
@@ -340,13 +391,13 @@ class AutomationClient:
         Returns:
             Full rule configuration
         """
-        return self.get(f'/rest/v1/rule/{rule_uuid}', operation='get automation rule')
+        return self.get(f"/rest/v1/rule/{rule_uuid}", operation="get automation rule")
 
     # -------------------------------------------------------------------------
     # Rule State Management
     # -------------------------------------------------------------------------
 
-    def update_rule_state(self, rule_uuid: str, state: str) -> Dict[str, Any]:
+    def update_rule_state(self, rule_uuid: str, state: str) -> dict[str, Any]:
         """
         Enable or disable an automation rule.
 
@@ -358,12 +409,12 @@ class AutomationClient:
             Updated rule data
         """
         return self.put(
-            f'/rest/v1/rule/{rule_uuid}/state',
-            data={'state': state.upper()},
-            operation=f'update automation rule state to {state}'
+            f"/rest/v1/rule/{rule_uuid}/state",
+            data={"state": state.upper()},
+            operation=f"update automation rule state to {state}",
         )
 
-    def enable_rule(self, rule_uuid: str) -> Dict[str, Any]:
+    def enable_rule(self, rule_uuid: str) -> dict[str, Any]:
         """
         Enable an automation rule.
 
@@ -373,9 +424,9 @@ class AutomationClient:
         Returns:
             Updated rule data
         """
-        return self.update_rule_state(rule_uuid, 'ENABLED')
+        return self.update_rule_state(rule_uuid, "ENABLED")
 
-    def disable_rule(self, rule_uuid: str) -> Dict[str, Any]:
+    def disable_rule(self, rule_uuid: str) -> dict[str, Any]:
         """
         Disable an automation rule.
 
@@ -385,18 +436,15 @@ class AutomationClient:
         Returns:
             Updated rule data
         """
-        return self.update_rule_state(rule_uuid, 'DISABLED')
+        return self.update_rule_state(rule_uuid, "DISABLED")
 
     # -------------------------------------------------------------------------
     # Manual Rules
     # -------------------------------------------------------------------------
 
     def get_manual_rules(
-        self,
-        context_type: str = 'issue',
-        limit: int = 50,
-        cursor: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, context_type: str = "issue", limit: int = 50, cursor: str | None = None
+    ) -> dict[str, Any]:
         """
         List manually-triggered automation rules.
 
@@ -408,21 +456,20 @@ class AutomationClient:
         Returns:
             Dictionary with manual rules
         """
-        params = {
-            'contextType': context_type,
-            'limit': min(max(1, limit), 100)
-        }
+        params = {"contextType": context_type, "limit": min(max(1, limit), 100)}
         if cursor:
-            params['cursor'] = cursor
+            params["cursor"] = cursor
 
-        return self.get('/rest/v1/rule/manual/search', params=params, operation='list manual rules')
+        return self.get(
+            "/rest/v1/rule/manual/search", params=params, operation="list manual rules"
+        )
 
     def invoke_manual_rule(
         self,
         rule_id: str,
-        context: Dict[str, Any],
-        properties: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        context: dict[str, Any],
+        properties: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Invoke a manual automation rule.
 
@@ -434,14 +481,14 @@ class AutomationClient:
         Returns:
             Invocation result
         """
-        data = {'context': context}
+        data = {"context": context}
         if properties:
-            data['properties'] = properties
+            data["properties"] = properties
 
         return self.post(
-            f'/rest/v1/rule/manual/{rule_id}/invocation',
+            f"/rest/v1/rule/manual/{rule_id}/invocation",
             data=data,
-            operation='invoke manual rule'
+            operation="invoke manual rule",
         )
 
     # -------------------------------------------------------------------------
@@ -450,10 +497,10 @@ class AutomationClient:
 
     def get_templates(
         self,
-        category: Optional[str] = None,
+        category: str | None = None,
         limit: int = 50,
-        cursor: Optional[str] = None
-    ) -> Dict[str, Any]:
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
         """
         List available automation templates.
 
@@ -465,24 +512,28 @@ class AutomationClient:
         Returns:
             Dictionary with templates
         """
-        params = {'limit': min(max(1, limit), 100)}
+        params = {"limit": min(max(1, limit), 100)}
         if cursor:
-            params['cursor'] = cursor
+            params["cursor"] = cursor
 
         data = {}
         if category:
-            data['category'] = category
+            data["category"] = category
 
         if data:
             url = f"{self.base_url}/rest/v1/template/search"
             if params:
-                url += '?' + '&'.join(f"{k}={v}" for k, v in params.items())
+                url += "?" + "&".join(f"{k}={v}" for k, v in params.items())
             response = self.session.post(url, json=data, timeout=self.timeout)
-            return self._handle_response(response, 'search automation templates')
+            return self._handle_response(response, "search automation templates")
         else:
-            return self.get('/rest/v1/template/search', params=params, operation='list automation templates')
+            return self.get(
+                "/rest/v1/template/search",
+                params=params,
+                operation="list automation templates",
+            )
 
-    def get_template(self, template_id: str) -> Dict[str, Any]:
+    def get_template(self, template_id: str) -> dict[str, Any]:
         """
         Get automation template details.
 
@@ -492,15 +543,17 @@ class AutomationClient:
         Returns:
             Template configuration
         """
-        return self.get(f'/rest/v1/template/{template_id}', operation='get automation template')
+        return self.get(
+            f"/rest/v1/template/{template_id}", operation="get automation template"
+        )
 
     def create_rule_from_template(
         self,
         template_id: str,
-        parameters: Dict[str, Any],
-        name: Optional[str] = None,
-        scope: Optional[str] = None
-    ) -> Dict[str, Any]:
+        parameters: dict[str, Any],
+        name: str | None = None,
+        scope: str | None = None,
+    ) -> dict[str, Any]:
         """
         Create an automation rule from a template.
 
@@ -513,16 +566,15 @@ class AutomationClient:
         Returns:
             Created rule data
         """
-        data = {
-            'templateId': template_id,
-            'parameters': parameters
-        }
+        data = {"templateId": template_id, "parameters": parameters}
         if name:
-            data['name'] = name
+            data["name"] = name
         if scope:
-            data['scope'] = scope
+            data["scope"] = scope
 
-        return self.post('/rest/v1/template/create', data=data, operation='create rule from template')
+        return self.post(
+            "/rest/v1/template/create", data=data, operation="create rule from template"
+        )
 
     # -------------------------------------------------------------------------
     # Rule Creation & Updates
@@ -531,12 +583,12 @@ class AutomationClient:
     def create_rule(
         self,
         name: str,
-        trigger: Dict[str, Any],
-        components: List[Dict[str, Any]],
-        scope: Optional[Dict[str, Any]] = None,
-        description: Optional[str] = None,
-        state: str = 'ENABLED'
-    ) -> Dict[str, Any]:
+        trigger: dict[str, Any],
+        components: list[dict[str, Any]],
+        scope: dict[str, Any] | None = None,
+        description: str | None = None,
+        state: str = "ENABLED",
+    ) -> dict[str, Any]:
         """
         Create a new automation rule.
 
@@ -552,19 +604,21 @@ class AutomationClient:
             Created rule data
         """
         data = {
-            'name': name,
-            'trigger': trigger,
-            'components': components,
-            'state': state.upper()
+            "name": name,
+            "trigger": trigger,
+            "components": components,
+            "state": state.upper(),
         }
         if scope:
-            data['ruleScope'] = scope
+            data["ruleScope"] = scope
         if description:
-            data['description'] = description
+            data["description"] = description
 
-        return self.post('/rest/v1/rule', data=data, operation='create automation rule')
+        return self.post("/rest/v1/rule", data=data, operation="create automation rule")
 
-    def update_rule(self, rule_uuid: str, rule_config: Dict[str, Any]) -> Dict[str, Any]:
+    def update_rule(
+        self, rule_uuid: str, rule_config: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Update an automation rule configuration.
 
@@ -575,9 +629,15 @@ class AutomationClient:
         Returns:
             Updated rule data
         """
-        return self.put(f'/rest/v1/rule/{rule_uuid}', data=rule_config, operation='update automation rule')
+        return self.put(
+            f"/rest/v1/rule/{rule_uuid}",
+            data=rule_config,
+            operation="update automation rule",
+        )
 
-    def update_rule_scope(self, rule_uuid: str, scope: Dict[str, Any]) -> Dict[str, Any]:
+    def update_rule_scope(
+        self, rule_uuid: str, scope: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Update automation rule scope.
 
@@ -589,9 +649,9 @@ class AutomationClient:
             Updated rule data
         """
         return self.put(
-            f'/rest/v1/rule/{rule_uuid}/rule-scope',
+            f"/rest/v1/rule/{rule_uuid}/rule-scope",
             data=scope,
-            operation='update automation rule scope'
+            operation="update automation rule scope",
         )
 
     def close(self):

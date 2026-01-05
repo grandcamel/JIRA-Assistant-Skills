@@ -8,16 +8,13 @@ Share filters with projects, groups, roles, or specific users.
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
 
 # Add shared library to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, print_error
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-def share_with_project(client, filter_id: str, project_key: str) -> Dict[str, Any]:
+def share_with_project(client, filter_id: str, project_key: str) -> dict[str, Any]:
     """
     Share filter with all project members.
 
@@ -30,14 +27,15 @@ def share_with_project(client, filter_id: str, project_key: str) -> Dict[str, An
         New permission object
     """
     permission = {
-        'type': 'project',
-        'projectId': project_key  # JIRA accepts key or ID
+        "type": "project",
+        "projectId": project_key,  # JIRA accepts key or ID
     }
     return client.add_filter_permission(filter_id, permission)
 
 
-def share_with_project_role(client, filter_id: str, project_key: str,
-                            role_name: str) -> Dict[str, Any]:
+def share_with_project_role(
+    client, filter_id: str, project_key: str, role_name: str
+) -> dict[str, Any]:
     """
     Share filter with a specific project role.
 
@@ -51,26 +49,26 @@ def share_with_project_role(client, filter_id: str, project_key: str,
         New permission object
     """
     # First, get the role ID from the project roles
-    roles = client.get(f'/rest/api/3/project/{project_key}/role')
+    roles = client.get(f"/rest/api/3/project/{project_key}/role")
     role_id = None
     for name, url in roles.items():
         if name.lower() == role_name.lower():
             # Extract role ID from URL
-            role_id = url.split('/')[-1]
+            role_id = url.split("/")[-1]
             break
 
     if not role_id:
         raise JiraError(f"Role '{role_name}' not found in project {project_key}")
 
     permission = {
-        'type': 'projectRole',
-        'projectId': project_key,
-        'projectRoleId': role_id
+        "type": "projectRole",
+        "projectId": project_key,
+        "projectRoleId": role_id,
     }
     return client.add_filter_permission(filter_id, permission)
 
 
-def share_with_group(client, filter_id: str, group_name: str) -> Dict[str, Any]:
+def share_with_group(client, filter_id: str, group_name: str) -> dict[str, Any]:
     """
     Share filter with a group.
 
@@ -82,14 +80,11 @@ def share_with_group(client, filter_id: str, group_name: str) -> Dict[str, Any]:
     Returns:
         New permission object
     """
-    permission = {
-        'type': 'group',
-        'groupname': group_name
-    }
+    permission = {"type": "group", "groupname": group_name}
     return client.add_filter_permission(filter_id, permission)
 
 
-def share_globally(client, filter_id: str) -> Dict[str, Any]:
+def share_globally(client, filter_id: str) -> dict[str, Any]:
     """
     Share filter with all authenticated users.
 
@@ -100,13 +95,11 @@ def share_globally(client, filter_id: str) -> Dict[str, Any]:
     Returns:
         New permission object
     """
-    permission = {
-        'type': 'global'
-    }
+    permission = {"type": "global"}
     return client.add_filter_permission(filter_id, permission)
 
 
-def share_with_user(client, filter_id: str, account_id: str) -> Dict[str, Any]:
+def share_with_user(client, filter_id: str, account_id: str) -> dict[str, Any]:
     """
     Share filter with a specific user.
 
@@ -118,10 +111,7 @@ def share_with_user(client, filter_id: str, account_id: str) -> Dict[str, Any]:
     Returns:
         New permission object
     """
-    permission = {
-        'type': 'user',
-        'accountId': account_id
-    }
+    permission = {"type": "user", "accountId": account_id}
     return client.add_filter_permission(filter_id, permission)
 
 
@@ -137,7 +127,7 @@ def unshare(client, filter_id: str, permission_id: str) -> None:
     client.delete_filter_permission(filter_id, permission_id)
 
 
-def list_permissions(client, filter_id: str) -> List[Dict[str, Any]]:
+def list_permissions(client, filter_id: str) -> list[dict[str, Any]]:
     """
     List current share permissions.
 
@@ -151,24 +141,24 @@ def list_permissions(client, filter_id: str) -> List[Dict[str, Any]]:
     return client.get_filter_permissions(filter_id)
 
 
-def format_permission(perm: Dict[str, Any]) -> str:
+def format_permission(perm: dict[str, Any]) -> str:
     """Format a permission for display."""
-    perm_type = perm.get('type', 'unknown')
+    perm_type = perm.get("type", "unknown")
 
-    if perm_type == 'project':
-        project = perm.get('project', {})
+    if perm_type == "project":
+        project = perm.get("project", {})
         return f"Project: {project.get('key', project.get('name', 'Unknown'))}"
-    elif perm_type == 'projectRole':
-        project = perm.get('project', {})
-        role = perm.get('role', {})
+    elif perm_type == "projectRole":
+        project = perm.get("project", {})
+        role = perm.get("role", {})
         return f"Role: {role.get('name', 'Unknown')} in {project.get('key', 'Unknown')}"
-    elif perm_type == 'group':
-        group = perm.get('group', {})
+    elif perm_type == "group":
+        group = perm.get("group", {})
         return f"Group: {group.get('name', 'Unknown')}"
-    elif perm_type == 'user':
-        user = perm.get('user', {})
+    elif perm_type == "user":
+        user = perm.get("user", {})
         return f"User: {user.get('displayName', user.get('accountId', 'Unknown'))}"
-    elif perm_type == 'global':
+    elif perm_type == "global":
         return "All authenticated users"
     else:
         return f"Unknown type: {perm_type}"
@@ -184,7 +174,7 @@ def handle_list_permissions(client, args) -> None:
     """
     permissions = list_permissions(client, args.filter_id)
 
-    if args.output == 'json':
+    if args.output == "json":
         print(json.dumps(permissions, indent=2))
     else:
         if not permissions:
@@ -193,10 +183,10 @@ def handle_list_permissions(client, args) -> None:
             print(f"Share permissions for filter {args.filter_id}:")
             print()
             print(f"{'ID':<10} {'Type':<15} {'Shared With':<40}")
-            print('-' * 65)
+            print("-" * 65)
             for perm in permissions:
-                perm_id = perm.get('id', 'N/A')
-                perm_type = perm.get('type', 'unknown')
+                perm_id = perm.get("id", "N/A")
+                perm_type = perm.get("type", "unknown")
                 shared_with = format_permission(perm)
                 print(f"{perm_id:<10} {perm_type:<15} {shared_with:<40}")
 
@@ -211,12 +201,17 @@ def handle_unshare(client, args) -> None:
     """
     unshare(client, args.filter_id, args.unshare)
 
-    if args.output == 'json':
-        print(json.dumps({
-            'action': 'removed',
-            'filter_id': args.filter_id,
-            'permission_id': args.unshare
-        }, indent=2))
+    if args.output == "json":
+        print(
+            json.dumps(
+                {
+                    "action": "removed",
+                    "filter_id": args.filter_id,
+                    "permission_id": args.unshare,
+                },
+                indent=2,
+            )
+        )
     else:
         print(f"Permission {args.unshare} removed from filter {args.filter_id}.")
 
@@ -230,15 +225,16 @@ def handle_share_project(client, args) -> None:
         args: Parsed command-line arguments
     """
     if args.role:
-        result = share_with_project_role(client, args.filter_id,
-                                         args.project, args.role)
+        result = share_with_project_role(
+            client, args.filter_id, args.project, args.role
+        )
         action_desc = f"project {args.project} role {args.role}"
     else:
         result = share_with_project(client, args.filter_id, args.project)
         action_desc = f"project {args.project}"
 
-    if args.output == 'json':
-        print(json.dumps({'action': 'shared', 'permission': result}, indent=2))
+    if args.output == "json":
+        print(json.dumps({"action": "shared", "permission": result}, indent=2))
     else:
         print(f"Filter {args.filter_id} shared with {action_desc}.")
 
@@ -253,8 +249,8 @@ def handle_share_group(client, args) -> None:
     """
     result = share_with_group(client, args.filter_id, args.group)
 
-    if args.output == 'json':
-        print(json.dumps({'action': 'shared', 'permission': result}, indent=2))
+    if args.output == "json":
+        print(json.dumps({"action": "shared", "permission": result}, indent=2))
     else:
         print(f"Filter {args.filter_id} shared with group {args.group}.")
 
@@ -269,8 +265,8 @@ def handle_share_global(client, args) -> None:
     """
     result = share_globally(client, args.filter_id)
 
-    if args.output == 'json':
-        print(json.dumps({'action': 'shared', 'permission': result}, indent=2))
+    if args.output == "json":
+        print(json.dumps({"action": "shared", "permission": result}, indent=2))
     else:
         print(f"Filter {args.filter_id} shared with all authenticated users.")
 
@@ -285,8 +281,8 @@ def handle_share_user(client, args) -> None:
     """
     result = share_with_user(client, args.filter_id, args.user)
 
-    if args.output == 'json':
-        print(json.dumps({'action': 'shared', 'permission': result}, indent=2))
+    if args.output == "json":
+        print(json.dumps({"action": "shared", "permission": result}, indent=2))
     else:
         print(f"Filter {args.filter_id} shared with user {args.user}.")
 
@@ -294,8 +290,8 @@ def handle_share_user(client, args) -> None:
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Manage filter sharing permissions.',
-        epilog='''
+        description="Manage filter sharing permissions.",
+        epilog="""
 Examples:
   %(prog)s 10042 --project PROJ           # Share with project
   %(prog)s 10042 --project PROJ --role Developers  # Share with role
@@ -304,34 +300,39 @@ Examples:
   %(prog)s 10042 --user accountId123      # Share with user
   %(prog)s 10042 --list                   # View permissions
   %(prog)s 10042 --unshare 456            # Remove permission
-        '''
+        """,
     )
 
-    parser.add_argument('filter_id',
-                        help='Filter ID')
+    parser.add_argument("filter_id", help="Filter ID")
 
     # Share options (mutually exclusive)
     share_group = parser.add_mutually_exclusive_group()
-    share_group.add_argument('--project', '-p',
-                             help='Share with project (project key)')
-    share_group.add_argument('--group', '-g',
-                             help='Share with group')
-    share_group.add_argument('--global', dest='share_global', action='store_true',
-                             help='Share with all authenticated users')
-    share_group.add_argument('--user', '-u',
-                             help='Share with specific user (account ID)')
-    share_group.add_argument('--list', '-l', action='store_true',
-                             help='List current permissions')
-    share_group.add_argument('--unshare',
-                             help='Remove permission (permission ID)')
+    share_group.add_argument("--project", "-p", help="Share with project (project key)")
+    share_group.add_argument("--group", "-g", help="Share with group")
+    share_group.add_argument(
+        "--global",
+        dest="share_global",
+        action="store_true",
+        help="Share with all authenticated users",
+    )
+    share_group.add_argument(
+        "--user", "-u", help="Share with specific user (account ID)"
+    )
+    share_group.add_argument(
+        "--list", "-l", action="store_true", help="List current permissions"
+    )
+    share_group.add_argument("--unshare", help="Remove permission (permission ID)")
 
     # Additional options
-    parser.add_argument('--role', '-r',
-                        help='Project role (used with --project)')
-    parser.add_argument('--output', '-o', choices=['text', 'json'],
-                        default='text', help='Output format (default: text)')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use')
+    parser.add_argument("--role", "-r", help="Project role (used with --project)")
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -358,5 +359,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

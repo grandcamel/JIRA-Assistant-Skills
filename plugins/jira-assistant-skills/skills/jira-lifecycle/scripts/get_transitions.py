@@ -7,19 +7,20 @@ Usage:
     python get_transitions.py PROJ-123 --output json
 """
 
-import sys
 import argparse
-import json
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_json,
+    format_transitions,
+    get_jira_client,
+    print_error,
+    validate_issue_key,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import format_transitions, format_json
-
-
-def get_transitions(issue_key: str, profile: str = None) -> list:
+def get_transitions(issue_key: str, profile: str | None = None) -> list:
     """
     Get available transitions for an issue.
 
@@ -41,32 +42,30 @@ def get_transitions(issue_key: str, profile: str = None) -> list:
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Get available transitions for a JIRA issue',
-        epilog='Example: python get_transitions.py PROJ-123'
+        description="Get available transitions for a JIRA issue",
+        epilog="Example: python get_transitions.py PROJ-123",
     )
 
-    parser.add_argument('issue_key',
-                       help='Issue key (e.g., PROJ-123)')
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format (default: text)')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument("issue_key", help="Issue key (e.g., PROJ-123)")
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
-        transitions = get_transitions(
-            issue_key=args.issue_key,
-            profile=args.profile
-        )
+        transitions = get_transitions(issue_key=args.issue_key, profile=args.profile)
 
         if not transitions:
             print(f"No transitions available for {args.issue_key}")
             return
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_json(transitions))
         else:
             print(f"\nAvailable transitions for {args.issue_key}:\n")
@@ -80,5 +79,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -17,19 +17,22 @@ Usage:
     python bulk_assign.py --issues PROJ-1 --assignee "john@company.com" --dry-run
 """
 
-import sys
 import argparse
-from pathlib import Path
-from typing import List, Dict, Any, Optional, Callable
+import sys
+from collections.abc import Callable
+from typing import Any
+
+from bulk_utils import execute_bulk_operation, get_issues_to_process
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-
-from bulk_utils import get_issues_to_process, execute_bulk_operation
-
-
-def resolve_user_id(client, user_identifier: str) -> Optional[str]:
+def resolve_user_id(client, user_identifier: str) -> str | None:
     """
     Resolve a user identifier to an account ID.
 
@@ -43,25 +46,25 @@ def resolve_user_id(client, user_identifier: str) -> Optional[str]:
     if user_identifier is None:
         return None
 
-    if user_identifier.lower() == 'self':
+    if user_identifier.lower() == "self":
         return client.get_current_user_id()
 
     # Check if it looks like an email
-    if '@' in user_identifier:
+    if "@" in user_identifier:
         # Try to find user by email
         try:
             users = client.get(
-                '/rest/api/3/user/search',
-                params={'query': user_identifier},
-                operation='search users'
+                "/rest/api/3/user/search",
+                params={"query": user_identifier},
+                operation="search users",
             )
             if users and len(users) > 0:
                 # Find exact email match
                 for user in users:
-                    if user.get('emailAddress', '').lower() == user_identifier.lower():
-                        return user['accountId']
+                    if user.get("emailAddress", "").lower() == user_identifier.lower():
+                        return user["accountId"]
                 # Fall back to first result
-                return users[0]['accountId']
+                return users[0]["accountId"]
         except JiraError:
             pass
 
@@ -71,19 +74,19 @@ def resolve_user_id(client, user_identifier: str) -> Optional[str]:
 
 def bulk_assign(
     client=None,
-    issue_keys: List[str] = None,
-    jql: str = None,
-    assignee: str = None,
+    issue_keys: list[str] | None = None,
+    jql: str | None = None,
+    assignee: str | None = None,
     unassign: bool = False,
     dry_run: bool = False,
     max_issues: int = 100,
     delay_between_ops: float = 0.1,
-    progress_callback: Callable = None,
-    profile: str = None,
+    progress_callback: Callable | None = None,
+    profile: str | None = None,
     show_progress: bool = True,
     confirm_threshold: int = 50,
-    skip_confirmation: bool = False
-) -> Dict[str, Any]:
+    skip_confirmation: bool = False,
+) -> dict[str, Any]:
     """
     Assign multiple issues to a user.
 
@@ -118,7 +121,7 @@ def bulk_assign(
             action = "unassign"
         elif assignee:
             account_id = resolve_user_id(client, assignee)
-            if account_id is None and assignee.lower() != 'self':
+            if account_id is None and assignee.lower() != "self":
                 raise ValidationError(f"Could not resolve user: {assignee}")
             action = f"assign to {assignee}"
         else:
@@ -130,20 +133,22 @@ def bulk_assign(
             issue_keys=issue_keys,
             jql=jql,
             max_issues=max_issues,
-            fields=['key', 'summary', 'assignee']
+            fields=["key", "summary", "assignee"],
         )
 
-        def assign_operation(issue: Dict, index: int, total: int) -> str:
+        def assign_operation(issue: dict, index: int, total: int) -> str:
             """Execute assignment for a single issue."""
-            issue_key = issue.get('key')
+            issue_key = issue.get("key")
             client.assign_issue(issue_key, account_id)
             return action
 
-        def format_dry_run_item(issue: Dict) -> str:
+        def format_dry_run_item(issue: dict) -> str:
             """Format issue for dry-run preview."""
-            key = issue.get('key')
-            current = issue.get('fields', {}).get('assignee')
-            current_name = current.get('displayName', 'Unassigned') if current else 'Unassigned'
+            key = issue.get("key")
+            current = issue.get("fields", {}).get("assignee")
+            current_name = (
+                current.get("displayName", "Unassigned") if current else "Unassigned"
+            )
             return f"{key} (current: {current_name})"
 
         # Execute bulk operation using shared utility
@@ -160,7 +165,7 @@ def bulk_assign(
             progress_desc=f"{action.capitalize()}ing",
             confirm_threshold=confirm_threshold,
             skip_confirmation=skip_confirmation,
-            operation_name=action
+            operation_name=action,
         )
 
         return result
@@ -172,45 +177,50 @@ def bulk_assign(
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Bulk assign JIRA issues to a user',
-        epilog='Example: python bulk_assign.py --issues PROJ-1,PROJ-2 --assignee self'
+        description="Bulk assign JIRA issues to a user",
+        epilog="Example: python bulk_assign.py --issues PROJ-1,PROJ-2 --assignee self",
     )
 
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--issues', '-i',
-                       help='Comma-separated issue keys (e.g., PROJ-1,PROJ-2)')
-    group.add_argument('--jql', '-q',
-                       help='JQL query to find issues')
+    group.add_argument(
+        "--issues", "-i", help="Comma-separated issue keys (e.g., PROJ-1,PROJ-2)"
+    )
+    group.add_argument("--jql", "-q", help="JQL query to find issues")
 
     assign_group = parser.add_mutually_exclusive_group(required=True)
-    assign_group.add_argument('--assignee', '-a',
-                              help='User to assign (account ID, email, or "self")')
-    assign_group.add_argument('--unassign', '-u',
-                              action='store_true',
-                              help='Remove assignee from issues')
+    assign_group.add_argument(
+        "--assignee", "-a", help='User to assign (account ID, email, or "self")'
+    )
+    assign_group.add_argument(
+        "--unassign", "-u", action="store_true", help="Remove assignee from issues"
+    )
 
-    parser.add_argument('--max-issues',
-                        type=int,
-                        default=100,
-                        help='Maximum issues to process (default: 100)')
-    parser.add_argument('--dry-run',
-                        action='store_true',
-                        help='Preview changes without making them')
-    parser.add_argument('--yes', '-y',
-                        action='store_true',
-                        help='Skip confirmation prompt for large operations')
-    parser.add_argument('--no-progress',
-                        action='store_true',
-                        help='Disable progress bar')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use')
+    parser.add_argument(
+        "--max-issues",
+        type=int,
+        default=100,
+        help="Maximum issues to process (default: 100)",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Preview changes without making them"
+    )
+    parser.add_argument(
+        "--yes",
+        "-y",
+        action="store_true",
+        help="Skip confirmation prompt for large operations",
+    )
+    parser.add_argument(
+        "--no-progress", action="store_true", help="Disable progress bar"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         issue_keys = None
         if args.issues:
-            issue_keys = [k.strip() for k in args.issues.split(',')]
+            issue_keys = [k.strip() for k in args.issues.split(",")]
 
         result = bulk_assign(
             issue_keys=issue_keys,
@@ -221,16 +231,16 @@ def main(argv: list[str] | None = None):
             max_issues=args.max_issues,
             profile=args.profile,
             show_progress=not args.no_progress,
-            skip_confirmation=args.yes
+            skip_confirmation=args.yes,
         )
 
-        if result.get('cancelled'):
+        if result.get("cancelled"):
             print("\nOperation cancelled by user.")
             sys.exit(0)
 
         print(f"\nSummary: {result['success']} succeeded, {result['failed']} failed")
 
-        if result['failed'] > 0:
+        if result["failed"] > 0:
             sys.exit(1)
 
     except JiraError as e:
@@ -244,5 +254,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

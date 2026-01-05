@@ -13,20 +13,22 @@ Tests cover:
 - Output formatting (text and JSON)
 """
 
-import pytest
-import sys
 import json
-from pathlib import Path
-from unittest.mock import Mock, patch
+import sys
 from copy import deepcopy
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
 
 # Add scripts path
-scripts_path = str(Path(__file__).parent.parent / 'scripts')
+scripts_path = str(Path(__file__).parent.parent / "scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
 # Import after path setup
 import get_issue as get_issue_module
+
 from jira_assistant_skills_lib import format_issue, format_json
 
 
@@ -38,58 +40,66 @@ class TestGetIssueBasic:
         """Test retrieving an issue successfully."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="PROJ-123")
 
         mock_jira_client.get_issue.assert_called_once_with("PROJ-123", fields=None)
-        assert result['key'] == "PROJ-123"
-        assert result['fields']['summary'] == "Test Issue Summary"
+        assert result["key"] == "PROJ-123"
+        assert result["fields"]["summary"] == "Test Issue Summary"
 
     def test_get_issue_normalizes_key(self, mock_jira_client, sample_issue):
         """Test that issue key is normalized to uppercase."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="proj-123")
 
         mock_jira_client.get_issue.assert_called_once_with("PROJ-123", fields=None)
-        assert result['key'] == "PROJ-123"
+        assert result["key"] == "PROJ-123"
 
     def test_get_issue_returns_all_fields(self, mock_jira_client, sample_issue):
         """Test that retrieved issue contains all expected fields."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="PROJ-123")
 
-        fields = result['fields']
-        assert 'summary' in fields
-        assert 'status' in fields
-        assert 'issuetype' in fields
-        assert 'priority' in fields
-        assert 'assignee' in fields
-        assert 'reporter' in fields
+        fields = result["fields"]
+        assert "summary" in fields
+        assert "status" in fields
+        assert "issuetype" in fields
+        assert "priority" in fields
+        assert "assignee" in fields
+        assert "reporter" in fields
 
 
 @pytest.mark.unit
 class TestGetIssueWithFields:
     """Tests for retrieving issues with specific fields."""
 
-    def test_get_issue_with_specific_fields(self, mock_jira_client, sample_issue_minimal):
+    def test_get_issue_with_specific_fields(
+        self, mock_jira_client, sample_issue_minimal
+    ):
         """Test retrieving an issue with specific fields."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue_minimal)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(
-                issue_key="PROJ-124",
-                fields=['summary', 'status']
+                issue_key="PROJ-124", fields=["summary", "status"]
             )
 
         mock_jira_client.get_issue.assert_called_once_with(
-            "PROJ-124",
-            fields=['summary', 'status']
+            "PROJ-124", fields=["summary", "status"]
         )
-        assert result['key'] == "PROJ-124"
+        assert result["key"] == "PROJ-124"
 
 
 @pytest.mark.unit
@@ -100,33 +110,43 @@ class TestGetIssueWithLinks:
         """Test retrieving an issue with issue links."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue_with_links)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="PROJ-126")
 
-        assert 'issuelinks' in result['fields']
-        assert len(result['fields']['issuelinks']) == 2
+        assert "issuelinks" in result["fields"]
+        assert len(result["fields"]["issuelinks"]) == 2
 
-    def test_get_issue_links_contains_blocks(self, mock_jira_client, sample_issue_with_links):
+    def test_get_issue_links_contains_blocks(
+        self, mock_jira_client, sample_issue_with_links
+    ):
         """Test that issue links contain blocking relationships."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue_with_links)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="PROJ-126")
 
-        links = result['fields']['issuelinks']
-        blocks_link = next((l for l in links if l['type']['name'] == 'Blocks'), None)
+        links = result["fields"]["issuelinks"]
+        blocks_link = next((l for l in links if l["type"]["name"] == "Blocks"), None)
         assert blocks_link is not None
-        assert 'outwardIssue' in blocks_link
+        assert "outwardIssue" in blocks_link
 
-    def test_get_issue_links_contains_relates(self, mock_jira_client, sample_issue_with_links):
+    def test_get_issue_links_contains_relates(
+        self, mock_jira_client, sample_issue_with_links
+    ):
         """Test that issue links contain relates relationships."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue_with_links)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="PROJ-126")
 
-        links = result['fields']['issuelinks']
-        relates_link = next((l for l in links if l['type']['name'] == 'Relates'), None)
+        links = result["fields"]["issuelinks"]
+        relates_link = next((l for l in links if l["type"]["name"] == "Relates"), None)
         assert relates_link is not None
 
 
@@ -134,44 +154,60 @@ class TestGetIssueWithLinks:
 class TestGetIssueWithTimeTracking:
     """Tests for retrieving issues with time tracking."""
 
-    def test_get_issue_with_time_tracking(self, mock_jira_client, sample_issue_with_time_tracking):
+    def test_get_issue_with_time_tracking(
+        self, mock_jira_client, sample_issue_with_time_tracking
+    ):
         """Test retrieving an issue with time tracking information."""
-        mock_jira_client.get_issue.return_value = deepcopy(sample_issue_with_time_tracking)
+        mock_jira_client.get_issue.return_value = deepcopy(
+            sample_issue_with_time_tracking
+        )
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="PROJ-125")
 
-        tt = result['fields']['timetracking']
-        assert tt['originalEstimate'] == "2d"
-        assert tt['remainingEstimate'] == "1d 4h"
-        assert tt['timeSpent'] == "4h"
+        tt = result["fields"]["timetracking"]
+        assert tt["originalEstimate"] == "2d"
+        assert tt["remainingEstimate"] == "1d 4h"
+        assert tt["timeSpent"] == "4h"
 
-    def test_get_issue_time_tracking_seconds(self, mock_jira_client, sample_issue_with_time_tracking):
+    def test_get_issue_time_tracking_seconds(
+        self, mock_jira_client, sample_issue_with_time_tracking
+    ):
         """Test that time tracking includes seconds values."""
-        mock_jira_client.get_issue.return_value = deepcopy(sample_issue_with_time_tracking)
+        mock_jira_client.get_issue.return_value = deepcopy(
+            sample_issue_with_time_tracking
+        )
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="PROJ-125")
 
-        tt = result['fields']['timetracking']
-        assert tt['originalEstimateSeconds'] == 57600
-        assert tt['remainingEstimateSeconds'] == 36000
-        assert tt['timeSpentSeconds'] == 14400
+        tt = result["fields"]["timetracking"]
+        assert tt["originalEstimateSeconds"] == 57600
+        assert tt["remainingEstimateSeconds"] == 36000
+        assert tt["timeSpentSeconds"] == 14400
 
 
 @pytest.mark.unit
 class TestGetIssueWithAgile:
     """Tests for retrieving issues with Agile fields."""
 
-    def test_get_issue_with_agile_fields(self, mock_jira_client, sample_issue_with_agile):
+    def test_get_issue_with_agile_fields(
+        self, mock_jira_client, sample_issue_with_agile
+    ):
         """Test retrieving an issue with Agile fields."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue_with_agile)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="PROJ-129")
 
-        assert result['fields']['customfield_10014'] == "PROJ-100"  # Epic Link
-        assert result['fields']['customfield_10016'] == 5.0  # Story Points
+        assert result["fields"]["customfield_10014"] == "PROJ-100"  # Epic Link
+        assert result["fields"]["customfield_10016"] == 5.0  # Story Points
 
 
 @pytest.mark.unit
@@ -182,25 +218,37 @@ class TestGetIssueValidation:
         """Test that invalid issue key raises ValidationError."""
         from assistant_skills_lib.error_handler import ValidationError
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(ValidationError):
-                get_issue_module.get_issue(issue_key="invalid-key")
+        with (
+            patch.object(
+                get_issue_module, "get_jira_client", return_value=mock_jira_client
+            ),
+            pytest.raises(ValidationError),
+        ):
+            get_issue_module.get_issue(issue_key="invalid-key")
 
     def test_get_issue_empty_key_raises_error(self, mock_jira_client):
         """Test that empty issue key raises ValidationError."""
         from assistant_skills_lib.error_handler import ValidationError
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(ValidationError):
-                get_issue_module.get_issue(issue_key="")
+        with (
+            patch.object(
+                get_issue_module, "get_jira_client", return_value=mock_jira_client
+            ),
+            pytest.raises(ValidationError),
+        ):
+            get_issue_module.get_issue(issue_key="")
 
     def test_get_issue_key_with_spaces_raises_error(self, mock_jira_client):
         """Test that issue key with spaces raises ValidationError."""
         from assistant_skills_lib.error_handler import ValidationError
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(ValidationError):
-                get_issue_module.get_issue(issue_key="PROJ 123")
+        with (
+            patch.object(
+                get_issue_module, "get_jira_client", return_value=mock_jira_client
+            ),
+            pytest.raises(ValidationError),
+        ):
+            get_issue_module.get_issue(issue_key="PROJ 123")
 
 
 @pytest.mark.unit
@@ -210,39 +258,52 @@ class TestGetIssueErrors:
     def test_get_issue_not_found(self, mock_jira_client):
         """Test handling issue not found error."""
         from jira_assistant_skills_lib import NotFoundError
-        mock_jira_client.get_issue.side_effect = NotFoundError(
-            "Issue", "PROJ-999"
-        )
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(NotFoundError) as exc_info:
-                get_issue_module.get_issue(issue_key="PROJ-999")
+        mock_jira_client.get_issue.side_effect = NotFoundError("Issue", "PROJ-999")
+
+        with (
+            patch.object(
+                get_issue_module, "get_jira_client", return_value=mock_jira_client
+            ),
+            pytest.raises(NotFoundError) as exc_info,
+        ):
+            get_issue_module.get_issue(issue_key="PROJ-999")
 
         assert "not found" in str(exc_info.value).lower()
 
     def test_get_issue_permission_denied(self, mock_jira_client):
         """Test handling permission denied error."""
         from jira_assistant_skills_lib import PermissionError
+
         mock_jira_client.get_issue.side_effect = PermissionError(
             "You do not have permission to view this issue"
         )
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(PermissionError) as exc_info:
-                get_issue_module.get_issue(issue_key="PROJ-123")
+        with (
+            patch.object(
+                get_issue_module, "get_jira_client", return_value=mock_jira_client
+            ),
+            pytest.raises(PermissionError) as exc_info,
+        ):
+            get_issue_module.get_issue(issue_key="PROJ-123")
 
         assert "permission" in str(exc_info.value).lower()
 
     def test_get_issue_authentication_error(self, mock_jira_client):
         """Test handling authentication error."""
         from jira_assistant_skills_lib import AuthenticationError
+
         mock_jira_client.get_issue.side_effect = AuthenticationError(
             "Authentication failed"
         )
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(AuthenticationError):
-                get_issue_module.get_issue(issue_key="PROJ-123")
+        with (
+            patch.object(
+                get_issue_module, "get_jira_client", return_value=mock_jira_client
+            ),
+            pytest.raises(AuthenticationError),
+        ):
+            get_issue_module.get_issue(issue_key="PROJ-123")
 
 
 @pytest.mark.unit
@@ -253,7 +314,9 @@ class TestGetIssueOutputFormatting:
         """Test text output format for issue."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="PROJ-123")
             output = format_issue(result, detailed=False)
 
@@ -266,7 +329,9 @@ class TestGetIssueOutputFormatting:
         """Test detailed text output format for issue."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="PROJ-123")
             output = format_issue(result, detailed=True)
 
@@ -279,19 +344,25 @@ class TestGetIssueOutputFormatting:
         """Test JSON output format for issue."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="PROJ-123")
             output = format_json(result)
 
         parsed = json.loads(output)
-        assert parsed['key'] == "PROJ-123"
-        assert parsed['fields']['summary'] == "Test Issue Summary"
+        assert parsed["key"] == "PROJ-123"
+        assert parsed["fields"]["summary"] == "Test Issue Summary"
 
-    def test_format_issue_with_links_text(self, mock_jira_client, sample_issue_with_links):
+    def test_format_issue_with_links_text(
+        self, mock_jira_client, sample_issue_with_links
+    ):
         """Test text output format for issue with links."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue_with_links)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="PROJ-126")
             output = format_issue(result, detailed=True)
 
@@ -307,7 +378,9 @@ class TestGetIssueProfile:
         """Test retrieving issue with specific profile."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client) as mock_get_client:
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ) as mock_get_client:
             get_issue_module.get_issue(issue_key="PROJ-123", profile="development")
 
         mock_get_client.assert_called_with("development")
@@ -321,20 +394,26 @@ class TestGetIssueMinimal:
         """Test retrieving an issue with minimal fields."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue_minimal)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="PROJ-124")
 
-        assert result['key'] == "PROJ-124"
-        assert result['fields']['summary'] == "Minimal Issue"
+        assert result["key"] == "PROJ-124"
+        assert result["fields"]["summary"] == "Minimal Issue"
         # Minimal issue should not have priority or assignee
-        assert result['fields'].get('priority') is None
-        assert result['fields'].get('assignee') is None
+        assert result["fields"].get("priority") is None
+        assert result["fields"].get("assignee") is None
 
-    def test_format_issue_handles_missing_fields(self, mock_jira_client, sample_issue_minimal):
+    def test_format_issue_handles_missing_fields(
+        self, mock_jira_client, sample_issue_minimal
+    ):
         """Test that formatting handles missing optional fields gracefully."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue_minimal)
 
-        with patch.object(get_issue_module, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(
+            get_issue_module, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_issue_module.get_issue(issue_key="PROJ-124")
             output = format_issue(result, detailed=False)
 

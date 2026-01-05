@@ -1,4 +1,5 @@
 import click
+
 from jira_assistant_skills.utils import SKILLS_ROOT_DIR, run_skill_script_subprocess
 
 
@@ -9,7 +10,7 @@ def ops():
 
 
 @ops.command(name="cache-status")
-@click.option('--detailed', '-d', is_flag=True, help='Show detailed cache statistics')
+@click.option("--detailed", "-d", is_flag=True, help="Show detailed cache statistics")
 @click.pass_context
 def ops_cache_status(ctx, detailed: bool):
     """Show cache status and statistics."""
@@ -23,9 +24,9 @@ def ops_cache_status(ctx, detailed: bool):
 
 
 @ops.command(name="cache-clear")
-@click.option('--type', '-t', 'cache_type', help='Clear specific cache type')
-@click.option('--older-than', help='Clear entries older than (e.g., 1d, 2h)')
-@click.option('--force', '-f', is_flag=True, help='Skip confirmation')
+@click.option("--type", "-t", "cache_type", help="Clear specific cache type")
+@click.option("--older-than", help="Clear entries older than (e.g., 1d, 2h)")
+@click.option("--force", "-f", is_flag=True, help="Skip confirmation")
 @click.pass_context
 def ops_cache_clear(ctx, cache_type: str, older_than: str, force: bool):
     """Clear cache entries."""
@@ -43,9 +44,9 @@ def ops_cache_clear(ctx, cache_type: str, older_than: str, force: bool):
 
 
 @ops.command(name="cache-warm")
-@click.argument('project_key')
-@click.option('--type', '-t', 'cache_type', help='Warm specific cache type')
-@click.option('--max-issues', '-m', type=int, help='Maximum issues to cache')
+@click.argument("project_key")
+@click.option("--type", "-t", "cache_type", help="Warm specific cache type")
+@click.option("--max-issues", "-m", type=int, help="Maximum issues to cache")
 @click.pass_context
 def ops_cache_warm(ctx, project_key: str, cache_type: str, max_issues: int):
     """Pre-warm cache for a project."""
@@ -61,8 +62,8 @@ def ops_cache_warm(ctx, project_key: str, cache_type: str, max_issues: int):
 
 
 @ops.command(name="discover-project")
-@click.argument('project_key')
-@click.option('--save', '-s', is_flag=True, help='Save discovered context to config')
+@click.argument("project_key")
+@click.option("--save", "-s", is_flag=True, help="Save discovered context to config")
 @click.pass_context
 def ops_discover_project(ctx, project_key: str, save: bool):
     """Discover project configuration and capabilities."""

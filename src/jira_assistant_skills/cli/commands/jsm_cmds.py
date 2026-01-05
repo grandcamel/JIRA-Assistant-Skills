@@ -1,4 +1,5 @@
 import click
+
 from jira_assistant_skills.utils import SKILLS_ROOT_DIR, run_skill_script_subprocess
 
 
@@ -24,7 +25,7 @@ def service_desk_list(ctx):
 
 
 @service_desk.command(name="get")
-@click.argument('service_desk_id', type=int)
+@click.argument("service_desk_id", type=int)
 @click.pass_context
 def service_desk_get(ctx, service_desk_id: int):
     """Get service desk details."""
@@ -33,9 +34,9 @@ def service_desk_get(ctx, service_desk_id: int):
 
 
 @service_desk.command(name="create")
-@click.argument('project_key')
-@click.argument('name')
-@click.option('--description', '-d', help='Service desk description')
+@click.argument("project_key")
+@click.argument("name")
+@click.option("--description", "-d", help="Service desk description")
 @click.pass_context
 def service_desk_create(ctx, project_key: str, name: str, description: str):
     """Create a new service desk."""
@@ -56,7 +57,7 @@ def request_type():
 
 
 @request_type.command(name="list")
-@click.argument('service_desk_id', type=int)
+@click.argument("service_desk_id", type=int)
 @click.pass_context
 def request_type_list(ctx, service_desk_id: int):
     """List request types for a service desk."""
@@ -65,23 +66,29 @@ def request_type_list(ctx, service_desk_id: int):
 
 
 @request_type.command(name="get")
-@click.argument('service_desk_id', type=int)
-@click.argument('request_type_id', type=int)
+@click.argument("service_desk_id", type=int)
+@click.argument("request_type_id", type=int)
 @click.pass_context
 def request_type_get(ctx, service_desk_id: int, request_type_id: int):
     """Get request type details."""
     script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "get_request_type.py"
-    run_skill_script_subprocess(script_path, [str(service_desk_id), str(request_type_id)], ctx)
+    run_skill_script_subprocess(
+        script_path, [str(service_desk_id), str(request_type_id)], ctx
+    )
 
 
 @request_type.command(name="fields")
-@click.argument('service_desk_id', type=int)
-@click.argument('request_type_id', type=int)
+@click.argument("service_desk_id", type=int)
+@click.argument("request_type_id", type=int)
 @click.pass_context
 def request_type_fields(ctx, service_desk_id: int, request_type_id: int):
     """Get fields for a request type."""
-    script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "get_request_type_fields.py"
-    run_skill_script_subprocess(script_path, [str(service_desk_id), str(request_type_id)], ctx)
+    script_path = (
+        SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "get_request_type_fields.py"
+    )
+    run_skill_script_subprocess(
+        script_path, [str(service_desk_id), str(request_type_id)], ctx
+    )
 
 
 # Request commands
@@ -92,12 +99,14 @@ def request():
 
 
 @request.command(name="list")
-@click.argument('service_desk_id', type=int)
-@click.option('--status', '-s', help='Filter by status')
-@click.option('--reporter', '-r', help='Filter by reporter')
-@click.option('--max-results', '-m', type=int, default=50, help='Maximum results')
+@click.argument("service_desk_id", type=int)
+@click.option("--status", "-s", help="Filter by status")
+@click.option("--reporter", "-r", help="Filter by reporter")
+@click.option("--max-results", "-m", type=int, default=50, help="Maximum results")
 @click.pass_context
-def request_list(ctx, service_desk_id: int, status: str, reporter: str, max_results: int):
+def request_list(
+    ctx, service_desk_id: int, status: str, reporter: str, max_results: int
+):
     """List requests for a service desk."""
     script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "list_requests.py"
 
@@ -113,15 +122,22 @@ def request_list(ctx, service_desk_id: int, status: str, reporter: str, max_resu
 
 
 @request.command(name="create")
-@click.argument('service_desk_id', type=int)
-@click.argument('request_type_id', type=int)
-@click.option('--summary', '-s', required=True, help='Request summary')
-@click.option('--description', '-d', help='Request description')
-@click.option('--fields', '-f', help='Additional fields as JSON')
-@click.option('--on-behalf-of', help='Create on behalf of customer')
+@click.argument("service_desk_id", type=int)
+@click.argument("request_type_id", type=int)
+@click.option("--summary", "-s", required=True, help="Request summary")
+@click.option("--description", "-d", help="Request description")
+@click.option("--fields", "-f", help="Additional fields as JSON")
+@click.option("--on-behalf-of", help="Create on behalf of customer")
 @click.pass_context
-def request_create(ctx, service_desk_id: int, request_type_id: int, summary: str,
-                   description: str, fields: str, on_behalf_of: str):
+def request_create(
+    ctx,
+    service_desk_id: int,
+    request_type_id: int,
+    summary: str,
+    description: str,
+    fields: str,
+    on_behalf_of: str,
+):
     """Create a new request."""
     script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "create_request.py"
 
@@ -137,7 +153,7 @@ def request_create(ctx, service_desk_id: int, request_type_id: int, summary: str
 
 
 @request.command(name="get")
-@click.argument('issue_key')
+@click.argument("issue_key")
 @click.pass_context
 def request_get(ctx, issue_key: str):
     """Get request details."""
@@ -146,7 +162,7 @@ def request_get(ctx, issue_key: str):
 
 
 @request.command(name="status")
-@click.argument('issue_key')
+@click.argument("issue_key")
 @click.pass_context
 def request_status(ctx, issue_key: str):
     """Get request status."""
@@ -155,9 +171,9 @@ def request_status(ctx, issue_key: str):
 
 
 @request.command(name="transition")
-@click.argument('issue_key')
-@click.argument('status')
-@click.option('--comment', '-c', help='Transition comment')
+@click.argument("issue_key")
+@click.argument("status")
+@click.option("--comment", "-c", help="Transition comment")
 @click.pass_context
 def request_transition(ctx, issue_key: str, status: str, comment: str):
     """Transition a request to a new status."""
@@ -171,9 +187,9 @@ def request_transition(ctx, issue_key: str, status: str, comment: str):
 
 
 @request.command(name="comment")
-@click.argument('issue_key')
-@click.argument('body')
-@click.option('--public', '-p', is_flag=True, help='Make comment public to customer')
+@click.argument("issue_key")
+@click.argument("body")
+@click.option("--public", "-p", is_flag=True, help="Make comment public to customer")
 @click.pass_context
 def request_comment(ctx, issue_key: str, body: str, public: bool):
     """Add a comment to a request."""
@@ -187,8 +203,8 @@ def request_comment(ctx, issue_key: str, body: str, public: bool):
 
 
 @request.command(name="comments")
-@click.argument('issue_key')
-@click.option('--public-only', '-p', is_flag=True, help='Show only public comments')
+@click.argument("issue_key")
+@click.option("--public-only", "-p", is_flag=True, help="Show only public comments")
 @click.pass_context
 def request_comments(ctx, issue_key: str, public_only: bool):
     """Get comments for a request."""
@@ -203,7 +219,7 @@ def request_comments(ctx, issue_key: str, public_only: bool):
 
 # Participant commands
 @request.command(name="participants")
-@click.argument('issue_key')
+@click.argument("issue_key")
 @click.pass_context
 def request_participants(ctx, issue_key: str):
     """Get participants for a request."""
@@ -212,8 +228,8 @@ def request_participants(ctx, issue_key: str):
 
 
 @request.command(name="add-participant")
-@click.argument('issue_key')
-@click.argument('account_id')
+@click.argument("issue_key")
+@click.argument("account_id")
 @click.pass_context
 def request_add_participant(ctx, issue_key: str, account_id: str):
     """Add a participant to a request."""
@@ -222,8 +238,8 @@ def request_add_participant(ctx, issue_key: str, account_id: str):
 
 
 @request.command(name="remove-participant")
-@click.argument('issue_key')
-@click.argument('account_id')
+@click.argument("issue_key")
+@click.argument("account_id")
 @click.pass_context
 def request_remove_participant(ctx, issue_key: str, account_id: str):
     """Remove a participant from a request."""
@@ -239,8 +255,8 @@ def customer():
 
 
 @customer.command(name="list")
-@click.argument('service_desk_id', type=int)
-@click.option('--query', '-q', help='Search query')
+@click.argument("service_desk_id", type=int)
+@click.option("--query", "-q", help="Search query")
 @click.pass_context
 def customer_list(ctx, service_desk_id: int, query: str):
     """List customers for a service desk."""
@@ -254,9 +270,9 @@ def customer_list(ctx, service_desk_id: int, query: str):
 
 
 @customer.command(name="create")
-@click.argument('service_desk_id', type=int)
-@click.argument('email')
-@click.option('--display-name', '-n', help='Customer display name')
+@click.argument("service_desk_id", type=int)
+@click.argument("email")
+@click.option("--display-name", "-n", help="Customer display name")
 @click.pass_context
 def customer_create(ctx, service_desk_id: int, email: str, display_name: str):
     """Create a new customer."""
@@ -270,8 +286,8 @@ def customer_create(ctx, service_desk_id: int, email: str, display_name: str):
 
 
 @customer.command(name="add")
-@click.argument('service_desk_id', type=int)
-@click.argument('account_id')
+@click.argument("service_desk_id", type=int)
+@click.argument("account_id")
 @click.pass_context
 def customer_add(ctx, service_desk_id: int, account_id: str):
     """Add an existing user as a customer."""
@@ -280,8 +296,8 @@ def customer_add(ctx, service_desk_id: int, account_id: str):
 
 
 @customer.command(name="remove")
-@click.argument('service_desk_id', type=int)
-@click.argument('account_id')
+@click.argument("service_desk_id", type=int)
+@click.argument("account_id")
 @click.pass_context
 def customer_remove(ctx, service_desk_id: int, account_id: str):
     """Remove a customer from a service desk."""
@@ -305,7 +321,7 @@ def organization_list(ctx):
 
 
 @organization.command(name="get")
-@click.argument('organization_id', type=int)
+@click.argument("organization_id", type=int)
 @click.pass_context
 def organization_get(ctx, organization_id: int):
     """Get organization details."""
@@ -314,7 +330,7 @@ def organization_get(ctx, organization_id: int):
 
 
 @organization.command(name="create")
-@click.argument('name')
+@click.argument("name")
 @click.pass_context
 def organization_create(ctx, name: str):
     """Create a new organization."""
@@ -323,8 +339,8 @@ def organization_create(ctx, name: str):
 
 
 @organization.command(name="delete")
-@click.argument('organization_id', type=int)
-@click.option('--force', '-f', is_flag=True, help='Skip confirmation')
+@click.argument("organization_id", type=int)
+@click.option("--force", "-f", is_flag=True, help="Skip confirmation")
 @click.pass_context
 def organization_delete(ctx, organization_id: int, force: bool):
     """Delete an organization."""
@@ -338,8 +354,8 @@ def organization_delete(ctx, organization_id: int, force: bool):
 
 
 @organization.command(name="add-customer")
-@click.argument('organization_id', type=int)
-@click.argument('account_id')
+@click.argument("organization_id", type=int)
+@click.argument("account_id")
 @click.pass_context
 def organization_add_customer(ctx, organization_id: int, account_id: str):
     """Add a customer to an organization."""
@@ -348,12 +364,14 @@ def organization_add_customer(ctx, organization_id: int, account_id: str):
 
 
 @organization.command(name="remove-customer")
-@click.argument('organization_id', type=int)
-@click.argument('account_id')
+@click.argument("organization_id", type=int)
+@click.argument("account_id")
 @click.pass_context
 def organization_remove_customer(ctx, organization_id: int, account_id: str):
     """Remove a customer from an organization."""
-    script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "remove_from_organization.py"
+    script_path = (
+        SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "remove_from_organization.py"
+    )
     run_skill_script_subprocess(script_path, [str(organization_id), account_id], ctx)
 
 
@@ -365,36 +383,50 @@ def queue():
 
 
 @queue.command(name="list")
-@click.argument('service_desk_id', type=int)
+@click.argument("service_desk_id", type=int)
 @click.pass_context
 def queue_list(ctx, service_desk_id: int):
     """List queues for a service desk."""
     script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "list_queues.py"
-    run_skill_script_subprocess(script_path, ["--service-desk", str(service_desk_id)], ctx)
+    run_skill_script_subprocess(
+        script_path, ["--service-desk", str(service_desk_id)], ctx
+    )
 
 
 @queue.command(name="get")
-@click.argument('service_desk_id', type=int)
-@click.argument('queue_id', type=int)
+@click.argument("service_desk_id", type=int)
+@click.argument("queue_id", type=int)
 @click.pass_context
 def queue_get(ctx, service_desk_id: int, queue_id: int):
     """Get queue details."""
     script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "get_queue.py"
-    run_skill_script_subprocess(script_path, ["--service-desk", str(service_desk_id),
-                                              "--queue-id", str(queue_id)], ctx)
+    run_skill_script_subprocess(
+        script_path,
+        ["--service-desk", str(service_desk_id), "--queue-id", str(queue_id)],
+        ctx,
+    )
 
 
 @queue.command(name="issues")
-@click.argument('service_desk_id', type=int)
-@click.argument('queue_id', type=int)
-@click.option('--max-results', '-m', type=int, default=50, help='Maximum results')
+@click.argument("service_desk_id", type=int)
+@click.argument("queue_id", type=int)
+@click.option("--max-results", "-m", type=int, default=50, help="Maximum results")
 @click.pass_context
 def queue_issues(ctx, service_desk_id: int, queue_id: int, max_results: int):
     """Get issues in a queue."""
     script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "get_queue_issues.py"
-    run_skill_script_subprocess(script_path, ["--service-desk", str(service_desk_id),
-                                              "--queue-id", str(queue_id),
-                                              "--limit", str(max_results)], ctx)
+    run_skill_script_subprocess(
+        script_path,
+        [
+            "--service-desk",
+            str(service_desk_id),
+            "--queue-id",
+            str(queue_id),
+            "--limit",
+            str(max_results),
+        ],
+        ctx,
+    )
 
 
 # SLA commands
@@ -405,7 +437,7 @@ def sla():
 
 
 @sla.command(name="get")
-@click.argument('issue_key')
+@click.argument("issue_key")
 @click.pass_context
 def sla_get(ctx, issue_key: str):
     """Get SLA information for an issue."""
@@ -414,7 +446,7 @@ def sla_get(ctx, issue_key: str):
 
 
 @sla.command(name="check-breach")
-@click.argument('issue_key')
+@click.argument("issue_key")
 @click.pass_context
 def sla_check_breach(ctx, issue_key: str):
     """Check if an issue is breaching SLA."""
@@ -423,11 +455,17 @@ def sla_check_breach(ctx, issue_key: str):
 
 
 @sla.command(name="report")
-@click.argument('service_desk_id', type=int)
-@click.option('--since', '-s', help='Report start date')
-@click.option('--until', help='Report end date')
-@click.option('--format', '-f', 'output_format', type=click.Choice(['text', 'csv', 'json']),
-              default='text', help='Output format')
+@click.argument("service_desk_id", type=int)
+@click.option("--since", "-s", help="Report start date")
+@click.option("--until", help="Report end date")
+@click.option(
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["text", "csv", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 def sla_report(ctx, service_desk_id: int, since: str, until: str, output_format: str):
     """Generate SLA report."""
@@ -438,7 +476,7 @@ def sla_report(ctx, service_desk_id: int, since: str, until: str, output_format:
         script_args.extend(["--since", since])
     if until:
         script_args.extend(["--until", until])
-    if output_format != 'text':
+    if output_format != "text":
         script_args.extend(["--format", output_format])
 
     run_skill_script_subprocess(script_path, script_args, ctx)
@@ -452,7 +490,7 @@ def approval():
 
 
 @approval.command(name="list")
-@click.argument('issue_key')
+@click.argument("issue_key")
 @click.pass_context
 def approval_list(ctx, issue_key: str):
     """Get approvals for an issue."""
@@ -461,7 +499,7 @@ def approval_list(ctx, issue_key: str):
 
 
 @approval.command(name="pending")
-@click.option('--service-desk-id', '-s', type=int, help='Filter by service desk')
+@click.option("--service-desk-id", "-s", type=int, help="Filter by service desk")
 @click.pass_context
 def approval_pending(ctx, service_desk_id: int):
     """List pending approvals."""
@@ -475,9 +513,9 @@ def approval_pending(ctx, service_desk_id: int):
 
 
 @approval.command(name="approve")
-@click.argument('issue_key')
-@click.argument('approval_id', type=int)
-@click.option('--comment', '-c', help='Approval comment')
+@click.argument("issue_key")
+@click.argument("approval_id", type=int)
+@click.option("--comment", "-c", help="Approval comment")
 @click.pass_context
 def approval_approve(ctx, issue_key: str, approval_id: int, comment: str):
     """Approve a request."""
@@ -491,9 +529,9 @@ def approval_approve(ctx, issue_key: str, approval_id: int, comment: str):
 
 
 @approval.command(name="decline")
-@click.argument('issue_key')
-@click.argument('approval_id', type=int)
-@click.option('--comment', '-c', help='Decline comment')
+@click.argument("issue_key")
+@click.argument("approval_id", type=int)
+@click.option("--comment", "-c", help="Decline comment")
 @click.pass_context
 def approval_decline(ctx, issue_key: str, approval_id: int, comment: str):
     """Decline a request."""
@@ -514,9 +552,9 @@ def kb():
 
 
 @kb.command(name="search")
-@click.argument('query')
-@click.option('--service-desk-id', '-s', type=int, help='Limit to service desk')
-@click.option('--max-results', '-m', type=int, default=10, help='Maximum results')
+@click.argument("query")
+@click.option("--service-desk-id", "-s", type=int, help="Limit to service desk")
+@click.option("--max-results", "-m", type=int, default=10, help="Maximum results")
 @click.pass_context
 def kb_search(ctx, query: str, service_desk_id: int, max_results: int):
     """Search Knowledge Base articles."""
@@ -532,7 +570,7 @@ def kb_search(ctx, query: str, service_desk_id: int, max_results: int):
 
 
 @kb.command(name="get")
-@click.argument('article_id')
+@click.argument("article_id")
 @click.pass_context
 def kb_get(ctx, article_id: str):
     """Get a Knowledge Base article."""
@@ -541,13 +579,15 @@ def kb_get(ctx, article_id: str):
 
 
 @kb.command(name="suggest")
-@click.argument('issue_key')
-@click.option('--max-results', '-m', type=int, default=5, help='Maximum suggestions')
+@click.argument("issue_key")
+@click.option("--max-results", "-m", type=int, default=5, help="Maximum suggestions")
 @click.pass_context
 def kb_suggest(ctx, issue_key: str, max_results: int):
     """Suggest KB articles for an issue."""
     script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "suggest_kb.py"
-    run_skill_script_subprocess(script_path, [issue_key, "--max-results", str(max_results)], ctx)
+    run_skill_script_subprocess(
+        script_path, [issue_key, "--max-results", str(max_results)], ctx
+    )
 
 
 # Asset commands (JSM Premium)
@@ -558,10 +598,10 @@ def asset():
 
 
 @asset.command(name="list")
-@click.option('--schema', '-s', help='Object schema')
-@click.option('--type', '-t', 'object_type', help='Object type')
-@click.option('--query', '-q', help='AQL query')
-@click.option('--max-results', '-m', type=int, default=50, help='Maximum results')
+@click.option("--schema", "-s", help="Object schema")
+@click.option("--type", "-t", "object_type", help="Object type")
+@click.option("--query", "-q", help="AQL query")
+@click.option("--max-results", "-m", type=int, default=50, help="Maximum results")
 @click.pass_context
 def asset_list(ctx, schema: str, object_type: str, query: str, max_results: int):
     """List assets."""
@@ -581,7 +621,7 @@ def asset_list(ctx, schema: str, object_type: str, query: str, max_results: int)
 
 
 @asset.command(name="get")
-@click.argument('object_id')
+@click.argument("object_id")
 @click.pass_context
 def asset_get(ctx, object_id: str):
     """Get asset details."""
@@ -590,28 +630,32 @@ def asset_get(ctx, object_id: str):
 
 
 @asset.command(name="create")
-@click.argument('object_type_id')
-@click.option('--attributes', '-a', required=True, help='Attributes as JSON')
+@click.argument("object_type_id")
+@click.option("--attributes", "-a", required=True, help="Attributes as JSON")
 @click.pass_context
 def asset_create(ctx, object_type_id: str, attributes: str):
     """Create a new asset."""
     script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "create_asset.py"
-    run_skill_script_subprocess(script_path, [object_type_id, "--attributes", attributes], ctx)
+    run_skill_script_subprocess(
+        script_path, [object_type_id, "--attributes", attributes], ctx
+    )
 
 
 @asset.command(name="update")
-@click.argument('object_id')
-@click.option('--attributes', '-a', required=True, help='Attributes to update as JSON')
+@click.argument("object_id")
+@click.option("--attributes", "-a", required=True, help="Attributes to update as JSON")
 @click.pass_context
 def asset_update(ctx, object_id: str, attributes: str):
     """Update an asset."""
     script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "update_asset.py"
-    run_skill_script_subprocess(script_path, [object_id, "--attributes", attributes], ctx)
+    run_skill_script_subprocess(
+        script_path, [object_id, "--attributes", attributes], ctx
+    )
 
 
 @asset.command(name="link")
-@click.argument('issue_key')
-@click.argument('object_id')
+@click.argument("issue_key")
+@click.argument("object_id")
 @click.pass_context
 def asset_link(ctx, issue_key: str, object_id: str):
     """Link an asset to an issue."""
@@ -620,7 +664,7 @@ def asset_link(ctx, issue_key: str, object_id: str):
 
 
 @asset.command(name="find-affected")
-@click.argument('issue_key')
+@click.argument("issue_key")
 @click.pass_context
 def asset_find_affected(ctx, issue_key: str):
     """Find assets affected by an issue."""

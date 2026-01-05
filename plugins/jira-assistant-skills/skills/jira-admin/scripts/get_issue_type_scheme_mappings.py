@@ -9,23 +9,24 @@ Requires 'Administer Jira' global permission.
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, print_error
-from jira_assistant_skills_lib import format_table
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_table,
+    get_jira_client,
+    print_error,
+)
 
 
 def get_issue_type_scheme_mappings(
     client=None,
-    profile: Optional[str] = None,
+    profile: str | None = None,
     start_at: int = 0,
     max_results: int = 50,
-    scheme_ids: Optional[List[str]] = None
-) -> Dict[str, Any]:
+    scheme_ids: list[str] | None = None,
+) -> dict[str, Any]:
     """
     Get issue type scheme mappings.
 
@@ -47,9 +48,7 @@ def get_issue_type_scheme_mappings(
 
     try:
         result = client.get_issue_type_scheme_items(
-            start_at=start_at,
-            max_results=max_results,
-            scheme_ids=scheme_ids
+            start_at=start_at, max_results=max_results, scheme_ids=scheme_ids
         )
         return result
     finally:
@@ -57,23 +56,22 @@ def get_issue_type_scheme_mappings(
             client.close()
 
 
-def format_mappings(response: Dict[str, Any], output_format: str = 'table') -> str:
+def format_mappings(response: dict[str, Any], output_format: str = "table") -> str:
     """Format mappings for display."""
-    if output_format == 'json':
+    if output_format == "json":
         return json.dumps(response, indent=2)
 
-    mappings = response.get('values', [])
+    mappings = response.get("values", [])
     if not mappings:
         return "No mappings found."
 
-    headers = ['Scheme ID', 'Issue Type ID']
+    headers = ["Scheme ID", "Issue Type ID"]
     rows = []
 
     for mapping in mappings:
-        rows.append([
-            mapping.get('issueTypeSchemeId', ''),
-            mapping.get('issueTypeId', '')
-        ])
+        rows.append(
+            [mapping.get("issueTypeSchemeId", ""), mapping.get("issueTypeId", "")]
+        )
 
     return format_table(headers, rows)
 
@@ -81,7 +79,7 @@ def format_mappings(response: Dict[str, Any], output_format: str = 'table') -> s
 def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Get issue type scheme mappings',
+        description="Get issue type scheme mappings",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -96,36 +94,23 @@ Examples:
 
   # Output as JSON
   python get_issue_type_scheme_mappings.py --format json
-"""
+""",
     )
 
+    parser.add_argument("--scheme-ids", nargs="+", help="Filter by scheme IDs")
     parser.add_argument(
-        '--scheme-ids',
-        nargs='+',
-        help='Filter by scheme IDs'
+        "--start-at", type=int, default=0, help="Starting index (default: 0)"
     )
     parser.add_argument(
-        '--start-at',
-        type=int,
-        default=0,
-        help='Starting index (default: 0)'
+        "--max-results", type=int, default=50, help="Maximum results (default: 50)"
     )
     parser.add_argument(
-        '--max-results',
-        type=int,
-        default=50,
-        help='Maximum results (default: 50)'
+        "--format",
+        choices=["table", "json"],
+        default="table",
+        help="Output format (default: table)",
     )
-    parser.add_argument(
-        '--format',
-        choices=['table', 'json'],
-        default='table',
-        help='Output format (default: table)'
-    )
-    parser.add_argument(
-        '--profile',
-        help='Configuration profile to use'
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -134,15 +119,15 @@ Examples:
             profile=args.profile,
             start_at=args.start_at,
             max_results=args.max_results,
-            scheme_ids=args.scheme_ids
+            scheme_ids=args.scheme_ids,
         )
 
         output = format_mappings(response, args.format)
         print(output)
 
-        if args.format == 'table':
-            total = response.get('total', len(response.get('values', [])))
-            shown = len(response.get('values', []))
+        if args.format == "table":
+            total = response.get("total", len(response.get("values", [])))
+            shown = len(response.get("values", []))
             print(f"\nShowing {shown} of {total} mapping(s)")
 
     except JiraError as e:
@@ -150,5 +135,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -10,92 +10,100 @@ Usage:
     python create_field.py --name "Effort" --type number --description "Effort in hours"
 """
 
-import sys
 import argparse
 import json
+import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any
 
 # Add shared lib to path
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    format_json,
+    get_jira_client,
+    print_error,
+    print_success,
+)
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import format_json, print_success
 
 # Field type mappings sourced from assets/field-types-reference.json
 # See that file for complete documentation, examples, and use cases
-def _load_field_types() -> Dict[str, Dict[str, str]]:
+def _load_field_types() -> dict[str, dict[str, str]]:
     """Load field types from JSON reference file with fallback to hardcoded values."""
-    ref_file = Path(__file__).parent.parent / 'assets' / 'field-types-reference.json'
+    ref_file = Path(__file__).parent.parent / "assets" / "field-types-reference.json"
     try:
         with open(ref_file) as f:
             data = json.load(f)
             # Extract only type and searcher for API calls
             return {
-                key: {'type': val['type'], 'searcher': val['searcher']}
-                for key, val in data['field_types'].items()
+                key: {"type": val["type"], "searcher": val["searcher"]}
+                for key, val in data["field_types"].items()
             }
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
         # Fallback to hardcoded values if reference file unavailable
         return {
-            'text': {
-                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:textfield',
-                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:textsearcher'
+            "text": {
+                "type": "com.atlassian.jira.plugin.system.customfieldtypes:textfield",
+                "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:textsearcher",
             },
-            'textarea': {
-                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:textarea',
-                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:textsearcher'
+            "textarea": {
+                "type": "com.atlassian.jira.plugin.system.customfieldtypes:textarea",
+                "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:textsearcher",
             },
-            'number': {
-                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:float',
-                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:exactnumber'
+            "number": {
+                "type": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:exactnumber",
             },
-            'date': {
-                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:datepicker',
-                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:daterange'
+            "date": {
+                "type": "com.atlassian.jira.plugin.system.customfieldtypes:datepicker",
+                "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:daterange",
             },
-            'datetime': {
-                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:datetime',
-                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:datetimerange'
+            "datetime": {
+                "type": "com.atlassian.jira.plugin.system.customfieldtypes:datetime",
+                "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:datetimerange",
             },
-            'select': {
-                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:select',
-                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher'
+            "select": {
+                "type": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+                "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher",
             },
-            'multiselect': {
-                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselect',
-                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher'
+            "multiselect": {
+                "type": "com.atlassian.jira.plugin.system.customfieldtypes:multiselect",
+                "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher",
             },
-            'checkbox': {
-                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes',
-                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher'
+            "checkbox": {
+                "type": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes",
+                "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher",
             },
-            'radio': {
-                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:radiobuttons',
-                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher'
+            "radio": {
+                "type": "com.atlassian.jira.plugin.system.customfieldtypes:radiobuttons",
+                "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher",
             },
-            'url': {
-                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:url',
-                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:exacttextsearcher'
+            "url": {
+                "type": "com.atlassian.jira.plugin.system.customfieldtypes:url",
+                "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:exacttextsearcher",
             },
-            'user': {
-                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:userpicker',
-                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:userpickergroupsearcher'
+            "user": {
+                "type": "com.atlassian.jira.plugin.system.customfieldtypes:userpicker",
+                "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:userpickergroupsearcher",
             },
-            'labels': {
-                'type': 'com.atlassian.jira.plugin.system.customfieldtypes:labels',
-                'searcher': 'com.atlassian.jira.plugin.system.customfieldtypes:labelsearcher'
-            }
+            "labels": {
+                "type": "com.atlassian.jira.plugin.system.customfieldtypes:labels",
+                "searcher": "com.atlassian.jira.plugin.system.customfieldtypes:labelsearcher",
+            },
         }
+
 
 FIELD_TYPES = _load_field_types()
 
 
-def create_field(name: str,
-                 field_type: str,
-                 description: str = None,
-                 profile: str = None,
-                 client=None) -> Dict[str, Any]:
+def create_field(
+    name: str,
+    field_type: str,
+    description: str | None = None,
+    profile: str | None = None,
+    client=None,
+) -> dict[str, Any]:
     """
     Create a custom field.
 
@@ -129,15 +137,15 @@ def create_field(name: str,
         type_config = FIELD_TYPES[field_type]
 
         data = {
-            'name': name,
-            'type': type_config['type'],
-            'searcherKey': type_config['searcher']
+            "name": name,
+            "type": type_config["type"],
+            "searcherKey": type_config["searcher"],
         }
 
         if description:
-            data['description'] = description
+            data["description"] = description
 
-        result = client.post('/rest/api/3/field', data=data)
+        result = client.post("/rest/api/3/field", data=data)
         return result
 
     finally:
@@ -147,23 +155,23 @@ def create_field(name: str,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Create a custom field in JIRA',
-        epilog='Example: python create_field.py --name "Story Points" --type number'
+        description="Create a custom field in JIRA",
+        epilog='Example: python create_field.py --name "Story Points" --type number',
     )
 
-    parser.add_argument('--name', '-n', required=True,
-                        help='Field name')
-    parser.add_argument('--type', '-t', required=True,
-                        choices=list(FIELD_TYPES.keys()),
-                        help='Field type')
-    parser.add_argument('--description', '-d',
-                        help='Field description')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use')
-    parser.add_argument('--output', '-o',
-                        choices=['text', 'json'],
-                        default='text',
-                        help='Output format')
+    parser.add_argument("--name", "-n", required=True, help="Field name")
+    parser.add_argument(
+        "--type",
+        "-t",
+        required=True,
+        choices=list(FIELD_TYPES.keys()),
+        help="Field type",
+    )
+    parser.add_argument("--description", "-d", help="Field description")
+    parser.add_argument("--profile", help="JIRA profile to use")
+    parser.add_argument(
+        "--output", "-o", choices=["text", "json"], default="text", help="Output format"
+    )
 
     args = parser.parse_args(argv)
 
@@ -172,10 +180,10 @@ def main(argv: list[str] | None = None):
             name=args.name,
             field_type=args.type,
             description=args.description,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_json(result))
         else:
             print_success(f"Created field: {result.get('name')}")
@@ -193,5 +201,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

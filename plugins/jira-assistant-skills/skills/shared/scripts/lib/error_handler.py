@@ -8,17 +8,22 @@ Security Note: Error messages may contain sensitive data from JIRA responses.
 Use sanitize_error_message() before logging errors in production environments.
 """
 
+import functools
 import re
 import sys
-import functools
-from typing import Optional, Dict, Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 
 class JiraError(Exception):
     """Base exception for all JIRA-related errors."""
 
-    def __init__(self, message: str, status_code: Optional[int] = None,
-                 response_data: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        message: str,
+        status_code: int | None = None,
+        response_data: dict[str, Any] | None = None,
+    ):
         self.message = message
         self.status_code = status_code
         self.response_data = response_data or {}
@@ -56,7 +61,9 @@ class PermissionError(JiraError):
 class ValidationError(JiraError):
     """Raised when input validation fails."""
 
-    def __init__(self, message: str = "Validation failed", field: Optional[str] = None, **kwargs):
+    def __init__(
+        self, message: str = "Validation failed", field: str | None = None, **kwargs
+    ):
         self.field = field
         if field:
             message = f"{message} (field: {field})"
@@ -66,7 +73,9 @@ class ValidationError(JiraError):
 class NotFoundError(JiraError):
     """Raised when a resource is not found."""
 
-    def __init__(self, resource_type: str = "Resource", resource_id: str = "", **kwargs):
+    def __init__(
+        self, resource_type: str = "Resource", resource_id: str = "", **kwargs
+    ):
         message = f"{resource_type} not found"
         if resource_id:
             message += f": {resource_id}"
@@ -76,7 +85,7 @@ class NotFoundError(JiraError):
 class RateLimitError(JiraError):
     """Raised when API rate limit is exceeded."""
 
-    def __init__(self, retry_after: Optional[int] = None, **kwargs):
+    def __init__(self, retry_after: int | None = None, **kwargs):
         self.retry_after = retry_after
         message = "API rate limit exceeded"
         if retry_after:
@@ -88,6 +97,7 @@ class RateLimitError(JiraError):
 
 class ConflictError(JiraError):
     """Raised when there's a conflict (e.g., duplicate, concurrent modification)."""
+
     pass
 
 
@@ -103,6 +113,7 @@ class ServerError(JiraError):
 # Automation API Errors
 # -----------------------------------------------------------------------------
 
+
 class AutomationError(JiraError):
     """Base exception for Automation API errors."""
 
@@ -117,7 +128,12 @@ class AutomationError(JiraError):
 class AutomationNotFoundError(AutomationError):
     """Raised when an automation rule or template is not found."""
 
-    def __init__(self, resource_type: str = "Automation resource", resource_id: str = "", **kwargs):
+    def __init__(
+        self,
+        resource_type: str = "Automation resource",
+        resource_id: str = "",
+        **kwargs,
+    ):
         message = f"{resource_type} not found"
         if resource_id:
             message += f": {resource_id}"
@@ -140,7 +156,12 @@ class AutomationPermissionError(AutomationError):
 class AutomationValidationError(AutomationError):
     """Raised when automation rule configuration is invalid."""
 
-    def __init__(self, message: str = "Automation validation failed", field: Optional[str] = None, **kwargs):
+    def __init__(
+        self,
+        message: str = "Automation validation failed",
+        field: str | None = None,
+        **kwargs,
+    ):
         self.field = field
         if field:
             message = f"{message} (field: {field})"
@@ -166,15 +187,15 @@ def handle_jira_error(response, operation: str = "operation") -> None:
 
     try:
         error_data = response.json()
-        error_messages = error_data.get('errorMessages', [])
-        errors = error_data.get('errors', {})
+        error_messages = error_data.get("errorMessages", [])
+        errors = error_data.get("errors", {})
 
         if error_messages:
-            message = '; '.join(error_messages)
+            message = "; ".join(error_messages)
         elif errors:
-            message = '; '.join([f"{k}: {v}" for k, v in errors.items()])
+            message = "; ".join([f"{k}: {v}" for k, v in errors.items()])
         else:
-            message = error_data.get('message', response.text or 'Unknown error')
+            message = error_data.get("message", response.text or "Unknown error")
     except ValueError:
         message = response.text or f"HTTP {status_code} error"
         error_data = {}
@@ -182,21 +203,29 @@ def handle_jira_error(response, operation: str = "operation") -> None:
     message = f"Failed to {operation}: {message}"
 
     if status_code == 400:
-        raise ValidationError(message, status_code=status_code, response_data=error_data)
+        raise ValidationError(
+            message, status_code=status_code, response_data=error_data
+        )
     elif status_code == 401:
-        raise AuthenticationError(message, status_code=status_code, response_data=error_data)
+        raise AuthenticationError(
+            message, status_code=status_code, response_data=error_data
+        )
     elif status_code == 403:
-        raise PermissionError(message, status_code=status_code, response_data=error_data)
+        raise PermissionError(
+            message, status_code=status_code, response_data=error_data
+        )
     elif status_code == 404:
-        raise NotFoundError("Resource", message, status_code=status_code, response_data=error_data)
+        raise NotFoundError(
+            "Resource", message, status_code=status_code, response_data=error_data
+        )
     elif status_code == 409:
         raise ConflictError(message, status_code=status_code, response_data=error_data)
     elif status_code == 429:
-        retry_after = response.headers.get('Retry-After')
+        retry_after = response.headers.get("Retry-After")
         raise RateLimitError(
             retry_after=int(retry_after) if retry_after else None,
             status_code=status_code,
-            response_data=error_data
+            response_data=error_data,
         )
     elif status_code >= 500:
         raise ServerError(message, status_code=status_code, response_data=error_data)
@@ -232,47 +261,33 @@ def sanitize_error_message(message: str) -> str:
 
     # Redact email addresses
     sanitized = re.sub(
-        r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}',
-        '[EMAIL REDACTED]',
-        sanitized
+        r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", "[EMAIL REDACTED]", sanitized
     )
 
     # Redact Atlassian account IDs (24-character hex strings)
     sanitized = re.sub(
-        r'[0-9a-f]{24}',
-        '[ACCOUNT_ID REDACTED]',
-        sanitized,
-        flags=re.IGNORECASE
+        r"[0-9a-f]{24}", "[ACCOUNT_ID REDACTED]", sanitized, flags=re.IGNORECASE
     )
 
     # Redact longer UUIDs/tokens (32+ chars of hex)
     sanitized = re.sub(
-        r'[0-9a-f]{32,}',
-        '[TOKEN REDACTED]',
-        sanitized,
-        flags=re.IGNORECASE
+        r"[0-9a-f]{32,}", "[TOKEN REDACTED]", sanitized, flags=re.IGNORECASE
     )
 
     # Redact API tokens (typical formats)
-    sanitized = re.sub(
-        r'(ATATT[A-Za-z0-9+/=]+)',
-        '[API_TOKEN REDACTED]',
-        sanitized
-    )
+    sanitized = re.sub(r"(ATATT[A-Za-z0-9+/=]+)", "[API_TOKEN REDACTED]", sanitized)
 
     # Redact URLs with credentials
     sanitized = re.sub(
-        r'(https?://)[^:]+:[^@]+@',
-        r'\1[CREDENTIALS REDACTED]@',
-        sanitized
+        r"(https?://)[^:]+:[^@]+@", r"\1[CREDENTIALS REDACTED]@", sanitized
     )
 
     # Redact bearer tokens
     sanitized = re.sub(
-        r'(Bearer\s+)[A-Za-z0-9._-]+',
-        r'\1[TOKEN REDACTED]',
+        r"(Bearer\s+)[A-Za-z0-9._-]+",
+        r"\1[TOKEN REDACTED]",
         sanitized,
-        flags=re.IGNORECASE
+        flags=re.IGNORECASE,
     )
 
     return sanitized
@@ -293,8 +308,9 @@ def print_error(error: Exception, debug: bool = False, sanitize: bool = False) -
 
     print(f"\nError: {error_str}", file=sys.stderr)
 
-    if debug and hasattr(error, '__traceback__'):
+    if debug and hasattr(error, "__traceback__"):
         import traceback
+
         print("\nDebug traceback:", file=sys.stderr)
         traceback.print_tb(error.__traceback__, file=sys.stderr)
 
@@ -318,6 +334,7 @@ def handle_errors(func: Callable) -> Callable:
     Returns:
         Wrapped function with error handling
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:

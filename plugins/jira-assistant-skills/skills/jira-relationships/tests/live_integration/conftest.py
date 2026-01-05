@@ -14,17 +14,16 @@ Environment:
     Uses the profile specified via --profile flag or JIRA_PROFILE env var.
 """
 
+import contextlib
 import os
-import sys
-import uuid
 import time
+import uuid
+from collections.abc import Generator
+from typing import Any
+
 import pytest
-from pathlib import Path
-from typing import Generator, Dict, Any, List
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraClient
+from jira_assistant_skills_lib import JiraClient, get_jira_client
 
 
 def pytest_addoption(parser):
@@ -33,19 +32,19 @@ def pytest_addoption(parser):
         "--profile",
         action="store",
         default=os.environ.get("JIRA_PROFILE", "development"),
-        help="JIRA profile to use (default: development)"
+        help="JIRA profile to use (default: development)",
     )
     parser.addoption(
         "--keep-project",
         action="store_true",
         default=False,
-        help="Keep the test project after tests complete (for debugging)"
+        help="Keep the test project after tests complete (for debugging)",
     )
     parser.addoption(
         "--project-key",
         action="store",
         default=None,
-        help="Use existing project instead of creating one (skips cleanup)"
+        help="Use existing project instead of creating one (skips cleanup)",
     )
 
 
@@ -76,7 +75,9 @@ def jira_client(jira_profile) -> Generator[JiraClient, None, None]:
 
 
 @pytest.fixture(scope="session")
-def test_project(jira_client, keep_project, existing_project_key) -> Generator[Dict[str, Any], None, None]:
+def test_project(
+    jira_client, keep_project, existing_project_key
+) -> Generator[dict[str, Any], None, None]:
     """
     Create a unique test project for the session.
 
@@ -90,13 +91,13 @@ def test_project(jira_client, keep_project, existing_project_key) -> Generator[D
         # Use existing project - no cleanup
         project = jira_client.get_project(existing_project_key)
         boards = jira_client.get_all_boards(project_key=existing_project_key)
-        board_id = boards['values'][0]['id'] if boards.get('values') else None
+        board_id = boards["values"][0]["id"] if boards.get("values") else None
         yield {
-            'id': project['id'],
-            'key': project['key'],
-            'name': project['name'],
-            'board_id': board_id,
-            'is_temporary': False
+            "id": project["id"],
+            "key": project["key"],
+            "name": project["name"],
+            "board_id": board_id,
+            "is_temporary": False,
         }
         return
 
@@ -105,17 +106,17 @@ def test_project(jira_client, keep_project, existing_project_key) -> Generator[D
     project_key = f"REL{unique_suffix}"
     project_name = f"Relationships Test {project_key}"
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Creating test project: {project_key}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Create the project with Scrum template
     project = jira_client.create_project(
         key=project_key,
         name=project_name,
-        project_type_key='software',
-        template_key='com.pyxis.greenhopper.jira:gh-simplified-agility-scrum',
-        description='Temporary project for jira-relationships live integration tests'
+        project_type_key="software",
+        template_key="com.pyxis.greenhopper.jira:gh-simplified-agility-scrum",
+        description="Temporary project for jira-relationships live integration tests",
     )
 
     # Wait a moment for the board to be created
@@ -123,14 +124,14 @@ def test_project(jira_client, keep_project, existing_project_key) -> Generator[D
 
     # Get the auto-created board
     boards = jira_client.get_all_boards(project_key=project_key)
-    board_id = boards['values'][0]['id'] if boards.get('values') else None
+    board_id = boards["values"][0]["id"] if boards.get("values") else None
 
     project_data = {
-        'id': project['id'],
-        'key': project_key,
-        'name': project_name,
-        'board_id': board_id,
-        'is_temporary': True
+        "id": project["id"],
+        "key": project_key,
+        "name": project_name,
+        "board_id": board_id,
+        "is_temporary": True,
     }
 
     print(f"Project created: {project_key} (Board ID: {board_id})")
@@ -138,10 +139,10 @@ def test_project(jira_client, keep_project, existing_project_key) -> Generator[D
     yield project_data
 
     # Cleanup
-    if not keep_project and project_data.get('is_temporary', True):
-        print(f"\n{'='*60}")
+    if not keep_project and project_data.get("is_temporary", True):
+        print(f"\n{'=' * 60}")
         print(f"Cleaning up test project: {project_key}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         cleanup_project(jira_client, project_key)
 
 
@@ -161,20 +162,24 @@ def cleanup_project(client: JiraClient, project_key: str) -> None:
         while True:
             result = client.search_issues(
                 f"project = {project_key} ORDER BY created DESC",
-                fields=['key', 'issuetype'],
-                max_results=50
+                fields=["key", "issuetype"],
+                max_results=50,
             )
-            issues = result.get('issues', [])
+            issues = result.get("issues", [])
             if not issues:
                 break
 
             # Delete subtasks first, then parent issues
-            subtasks = [i for i in issues if i['fields']['issuetype'].get('subtask', False)]
-            parents = [i for i in issues if not i['fields']['issuetype'].get('subtask', False)]
+            subtasks = [
+                i for i in issues if i["fields"]["issuetype"].get("subtask", False)
+            ]
+            parents = [
+                i for i in issues if not i["fields"]["issuetype"].get("subtask", False)
+            ]
 
             for issue in subtasks + parents:
                 try:
-                    client.delete_issue(issue['key'])
+                    client.delete_issue(issue["key"])
                     issues_deleted += 1
                 except Exception as e:
                     print(f"    Warning: Could not delete {issue['key']}: {e}")
@@ -192,7 +197,7 @@ def cleanup_project(client: JiraClient, project_key: str) -> None:
 
 
 @pytest.fixture(scope="function")
-def test_issue(jira_client, test_project) -> Generator[Dict[str, Any], None, None]:
+def test_issue(jira_client, test_project) -> Generator[dict[str, Any], None, None]:
     """
     Create a test issue for individual tests.
 
@@ -201,28 +206,40 @@ def test_issue(jira_client, test_project) -> Generator[Dict[str, Any], None, Non
     Yields:
         Issue data with 'key', 'id', 'self'
     """
-    issue = jira_client.create_issue({
-        'project': {'key': test_project['key']},
-        'summary': f'Test Issue {uuid.uuid4().hex[:8]}',
-        'description': {
-            'type': 'doc',
-            'version': 1,
-            'content': [{'type': 'paragraph', 'content': [{'type': 'text', 'text': 'Test issue for relationship tests'}]}]
-        },
-        'issuetype': {'name': 'Task'}
-    })
+    issue = jira_client.create_issue(
+        {
+            "project": {"key": test_project["key"]},
+            "summary": f"Test Issue {uuid.uuid4().hex[:8]}",
+            "description": {
+                "type": "doc",
+                "version": 1,
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "Test issue for relationship tests",
+                            }
+                        ],
+                    }
+                ],
+            },
+            "issuetype": {"name": "Task"},
+        }
+    )
 
     yield issue
 
     # Cleanup
-    try:
-        jira_client.delete_issue(issue['key'])
-    except Exception:
-        pass
+    with contextlib.suppress(Exception):
+        jira_client.delete_issue(issue["key"])
 
 
 @pytest.fixture(scope="function")
-def linked_issues(jira_client, test_project) -> Generator[List[Dict[str, Any]], None, None]:
+def linked_issues(
+    jira_client, test_project
+) -> Generator[list[dict[str, Any]], None, None]:
     """
     Create a pair of linked issues for testing.
 
@@ -231,32 +248,36 @@ def linked_issues(jira_client, test_project) -> Generator[List[Dict[str, Any]], 
     Yields:
         List of two issue dicts
     """
-    issue1 = jira_client.create_issue({
-        'project': {'key': test_project['key']},
-        'summary': f'Linked Issue 1 {uuid.uuid4().hex[:8]}',
-        'issuetype': {'name': 'Task'}
-    })
-    issue2 = jira_client.create_issue({
-        'project': {'key': test_project['key']},
-        'summary': f'Linked Issue 2 {uuid.uuid4().hex[:8]}',
-        'issuetype': {'name': 'Task'}
-    })
+    issue1 = jira_client.create_issue(
+        {
+            "project": {"key": test_project["key"]},
+            "summary": f"Linked Issue 1 {uuid.uuid4().hex[:8]}",
+            "issuetype": {"name": "Task"},
+        }
+    )
+    issue2 = jira_client.create_issue(
+        {
+            "project": {"key": test_project["key"]},
+            "summary": f"Linked Issue 2 {uuid.uuid4().hex[:8]}",
+            "issuetype": {"name": "Task"},
+        }
+    )
 
     # Create link
-    jira_client.create_link('Relates', issue2['key'], issue1['key'])
+    jira_client.create_link("Relates", issue2["key"], issue1["key"])
 
     yield [issue1, issue2]
 
     # Cleanup
     for issue in [issue1, issue2]:
-        try:
-            jira_client.delete_issue(issue['key'])
-        except Exception:
-            pass
+        with contextlib.suppress(Exception):
+            jira_client.delete_issue(issue["key"])
 
 
 @pytest.fixture(scope="function")
-def blocker_chain(jira_client, test_project) -> Generator[List[Dict[str, Any]], None, None]:
+def blocker_chain(
+    jira_client, test_project
+) -> Generator[list[dict[str, Any]], None, None]:
     """
     Create a chain of blocking issues for testing.
 
@@ -266,30 +287,32 @@ def blocker_chain(jira_client, test_project) -> Generator[List[Dict[str, Any]], 
         List of three issue dicts [A, B, C]
     """
     issues = []
-    for name in ['Blocker A', 'Blocked B', 'Blocked C']:
-        issue = jira_client.create_issue({
-            'project': {'key': test_project['key']},
-            'summary': f'{name} {uuid.uuid4().hex[:8]}',
-            'issuetype': {'name': 'Task'}
-        })
+    for name in ["Blocker A", "Blocked B", "Blocked C"]:
+        issue = jira_client.create_issue(
+            {
+                "project": {"key": test_project["key"]},
+                "summary": f"{name} {uuid.uuid4().hex[:8]}",
+                "issuetype": {"name": "Task"},
+            }
+        )
         issues.append(issue)
 
     # Create blocking chain: A blocks B, B blocks C
-    jira_client.create_link('Blocks', issues[1]['key'], issues[0]['key'])  # A blocks B
-    jira_client.create_link('Blocks', issues[2]['key'], issues[1]['key'])  # B blocks C
+    jira_client.create_link("Blocks", issues[1]["key"], issues[0]["key"])  # A blocks B
+    jira_client.create_link("Blocks", issues[2]["key"], issues[1]["key"])  # B blocks C
 
     yield issues
 
     # Cleanup
     for issue in issues:
-        try:
-            jira_client.delete_issue(issue['key'])
-        except Exception:
-            pass
+        with contextlib.suppress(Exception):
+            jira_client.delete_issue(issue["key"])
 
 
 @pytest.fixture(scope="function")
-def issue_with_subtasks(jira_client, test_project) -> Generator[Dict[str, Any], None, None]:
+def issue_with_subtasks(
+    jira_client, test_project
+) -> Generator[dict[str, Any], None, None]:
     """
     Create a parent issue with subtasks for cloning tests.
 
@@ -297,40 +320,49 @@ def issue_with_subtasks(jira_client, test_project) -> Generator[Dict[str, Any], 
         Parent issue data with 'key', 'id', 'self', 'subtask_keys'
     """
     # Create parent
-    parent = jira_client.create_issue({
-        'project': {'key': test_project['key']},
-        'summary': f'Parent Issue {uuid.uuid4().hex[:8]}',
-        'description': {
-            'type': 'doc',
-            'version': 1,
-            'content': [{'type': 'paragraph', 'content': [{'type': 'text', 'text': 'Parent for cloning test'}]}]
-        },
-        'issuetype': {'name': 'Task'}
-    })
+    parent = jira_client.create_issue(
+        {
+            "project": {"key": test_project["key"]},
+            "summary": f"Parent Issue {uuid.uuid4().hex[:8]}",
+            "description": {
+                "type": "doc",
+                "version": 1,
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {"type": "text", "text": "Parent for cloning test"}
+                        ],
+                    }
+                ],
+            },
+            "issuetype": {"name": "Task"},
+        }
+    )
 
     # Create subtasks
     subtask_keys = []
     for i in range(2):
-        subtask = jira_client.create_issue({
-            'project': {'key': test_project['key']},
-            'summary': f'Subtask {i+1} {uuid.uuid4().hex[:8]}',
-            'issuetype': {'name': 'Subtask'},
-            'parent': {'key': parent['key']}
-        })
-        subtask_keys.append(subtask['key'])
+        subtask = jira_client.create_issue(
+            {
+                "project": {"key": test_project["key"]},
+                "summary": f"Subtask {i + 1} {uuid.uuid4().hex[:8]}",
+                "issuetype": {"name": "Subtask"},
+                "parent": {"key": parent["key"]},
+            }
+        )
+        subtask_keys.append(subtask["key"])
 
-    parent['subtask_keys'] = subtask_keys
+    parent["subtask_keys"] = subtask_keys
 
     yield parent
 
     # Cleanup - subtasks are deleted with parent
-    try:
-        jira_client.delete_issue(parent['key'])
-    except Exception:
-        pass
+    with contextlib.suppress(Exception):
+        jira_client.delete_issue(parent["key"])
 
 
 @pytest.fixture(scope="session")
-def link_types(jira_client) -> List[Dict[str, Any]]:
+def link_types(jira_client) -> list[dict[str, Any]]:
     """Get available link types for the JIRA instance."""
     return jira_client.get_link_types()

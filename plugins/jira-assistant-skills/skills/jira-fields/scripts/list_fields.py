@@ -9,27 +9,31 @@ Usage:
     python list_fields.py --output json
 """
 
-import sys
 import argparse
-import json
-from pathlib import Path
-from typing import List, Dict, Any, Optional
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import format_table, format_json, print_info
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_json,
+    format_table,
+    get_jira_client,
+    print_error,
+    print_info,
+)
 
 # Known Agile field name patterns
-AGILE_PATTERNS = ['epic', 'sprint', 'story', 'point', 'rank', 'velocity', 'backlog']
+AGILE_PATTERNS = ["epic", "sprint", "story", "point", "rank", "velocity", "backlog"]
 
 
-def list_fields(filter_pattern: str = None,
-                agile_only: bool = False,
-                custom_only: bool = True,
-                profile: str = None,
-                client=None) -> List[Dict[str, Any]]:
+def list_fields(
+    filter_pattern: str | None = None,
+    agile_only: bool = False,
+    custom_only: bool = True,
+    profile: str | None = None,
+    client=None,
+) -> list[dict[str, Any]]:
     """
     List fields from JIRA instance.
 
@@ -53,16 +57,16 @@ def list_fields(filter_pattern: str = None,
         should_close = False
 
     try:
-        fields = client.get('/rest/api/3/field')
+        fields = client.get("/rest/api/3/field")
 
         result = []
         for field in fields:
             # Filter by custom
-            if custom_only and not field.get('custom', False):
+            if custom_only and not field.get("custom", False):
                 continue
 
-            name = field.get('name', '')
-            field_id = field.get('id', '')
+            name = field.get("name", "")
+            field_id = field.get("id", "")
 
             # Filter by pattern
             if filter_pattern and filter_pattern.lower() not in name.lower():
@@ -74,18 +78,20 @@ def list_fields(filter_pattern: str = None,
                 if not is_agile:
                     continue
 
-            schema = field.get('schema', {})
-            result.append({
-                'id': field_id,
-                'name': name,
-                'type': schema.get('type', 'unknown'),
-                'custom': field.get('custom', False),
-                'searchable': field.get('searchable', False),
-                'navigable': field.get('navigable', False)
-            })
+            schema = field.get("schema", {})
+            result.append(
+                {
+                    "id": field_id,
+                    "name": name,
+                    "type": schema.get("type", "unknown"),
+                    "custom": field.get("custom", False),
+                    "searchable": field.get("searchable", False),
+                    "navigable": field.get("navigable", False),
+                }
+            )
 
         # Sort by name
-        result.sort(key=lambda x: x['name'].lower())
+        result.sort(key=lambda x: x["name"].lower())
         return result
 
     finally:
@@ -95,22 +101,21 @@ def list_fields(filter_pattern: str = None,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='List custom fields in JIRA instance',
-        epilog='Example: python list_fields.py --agile'
+        description="List custom fields in JIRA instance",
+        epilog="Example: python list_fields.py --agile",
     )
 
-    parser.add_argument('--filter', '-f',
-                        help='Filter fields by name pattern')
-    parser.add_argument('--agile', '-a', action='store_true',
-                        help='Show only Agile-related fields')
-    parser.add_argument('--all', action='store_true',
-                        help='Show all fields (not just custom)')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use')
-    parser.add_argument('--output', '-o',
-                        choices=['text', 'json'],
-                        default='text',
-                        help='Output format')
+    parser.add_argument("--filter", "-f", help="Filter fields by name pattern")
+    parser.add_argument(
+        "--agile", "-a", action="store_true", help="Show only Agile-related fields"
+    )
+    parser.add_argument(
+        "--all", action="store_true", help="Show all fields (not just custom)"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
+    parser.add_argument(
+        "--output", "-o", choices=["text", "json"], default="text", help="Output format"
+    )
 
     args = parser.parse_args(argv)
 
@@ -119,10 +124,10 @@ def main(argv: list[str] | None = None):
             filter_pattern=args.filter,
             agile_only=args.agile,
             custom_only=not args.all,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_json(fields))
         else:
             if not fields:
@@ -130,11 +135,13 @@ def main(argv: list[str] | None = None):
             else:
                 print_info(f"Found {len(fields)} field(s)")
                 print()
-                print(format_table(
-                    fields,
-                    columns=['id', 'name', 'type'],
-                    headers=['Field ID', 'Name', 'Type']
-                ))
+                print(
+                    format_table(
+                        fields,
+                        columns=["id", "name", "type"],
+                        headers=["Field ID", "Name", "Type"],
+                    )
+                )
 
     except JiraError as e:
         print_error(e)
@@ -144,5 +151,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -4,8 +4,9 @@ Tests for unlink_issue.py
 TDD tests for removing issue links.
 """
 
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 
 @pytest.mark.relationships
@@ -18,11 +19,11 @@ class TestUnlinkIssue:
         mock_jira_client.get_issue_links.return_value = sample_issue_links
 
         import unlink_issue
-        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
-            unlink_issue.unlink_issue(
-                issue_key="PROJ-123",
-                from_issue="PROJ-456"
-            )
+
+        with patch.object(
+            unlink_issue, "get_jira_client", return_value=mock_jira_client
+        ):
+            unlink_issue.unlink_issue(issue_key="PROJ-123", from_issue="PROJ-456")
 
         # Should delete the link with ID "20001" (PROJ-123 blocks PROJ-456)
         mock_jira_client.delete_link.assert_called_once_with("20001")
@@ -32,11 +33,12 @@ class TestUnlinkIssue:
         mock_jira_client.get_issue_links.return_value = sample_issue_links
 
         import unlink_issue
-        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(
+            unlink_issue, "get_jira_client", return_value=mock_jira_client
+        ):
             unlink_issue.unlink_issue(
-                issue_key="PROJ-123",
-                link_type="Blocks",
-                remove_all=True
+                issue_key="PROJ-123", link_type="Blocks", remove_all=True
             )
 
         # Should delete both Blocks links (IDs "20001" and "20003")
@@ -52,25 +54,33 @@ class TestUnlinkIssue:
         import unlink_issue
         from assistant_skills_lib.error_handler import ValidationError
 
-        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(ValidationError) as exc_info:
-                unlink_issue.unlink_issue(
-                    issue_key="PROJ-123",
-                    from_issue="PROJ-999"  # Not linked
-                )
+        with (
+            patch.object(
+                unlink_issue, "get_jira_client", return_value=mock_jira_client
+            ),
+            pytest.raises(ValidationError) as exc_info,
+        ):
+            unlink_issue.unlink_issue(
+                issue_key="PROJ-123",
+                from_issue="PROJ-999",  # Not linked
+            )
 
-        assert "not linked" in str(exc_info.value).lower() or "not found" in str(exc_info.value).lower()
+        assert (
+            "not linked" in str(exc_info.value).lower()
+            or "not found" in str(exc_info.value).lower()
+        )
 
     def test_unlink_dry_run(self, mock_jira_client, sample_issue_links):
         """Test preview without deleting."""
         mock_jira_client.get_issue_links.return_value = sample_issue_links
 
         import unlink_issue
-        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(
+            unlink_issue, "get_jira_client", return_value=mock_jira_client
+        ):
             result = unlink_issue.unlink_issue(
-                issue_key="PROJ-123",
-                from_issue="PROJ-456",
-                dry_run=True
+                issue_key="PROJ-123", from_issue="PROJ-456", dry_run=True
             )
 
         # Should NOT delete
@@ -83,11 +93,13 @@ class TestUnlinkIssue:
         import unlink_issue
         from assistant_skills_lib.error_handler import ValidationError
 
-        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(ValidationError) as exc_info:
-                unlink_issue.unlink_issue(
-                    issue_key="PROJ-123"
-                )
+        with (
+            patch.object(
+                unlink_issue, "get_jira_client", return_value=mock_jira_client
+            ),
+            pytest.raises(ValidationError) as exc_info,
+        ):
+            unlink_issue.unlink_issue(issue_key="PROJ-123")
 
         assert "specify" in str(exc_info.value).lower()
 
@@ -105,21 +117,33 @@ class TestUnlinkIssueErrorHandling:
         mock_jira_client.delete_link.side_effect = AuthenticationError("Invalid token")
 
         import unlink_issue
-        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(AuthenticationError):
-                unlink_issue.unlink_issue(issue_key="PROJ-123", from_issue="PROJ-456")
+
+        with (
+            patch.object(
+                unlink_issue, "get_jira_client", return_value=mock_jira_client
+            ),
+            pytest.raises(AuthenticationError),
+        ):
+            unlink_issue.unlink_issue(issue_key="PROJ-123", from_issue="PROJ-456")
 
     def test_forbidden_error(self, mock_jira_client, sample_issue_links):
         """Test handling of 403 forbidden."""
         from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.get_issue_links.return_value = sample_issue_links
-        mock_jira_client.delete_link.side_effect = PermissionError("Insufficient permissions")
+        mock_jira_client.delete_link.side_effect = PermissionError(
+            "Insufficient permissions"
+        )
 
         import unlink_issue
-        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(PermissionError):
-                unlink_issue.unlink_issue(issue_key="PROJ-123", from_issue="PROJ-456")
+
+        with (
+            patch.object(
+                unlink_issue, "get_jira_client", return_value=mock_jira_client
+            ),
+            pytest.raises(PermissionError),
+        ):
+            unlink_issue.unlink_issue(issue_key="PROJ-123", from_issue="PROJ-456")
 
     def test_link_not_found_error(self, mock_jira_client, sample_issue_links):
         """Test handling of 404 link not found."""
@@ -129,9 +153,14 @@ class TestUnlinkIssueErrorHandling:
         mock_jira_client.delete_link.side_effect = NotFoundError("Link not found")
 
         import unlink_issue
-        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(NotFoundError):
-                unlink_issue.unlink_issue(issue_key="PROJ-123", from_issue="PROJ-456")
+
+        with (
+            patch.object(
+                unlink_issue, "get_jira_client", return_value=mock_jira_client
+            ),
+            pytest.raises(NotFoundError),
+        ):
+            unlink_issue.unlink_issue(issue_key="PROJ-123", from_issue="PROJ-456")
 
     def test_rate_limit_error(self, mock_jira_client, sample_issue_links):
         """Test handling of 429 rate limit."""
@@ -143,7 +172,10 @@ class TestUnlinkIssueErrorHandling:
         )
 
         import unlink_issue
-        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(
+            unlink_issue, "get_jira_client", return_value=mock_jira_client
+        ):
             with pytest.raises(JiraError) as exc_info:
                 unlink_issue.unlink_issue(issue_key="PROJ-123", from_issue="PROJ-456")
             assert exc_info.value.status_code == 429
@@ -158,7 +190,10 @@ class TestUnlinkIssueErrorHandling:
         )
 
         import unlink_issue
-        with patch.object(unlink_issue, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(
+            unlink_issue, "get_jira_client", return_value=mock_jira_client
+        ):
             with pytest.raises(JiraError) as exc_info:
                 unlink_issue.unlink_issue(issue_key="PROJ-123", from_issue="PROJ-456")
             assert exc_info.value.status_code == 500

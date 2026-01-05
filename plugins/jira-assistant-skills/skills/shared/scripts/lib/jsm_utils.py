@@ -8,11 +8,10 @@ Provides helper functions for:
 - Status icons and text
 """
 
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from typing import Any
 
 
-def format_sla_time(time_dict: Dict[str, Any]) -> str:
+def format_sla_time(time_dict: dict[str, Any]) -> str:
     """
     Format SLA time from API response.
 
@@ -28,10 +27,10 @@ def format_sla_time(time_dict: Dict[str, Any]) -> str:
     """
     if not time_dict:
         return "N/A"
-    return time_dict.get('friendly', time_dict.get('iso8601', 'Unknown'))
+    return time_dict.get("friendly", time_dict.get("iso8601", "Unknown"))
 
 
-def format_duration(duration_dict: Dict[str, Any]) -> str:
+def format_duration(duration_dict: dict[str, Any]) -> str:
     """
     Format SLA duration from API response.
 
@@ -47,7 +46,7 @@ def format_duration(duration_dict: Dict[str, Any]) -> str:
     """
     if not duration_dict:
         return "N/A"
-    return duration_dict.get('friendly', f"{duration_dict.get('millis', 0) // 1000}s")
+    return duration_dict.get("friendly", f"{duration_dict.get('millis', 0) // 1000}s")
 
 
 def calculate_sla_percentage(elapsed_millis: int, goal_millis: int) -> float:
@@ -70,8 +69,9 @@ def calculate_sla_percentage(elapsed_millis: int, goal_millis: int) -> float:
     return (elapsed_millis / goal_millis) * 100
 
 
-def is_sla_at_risk(remaining_millis: int, goal_millis: int,
-                   threshold: float = 20.0) -> bool:
+def is_sla_at_risk(
+    remaining_millis: int, goal_millis: int, threshold: float = 20.0
+) -> bool:
     """
     Check if SLA is at risk of breach.
 
@@ -95,7 +95,7 @@ def is_sla_at_risk(remaining_millis: int, goal_millis: int,
     return remaining_percentage < threshold
 
 
-def get_sla_status_emoji(sla: Dict[str, Any]) -> str:
+def get_sla_status_emoji(sla: dict[str, Any]) -> str:
     """
     Get emoji for SLA status.
 
@@ -111,31 +111,31 @@ def get_sla_status_emoji(sla: Dict[str, Any]) -> str:
         >>> get_sla_status_emoji({"ongoingCycle": {"breached": True}})
         '✗'
     """
-    ongoing = sla.get('ongoingCycle')
-    completed = sla.get('completedCycles', [])
+    ongoing = sla.get("ongoingCycle")
+    completed = sla.get("completedCycles", [])
 
     if ongoing:
-        if ongoing.get('breached'):
-            return '✗'
-        if ongoing.get('paused'):
-            return '⏸'
+        if ongoing.get("breached"):
+            return "✗"
+        if ongoing.get("paused"):
+            return "⏸"
         # Check if at risk
-        remaining = ongoing.get('remainingTime', {}).get('millis', 0)
-        goal = ongoing.get('goalDuration', {}).get('millis', 0)
+        remaining = ongoing.get("remainingTime", {}).get("millis", 0)
+        goal = ongoing.get("goalDuration", {}).get("millis", 0)
         if is_sla_at_risk(remaining, goal):
-            return '⚠'
-        return '▶'  # Active
+            return "⚠"
+        return "▶"  # Active
 
     if completed:
         last_cycle = completed[-1]
-        if last_cycle.get('breached'):
-            return '✗'
-        return '✓'
+        if last_cycle.get("breached"):
+            return "✗"
+        return "✓"
 
-    return '?'
+    return "?"
 
 
-def get_sla_status_text(sla: Dict[str, Any]) -> str:
+def get_sla_status_text(sla: dict[str, Any]) -> str:
     """
     Get human-readable SLA status.
 
@@ -145,24 +145,24 @@ def get_sla_status_text(sla: Dict[str, Any]) -> str:
     Returns:
         Status text
     """
-    ongoing = sla.get('ongoingCycle')
-    completed = sla.get('completedCycles', [])
+    ongoing = sla.get("ongoingCycle")
+    completed = sla.get("completedCycles", [])
 
     if ongoing:
-        if ongoing.get('breached'):
-            return 'BREACHED'
-        if ongoing.get('paused'):
-            return 'Paused'
-        remaining = ongoing.get('remainingTime', {}).get('millis', 0)
-        goal = ongoing.get('goalDuration', {}).get('millis', 0)
+        if ongoing.get("breached"):
+            return "BREACHED"
+        if ongoing.get("paused"):
+            return "Paused"
+        remaining = ongoing.get("remainingTime", {}).get("millis", 0)
+        goal = ongoing.get("goalDuration", {}).get("millis", 0)
         if is_sla_at_risk(remaining, goal):
-            return 'At Risk'
-        return 'Active'
+            return "At Risk"
+        return "Active"
 
     if completed:
         last_cycle = completed[-1]
-        if last_cycle.get('breached'):
-            return 'Failed'
-        return 'Met'
+        if last_cycle.get("breached"):
+            return "Failed"
+        return "Met"
 
-    return 'Unknown'
+    return "Unknown"

@@ -7,18 +7,18 @@ Usage:
     python delete_organization.py 12345 --dry-run
 """
 
-import sys
-import os
 import argparse
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    get_jira_client,
+    print_error,
+    print_success,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import print_success
-
-
-def delete_organization_func(organization_id: int, profile: str = None) -> None:
+def delete_organization_func(organization_id: int, profile: str | None = None) -> None:
     """
     Delete an organization.
 
@@ -33,7 +33,7 @@ def delete_organization_func(organization_id: int, profile: str = None) -> None:
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Delete a JSM organization',
+        description="Delete a JSM organization",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -42,17 +42,19 @@ Examples:
 
   Dry-run:
     %(prog)s 12345 --dry-run
-        """
+        """,
     )
 
-    parser.add_argument('organization_id', type=int,
-                        help='Organization ID')
-    parser.add_argument('--yes', '-y', action='store_true',
-                        help='Skip confirmation prompt')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Show what would be deleted without deleting')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use from config')
+    parser.add_argument("organization_id", type=int, help="Organization ID")
+    parser.add_argument(
+        "--yes", "-y", action="store_true", help="Skip confirmation prompt"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be deleted without deleting",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -67,8 +69,7 @@ Examples:
             return 1
 
         delete_organization_func(
-            organization_id=args.organization_id,
-            profile=args.profile
+            organization_id=args.organization_id, profile=args.profile
         )
 
         print_success(f"Successfully deleted organization {args.organization_id}")
@@ -83,5 +84,5 @@ Examples:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

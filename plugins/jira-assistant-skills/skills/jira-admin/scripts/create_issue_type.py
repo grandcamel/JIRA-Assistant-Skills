@@ -9,13 +9,15 @@ Requires 'Administer Jira' global permission.
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, ValidationError, print_error
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
 
 def validate_issue_type_name(name: str) -> str:
@@ -25,14 +27,16 @@ def validate_issue_type_name(name: str) -> str:
 
     name = name.strip()
     if len(name) > 60:
-        raise ValidationError(f"Issue type name must be 60 characters or less (got {len(name)})")
+        raise ValidationError(
+            f"Issue type name must be 60 characters or less (got {len(name)})"
+        )
 
     return name
 
 
 def validate_issue_type_type(issue_type: str) -> str:
     """Validate issue type type."""
-    valid_types = ['standard', 'subtask']
+    valid_types = ["standard", "subtask"]
     if issue_type not in valid_types:
         raise ValidationError(
             f"Invalid issue type: '{issue_type}'. Must be one of: {', '.join(valid_types)}"
@@ -42,12 +46,12 @@ def validate_issue_type_type(issue_type: str) -> str:
 
 def create_issue_type(
     name: str,
-    description: Optional[str] = None,
-    issue_type: str = 'standard',
-    hierarchy_level: Optional[int] = None,
+    description: str | None = None,
+    issue_type: str = "standard",
+    hierarchy_level: int | None = None,
     client=None,
-    profile: Optional[str] = None
-) -> Dict[str, Any]:
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Create a new issue type.
 
@@ -79,7 +83,7 @@ def create_issue_type(
             name=name,
             description=description,
             issue_type=issue_type,
-            hierarchy_level=hierarchy_level
+            hierarchy_level=hierarchy_level,
         )
         return result
     finally:
@@ -87,9 +91,11 @@ def create_issue_type(
             client.close()
 
 
-def format_created_issue_type(issue_type: Dict[str, Any], output_format: str = 'detail') -> str:
+def format_created_issue_type(
+    issue_type: dict[str, Any], output_format: str = "detail"
+) -> str:
     """Format created issue type for display."""
-    if output_format == 'json':
+    if output_format == "json":
         return json.dumps(issue_type, indent=2)
 
     lines = []
@@ -101,13 +107,13 @@ def format_created_issue_type(issue_type: Dict[str, Any], output_format: str = '
     lines.append(f"Subtask:     {'Yes' if issue_type.get('subtask') else 'No'}")
     lines.append(f"Hierarchy:   {issue_type.get('hierarchyLevel', 0)}")
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Create a new issue type in JIRA',
+        description="Create a new issue type in JIRA",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -129,41 +135,33 @@ Examples:
 Note:
   Requires 'Administer Jira' global permission.
   Issue type name must be unique and <= 60 characters.
-"""
+""",
     )
 
     parser.add_argument(
-        '--name',
-        required=True,
-        help='Issue type name (max 60 characters)'
+        "--name", required=True, help="Issue type name (max 60 characters)"
+    )
+    parser.add_argument("--description", help="Issue type description")
+    parser.add_argument(
+        "--type",
+        choices=["standard", "subtask"],
+        default="standard",
+        dest="issue_type",
+        help="Issue type kind (default: standard)",
     )
     parser.add_argument(
-        '--description',
-        help='Issue type description'
-    )
-    parser.add_argument(
-        '--type',
-        choices=['standard', 'subtask'],
-        default='standard',
-        dest='issue_type',
-        help='Issue type kind (default: standard)'
-    )
-    parser.add_argument(
-        '--hierarchy',
+        "--hierarchy",
         type=int,
-        metavar='LEVEL',
-        help='Hierarchy level (-1=subtask, 0=standard, 1=epic, 2+=higher)'
+        metavar="LEVEL",
+        help="Hierarchy level (-1=subtask, 0=standard, 1=epic, 2+=higher)",
     )
     parser.add_argument(
-        '--format',
-        choices=['detail', 'json'],
-        default='detail',
-        help='Output format (default: detail)'
+        "--format",
+        choices=["detail", "json"],
+        default="detail",
+        help="Output format (default: detail)",
     )
-    parser.add_argument(
-        '--profile',
-        help='Configuration profile to use'
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -173,7 +171,7 @@ Note:
             description=args.description,
             issue_type=args.issue_type,
             hierarchy_level=args.hierarchy,
-            profile=args.profile
+            profile=args.profile,
         )
 
         output = format_created_issue_type(issue_type, args.format)
@@ -184,5 +182,5 @@ Note:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -8,22 +8,23 @@ Note: Common markers (unit, integration, ops, asyncio) are defined in the root p
 """
 
 import copy
-import pytest
-import sys
-import os
-import tempfile
 import shutil
+import sys
+import tempfile
 from pathlib import Path
 from unittest.mock import Mock
 
+import pytest
 
 # Add shared lib to path so imports work in tests (use resolve for absolute paths)
-shared_lib_path = str(Path(__file__).resolve().parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(
+    Path(__file__).resolve().parent.parent.parent / "shared" / "scripts" / "lib"
+)
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
 # Add scripts to path for importing
-scripts_path = str(Path(__file__).resolve().parent.parent / 'scripts')
+scripts_path = str(Path(__file__).resolve().parent.parent / "scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
@@ -60,8 +61,8 @@ def sample_issue_data():
             "issuetype": {"name": "Task"},
             "project": {"key": "PROJ"},
             "status": {"name": "To Do"},
-            "priority": {"name": "Medium"}
-        }
+            "priority": {"name": "Medium"},
+        },
     }
     return copy.deepcopy(data)
 
@@ -73,7 +74,7 @@ def sample_project_data():
         "id": "10000",
         "key": "PROJ",
         "name": "Test Project",
-        "projectTypeKey": "software"
+        "projectTypeKey": "software",
     }
     return copy.deepcopy(data)
 
@@ -85,7 +86,7 @@ def sample_user_data():
         "accountId": "557058:test-user-id",
         "displayName": "Test User",
         "emailAddress": "test@example.com",
-        "active": True
+        "active": True,
     }
     return copy.deepcopy(data)
 
@@ -97,6 +98,6 @@ def sample_field_data():
         "id": "customfield_10016",
         "name": "Story Points",
         "custom": True,
-        "clauseNames": ["cf[10016]", "Story Points"]
+        "clauseNames": ["cf[10016]", "Story Points"],
     }
     return copy.deepcopy(data)

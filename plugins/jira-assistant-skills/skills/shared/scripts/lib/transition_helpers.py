@@ -5,10 +5,12 @@ Provides functions to find transitions by name with fuzzy matching
 support (case-insensitive, exact and partial matching).
 """
 
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 
-def find_transition_by_name(transitions: List[Dict[str, Any]], name: str) -> Dict[str, Any]:
+def find_transition_by_name(
+    transitions: list[dict[str, Any]], name: str
+) -> dict[str, Any]:
     """
     Find a transition by name (case-insensitive, partial match).
 
@@ -34,35 +36,37 @@ def find_transition_by_name(transitions: List[Dict[str, Any]], name: str) -> Dic
     name_lower = name.lower()
 
     # Phase 1: Exact match (case-insensitive)
-    exact_matches = [t for t in transitions if t['name'].lower() == name_lower]
+    exact_matches = [t for t in transitions if t["name"].lower() == name_lower]
     if len(exact_matches) == 1:
         return exact_matches[0]
     elif len(exact_matches) > 1:
         raise ValidationError(
-            f"Multiple exact matches for transition '{name}': " +
-            ', '.join(t['name'] for t in exact_matches)
+            f"Multiple exact matches for transition '{name}': "
+            + ", ".join(t["name"] for t in exact_matches)
         )
 
     # Phase 2: Partial match (case-insensitive)
-    partial_matches = [t for t in transitions if name_lower in t['name'].lower()]
+    partial_matches = [t for t in transitions if name_lower in t["name"].lower()]
     if len(partial_matches) == 1:
         return partial_matches[0]
     elif len(partial_matches) > 1:
         raise ValidationError(
-            f"Ambiguous transition name '{name}'. Matches: " +
-            ', '.join(t['name'] for t in partial_matches)
+            f"Ambiguous transition name '{name}'. Matches: "
+            + ", ".join(t["name"] for t in partial_matches)
         )
 
     # No matches found
     raise ValidationError(
-        f"Transition '{name}' not found. Available: " +
-        ', '.join(t['name'] for t in transitions)
+        f"Transition '{name}' not found. Available: "
+        + ", ".join(t["name"] for t in transitions)
     )
 
 
-def find_transition_by_keywords(transitions: List[Dict[str, Any]],
-                                 keywords: List[str],
-                                 prefer_exact: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def find_transition_by_keywords(
+    transitions: list[dict[str, Any]],
+    keywords: list[str],
+    prefer_exact: str | None = None,
+) -> dict[str, Any] | None:
     """
     Find a transition matching any of the given keywords.
 
@@ -82,8 +86,9 @@ def find_transition_by_keywords(transitions: List[Dict[str, Any]],
 
     # Find all transitions matching any keyword
     matching = [
-        t for t in transitions
-        if any(keyword.lower() in t['name'].lower() for keyword in keywords)
+        t
+        for t in transitions
+        if any(keyword.lower() in t["name"].lower() for keyword in keywords)
     ]
 
     if not matching:
@@ -92,7 +97,7 @@ def find_transition_by_keywords(transitions: List[Dict[str, Any]],
     # If prefer_exact is specified, look for exact match first
     if prefer_exact:
         prefer_lower = prefer_exact.lower()
-        exact = [t for t in matching if t['name'].lower() == prefer_lower]
+        exact = [t for t in matching if t["name"].lower() == prefer_lower]
         if exact:
             return exact[0]
 
@@ -100,7 +105,7 @@ def find_transition_by_keywords(transitions: List[Dict[str, Any]],
     return matching[0]
 
 
-def format_transition_list(transitions: List[Dict[str, Any]]) -> str:
+def format_transition_list(transitions: list[dict[str, Any]]) -> str:
     """
     Format a list of transitions for display.
 
@@ -115,7 +120,7 @@ def format_transition_list(transitions: List[Dict[str, Any]]) -> str:
 
     lines = []
     for t in transitions:
-        target = t.get('to', {}).get('name', 'Unknown')
+        target = t.get("to", {}).get("name", "Unknown")
         lines.append(f"  - {t['name']} (ID: {t['id']}) -> {target}")
 
-    return '\n'.join(lines)
+    return "\n".join(lines)

@@ -15,9 +15,7 @@ ISSUE_TYPES_RESPONSE = [
         "hierarchyLevel": 1,
         "avatarId": 10307,
         "entityId": "uuid-epic-1234",
-        "scope": {
-            "type": "GLOBAL"
-        }
+        "scope": {"type": "GLOBAL"},
     },
     {
         "id": "10001",
@@ -26,7 +24,7 @@ ISSUE_TYPES_RESPONSE = [
         "iconUrl": "https://test.atlassian.net/images/icons/issuetypes/story.svg",
         "subtask": False,
         "hierarchyLevel": 0,
-        "avatarId": 10308
+        "avatarId": 10308,
     },
     {
         "id": "10002",
@@ -35,7 +33,7 @@ ISSUE_TYPES_RESPONSE = [
         "iconUrl": "https://test.atlassian.net/images/icons/issuetypes/task.svg",
         "subtask": False,
         "hierarchyLevel": 0,
-        "avatarId": 10318
+        "avatarId": 10318,
     },
     {
         "id": "10003",
@@ -44,7 +42,7 @@ ISSUE_TYPES_RESPONSE = [
         "iconUrl": "https://test.atlassian.net/images/icons/issuetypes/bug.svg",
         "subtask": False,
         "hierarchyLevel": 0,
-        "avatarId": 10303
+        "avatarId": 10303,
     },
     {
         "id": "10004",
@@ -53,8 +51,8 @@ ISSUE_TYPES_RESPONSE = [
         "iconUrl": "https://test.atlassian.net/images/icons/issuetypes/subtask.svg",
         "subtask": True,
         "hierarchyLevel": -1,
-        "avatarId": 10316
-    }
+        "avatarId": 10316,
+    },
 ]
 
 # Single issue type response
@@ -66,7 +64,7 @@ EPIC_RESPONSE = {
     "subtask": False,
     "hierarchyLevel": 1,
     "avatarId": 10307,
-    "entityId": "uuid-epic-1234"
+    "entityId": "uuid-epic-1234",
 }
 
 STORY_RESPONSE = {
@@ -76,7 +74,7 @@ STORY_RESPONSE = {
     "iconUrl": "https://test.atlassian.net/images/icons/issuetypes/story.svg",
     "subtask": False,
     "hierarchyLevel": 0,
-    "avatarId": 10308
+    "avatarId": 10308,
 }
 
 SUBTASK_RESPONSE = {
@@ -86,7 +84,7 @@ SUBTASK_RESPONSE = {
     "iconUrl": "https://test.atlassian.net/images/icons/issuetypes/subtask.svg",
     "subtask": True,
     "hierarchyLevel": -1,
-    "avatarId": 10316
+    "avatarId": 10316,
 }
 
 # Created issue type response
@@ -97,7 +95,7 @@ CREATED_ISSUE_TYPE_RESPONSE = {
     "iconUrl": "https://test.atlassian.net/images/icons/issuetypes/story.svg",
     "subtask": False,
     "hierarchyLevel": 0,
-    "avatarId": 10308
+    "avatarId": 10308,
 }
 
 # Project-scoped issue type
@@ -109,12 +107,7 @@ PROJECT_SCOPED_ISSUE_TYPE = {
     "subtask": False,
     "hierarchyLevel": 0,
     "avatarId": 10308,
-    "scope": {
-        "type": "PROJECT",
-        "project": {
-            "id": "10000"
-        }
-    }
+    "scope": {"type": "PROJECT", "project": {"id": "10000"}},
 }
 
 # Issue type schemes list response
@@ -129,16 +122,16 @@ ISSUE_TYPE_SCHEMES_RESPONSE = {
             "name": "Default Issue Type Scheme",
             "description": "Default issue type scheme is the list of global issue types. All newly created issue types will automatically be added to this scheme.",
             "defaultIssueTypeId": "10001",
-            "isDefault": True
+            "isDefault": True,
         },
         {
             "id": "10001",
             "name": "Software Development Scheme",
             "description": "Issue types for software development projects",
             "defaultIssueTypeId": "10001",
-            "isDefault": False
-        }
-    ]
+            "isDefault": False,
+        },
+    ],
 }
 
 # Single issue type scheme response
@@ -147,7 +140,7 @@ DEFAULT_SCHEME_RESPONSE = {
     "name": "Default Issue Type Scheme",
     "description": "Default issue type scheme is the list of global issue types.",
     "defaultIssueTypeId": "10001",
-    "isDefault": True
+    "isDefault": True,
 }
 
 SOFTWARE_SCHEME_RESPONSE = {
@@ -155,13 +148,11 @@ SOFTWARE_SCHEME_RESPONSE = {
     "name": "Software Development Scheme",
     "description": "Issue types for software development projects",
     "defaultIssueTypeId": "10001",
-    "isDefault": False
+    "isDefault": False,
 }
 
 # Created issue type scheme response
-CREATED_SCHEME_RESPONSE = {
-    "issueTypeSchemeId": "10002"
-}
+CREATED_SCHEME_RESPONSE = {"issueTypeSchemeId": "10002"}
 
 # Issue type scheme for projects response
 SCHEME_FOR_PROJECTS_RESPONSE = {
@@ -176,9 +167,9 @@ SCHEME_FOR_PROJECTS_RESPONSE = {
                 "name": "Default Issue Type Scheme",
                 "description": "Default issue type scheme",
                 "defaultIssueTypeId": "10001",
-                "isDefault": True
+                "isDefault": True,
             },
-            "projectIds": ["10000"]
+            "projectIds": ["10000"],
         },
         {
             "issueTypeScheme": {
@@ -186,11 +177,11 @@ SCHEME_FOR_PROJECTS_RESPONSE = {
                 "name": "Kanban Issue Type Scheme",
                 "description": "Kanban-specific issue types",
                 "defaultIssueTypeId": "10002",
-                "isDefault": False
+                "isDefault": False,
             },
-            "projectIds": ["10001"]
-        }
-    ]
+            "projectIds": ["10001"],
+        },
+    ],
 }
 
 # Issue type scheme mappings response
@@ -200,33 +191,15 @@ SCHEME_MAPPINGS_RESPONSE = {
     "total": 4,
     "isLast": True,
     "values": [
-        {
-            "issueTypeSchemeId": "10000",
-            "issueTypeId": "10000"
-        },
-        {
-            "issueTypeSchemeId": "10000",
-            "issueTypeId": "10001"
-        },
-        {
-            "issueTypeSchemeId": "10000",
-            "issueTypeId": "10002"
-        },
-        {
-            "issueTypeSchemeId": "10001",
-            "issueTypeId": "10001"
-        }
-    ]
+        {"issueTypeSchemeId": "10000", "issueTypeId": "10000"},
+        {"issueTypeSchemeId": "10000", "issueTypeId": "10001"},
+        {"issueTypeSchemeId": "10000", "issueTypeId": "10002"},
+        {"issueTypeSchemeId": "10001", "issueTypeId": "10001"},
+    ],
 }
 
 # Alternative issue types response (for deletion)
 ALTERNATIVES_RESPONSE = [
-    {
-        "id": "10001",
-        "name": "Story"
-    },
-    {
-        "id": "10002",
-        "name": "Task"
-    }
+    {"id": "10001", "name": "Story"},
+    {"id": "10002", "name": "Task"},
 ]

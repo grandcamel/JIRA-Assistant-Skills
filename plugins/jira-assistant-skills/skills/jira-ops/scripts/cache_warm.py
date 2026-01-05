@@ -25,7 +25,9 @@ import sys
 from pathlib import Path
 
 # Add shared lib to path
-shared_lib_path = str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(
+    Path(__file__).parent.parent.parent / "shared" / "scripts" / "lib"
+)
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
@@ -33,12 +35,18 @@ from jira_assistant_skills_lib import JiraCache
 
 try:
     from jira_assistant_skills_lib import get_jira_client
+
     HAS_CONFIG_MANAGER = True
 except ImportError:
     HAS_CONFIG_MANAGER = False
 
 try:
-    from jira_assistant_skills_lib import AuthenticationError, RateLimitError, ServerError
+    from jira_assistant_skills_lib import (
+        AuthenticationError,
+        RateLimitError,
+        ServerError,
+    )
+
     HAS_ERROR_HANDLER = True
 except ImportError:
     HAS_ERROR_HANDLER = False
@@ -46,6 +54,7 @@ except ImportError:
 # Import requests for network error handling
 try:
     import requests
+
     HAS_REQUESTS = True
 except ImportError:
     HAS_REQUESTS = False
@@ -58,7 +67,9 @@ def is_critical_error(e):
         if isinstance(e, (AuthenticationError, RateLimitError, ServerError)):
             return True
     if HAS_REQUESTS:
-        if isinstance(e, (requests.exceptions.Timeout, requests.exceptions.ConnectionError)):
+        if isinstance(
+            e, (requests.exceptions.Timeout, requests.exceptions.ConnectionError)
+        ):
             return True
     return False
 
@@ -227,46 +238,21 @@ def main(argv: list[str] | None = None):
 Examples:
     python cache_warm.py --projects --fields
     python cache_warm.py --all --profile production
-        """
+        """,
+    )
+    parser.add_argument("--projects", action="store_true", help="Cache project list")
+    parser.add_argument("--fields", action="store_true", help="Cache field definitions")
+    parser.add_argument(
+        "--users", action="store_true", help="Cache assignable users (requires project)"
     )
     parser.add_argument(
-        "--projects",
-        action="store_true",
-        help="Cache project list"
+        "--all", action="store_true", help="Cache all available metadata"
     )
+    parser.add_argument("--profile", type=str, default=None, help="JIRA profile to use")
     parser.add_argument(
-        "--fields",
-        action="store_true",
-        help="Cache field definitions"
+        "--cache-dir", type=str, default=None, help="Custom cache directory"
     )
-    parser.add_argument(
-        "--users",
-        action="store_true",
-        help="Cache assignable users (requires project)"
-    )
-    parser.add_argument(
-        "--all",
-        action="store_true",
-        help="Cache all available metadata"
-    )
-    parser.add_argument(
-        "--profile",
-        type=str,
-        default=None,
-        help="JIRA profile to use"
-    )
-    parser.add_argument(
-        "--cache-dir",
-        type=str,
-        default=None,
-        help="Custom cache directory"
-    )
-    parser.add_argument(
-        "--verbose",
-        "-v",
-        action="store_true",
-        help="Verbose output"
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     args = parser.parse_args(argv)
 
@@ -277,7 +263,10 @@ Examples:
         sys.exit(1)
 
     if not HAS_CONFIG_MANAGER:
-        print("Error: config_manager not available. Cannot connect to JIRA.", file=sys.stderr)
+        print(
+            "Error: config_manager not available. Cannot connect to JIRA.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     try:
@@ -315,11 +304,16 @@ Examples:
                 critical_errors.append(error)
 
         if args.users:
-            print("User caching requires a project context. Use search scripts instead.")
+            print(
+                "User caching requires a project context. Use search scripts instead."
+            )
 
         # If any critical errors occurred, exit with error
         if critical_errors:
-            print(f"\nCache warming failed with {len(critical_errors)} error(s).", file=sys.stderr)
+            print(
+                f"\nCache warming failed with {len(critical_errors)} error(s).",
+                file=sys.stderr,
+            )
             for err in critical_errors:
                 print(f"  - {err}", file=sys.stderr)
             sys.exit(1)
@@ -327,7 +321,7 @@ Examples:
         print(f"\nCache warming complete. Cached {total_cached} items.")
 
         stats = cache.get_stats()
-        print(f"Total cache size: {stats.total_size_bytes / (1024*1024):.1f} MB")
+        print(f"Total cache size: {stats.total_size_bytes / (1024 * 1024):.1f} MB")
 
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)

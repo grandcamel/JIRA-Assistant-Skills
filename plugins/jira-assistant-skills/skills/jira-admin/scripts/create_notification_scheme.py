@@ -12,35 +12,36 @@ Usage:
     python create_notification_scheme.py --profile production --name "Prod Scheme"
 """
 
-import sys
 import argparse
 import json
-from pathlib import Path
-from typing import Dict, Any, Optional, List
+import sys
+from typing import Any
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError, ConflictError
 from notification_utils import (
-    parse_recipient_string,
-    get_event_id,
-    validate_recipient_type,
-    recipient_requires_parameter,
     format_recipient,
-    build_notification_payload
+    get_event_id,
+    parse_recipient_string,
+)
+
+from jira_assistant_skills_lib import (
+    ConflictError,
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
 )
 
 
 def create_notification_scheme(
     client=None,
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    events: Optional[List[Dict[str, Any]]] = None,
-    template_file: Optional[str] = None,
+    name: str | None = None,
+    description: str | None = None,
+    events: list[dict[str, Any]] | None = None,
+    template_file: str | None = None,
     dry_run: bool = False,
     check_duplicate: bool = False,
-    profile: Optional[str] = None
-) -> Dict[str, Any]:
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Create a new notification scheme.
 
@@ -71,12 +72,12 @@ def create_notification_scheme(
     try:
         # Load from template if provided
         if template_file:
-            with open(template_file, 'r') as f:
+            with open(template_file) as f:
                 template_data = json.load(f)
-            name = template_data.get('name', name)
-            description = template_data.get('description', description)
+            name = template_data.get("name", name)
+            description = template_data.get("description", description)
             # Use template's notificationSchemeEvents directly
-            scheme_events = template_data.get('notificationSchemeEvents', [])
+            scheme_events = template_data.get("notificationSchemeEvents", [])
         else:
             scheme_events = []
 
@@ -98,9 +99,9 @@ def create_notification_scheme(
         if events and not scheme_events:
             scheme_events = []
             for event_config in events:
-                event_id = event_config.get('event_id')
-                event_name = event_config.get('event_name')
-                recipients = event_config.get('recipients', [])
+                event_id = event_config.get("event_id")
+                event_name = event_config.get("event_name")
+                recipients = event_config.get("recipients", [])
 
                 # Resolve event ID from name if needed
                 if not event_id and event_name:
@@ -117,39 +118,33 @@ def create_notification_scheme(
                     except ValueError as e:
                         raise ValidationError(str(e))
 
-                scheme_events.append({
-                    'event': {'id': event_id},
-                    'notifications': notifications
-                })
+                scheme_events.append(
+                    {"event": {"id": event_id}, "notifications": notifications}
+                )
 
         # Build request data
-        data = {
-            'name': name
-        }
+        data = {"name": name}
 
         if description:
-            data['description'] = description
+            data["description"] = description
 
         if scheme_events:
-            data['notificationSchemeEvents'] = scheme_events
+            data["notificationSchemeEvents"] = scheme_events
 
         # Handle dry run
         if dry_run:
-            return {
-                'dry_run': True,
-                'would_create': data
-            }
+            return {"dry_run": True, "would_create": data}
 
         # Create the scheme
         result = client.create_notification_scheme(data)
         return result
 
     finally:
-        if close_client and hasattr(client, 'close'):
+        if close_client and hasattr(client, "close"):
             client.close()
 
 
-def format_text_output(result: Dict[str, Any]) -> str:
+def format_text_output(result: dict[str, Any]) -> str:
     """
     Format result as human-readable text.
 
@@ -161,21 +156,21 @@ def format_text_output(result: Dict[str, Any]) -> str:
     """
     output = []
 
-    if result.get('dry_run'):
+    if result.get("dry_run"):
         output.append("[DRY RUN] Would create notification scheme:")
         output.append("")
-        data = result.get('would_create', {})
+        data = result.get("would_create", {})
         output.append(f"Name:        {data.get('name', 'N/A')}")
         output.append(f"Description: {data.get('description', 'N/A')}")
 
-        events = data.get('notificationSchemeEvents', [])
+        events = data.get("notificationSchemeEvents", [])
         if events:
             output.append("")
             output.append("Event Configurations:")
             for event_config in events:
-                event_id = event_config.get('event', {}).get('id', 'N/A')
+                event_id = event_config.get("event", {}).get("id", "N/A")
                 output.append(f"  Event ID: {event_id}")
-                for notification in event_config.get('notifications', []):
+                for notification in event_config.get("notifications", []):
                     output.append(f"    - {format_recipient(notification)}")
 
         output.append("")
@@ -187,15 +182,19 @@ def format_text_output(result: Dict[str, Any]) -> str:
         output.append(f"Name:        {result.get('name', 'N/A')}")
         output.append(f"Description: {result.get('description', 'N/A')}")
         output.append("")
-        output.append(f"Success! Notification scheme created with ID: {result.get('id', 'N/A')}")
+        output.append(
+            f"Success! Notification scheme created with ID: {result.get('id', 'N/A')}"
+        )
         output.append("")
         output.append("To add more notifications:")
-        output.append(f"  python add_notification.py {result.get('id', 'SCHEME_ID')} --event \"Issue created\" --notify CurrentAssignee")
+        output.append(
+            f'  python add_notification.py {result.get("id", "SCHEME_ID")} --event "Issue created" --notify CurrentAssignee'
+        )
 
-    return '\n'.join(output)
+    return "\n".join(output)
 
 
-def format_json_output(result: Dict[str, Any]) -> str:
+def format_json_output(result: dict[str, Any]) -> str:
     """
     Format result as JSON.
 
@@ -211,29 +210,47 @@ def format_json_output(result: Dict[str, Any]) -> str:
 def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Create a new notification scheme in JIRA',
-        epilog='''
+        description="Create a new notification scheme in JIRA",
+        epilog="""
 Examples:
     python create_notification_scheme.py --name "New Scheme" --description "Description"
     python create_notification_scheme.py --template notification_scheme.json
     python create_notification_scheme.py --name "Dev Scheme" --event "Issue created" --notify CurrentAssignee --notify Group:developers
     python create_notification_scheme.py --template scheme.json --dry-run
-        '''
+        """,
     )
-    parser.add_argument('--name', '-n', help='Notification scheme name')
-    parser.add_argument('--description', '-d', help='Notification scheme description')
-    parser.add_argument('--template', '-t', dest='template_file',
-                        help='JSON template file path')
-    parser.add_argument('--event', '-e', help='Event name or ID to add notification for')
-    parser.add_argument('--notify', action='append', dest='recipients',
-                        help='Recipient (e.g., CurrentAssignee, Group:developers)')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Preview what would be created without creating')
-    parser.add_argument('--check-duplicate', action='store_true',
-                        help='Check if scheme name already exists')
-    parser.add_argument('--output', '-o', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--profile', '-p', help='JIRA profile to use')
+    parser.add_argument("--name", "-n", help="Notification scheme name")
+    parser.add_argument("--description", "-d", help="Notification scheme description")
+    parser.add_argument(
+        "--template", "-t", dest="template_file", help="JSON template file path"
+    )
+    parser.add_argument(
+        "--event", "-e", help="Event name or ID to add notification for"
+    )
+    parser.add_argument(
+        "--notify",
+        action="append",
+        dest="recipients",
+        help="Recipient (e.g., CurrentAssignee, Group:developers)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview what would be created without creating",
+    )
+    parser.add_argument(
+        "--check-duplicate",
+        action="store_true",
+        help="Check if scheme name already exists",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -244,10 +261,7 @@ Examples:
         # Build events from CLI args if provided
         events = None
         if args.event and args.recipients:
-            events = [{
-                'event_name': args.event,
-                'recipients': args.recipients
-            }]
+            events = [{"event_name": args.event, "recipients": args.recipients}]
 
         result = create_notification_scheme(
             name=args.name,
@@ -256,10 +270,10 @@ Examples:
             events=events,
             dry_run=args.dry_run,
             check_duplicate=args.check_duplicate,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_json_output(result))
         else:
             print(format_text_output(result))
@@ -272,5 +286,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

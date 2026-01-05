@@ -30,13 +30,14 @@ import os
 import re
 import subprocess
 import sys
-import tempfile
-import time
 from pathlib import Path
 from typing import NamedTuple
 
 import pytest
 import yaml
+
+# Mark all tests in this module as 'live' - they require the Claude CLI
+pytestmark = pytest.mark.live
 
 # Add tests directory to path for otel_metrics import
 TESTS_DIR = Path(__file__).parent
@@ -46,11 +47,11 @@ if str(TESTS_DIR) not in sys.path:
 # OpenTelemetry integration (optional)
 try:
     from otel_metrics import (
+        OTEL_AVAILABLE,
         init_telemetry,
         record_test_result,
         record_test_session_summary,
         shutdown as otel_shutdown,
-        OTEL_AVAILABLE
     )
 except ImportError:
     OTEL_AVAILABLE = False
@@ -69,6 +70,7 @@ DEBUG_DIR = Path.home() / ".claude" / "debug"
 
 class CommandMatch(NamedTuple):
     """Result of matching a single expected command pattern."""
+
     pattern: str
     is_regex: bool
     matched: bool
@@ -76,6 +78,7 @@ class CommandMatch(NamedTuple):
 
 class ToolUseResult(NamedTuple):
     """Result of tool use accuracy check."""
+
     total_patterns: int
     matched_patterns: int
     accuracy: float  # 0.0 to 1.0
@@ -84,6 +87,7 @@ class ToolUseResult(NamedTuple):
 
 class RoutingResult(NamedTuple):
     """Result of a routing test."""
+
     skill_loaded: str | None
     asked_clarification: bool
     session_id: str
@@ -103,7 +107,9 @@ def load_golden_tests() -> list[dict]:
     return data.get("tests", [])
 
 
-def validate_tool_use(response_text: str, expected_commands: list[dict] | None) -> ToolUseResult:
+def validate_tool_use(
+    response_text: str, expected_commands: list[dict] | None
+) -> ToolUseResult:
     """
     Validate that expected command patterns appear in the response.
 
@@ -121,7 +127,7 @@ def validate_tool_use(response_text: str, expected_commands: list[dict] | None) 
             total_patterns=0,
             matched_patterns=0,
             accuracy=1.0,  # No expectations = 100% by default
-            matches=[]
+            matches=[],
         )
 
     matches = []
@@ -147,11 +153,9 @@ def validate_tool_use(response_text: str, expected_commands: list[dict] | None) 
         else:
             continue
 
-        matches.append(CommandMatch(
-            pattern=pattern,
-            is_regex=is_regex,
-            matched=matched
-        ))
+        matches.append(
+            CommandMatch(pattern=pattern, is_regex=is_regex, matched=matched)
+        )
 
         if matched:
             matched_count += 1
@@ -163,14 +167,12 @@ def validate_tool_use(response_text: str, expected_commands: list[dict] | None) 
         total_patterns=total,
         matched_patterns=matched_count,
         accuracy=accuracy,
-        matches=matches
+        matches=matches,
     )
 
 
 def run_claude_routing(
-    input_text: str,
-    expected_commands: list[dict] | None = None,
-    timeout: int = 60
+    input_text: str, expected_commands: list[dict] | None = None, timeout: int = 60
 ) -> RoutingResult:
     """
     Run Claude Code with input and extract routing result.
@@ -194,15 +196,17 @@ def run_claude_routing(
             response_text="",
             input_tokens=0,
             output_tokens=0,
-            tool_use=None
+            tool_use=None,
         )
 
     # Build command with optional model
     cmd = [
         "claude",
         "--print",
-        "--permission-mode", "dontAsk",
-        "--output-format", "json",
+        "--permission-mode",
+        "dontAsk",
+        "--output-format",
+        "json",
         "--debug",
     ]
 
@@ -245,25 +249,29 @@ def run_claude_routing(
     # Check if DISAMBIGUATION was asked (not just any question)
     # "Would you like me to run this" is NOT disambiguation - it's confirmation
     response_lower = response_text.lower()
-    asked_clarification = "?" in response_text and any(
-        phrase in response_lower
-        for phrase in [
-            "which skill",
-            "which would you",
-            "did you mean",
-            "do you want sprint details or",
-            "do you want to delete them or close",
-            "update fields on one issue or multiple",
-        ]
-    ) and not any(
-        phrase in response_lower
-        for phrase in [
-            "would you like me to run",
-            "shall i run",
-            "shall i execute",
-            "want me to run",
-            "want me to execute",
-        ]
+    asked_clarification = (
+        "?" in response_text
+        and any(
+            phrase in response_lower
+            for phrase in [
+                "which skill",
+                "which would you",
+                "did you mean",
+                "do you want sprint details or",
+                "do you want to delete them or close",
+                "update fields on one issue or multiple",
+            ]
+        )
+        and not any(
+            phrase in response_lower
+            for phrase in [
+                "would you like me to run",
+                "shall i run",
+                "shall i execute",
+                "want me to run",
+                "want me to execute",
+            ]
+        )
     )
 
     # Detect skill from multiple sources
@@ -276,9 +284,7 @@ def run_claude_routing(
 
         # Look for skill loading pattern from Skill tool invocation
         skill_match = re.search(
-            r'skill is loading.*?(jira-\w+)',
-            debug_content,
-            re.IGNORECASE
+            r"skill is loading.*?(jira-\w+)", debug_content, re.IGNORECASE
         )
         if skill_match:
             skill_loaded = normalize_skill_name(skill_match.group(1))
@@ -458,11 +464,8 @@ def get_edge_tests():
 # DIRECT ROUTING TESTS
 # =============================================================================
 
-@pytest.mark.parametrize(
-    "test_case",
-    get_direct_tests(),
-    ids=lambda t: t["id"]
-)
+
+@pytest.mark.parametrize("test_case", get_direct_tests(), ids=lambda t: t["id"])
 def test_direct_routing(test_case, record_otel):
     """Test high-certainty direct routing."""
     input_text = test_case["input"]
@@ -472,7 +475,9 @@ def test_direct_routing(test_case, record_otel):
 
     result = run_claude_routing(input_text, expected_commands=expected_commands)
 
-    routing_passed = (result.skill_loaded == expected_skill and not result.asked_clarification)
+    routing_passed = (
+        result.skill_loaded == expected_skill and not result.asked_clarification
+    )
     tool_use_passed = result.tool_use is None or result.tool_use.accuracy >= 0.5
 
     # Record to OpenTelemetry with enhanced context
@@ -503,8 +508,7 @@ def test_direct_routing(test_case, record_otel):
 
     # Direct routing should NOT ask for clarification
     assert not result.asked_clarification, (
-        f"Direct routing should not ask clarification\n"
-        f"Input: {input_text}"
+        f"Direct routing should not ask clarification\nInput: {input_text}"
     )
 
     # Validate tool use accuracy if expected commands specified
@@ -527,11 +531,8 @@ def test_direct_routing(test_case, record_otel):
 # DISAMBIGUATION TESTS
 # =============================================================================
 
-@pytest.mark.parametrize(
-    "test_case",
-    get_disambiguation_tests(),
-    ids=lambda t: t["id"]
-)
+
+@pytest.mark.parametrize("test_case", get_disambiguation_tests(), ids=lambda t: t["id"])
 def test_disambiguation(test_case, record_otel):
     """Test that ambiguous inputs ask for clarification."""
     input_text = test_case["input"]
@@ -553,7 +554,7 @@ def test_disambiguation(test_case, record_otel):
         duration_ms=result.duration_ms,
         cost_usd=result.cost_usd,
         asked_clarification=result.asked_clarification,
-        session_id=result.session_id
+        session_id=result.session_id,
     )
 
     # Should ask for clarification
@@ -568,11 +569,8 @@ def test_disambiguation(test_case, record_otel):
 # NEGATIVE TRIGGER TESTS
 # =============================================================================
 
-@pytest.mark.parametrize(
-    "test_case",
-    get_negative_tests(),
-    ids=lambda t: t["id"]
-)
+
+@pytest.mark.parametrize("test_case", get_negative_tests(), ids=lambda t: t["id"])
 def test_negative_triggers(test_case, record_otel):
     """Test that inputs route to correct skill, NOT to excluded skill."""
     input_text = test_case["input"]
@@ -582,7 +580,7 @@ def test_negative_triggers(test_case, record_otel):
 
     result = run_claude_routing(input_text)
 
-    passed = (result.skill_loaded == expected_skill)
+    passed = result.skill_loaded == expected_skill
     if not_skill and result.skill_loaded == not_skill:
         passed = False
 
@@ -597,18 +595,16 @@ def test_negative_triggers(test_case, record_otel):
         duration_ms=result.duration_ms,
         cost_usd=result.cost_usd,
         asked_clarification=result.asked_clarification,
-        session_id=result.session_id
+        session_id=result.session_id,
     )
 
     assert result.skill_loaded == expected_skill, (
-        f"Expected {expected_skill}, got {result.skill_loaded}\n"
-        f"Input: {input_text}"
+        f"Expected {expected_skill}, got {result.skill_loaded}\nInput: {input_text}"
     )
 
     if not_skill:
         assert result.skill_loaded != not_skill, (
-            f"Should NOT route to {not_skill}\n"
-            f"Input: {input_text}"
+            f"Should NOT route to {not_skill}\nInput: {input_text}"
         )
 
 
@@ -616,11 +612,8 @@ def test_negative_triggers(test_case, record_otel):
 # EDGE CASE TESTS
 # =============================================================================
 
-@pytest.mark.parametrize(
-    "test_case",
-    get_edge_tests(),
-    ids=lambda t: t["id"]
-)
+
+@pytest.mark.parametrize("test_case", get_edge_tests(), ids=lambda t: t["id"])
 def test_edge_cases(test_case, record_otel):
     """Test edge cases like empty input, explicit skill mention, etc."""
     input_text = test_case["input"]
@@ -632,9 +625,9 @@ def test_edge_cases(test_case, record_otel):
 
     passed = True
     if expected_skill:
-        passed = (result.skill_loaded == expected_skill)
+        passed = result.skill_loaded == expected_skill
     if expected_action == "ask_for_input":
-        passed = (result.skill_loaded is None or result.asked_clarification)
+        passed = result.skill_loaded is None or result.asked_clarification
 
     # Record to OpenTelemetry
     record_otel(
@@ -647,7 +640,7 @@ def test_edge_cases(test_case, record_otel):
         duration_ms=result.duration_ms,
         cost_usd=result.cost_usd,
         asked_clarification=result.asked_clarification,
-        session_id=result.session_id
+        session_id=result.session_id,
     )
 
     if expected_skill:
@@ -665,11 +658,8 @@ def test_edge_cases(test_case, record_otel):
 # WORKFLOW TESTS (informational - multi-skill sequences)
 # =============================================================================
 
-@pytest.mark.parametrize(
-    "test_case",
-    get_workflow_tests(),
-    ids=lambda t: t["id"]
-)
+
+@pytest.mark.parametrize("test_case", get_workflow_tests(), ids=lambda t: t["id"])
 def test_workflows(test_case, record_otel):
     """
     Test multi-skill workflow routing.
@@ -689,7 +679,7 @@ def test_workflows(test_case, record_otel):
 
     result = run_claude_routing(input_text)
 
-    passed = (result.skill_loaded == first_skill or result.asked_clarification)
+    passed = result.skill_loaded == first_skill or result.asked_clarification
 
     # Record to OpenTelemetry
     record_otel(
@@ -702,7 +692,7 @@ def test_workflows(test_case, record_otel):
         duration_ms=result.duration_ms,
         cost_usd=result.cost_usd,
         asked_clarification=result.asked_clarification,
-        session_id=result.session_id
+        session_id=result.session_id,
     )
 
     # Workflow tests are informational - first skill should load
@@ -718,12 +708,9 @@ def test_workflows(test_case, record_otel):
 # CONTEXT TESTS (require session state - marked as expected failures)
 # =============================================================================
 
+
 @pytest.mark.skip(reason="Context tests require multi-turn sessions")
-@pytest.mark.parametrize(
-    "test_case",
-    get_context_tests(),
-    ids=lambda t: t["id"]
-)
+@pytest.mark.parametrize("test_case", get_context_tests(), ids=lambda t: t["id"])
 def test_context_dependent(test_case):
     """
     Test context-dependent routing.
@@ -738,11 +725,12 @@ def test_context_dependent(test_case):
 # SUMMARY REPORT
 # =============================================================================
 
+
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """Print routing test summary."""
-    passed = len(terminalreporter.stats.get('passed', []))
-    failed = len(terminalreporter.stats.get('failed', []))
-    skipped = len(terminalreporter.stats.get('skipped', []))
+    passed = len(terminalreporter.stats.get("passed", []))
+    failed = len(terminalreporter.stats.get("failed", []))
+    skipped = len(terminalreporter.stats.get("skipped", []))
 
     print("\n" + "=" * 60)
     print("ROUTING TEST SUMMARY")

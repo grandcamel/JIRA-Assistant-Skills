@@ -22,22 +22,22 @@ Examples:
 
 import argparse
 import sys
-import json
-from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import format_table, format_json, get_csv_string
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_json,
+    format_table,
+    get_csv_string,
+    get_jira_client,
+    print_error,
+)
 
 
 def list_permissions(
-    client,
-    permission_type: Optional[str] = None,
-    search: Optional[str] = None
-) -> List[Dict[str, Any]]:
+    client, permission_type: str | None = None, search: str | None = None
+) -> list[dict[str, Any]]:
     """
     List all available permissions.
 
@@ -50,7 +50,7 @@ def list_permissions(
         List of permission objects sorted by key
     """
     response = client.get_all_permissions()
-    permissions_dict = response.get('permissions', {})
+    permissions_dict = response.get("permissions", {})
 
     # Convert dict to list
     permissions = list(permissions_dict.values())
@@ -58,25 +58,28 @@ def list_permissions(
     # Filter by type
     if permission_type:
         type_upper = permission_type.upper()
-        permissions = [p for p in permissions if p.get('type') == type_upper]
+        permissions = [p for p in permissions if p.get("type") == type_upper]
 
     # Filter by search term
     if search:
         search_lower = search.lower()
         permissions = [
-            p for p in permissions
-            if (search_lower in p.get('key', '').lower() or
-                search_lower in p.get('name', '').lower() or
-                search_lower in p.get('description', '').lower())
+            p
+            for p in permissions
+            if (
+                search_lower in p.get("key", "").lower()
+                or search_lower in p.get("name", "").lower()
+                or search_lower in p.get("description", "").lower()
+            )
         ]
 
     # Sort by key
-    permissions.sort(key=lambda p: p.get('key', ''))
+    permissions.sort(key=lambda p: p.get("key", ""))
 
     return permissions
 
 
-def group_by_type(permissions: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+def group_by_type(permissions: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
     """
     Group permissions by type.
 
@@ -88,7 +91,7 @@ def group_by_type(permissions: List[Dict[str, Any]]) -> Dict[str, List[Dict[str,
     """
     grouped = {}
     for perm in permissions:
-        perm_type = perm.get('type', 'OTHER')
+        perm_type = perm.get("type", "OTHER")
         if perm_type not in grouped:
             grouped[perm_type] = []
         grouped[perm_type].append(perm)
@@ -96,8 +99,7 @@ def group_by_type(permissions: List[Dict[str, Any]]) -> Dict[str, List[Dict[str,
 
 
 def format_permissions(
-    permissions: List[Dict[str, Any]],
-    output_format: str = 'table'
+    permissions: list[dict[str, Any]], output_format: str = "table"
 ) -> str:
     """
     Format permissions for output.
@@ -112,61 +114,58 @@ def format_permissions(
     if not permissions:
         return "No permissions found."
 
-    if output_format == 'json':
+    if output_format == "json":
         return format_json(permissions)
 
     # Prepare data for table/CSV
     data = []
     for perm in permissions:
-        desc = perm.get('description', '')
+        desc = perm.get("description", "")
         if len(desc) > 50:
-            desc = desc[:47] + '...'
+            desc = desc[:47] + "..."
 
-        data.append({
-            'Key': perm.get('key', ''),
-            'Name': perm.get('name', ''),
-            'Type': perm.get('type', ''),
-            'Description': desc
-        })
+        data.append(
+            {
+                "Key": perm.get("key", ""),
+                "Name": perm.get("name", ""),
+                "Type": perm.get("type", ""),
+                "Description": desc,
+            }
+        )
 
-    if output_format == 'csv':
-        return get_csv_string(data, columns=['Key', 'Name', 'Type', 'Description'])
+    if output_format == "csv":
+        return get_csv_string(data, columns=["Key", "Name", "Type", "Description"])
 
-    return format_table(data, columns=['Key', 'Name', 'Type', 'Description'])
+    return format_table(data, columns=["Key", "Name", "Type", "Description"])
 
 
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='List all available JIRA permissions',
-        epilog='''
+        description="List all available JIRA permissions",
+        epilog="""
 Examples:
   %(prog)s
   %(prog)s --type PROJECT
   %(prog)s --type GLOBAL
   %(prog)s --search "issue"
   %(prog)s --output json
-'''
+""",
     )
     parser.add_argument(
-        '--type', '-t',
-        choices=['PROJECT', 'GLOBAL'],
-        help='Filter by permission type'
+        "--type", "-t", choices=["PROJECT", "GLOBAL"], help="Filter by permission type"
     )
     parser.add_argument(
-        '--search', '-s',
-        help='Search by name or description (case-insensitive)'
+        "--search", "-s", help="Search by name or description (case-insensitive)"
     )
     parser.add_argument(
-        '--output', '-o',
-        choices=['table', 'json', 'csv'],
-        default='table',
-        help='Output format (default: table)'
+        "--output",
+        "-o",
+        choices=["table", "json", "csv"],
+        default="table",
+        help="Output format (default: table)",
     )
-    parser.add_argument(
-        '--profile', '-p',
-        help='JIRA profile to use'
-    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -174,9 +173,7 @@ Examples:
         client = get_jira_client(profile=args.profile)
 
         permissions = list_permissions(
-            client,
-            permission_type=args.type,
-            search=args.search
+            client, permission_type=args.type, search=args.search
         )
 
         output = format_permissions(permissions, output_format=args.output)
@@ -190,5 +187,5 @@ Examples:
         sys.exit(130)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -9,29 +9,27 @@ Usage:
     python create_service_desk.py --list-templates
 """
 
-import sys
-import os
 import argparse
-import json
 import re
-from pathlib import Path
+import sys
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import format_json
-
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_json,
+    get_jira_client,
+    print_error,
+)
 
 # Common service desk templates
 TEMPLATES = {
-    'simplified-it-service-desk': 'com.atlassian.servicedesk:simplified-it-service-desk',
-    'it-service-desk': 'com.atlassian.servicedesk:itil-v2-service-desk-no-queues',
-    'internal-service-desk': 'com.atlassian.servicedesk:simplified-internal-service-desk',
-    'external-service-desk': 'com.atlassian.servicedesk:simplified-external-service-desk',
-    'general-service-desk': 'com.atlassian.servicedesk:simplified-general-service-desk',
-    'hr-service-desk': 'com.atlassian.servicedesk:simplified-hr-service-desk',
-    'facilities-service-desk': 'com.atlassian.servicedesk:simplified-facilities-service-desk',
-    'legal-service-desk': 'com.atlassian.servicedesk:simplified-legal-service-desk'
+    "simplified-it-service-desk": "com.atlassian.servicedesk:simplified-it-service-desk",
+    "it-service-desk": "com.atlassian.servicedesk:itil-v2-service-desk-no-queues",
+    "internal-service-desk": "com.atlassian.servicedesk:simplified-internal-service-desk",
+    "external-service-desk": "com.atlassian.servicedesk:simplified-external-service-desk",
+    "general-service-desk": "com.atlassian.servicedesk:simplified-general-service-desk",
+    "hr-service-desk": "com.atlassian.servicedesk:simplified-hr-service-desk",
+    "facilities-service-desk": "com.atlassian.servicedesk:simplified-facilities-service-desk",
+    "legal-service-desk": "com.atlassian.servicedesk:simplified-legal-service-desk",
 }
 
 
@@ -50,9 +48,7 @@ def validate_project_key(key: str) -> bool:
         return False
     if len(key) < 2 or len(key) > 10:
         return False
-    if not re.match(r'^[A-Z][A-Z0-9]*$', key):
-        return False
-    return True
+    return re.match(r"^[A-Z][A-Z0-9]*$", key)
 
 
 def list_available_templates() -> None:
@@ -69,7 +65,9 @@ def list_available_templates() -> None:
     print("Usage: --template <template-key>")
 
 
-def create_service_desk(name: str, key: str, project_template_key: str, profile: str = None) -> dict:
+def create_service_desk(
+    name: str, key: str, project_template_key: str, profile: str | None = None
+) -> dict:
     """
     Create a new service desk.
 
@@ -124,7 +122,9 @@ def format_service_desk_created_text(service_desk: dict) -> None:
     print()
     print("Next steps:")
     print(f"  - View details: python get_service_desk.py {service_desk.get('id', '')}")
-    print(f"  - List request types: python list_request_types.py {service_desk.get('id', '')}")
+    print(
+        f"  - List request types: python list_request_types.py {service_desk.get('id', '')}"
+    )
 
 
 def format_service_desk_created_json(service_desk: dict) -> str:
@@ -142,29 +142,35 @@ def format_service_desk_created_json(service_desk: dict) -> str:
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Create a new JSM service desk (requires admin permissions)',
-        epilog='Example: python create_service_desk.py --name "IT Service Desk" --key ITS'
+        description="Create a new JSM service desk (requires admin permissions)",
+        epilog='Example: python create_service_desk.py --name "IT Service Desk" --key ITS',
     )
 
-    parser.add_argument('--name', '-n',
-                       help='Service desk name')
-    parser.add_argument('--key', '-k',
-                       help='Project key (2-10 uppercase letters)')
-    parser.add_argument('--template', '-t',
-                       default='simplified-it-service-desk',
-                       help='Project template key (default: simplified-it-service-desk)')
-    parser.add_argument('--list-templates', '-l',
-                       action='store_true',
-                       help='List available templates')
-    parser.add_argument('--dry-run', '-d',
-                       action='store_true',
-                       help='Preview creation without actually creating')
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format (default: text)')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument("--name", "-n", help="Service desk name")
+    parser.add_argument("--key", "-k", help="Project key (2-10 uppercase letters)")
+    parser.add_argument(
+        "--template",
+        "-t",
+        default="simplified-it-service-desk",
+        help="Project template key (default: simplified-it-service-desk)",
+    )
+    parser.add_argument(
+        "--list-templates", "-l", action="store_true", help="List available templates"
+    )
+    parser.add_argument(
+        "--dry-run",
+        "-d",
+        action="store_true",
+        help="Preview creation without actually creating",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -195,14 +201,11 @@ def main(argv: list[str] | None = None):
 
         # Create service desk
         service_desk = create_service_desk(
-            args.name,
-            args.key,
-            template_id,
-            profile=args.profile
+            args.name, args.key, template_id, profile=args.profile
         )
 
         # Output results
-        if args.output == 'json':
+        if args.output == "json":
             print(format_service_desk_created_json(service_desk))
         else:
             format_service_desk_created_text(service_desk)
@@ -215,5 +218,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

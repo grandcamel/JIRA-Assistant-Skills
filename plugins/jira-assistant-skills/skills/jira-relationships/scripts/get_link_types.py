@@ -8,17 +8,16 @@ Usage:
     python get_link_types.py --filter "block"
 """
 
-import sys
 import argparse
 import json
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-
-
-def get_link_types(filter_pattern: str = None, profile: str = None) -> list:
+def get_link_types(
+    filter_pattern: str | None = None, profile: str | None = None
+) -> list:
     """
     Get all available issue link types.
 
@@ -36,16 +35,17 @@ def get_link_types(filter_pattern: str = None, profile: str = None) -> list:
     if filter_pattern:
         pattern_lower = filter_pattern.lower()
         link_types = [
-            lt for lt in link_types
-            if pattern_lower in lt['name'].lower() or
-               pattern_lower in lt.get('inward', '').lower() or
-               pattern_lower in lt.get('outward', '').lower()
+            lt
+            for lt in link_types
+            if pattern_lower in lt["name"].lower()
+            or pattern_lower in lt.get("inward", "").lower()
+            or pattern_lower in lt.get("outward", "").lower()
         ]
 
     return link_types
 
 
-def format_link_types(link_types: list, output_format: str = 'text') -> str:
+def format_link_types(link_types: list, output_format: str = "text") -> str:
     """
     Format link types for output.
 
@@ -56,16 +56,16 @@ def format_link_types(link_types: list, output_format: str = 'text') -> str:
     Returns:
         Formatted string
     """
-    if output_format == 'json':
+    if output_format == "json":
         return json.dumps(link_types, indent=2)
 
     if not link_types:
         return "No link types found."
 
     # Calculate column widths
-    name_width = max(len(lt['name']) for lt in link_types)
-    outward_width = max(len(lt.get('outward', '')) for lt in link_types)
-    inward_width = max(len(lt.get('inward', '')) for lt in link_types)
+    name_width = max(len(lt["name"]) for lt in link_types)
+    outward_width = max(len(lt.get("outward", "")) for lt in link_types)
+    inward_width = max(len(lt.get("inward", "")) for lt in link_types)
 
     # Minimum widths
     name_width = max(name_width, 4)
@@ -78,7 +78,9 @@ def format_link_types(link_types: list, output_format: str = 'text') -> str:
     lines.append("")
     header = f"{'Name':<{name_width}}  {'Outward':<{outward_width}}  {'Inward':<{inward_width}}"
     lines.append(header)
-    lines.append("─" * name_width + "  " + "─" * outward_width + "  " + "─" * inward_width)
+    lines.append(
+        "─" * name_width + "  " + "─" * outward_width + "  " + "─" * inward_width
+    )
 
     # Build rows
     for lt in link_types:
@@ -93,26 +95,26 @@ def format_link_types(link_types: list, output_format: str = 'text') -> str:
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='List available issue link types',
-        epilog='Example: python get_link_types.py --filter "block"'
+        description="List available issue link types",
+        epilog='Example: python get_link_types.py --filter "block"',
     )
 
-    parser.add_argument('--filter', '-f',
-                       help='Filter link types by name pattern (case-insensitive)')
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format (default: text)')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument(
+        "--filter", "-f", help="Filter link types by name pattern (case-insensitive)"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
-        link_types = get_link_types(
-            filter_pattern=args.filter,
-            profile=args.profile
-        )
+        link_types = get_link_types(filter_pattern=args.filter, profile=args.profile)
         output = format_link_types(link_types, output_format=args.output)
         print(output)
 
@@ -124,5 +126,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

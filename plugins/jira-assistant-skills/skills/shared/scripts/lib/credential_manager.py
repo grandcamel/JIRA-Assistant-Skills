@@ -17,14 +17,21 @@ import os
 import stat
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple
+from typing import Any
 
-from jira_assistant_skills_lib import JiraError, ValidationError, AuthenticationError, sanitize_error_message
-from validators import validate_url, validate_email
+from validators import validate_email, validate_url
+
+from jira_assistant_skills_lib import (
+    AuthenticationError,
+    JiraError,
+    ValidationError,
+    sanitize_error_message,
+)
 
 # Try to import keyring, gracefully handle if not installed
 try:
     import keyring
+
     KEYRING_AVAILABLE = True
 except ImportError:
     KEYRING_AVAILABLE = False
@@ -32,8 +39,11 @@ except ImportError:
 
 class CredentialBackend(Enum):
     """Available credential storage backends."""
-    KEYCHAIN = "keychain"       # macOS Keychain, Windows Credential Manager, Linux Secret Service
-    JSON_FILE = "json_file"     # settings.local.json
+
+    KEYCHAIN = (
+        "keychain"  # macOS Keychain, Windows Credential Manager, Linux Secret Service
+    )
+    JSON_FILE = "json_file"  # settings.local.json
     ENVIRONMENT = "environment"  # Environment variables (read-only for retrieval)
 
 
@@ -79,7 +89,7 @@ class CredentialManager:
         self.profile = profile
         self._claude_dir = self._find_claude_dir()
 
-    def _find_claude_dir(self) -> Optional[Path]:
+    def _find_claude_dir(self) -> Path | None:
         """
         Find .claude directory by walking up from current directory.
 
@@ -89,14 +99,14 @@ class CredentialManager:
         current = Path.cwd()
 
         while current != current.parent:
-            claude_dir = current / '.claude'
+            claude_dir = current / ".claude"
             if claude_dir.is_dir():
                 return claude_dir
             current = current.parent
 
         return None
 
-    def _get_keychain_service(self, profile: Optional[str] = None) -> str:
+    def _get_keychain_service(self, profile: str | None = None) -> str:
         """Get keychain service name for a profile."""
         profile = profile or self.profile
         return f"{self.KEYCHAIN_SERVICE}-{profile}"
@@ -120,7 +130,9 @@ class CredentialManager:
         except Exception:
             return False
 
-    def get_credentials_from_env(self, profile: Optional[str] = None) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    def get_credentials_from_env(
+        self, profile: str | None = None
+    ) -> tuple[str | None, str | None, str | None]:
         """
         Get credentials from environment variables.
 
@@ -132,17 +144,19 @@ class CredentialManager:
         """
         profile = profile or self.profile
 
-        url = os.getenv('JIRA_SITE_URL')
-        email = os.getenv('JIRA_EMAIL')
+        url = os.getenv("JIRA_SITE_URL")
+        email = os.getenv("JIRA_EMAIL")
 
         # Try profile-specific token first, then generic
-        api_token = os.getenv(f'JIRA_API_TOKEN_{profile.upper()}')
+        api_token = os.getenv(f"JIRA_API_TOKEN_{profile.upper()}")
         if not api_token:
-            api_token = os.getenv('JIRA_API_TOKEN')
+            api_token = os.getenv("JIRA_API_TOKEN")
 
         return url, email, api_token
 
-    def get_credentials_from_keychain(self, profile: Optional[str] = None) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    def get_credentials_from_keychain(
+        self, profile: str | None = None
+    ) -> tuple[str | None, str | None, str | None]:
         """
         Get credentials from system keychain.
 
@@ -165,11 +179,13 @@ class CredentialManager:
                 return None, None, None
 
             creds = json.loads(credential_json)
-            return creds.get('url'), creds.get('email'), creds.get('api_token')
+            return creds.get("url"), creds.get("email"), creds.get("api_token")
         except Exception:
             return None, None, None
 
-    def get_credentials_from_json(self, profile: Optional[str] = None) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    def get_credentials_from_json(
+        self, profile: str | None = None
+    ) -> tuple[str | None, str | None, str | None]:
         """
         Get credentials from settings.local.json.
 
@@ -183,33 +199,33 @@ class CredentialManager:
             return None, None, None
 
         profile = profile or self.profile
-        local_settings = self._claude_dir / 'settings.local.json'
+        local_settings = self._claude_dir / "settings.local.json"
 
         if not local_settings.exists():
             return None, None, None
 
         try:
-            with open(local_settings, 'r') as f:
+            with open(local_settings) as f:
                 config = json.load(f)
 
-            jira_config = config.get('jira', {})
+            jira_config = config.get("jira", {})
 
             # Get URL from profile config
-            profiles = jira_config.get('profiles', {})
+            profiles = jira_config.get("profiles", {})
             profile_config = profiles.get(profile, {})
-            url = profile_config.get('url')
+            url = profile_config.get("url")
 
             # Get credentials
-            credentials = jira_config.get('credentials', {})
+            credentials = jira_config.get("credentials", {})
             profile_creds = credentials.get(profile, {})
-            email = profile_creds.get('email')
-            api_token = profile_creds.get('api_token')
+            email = profile_creds.get("email")
+            api_token = profile_creds.get("api_token")
 
             return url, email, api_token
         except Exception:
             return None, None, None
 
-    def get_credentials(self, profile: Optional[str] = None) -> Tuple[str, str, str]:
+    def get_credentials(self, profile: str | None = None) -> tuple[str, str, str]:
         """
         Retrieve credentials (url, email, api_token) for a profile.
 
@@ -275,8 +291,8 @@ class CredentialManager:
         url: str,
         email: str,
         api_token: str,
-        profile: Optional[str] = None,
-        backend: Optional[CredentialBackend] = None
+        profile: str | None = None,
+        backend: CredentialBackend | None = None,
     ) -> CredentialBackend:
         """
         Store credentials in the specified or preferred backend.
@@ -320,25 +336,21 @@ class CredentialManager:
             raise ValidationError(f"Cannot store to backend: {backend.value}")
 
     def _store_to_keychain(
-        self,
-        url: str,
-        email: str,
-        api_token: str,
-        profile: str
+        self, url: str, email: str, api_token: str, profile: str
     ) -> CredentialBackend:
         """Store credentials in system keychain."""
         if not self.is_keychain_available():
-            raise JiraError("Keychain is not available. Install keyring: pip install keyring")
+            raise JiraError(
+                "Keychain is not available. Install keyring: pip install keyring"
+            )
 
         service = self._get_keychain_service(profile)
 
         try:
             # Store as JSON
-            credential_json = json.dumps({
-                'url': url,
-                'email': email,
-                'api_token': api_token
-            })
+            credential_json = json.dumps(
+                {"url": url, "email": email, "api_token": api_token}
+            )
             keyring.set_password(service, "credentials", credential_json)
 
             # Clear sensitive data from memory
@@ -347,50 +359,48 @@ class CredentialManager:
 
             return CredentialBackend.KEYCHAIN
         except Exception as e:
-            raise JiraError(f"Failed to store credentials in keychain: {sanitize_error_message(str(e))}")
+            raise JiraError(
+                f"Failed to store credentials in keychain: {sanitize_error_message(str(e))}"
+            )
 
     def _store_to_json(
-        self,
-        url: str,
-        email: str,
-        api_token: str,
-        profile: str
+        self, url: str, email: str, api_token: str, profile: str
     ) -> CredentialBackend:
         """Store credentials in settings.local.json."""
         if not self._claude_dir:
             raise JiraError("Cannot find .claude directory. Run from project root.")
 
-        local_settings = self._claude_dir / 'settings.local.json'
+        local_settings = self._claude_dir / "settings.local.json"
 
         try:
             # Load existing config or create new
             if local_settings.exists():
-                with open(local_settings, 'r') as f:
+                with open(local_settings) as f:
                     config = json.load(f)
             else:
                 config = {}
 
             # Ensure structure exists
-            if 'jira' not in config:
-                config['jira'] = {}
-            if 'profiles' not in config['jira']:
-                config['jira']['profiles'] = {}
-            if 'credentials' not in config['jira']:
-                config['jira']['credentials'] = {}
+            if "jira" not in config:
+                config["jira"] = {}
+            if "profiles" not in config["jira"]:
+                config["jira"]["profiles"] = {}
+            if "credentials" not in config["jira"]:
+                config["jira"]["credentials"] = {}
 
             # Store URL in profile
-            if profile not in config['jira']['profiles']:
-                config['jira']['profiles'][profile] = {}
-            config['jira']['profiles'][profile]['url'] = url
+            if profile not in config["jira"]["profiles"]:
+                config["jira"]["profiles"][profile] = {}
+            config["jira"]["profiles"][profile]["url"] = url
 
             # Store credentials
-            if profile not in config['jira']['credentials']:
-                config['jira']['credentials'][profile] = {}
-            config['jira']['credentials'][profile]['email'] = email
-            config['jira']['credentials'][profile]['api_token'] = api_token
+            if profile not in config["jira"]["credentials"]:
+                config["jira"]["credentials"][profile] = {}
+            config["jira"]["credentials"][profile]["email"] = email
+            config["jira"]["credentials"][profile]["api_token"] = api_token
 
             # Write with secure permissions
-            with open(local_settings, 'w') as f:
+            with open(local_settings, "w") as f:
                 json.dump(config, f, indent=2)
 
             # Set restrictive permissions (owner read/write only)
@@ -398,9 +408,11 @@ class CredentialManager:
 
             return CredentialBackend.JSON_FILE
         except Exception as e:
-            raise JiraError(f"Failed to store credentials in JSON: {sanitize_error_message(str(e))}")
+            raise JiraError(
+                f"Failed to store credentials in JSON: {sanitize_error_message(str(e))}"
+            )
 
-    def delete_credentials(self, profile: Optional[str] = None) -> bool:
+    def delete_credentials(self, profile: str | None = None) -> bool:
         """
         Delete credentials from all backends for a profile.
 
@@ -424,26 +436,29 @@ class CredentialManager:
 
         # Delete from JSON
         if self._claude_dir:
-            local_settings = self._claude_dir / 'settings.local.json'
+            local_settings = self._claude_dir / "settings.local.json"
             if local_settings.exists():
                 try:
-                    with open(local_settings, 'r') as f:
+                    with open(local_settings) as f:
                         config = json.load(f)
 
                     # Remove profile credentials
-                    if 'jira' in config:
-                        if 'credentials' in config['jira'] and profile in config['jira']['credentials']:
-                            del config['jira']['credentials'][profile]
+                    if "jira" in config:
+                        if (
+                            "credentials" in config["jira"]
+                            and profile in config["jira"]["credentials"]
+                        ):
+                            del config["jira"]["credentials"][profile]
                             deleted = True
 
-                    with open(local_settings, 'w') as f:
+                    with open(local_settings, "w") as f:
                         json.dump(config, f, indent=2)
                 except Exception:
                     pass
 
         return deleted
 
-    def list_profiles(self) -> Dict[str, CredentialBackend]:
+    def list_profiles(self) -> dict[str, CredentialBackend]:
         """
         List all profiles with their storage backend.
 
@@ -460,14 +475,14 @@ class CredentialManager:
 
         # Check JSON profiles
         if self._claude_dir:
-            local_settings = self._claude_dir / 'settings.local.json'
+            local_settings = self._claude_dir / "settings.local.json"
             if local_settings.exists():
                 try:
-                    with open(local_settings, 'r') as f:
+                    with open(local_settings) as f:
                         config = json.load(f)
 
-                    credentials = config.get('jira', {}).get('credentials', {})
-                    for profile_name in credentials.keys():
+                    credentials = config.get("jira", {}).get("credentials", {})
+                    for profile_name in credentials:
                         profiles[profile_name] = CredentialBackend.JSON_FILE
                 except Exception:
                     pass
@@ -475,11 +490,8 @@ class CredentialManager:
         return profiles
 
     def validate_credentials(
-        self,
-        url: str,
-        email: str,
-        api_token: str
-    ) -> Dict[str, Any]:
+        self, url: str, email: str, api_token: str
+    ) -> dict[str, Any]:
         """
         Validate credentials by making a test API call.
 
@@ -507,8 +519,8 @@ class CredentialManager:
             response = requests.get(
                 test_url,
                 auth=(email, api_token),
-                headers={'Accept': 'application/json'},
-                timeout=10
+                headers={"Accept": "application/json"},
+                timeout=10,
             )
 
             if response.status_code == 401:
@@ -522,7 +534,7 @@ class CredentialManager:
             elif not response.ok:
                 raise JiraError(
                     f"Connection failed with status {response.status_code}",
-                    status_code=response.status_code
+                    status_code=response.status_code,
                 )
 
             return response.json()
@@ -541,12 +553,13 @@ class CredentialManager:
 
 # Convenience functions (match config_manager.py pattern)
 
+
 def is_keychain_available() -> bool:
     """Check if system keychain is available."""
     return CredentialManager.is_keychain_available()
 
 
-def get_credentials(profile: Optional[str] = None) -> Tuple[str, str, str]:
+def get_credentials(profile: str | None = None) -> tuple[str, str, str]:
     """
     Get credentials for a profile.
 
@@ -564,8 +577,8 @@ def store_credentials(
     url: str,
     email: str,
     api_token: str,
-    profile: Optional[str] = None,
-    backend: Optional[CredentialBackend] = None
+    profile: str | None = None,
+    backend: CredentialBackend | None = None,
 ) -> CredentialBackend:
     """
     Store credentials using preferred backend.
@@ -584,7 +597,7 @@ def store_credentials(
     return manager.store_credentials(url, email, api_token, profile, backend)
 
 
-def validate_credentials(url: str, email: str, api_token: str) -> Dict[str, Any]:
+def validate_credentials(url: str, email: str, api_token: str) -> dict[str, Any]:
     """
     Validate credentials by making a test API call.
 

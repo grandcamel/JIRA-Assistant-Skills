@@ -12,27 +12,27 @@ Usage:
     python get_issue_commits.py PROJ-123 --output json
 """
 
-import sys
-import os
 import argparse
 import json
-from pathlib import Path
-from typing import Optional, Dict, Any, List
+import sys
+from typing import Any
 
 # Add shared lib path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import format_table
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_table,
+    get_jira_client,
+    print_error,
+    validate_issue_key,
+)
 
 
 def get_issue_commits(
     issue_key: str,
     detailed: bool = False,
-    repo_filter: Optional[str] = None,
-    profile: Optional[str] = None
-) -> List[Dict[str, Any]]:
+    repo_filter: str | None = None,
+    profile: str | None = None,
+) -> list[dict[str, Any]]:
     """
     Get commits linked to a JIRA issue via Development Information API.
 
@@ -50,56 +50,60 @@ def get_issue_commits(
     client = get_jira_client(profile)
     try:
         # First, get the issue ID (numeric)
-        issue = client.get_issue(issue_key, fields=['id'])
-        issue_id = issue.get('id')
+        issue = client.get_issue(issue_key, fields=["id"])
+        issue_id = issue.get("id")
 
         # Query Development Information API
         # Note: This API requires the "View Development Information" permission
         dev_info = client.get(
-            '/rest/dev-status/latest/issue/detail',
+            "/rest/dev-status/latest/issue/detail",
             params={
-                'issueId': issue_id,
-                'applicationType': 'stash',  # Generic VCS type
-                'dataType': 'repository'
+                "issueId": issue_id,
+                "applicationType": "stash",  # Generic VCS type
+                "dataType": "repository",
             },
-            operation=f"get development info for {issue_key}"
+            operation=f"get development info for {issue_key}",
         )
 
         commits = []
 
         # Parse the response
-        detail = dev_info.get('detail', [])
+        detail = dev_info.get("detail", [])
 
         for detail_item in detail:
-            repositories = detail_item.get('repositories', [])
+            repositories = detail_item.get("repositories", [])
 
             for repo in repositories:
-                repo_name = repo.get('name', '')
-                repo_url = repo.get('url', '')
+                repo_name = repo.get("name", "")
+                repo.get("url", "")
 
                 # Apply repository filter
                 if repo_filter:
                     if repo_filter.lower() not in repo_name.lower():
                         continue
 
-                repo_commits = repo.get('commits', [])
+                repo_commits = repo.get("commits", [])
 
                 for commit in repo_commits:
                     commit_data = {
-                        'id': commit.get('id', ''),
-                        'sha': commit.get('id', ''),
-                        'display_id': commit.get('displayId', commit.get('id', '')[:7]),
-                        'repository': repo_name,
-                        'url': commit.get('url', '')
+                        "id": commit.get("id", ""),
+                        "sha": commit.get("id", ""),
+                        "display_id": commit.get("displayId", commit.get("id", "")[:7]),
+                        "repository": repo_name,
+                        "url": commit.get("url", ""),
                     }
 
                     if detailed:
-                        commit_data.update({
-                            'message': commit.get('message', ''),
-                            'author': commit.get('author', {}).get('name', ''),
-                            'author_email': commit.get('author', {}).get('email', ''),
-                            'timestamp': commit.get('authorTimestamp', '')
-                        })
+                        commit_data.update(
+                            {
+                                "message": commit.get("message", ""),
+                                "author": commit.get("author", {}).get("name", ""),
+                                "author_email": commit.get("author", {}).get(
+                                    "email", ""
+                                ),
+                                "timestamp": commit.get("authorTimestamp", ""),
+                            }
+                        )
 
                     commits.append(commit_data)
 
@@ -110,9 +114,7 @@ def get_issue_commits(
 
 
 def format_output(
-    commits: List[Dict[str, Any]],
-    output_format: str = 'text',
-    detailed: bool = False
+    commits: list[dict[str, Any]], output_format: str = "text", detailed: bool = False
 ) -> str:
     """
     Format commits for output.
@@ -125,22 +127,19 @@ def format_output(
     Returns:
         Formatted output string
     """
-    if output_format == 'json':
-        return json.dumps({
-            'commits': commits,
-            'count': len(commits)
-        }, indent=2)
+    if output_format == "json":
+        return json.dumps({"commits": commits, "count": len(commits)}, indent=2)
 
-    elif output_format == 'table':
+    elif output_format == "table":
         if not commits:
             return "No commits found"
 
         if detailed:
-            columns = ['display_id', 'message', 'author', 'repository']
-            headers = ['SHA', 'Message', 'Author', 'Repository']
+            columns = ["display_id", "message", "author", "repository"]
+            headers = ["SHA", "Message", "Author", "Repository"]
         else:
-            columns = ['display_id', 'repository', 'url']
-            headers = ['SHA', 'Repository', 'URL']
+            columns = ["display_id", "repository", "url"]
+            headers = ["SHA", "Repository", "URL"]
 
         return format_table(commits, columns=columns, headers=headers)
 
@@ -152,13 +151,13 @@ def format_output(
         lines.append("")
 
         for commit in commits:
-            sha = commit.get('display_id', commit.get('id', '')[:7])
-            repo = commit.get('repository', '')
-            url = commit.get('url', '')
+            sha = commit.get("display_id", commit.get("id", "")[:7])
+            repo = commit.get("repository", "")
+            url = commit.get("url", "")
 
             if detailed:
-                message = commit.get('message', '').split('\n')[0][:60]
-                author = commit.get('author', '')
+                message = commit.get("message", "").split("\n")[0][:60]
+                author = commit.get("author", "")
                 lines.append(f"  {sha} - {message}")
                 lines.append(f"    Author: {author}")
                 lines.append(f"    Repo: {repo}")
@@ -170,28 +169,31 @@ def format_output(
                 if url:
                     lines.append(f"    {url}")
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Get commits linked to a JIRA issue',
-        epilog='Example: python get_issue_commits.py PROJ-123 --detailed'
+        description="Get commits linked to a JIRA issue",
+        epilog="Example: python get_issue_commits.py PROJ-123 --detailed",
     )
 
-    parser.add_argument('issue_key',
-                        help='JIRA issue key (e.g., PROJ-123)')
-    parser.add_argument('--detailed', '-d',
-                        action='store_true',
-                        help='Include commit message and author details')
-    parser.add_argument('--repo', '-r',
-                        help='Filter by repository name')
-    parser.add_argument('--output', '-o',
-                        choices=['text', 'json', 'table'],
-                        default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use')
+    parser.add_argument("issue_key", help="JIRA issue key (e.g., PROJ-123)")
+    parser.add_argument(
+        "--detailed",
+        "-d",
+        action="store_true",
+        help="Include commit message and author details",
+    )
+    parser.add_argument("--repo", "-r", help="Filter by repository name")
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json", "table"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -200,7 +202,7 @@ def main(argv: list[str] | None = None):
             issue_key=args.issue_key,
             detailed=args.detailed,
             repo_filter=args.repo,
-            profile=args.profile
+            profile=args.profile,
         )
 
         output = format_output(commits, args.output, args.detailed)
@@ -214,5 +216,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

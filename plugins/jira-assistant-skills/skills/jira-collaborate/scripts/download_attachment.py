@@ -9,21 +9,27 @@ Usage:
     python download_attachment.py PROJ-123 --all --output-dir ./downloads
 """
 
-import sys
 import argparse
-import os
 import json
-from pathlib import Path
-from typing import List, Dict, Any, Optional
+import os
+import sys
+from typing import Any
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    format_table,
+    get_jira_client,
+    print_error,
+    print_info,
+    print_success,
+    validate_issue_key,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import format_table, print_success, print_info
-
-
-def list_attachments(issue_key: str, profile: str = None) -> List[Dict[str, Any]]:
+def list_attachments(
+    issue_key: str, profile: str | None = None
+) -> list[dict[str, Any]]:
     """
     List all attachments for an issue.
 
@@ -43,9 +49,13 @@ def list_attachments(issue_key: str, profile: str = None) -> List[Dict[str, Any]
     return attachments
 
 
-def download_attachment(issue_key: str, attachment_id: str = None,
-                       attachment_name: str = None, output_dir: str = None,
-                       profile: str = None) -> str:
+def download_attachment(
+    issue_key: str,
+    attachment_id: str | None = None,
+    attachment_name: str | None = None,
+    output_dir: str | None = None,
+    profile: str | None = None,
+) -> str:
     """
     Download a specific attachment.
 
@@ -71,26 +81,30 @@ def download_attachment(issue_key: str, attachment_id: str = None,
     target = None
     if attachment_id:
         for att in attachments:
-            if str(att.get('id')) == str(attachment_id):
+            if str(att.get("id")) == str(attachment_id):
                 target = att
                 break
         if not target:
             client.close()
-            raise ValidationError(f"Attachment with ID {attachment_id} not found on {issue_key}")
+            raise ValidationError(
+                f"Attachment with ID {attachment_id} not found on {issue_key}"
+            )
     elif attachment_name:
         for att in attachments:
-            if att.get('filename') == attachment_name:
+            if att.get("filename") == attachment_name:
                 target = att
                 break
         if not target:
             client.close()
-            raise ValidationError(f"Attachment '{attachment_name}' not found on {issue_key}")
+            raise ValidationError(
+                f"Attachment '{attachment_name}' not found on {issue_key}"
+            )
     else:
         client.close()
         raise ValidationError("Either --id or --name must be specified")
 
     # Determine output path
-    filename = target.get('filename', f'attachment_{target.get("id")}')
+    filename = target.get("filename", f"attachment_{target.get('id')}")
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, filename)
@@ -98,20 +112,22 @@ def download_attachment(issue_key: str, attachment_id: str = None,
         output_path = filename
 
     # Download the file
-    content_url = target.get('content')
+    content_url = target.get("content")
     if not content_url:
         client.close()
         raise ValidationError(f"No content URL found for attachment {target.get('id')}")
 
-    client.download_file(content_url, output_path,
-                        operation=f"download attachment {filename}")
+    client.download_file(
+        content_url, output_path, operation=f"download attachment {filename}"
+    )
     client.close()
 
     return output_path
 
 
-def download_all_attachments(issue_key: str, output_dir: str = None,
-                            profile: str = None) -> List[str]:
+def download_all_attachments(
+    issue_key: str, output_dir: str | None = None, profile: str | None = None
+) -> list[str]:
     """
     Download all attachments from an issue.
 
@@ -138,8 +154,8 @@ def download_all_attachments(issue_key: str, output_dir: str = None,
 
     downloaded = []
     for att in attachments:
-        filename = att.get('filename', f'attachment_{att.get("id")}')
-        content_url = att.get('content')
+        filename = att.get("filename", f"attachment_{att.get('id')}")
+        content_url = att.get("content")
 
         if not content_url:
             continue
@@ -157,15 +173,16 @@ def download_all_attachments(issue_key: str, output_dir: str = None,
                 counter += 1
             output_path = f"{base}_{counter}{ext}"
 
-        client.download_file(content_url, output_path,
-                            operation=f"download attachment {filename}")
+        client.download_file(
+            content_url, output_path, operation=f"download attachment {filename}"
+        )
         downloaded.append(output_path)
 
     client.close()
     return downloaded
 
 
-def format_attachment_list(attachments: List[Dict[str, Any]]) -> str:
+def format_attachment_list(attachments: list[dict[str, Any]]) -> str:
     """
     Format attachments as a table.
 
@@ -180,7 +197,7 @@ def format_attachment_list(attachments: List[Dict[str, Any]]) -> str:
 
     table_data = []
     for att in attachments:
-        size_bytes = att.get('size', 0)
+        size_bytes = att.get("size", 0)
         if size_bytes >= 1048576:
             size_str = f"{size_bytes / 1048576:.1f} MB"
         elif size_bytes >= 1024:
@@ -188,57 +205,57 @@ def format_attachment_list(attachments: List[Dict[str, Any]]) -> str:
         else:
             size_str = f"{size_bytes} B"
 
-        table_data.append({
-            'id': att.get('id', ''),
-            'filename': att.get('filename', ''),
-            'size': size_str,
-            'mime_type': att.get('mimeType', ''),
-            'created': att.get('created', '')[:10] if att.get('created') else '',
-            'author': att.get('author', {}).get('displayName', '')
-        })
+        table_data.append(
+            {
+                "id": att.get("id", ""),
+                "filename": att.get("filename", ""),
+                "size": size_str,
+                "mime_type": att.get("mimeType", ""),
+                "created": att.get("created", "")[:10] if att.get("created") else "",
+                "author": att.get("author", {}).get("displayName", ""),
+            }
+        )
 
     return format_table(
         table_data,
-        columns=['id', 'filename', 'size', 'mime_type', 'created', 'author'],
-        headers=['ID', 'Filename', 'Size', 'Type', 'Created', 'Author']
+        columns=["id", "filename", "size", "mime_type", "created", "author"],
+        headers=["ID", "Filename", "Size", "Type", "Created", "Author"],
     )
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Download attachments from a JIRA issue',
-        epilog='''
+        description="Download attachments from a JIRA issue",
+        epilog="""
 Examples:
   %(prog)s PROJ-123 --list
   %(prog)s PROJ-123 --name screenshot.png
   %(prog)s PROJ-123 --id 12345
   %(prog)s PROJ-123 --all --output-dir ./downloads
-        '''
+        """,
     )
 
-    parser.add_argument('issue_key',
-                       help='Issue key (e.g., PROJ-123)')
+    parser.add_argument("issue_key", help="Issue key (e.g., PROJ-123)")
 
     action_group = parser.add_mutually_exclusive_group(required=True)
-    action_group.add_argument('--list', '-l',
-                             action='store_true',
-                             help='List all attachments')
-    action_group.add_argument('--name', '-n',
-                             help='Download attachment by filename')
-    action_group.add_argument('--id', '-i',
-                             help='Download attachment by ID')
-    action_group.add_argument('--all', '-a',
-                             action='store_true',
-                             help='Download all attachments')
+    action_group.add_argument(
+        "--list", "-l", action="store_true", help="List all attachments"
+    )
+    action_group.add_argument("--name", "-n", help="Download attachment by filename")
+    action_group.add_argument("--id", "-i", help="Download attachment by ID")
+    action_group.add_argument(
+        "--all", "-a", action="store_true", help="Download all attachments"
+    )
 
-    parser.add_argument('--output-dir', '-o',
-                       help='Directory to save downloaded files')
-    parser.add_argument('--output', '-O',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format for --list (default: text)')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument("--output-dir", "-o", help="Directory to save downloaded files")
+    parser.add_argument(
+        "--output",
+        "-O",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for --list (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -246,7 +263,7 @@ Examples:
         if args.list:
             attachments = list_attachments(args.issue_key, profile=args.profile)
 
-            if args.output == 'json':
+            if args.output == "json":
                 print(json.dumps(attachments, indent=2))
             else:
                 print(f"Attachments for {args.issue_key}:\n")
@@ -257,7 +274,7 @@ Examples:
                 args.issue_key,
                 attachment_name=args.name,
                 output_dir=args.output_dir,
-                profile=args.profile
+                profile=args.profile,
             )
             print_success(f"Downloaded: {output_path}")
 
@@ -266,15 +283,13 @@ Examples:
                 args.issue_key,
                 attachment_id=args.id,
                 output_dir=args.output_dir,
-                profile=args.profile
+                profile=args.profile,
             )
             print_success(f"Downloaded: {output_path}")
 
         elif args.all:
             downloaded = download_all_attachments(
-                args.issue_key,
-                output_dir=args.output_dir,
-                profile=args.profile
+                args.issue_key, output_dir=args.output_dir, profile=args.profile
             )
 
             if downloaded:
@@ -292,5 +307,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

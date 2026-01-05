@@ -8,18 +8,20 @@ Usage:
     python archive_version.py --id 10002 --dry-run
 """
 
-import sys
 import argparse
-from pathlib import Path
-from typing import Dict, Any
+import sys
+from typing import Any
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    print_success,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import print_success
-
-
-def archive_version(version_id: str, profile: str = None) -> Dict[str, Any]:
+def archive_version(version_id: str, profile: str | None = None) -> dict[str, Any]:
     """
     Archive a version by ID.
 
@@ -37,8 +39,9 @@ def archive_version(version_id: str, profile: str = None) -> Dict[str, Any]:
     return result
 
 
-def archive_version_by_name(project: str, version_name: str,
-                            profile: str = None) -> Dict[str, Any]:
+def archive_version_by_name(
+    project: str, version_name: str, profile: str | None = None
+) -> dict[str, Any]:
     """
     Archive a version by name (requires project lookup).
 
@@ -60,12 +63,14 @@ def archive_version_by_name(project: str, version_name: str,
     # Find version by name
     version_id = None
     for v in versions:
-        if v['name'] == version_name:
-            version_id = v['id']
+        if v["name"] == version_name:
+            version_id = v["id"]
             break
 
     if not version_id:
-        raise ValidationError(f"Version '{version_name}' not found in project {project}")
+        raise ValidationError(
+            f"Version '{version_name}' not found in project {project}"
+        )
 
     # Archive the version
     result = client.update_version(version_id, archived=True)
@@ -74,7 +79,7 @@ def archive_version_by_name(project: str, version_name: str,
     return result
 
 
-def archive_version_dry_run(version_id: str) -> Dict[str, Any]:
+def archive_version_dry_run(version_id: str) -> dict[str, Any]:
     """
     Show what would be archived without archiving.
 
@@ -84,35 +89,32 @@ def archive_version_dry_run(version_id: str) -> Dict[str, Any]:
     Returns:
         Update data that would be applied
     """
-    return {
-        'version_id': version_id,
-        'archived': True
-    }
+    return {"version_id": version_id, "archived": True}
 
 
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Archive a project version in JIRA',
-        epilog='''
+        description="Archive a project version in JIRA",
+        epilog="""
 Examples:
   %(prog)s --id 10002
   %(prog)s PROJ --name "v0.5.0"
   %(prog)s --id 10002 --dry-run
-        '''
+        """,
     )
 
-    parser.add_argument('project',
-                       nargs='?',
-                       help='Project key (required when using --name)')
-    parser.add_argument('--id',
-                       help='Version ID to archive')
-    parser.add_argument('--name', '-n',
-                       help='Version name (requires project)')
-    parser.add_argument('--dry-run', action='store_true',
-                       help='Show what would be archived without archiving')
-    parser.add_argument('--profile', '-p',
-                       help='JIRA profile to use')
+    parser.add_argument(
+        "project", nargs="?", help="Project key (required when using --name)"
+    )
+    parser.add_argument("--id", help="Version ID to archive")
+    parser.add_argument("--name", "-n", help="Version name (requires project)")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be archived without archiving",
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -133,7 +135,7 @@ Examples:
         if args.dry_run:
             # Dry run mode
             if args.id:
-                update_data = archive_version_dry_run(version_id=args.id)
+                archive_version_dry_run(version_id=args.id)
                 print(f"[DRY RUN] Would archive version {args.id}\n")
                 print("No version archived (dry-run mode).")
             else:
@@ -144,21 +146,16 @@ Examples:
         else:
             # Archive version
             if args.id:
-                version = archive_version(
-                    version_id=args.id,
-                    profile=args.profile
-                )
-                version_name = version.get('name', args.id)
+                version = archive_version(version_id=args.id, profile=args.profile)
+                version_name = version.get("name", args.id)
             else:
                 version = archive_version_by_name(
-                    project=args.project,
-                    version_name=args.name,
-                    profile=args.profile
+                    project=args.project, version_name=args.name, profile=args.profile
                 )
-                version_name = version.get('name', args.name)
+                version_name = version.get("name", args.name)
 
             print_success(f"Archived version '{version_name}' (ID: {version['id']})")
-            if version.get('description'):
+            if version.get("description"):
                 print(f"Description: {version['description']}")
 
     except ValidationError as e:
@@ -172,5 +169,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

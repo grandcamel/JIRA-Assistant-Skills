@@ -8,19 +8,20 @@ Usage:
     python delete_comment.py PROJ-123 --id 10001 --dry-run
 """
 
-import sys
 import argparse
-from pathlib import Path
-from typing import Dict, Any, Optional
+import sys
+from typing import Any
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    adf_to_text,
+    get_jira_client,
+    print_error,
+    validate_issue_key,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import adf_to_text
-
-
-def delete_comment(issue_key: str, comment_id: str, profile: str = None) -> None:
+def delete_comment(issue_key: str, comment_id: str, profile: str | None = None) -> None:
     """
     Delete a comment.
 
@@ -39,7 +40,9 @@ def delete_comment(issue_key: str, comment_id: str, profile: str = None) -> None
     client.close()
 
 
-def delete_comment_with_confirm(issue_key: str, comment_id: str, profile: str = None) -> bool:
+def delete_comment_with_confirm(
+    issue_key: str, comment_id: str, profile: str | None = None
+) -> bool:
     """
     Delete a comment with confirmation prompt.
 
@@ -58,14 +61,14 @@ def delete_comment_with_confirm(issue_key: str, comment_id: str, profile: str = 
     comment = client.get_comment(issue_key, comment_id)
 
     # Show comment preview
-    author = comment.get('author', {}).get('displayName', 'Unknown')
-    created = comment.get('created', 'N/A')[:16]
-    body = comment.get('body', {})
+    author = comment.get("author", {}).get("displayName", "Unknown")
+    created = comment.get("created", "N/A")[:16]
+    body = comment.get("body", {})
     body_text = adf_to_text(body)
 
     # Limit body preview
     if len(body_text) > 100:
-        body_preview = body_text[:100] + '...'
+        body_preview = body_text[:100] + "..."
     else:
         body_preview = body_text
 
@@ -78,7 +81,7 @@ def delete_comment_with_confirm(issue_key: str, comment_id: str, profile: str = 
 
     confirmation = input("Type 'yes' to confirm: ")
 
-    if confirmation.lower() == 'yes':
+    if confirmation.lower() == "yes":
         client.delete_comment(issue_key, comment_id)
         client.close()
         return True
@@ -87,7 +90,9 @@ def delete_comment_with_confirm(issue_key: str, comment_id: str, profile: str = 
         return False
 
 
-def delete_comment_dry_run(issue_key: str, comment_id: str, profile: str = None) -> Dict[str, Any]:
+def delete_comment_dry_run(
+    issue_key: str, comment_id: str, profile: str | None = None
+) -> dict[str, Any]:
     """
     Show what would be deleted without actually deleting.
 
@@ -111,25 +116,26 @@ def delete_comment_dry_run(issue_key: str, comment_id: str, profile: str = None)
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Delete a comment from a JIRA issue',
-        epilog='''
+        description="Delete a comment from a JIRA issue",
+        epilog="""
 Examples:
   %(prog)s PROJ-123 --id 10001              # Delete with confirmation
   %(prog)s PROJ-123 --id 10001 --yes        # Skip confirmation
   %(prog)s PROJ-123 --id 10001 --dry-run    # Show what would be deleted
-        '''
+        """,
     )
 
-    parser.add_argument('issue_key',
-                       help='Issue key (e.g., PROJ-123)')
-    parser.add_argument('--id', required=True,
-                       help='Comment ID to delete')
-    parser.add_argument('--yes', '-y', action='store_true',
-                       help='Skip confirmation prompt')
-    parser.add_argument('--dry-run', action='store_true',
-                       help='Show what would be deleted without deleting')
-    parser.add_argument('--profile', '-p',
-                       help='JIRA profile to use')
+    parser.add_argument("issue_key", help="Issue key (e.g., PROJ-123)")
+    parser.add_argument("--id", required=True, help="Comment ID to delete")
+    parser.add_argument(
+        "--yes", "-y", action="store_true", help="Skip confirmation prompt"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be deleted without deleting",
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -138,12 +144,14 @@ Examples:
             # Dry run mode
             comment = delete_comment_dry_run(args.issue_key, args.id, args.profile)
 
-            author = comment.get('author', {}).get('displayName', 'Unknown')
-            created = comment.get('created', 'N/A')[:16]
-            body = comment.get('body', {})
+            author = comment.get("author", {}).get("displayName", "Unknown")
+            created = comment.get("created", "N/A")[:16]
+            body = comment.get("body", {})
             body_text = adf_to_text(body)
 
-            print(f"[DRY RUN] Would delete comment {comment['id']} from {args.issue_key}:\n")
+            print(
+                f"[DRY RUN] Would delete comment {comment['id']} from {args.issue_key}:\n"
+            )
             print(f"  Author: {author}")
             print(f"  Date: {created}")
             print(f"  Body: {body_text[:200]}")
@@ -172,5 +180,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

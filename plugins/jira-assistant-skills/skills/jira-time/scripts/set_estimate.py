@@ -8,20 +8,25 @@ Sets original and/or remaining estimates for time tracking.
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any
 
 # Add shared lib to path
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    validate_issue_key,
+    validate_time_format,
+)
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import validate_time_format, format_seconds
 
-
-def set_estimate(client, issue_key: str,
-                 original_estimate: Optional[str] = None,
-                 remaining_estimate: Optional[str] = None) -> Dict[str, Any]:
+def set_estimate(
+    client,
+    issue_key: str,
+    original_estimate: str | None = None,
+    remaining_estimate: str | None = None,
+) -> dict[str, Any]:
     """
     Set time estimates on an issue.
 
@@ -61,7 +66,7 @@ def set_estimate(client, issue_key: str,
     client.set_time_tracking(
         issue_key=issue_key,
         original_estimate=original_estimate,
-        remaining_estimate=remaining_estimate
+        remaining_estimate=remaining_estimate,
     )
 
     # Return updated time tracking info
@@ -70,25 +75,26 @@ def set_estimate(client, issue_key: str,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Set time estimates on a JIRA issue.',
-        epilog='''
+        description="Set time estimates on a JIRA issue.",
+        epilog="""
 Examples:
   %(prog)s PROJ-123 --original "2d"
   %(prog)s PROJ-123 --remaining "1d 4h"
   %(prog)s PROJ-123 --original "2d" --remaining "1d 4h"
-        ''',
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument('issue_key', help='Issue key (e.g., PROJ-123)')
-    parser.add_argument('--original', '-o',
-                        help='Original estimate (e.g., 2d, 1w)')
-    parser.add_argument('--remaining', '-r',
-                        help='Remaining estimate (e.g., 1d 4h)')
-    parser.add_argument('--profile', '-p',
-                        help='JIRA profile to use')
-    parser.add_argument('--output', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
+    parser.add_argument("issue_key", help="Issue key (e.g., PROJ-123)")
+    parser.add_argument("--original", "-o", help="Original estimate (e.g., 2d, 1w)")
+    parser.add_argument("--remaining", "-r", help="Remaining estimate (e.g., 1d 4h)")
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
+    parser.add_argument(
+        "--output",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
 
     args = parser.parse_args(argv)
 
@@ -111,26 +117,26 @@ Examples:
             client,
             args.issue_key,
             original_estimate=args.original,
-            remaining_estimate=args.remaining
+            remaining_estimate=args.remaining,
         )
 
         # Output result
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(result, indent=2))
         else:
             print(f"Time estimates updated for {args.issue_key}:")
 
             if args.original:
-                old_orig = current.get('originalEstimate', 'unset')
-                new_orig = result.get('originalEstimate', 'unset')
+                old_orig = current.get("originalEstimate", "unset")
+                new_orig = result.get("originalEstimate", "unset")
                 print(f"  Original estimate: {new_orig} (was {old_orig})")
 
             if args.remaining:
-                old_rem = current.get('remainingEstimate', 'unset')
-                new_rem = result.get('remainingEstimate', 'unset')
+                old_rem = current.get("remainingEstimate", "unset")
+                new_rem = result.get("remainingEstimate", "unset")
                 print(f"  Remaining estimate: {new_rem} (was {old_rem})")
 
-            if result.get('timeSpent'):
+            if result.get("timeSpent"):
                 print(f"  Time spent: {result.get('timeSpent')}")
 
         client.close()
@@ -143,5 +149,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

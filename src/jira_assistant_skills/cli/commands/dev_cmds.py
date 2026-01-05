@@ -1,4 +1,5 @@
 import click
+
 from jira_assistant_skills.utils import SKILLS_ROOT_DIR, run_skill_script_subprocess
 
 
@@ -9,9 +10,14 @@ def dev():
 
 
 @dev.command(name="branch-name")
-@click.argument('issue_key')
-@click.option('--format', '-f', 'branch_format', help='Branch name format (feature, bugfix, hotfix)')
-@click.option('--max-length', '-m', type=int, help='Maximum branch name length')
+@click.argument("issue_key")
+@click.option(
+    "--format",
+    "-f",
+    "branch_format",
+    help="Branch name format (feature, bugfix, hotfix)",
+)
+@click.option("--max-length", "-m", type=int, help="Maximum branch name length")
 @click.pass_context
 def dev_branch_name(ctx, issue_key: str, branch_format: str, max_length: int):
     """Generate a Git branch name from an issue."""
@@ -27,9 +33,9 @@ def dev_branch_name(ctx, issue_key: str, branch_format: str, max_length: int):
 
 
 @dev.command(name="pr-description")
-@click.argument('issue_key')
-@click.option('--template', '-t', help='PR description template')
-@click.option('--include-commits', '-c', is_flag=True, help='Include linked commits')
+@click.argument("issue_key")
+@click.option("--template", "-t", help="PR description template")
+@click.option("--include-commits", "-c", is_flag=True, help="Include linked commits")
 @click.pass_context
 def dev_pr_description(ctx, issue_key: str, template: str, include_commits: bool):
     """Generate a PR description from an issue."""
@@ -45,8 +51,8 @@ def dev_pr_description(ctx, issue_key: str, template: str, include_commits: bool
 
 
 @dev.command(name="parse-commits")
-@click.argument('commit_messages', nargs=-1)
-@click.option('--file', '-f', 'input_file', help='Read commit messages from file')
+@click.argument("commit_messages", nargs=-1)
+@click.option("--file", "-f", "input_file", help="Read commit messages from file")
 @click.pass_context
 def dev_parse_commits(ctx, commit_messages: tuple, input_file: str):
     """Parse commit messages to extract JIRA issue keys."""
@@ -60,10 +66,10 @@ def dev_parse_commits(ctx, commit_messages: tuple, input_file: str):
 
 
 @dev.command(name="link-commit")
-@click.argument('issue_key')
-@click.argument('commit_hash')
-@click.option('--message', '-m', help='Commit message')
-@click.option('--repo', '-r', help='Repository name')
+@click.argument("issue_key")
+@click.argument("commit_hash")
+@click.option("--message", "-m", help="Commit message")
+@click.option("--repo", "-r", help="Repository name")
 @click.pass_context
 def dev_link_commit(ctx, issue_key: str, commit_hash: str, message: str, repo: str):
     """Link a Git commit to a JIRA issue."""
@@ -79,10 +85,10 @@ def dev_link_commit(ctx, issue_key: str, commit_hash: str, message: str, repo: s
 
 
 @dev.command(name="link-pr")
-@click.argument('issue_key')
-@click.argument('pr_url')
-@click.option('--title', '-t', help='PR title')
-@click.option('--status', '-s', help='PR status (open, merged, closed)')
+@click.argument("issue_key")
+@click.argument("pr_url")
+@click.option("--title", "-t", help="PR title")
+@click.option("--status", "-s", help="PR status (open, merged, closed)")
 @click.pass_context
 def dev_link_pr(ctx, issue_key: str, pr_url: str, title: str, status: str):
     """Link a Pull Request to a JIRA issue."""
@@ -98,8 +104,8 @@ def dev_link_pr(ctx, issue_key: str, pr_url: str, title: str, status: str):
 
 
 @dev.command(name="get-commits")
-@click.argument('issue_key')
-@click.option('--limit', '-l', type=int, help='Maximum commits to show')
+@click.argument("issue_key")
+@click.option("--limit", "-l", type=int, help="Maximum commits to show")
 @click.pass_context
 def dev_get_commits(ctx, issue_key: str, limit: int):
     """Get commits linked to an issue."""

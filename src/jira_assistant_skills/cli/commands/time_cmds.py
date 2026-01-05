@@ -1,4 +1,5 @@
 import click
+
 from jira_assistant_skills.utils import SKILLS_ROOT_DIR, run_skill_script_subprocess
 
 
@@ -9,16 +10,36 @@ def time():
 
 
 @time.command(name="log")
-@click.argument('issue_key')
-@click.option('--time', '-t', 'time_spent', required=True, help='Time spent (e.g., 2h, 1d 4h, 30m)')
-@click.option('--comment', '-c', help='Worklog comment')
-@click.option('--started', '-s', help='Start time (YYYY-MM-DD or ISO datetime)')
-@click.option('--adjust-estimate', '-a', type=click.Choice(['auto', 'leave', 'new', 'manual']),
-              default='auto', help='How to adjust remaining estimate')
-@click.option('--new-estimate', help='New remaining estimate (when adjust=new or manual)')
+@click.argument("issue_key")
+@click.option(
+    "--time",
+    "-t",
+    "time_spent",
+    required=True,
+    help="Time spent (e.g., 2h, 1d 4h, 30m)",
+)
+@click.option("--comment", "-c", help="Worklog comment")
+@click.option("--started", "-s", help="Start time (YYYY-MM-DD or ISO datetime)")
+@click.option(
+    "--adjust-estimate",
+    "-a",
+    type=click.Choice(["auto", "leave", "new", "manual"]),
+    default="auto",
+    help="How to adjust remaining estimate",
+)
+@click.option(
+    "--new-estimate", help="New remaining estimate (when adjust=new or manual)"
+)
 @click.pass_context
-def time_log(ctx, issue_key: str, time_spent: str, comment: str, started: str,
-             adjust_estimate: str, new_estimate: str):
+def time_log(
+    ctx,
+    issue_key: str,
+    time_spent: str,
+    comment: str,
+    started: str,
+    adjust_estimate: str,
+    new_estimate: str,
+):
     """Log time worked on an issue.
 
     Examples:
@@ -32,7 +53,7 @@ def time_log(ctx, issue_key: str, time_spent: str, comment: str, started: str,
         script_args.extend(["--comment", comment])
     if started:
         script_args.extend(["--started", started])
-    if adjust_estimate != 'auto':
+    if adjust_estimate != "auto":
         script_args.extend(["--adjust-estimate", adjust_estimate])
     if new_estimate:
         script_args.extend(["--new-estimate", new_estimate])
@@ -41,9 +62,9 @@ def time_log(ctx, issue_key: str, time_spent: str, comment: str, started: str,
 
 
 @time.command(name="worklogs")
-@click.argument('issue_key')
-@click.option('--since', '-s', help='Show worklogs since date (YYYY-MM-DD)')
-@click.option('--author', '-a', help='Filter by author')
+@click.argument("issue_key")
+@click.option("--since", "-s", help="Show worklogs since date (YYYY-MM-DD)")
+@click.option("--author", "-a", help="Filter by author")
 @click.pass_context
 def time_worklogs(ctx, issue_key: str, since: str, author: str):
     """Get worklogs for an issue."""
@@ -59,14 +80,15 @@ def time_worklogs(ctx, issue_key: str, since: str, author: str):
 
 
 @time.command(name="update-worklog")
-@click.argument('issue_key')
-@click.argument('worklog_id')
-@click.option('--time-spent', '-t', help='New time spent')
-@click.option('--comment', '-c', help='New comment')
-@click.option('--started', '-s', help='New start time')
+@click.argument("issue_key")
+@click.argument("worklog_id")
+@click.option("--time-spent", "-t", help="New time spent")
+@click.option("--comment", "-c", help="New comment")
+@click.option("--started", "-s", help="New start time")
 @click.pass_context
-def time_update_worklog(ctx, issue_key: str, worklog_id: str, time_spent: str,
-                        comment: str, started: str):
+def time_update_worklog(
+    ctx, issue_key: str, worklog_id: str, time_spent: str, comment: str, started: str
+):
     """Update an existing worklog."""
     script_path = SKILLS_ROOT_DIR / "jira-time" / "scripts" / "update_worklog.py"
 
@@ -82,13 +104,20 @@ def time_update_worklog(ctx, issue_key: str, worklog_id: str, time_spent: str,
 
 
 @time.command(name="delete-worklog")
-@click.argument('issue_key')
-@click.option('--worklog-id', '-w', required=True, help='Worklog ID to delete')
-@click.option('--adjust-estimate', '-a', type=click.Choice(['auto', 'leave', 'new', 'manual']),
-              default='auto', help='How to adjust remaining estimate')
-@click.option('--force', '-f', is_flag=True, help='Skip confirmation')
+@click.argument("issue_key")
+@click.option("--worklog-id", "-w", required=True, help="Worklog ID to delete")
+@click.option(
+    "--adjust-estimate",
+    "-a",
+    type=click.Choice(["auto", "leave", "new", "manual"]),
+    default="auto",
+    help="How to adjust remaining estimate",
+)
+@click.option("--force", "-f", is_flag=True, help="Skip confirmation")
 @click.pass_context
-def time_delete_worklog(ctx, issue_key: str, worklog_id: str, adjust_estimate: str, force: bool):
+def time_delete_worklog(
+    ctx, issue_key: str, worklog_id: str, adjust_estimate: str, force: bool
+):
     """Delete a worklog.
 
     Examples:
@@ -98,7 +127,7 @@ def time_delete_worklog(ctx, issue_key: str, worklog_id: str, adjust_estimate: s
     script_path = SKILLS_ROOT_DIR / "jira-time" / "scripts" / "delete_worklog.py"
 
     script_args = [issue_key, worklog_id]
-    if adjust_estimate != 'auto':
+    if adjust_estimate != "auto":
         script_args.extend(["--adjust-estimate", adjust_estimate])
     if force:
         script_args.append("--force")
@@ -107,9 +136,9 @@ def time_delete_worklog(ctx, issue_key: str, worklog_id: str, adjust_estimate: s
 
 
 @time.command(name="estimate")
-@click.argument('issue_key')
-@click.option('--original', '-o', help='Original estimate (e.g., 2d, 4h)')
-@click.option('--remaining', '-r', help='Remaining estimate (e.g., 1d 4h)')
+@click.argument("issue_key")
+@click.option("--original", "-o", help="Original estimate (e.g., 2d, 4h)")
+@click.option("--remaining", "-r", help="Remaining estimate (e.g., 1d 4h)")
 @click.pass_context
 def time_estimate(ctx, issue_key: str, original: str, remaining: str):
     """Set time estimate for an issue.
@@ -136,7 +165,7 @@ def time_estimate(ctx, issue_key: str, original: str, remaining: str):
 
 
 @time.command(name="tracking")
-@click.argument('issue_key')
+@click.argument("issue_key")
 @click.pass_context
 def time_tracking(ctx, issue_key: str):
     """Get time tracking information for an issue."""
@@ -145,14 +174,22 @@ def time_tracking(ctx, issue_key: str):
 
 
 @time.command(name="report")
-@click.option('--project', '-p', help='Project key')
-@click.option('--user', '-u', help='User (account ID or email)')
-@click.option('--since', '-s', help='Start date (YYYY-MM-DD)')
-@click.option('--until', help='End date (YYYY-MM-DD)')
-@click.option('--format', '-f', 'output_format', type=click.Choice(['text', 'csv', 'json']),
-              default='text', help='Output format')
+@click.option("--project", "-p", help="Project key")
+@click.option("--user", "-u", help="User (account ID or email)")
+@click.option("--since", "-s", help="Start date (YYYY-MM-DD)")
+@click.option("--until", help="End date (YYYY-MM-DD)")
+@click.option(
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["text", "csv", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
-def time_report(ctx, project: str, user: str, since: str, until: str, output_format: str):
+def time_report(
+    ctx, project: str, user: str, since: str, until: str, output_format: str
+):
     """Generate a time report."""
     script_path = SKILLS_ROOT_DIR / "jira-time" / "scripts" / "time_report.py"
 
@@ -165,23 +202,36 @@ def time_report(ctx, project: str, user: str, since: str, until: str, output_for
         script_args.extend(["--since", since])
     if until:
         script_args.extend(["--until", until])
-    if output_format != 'text':
+    if output_format != "text":
         script_args.extend(["--format", output_format])
 
     run_skill_script_subprocess(script_path, script_args, ctx)
 
 
 @time.command(name="export")
-@click.option('--project', '-p', help='Project key')
-@click.option('--user', '-u', help='User (account ID or email)')
-@click.option('--since', '-s', help='Start date (YYYY-MM-DD)')
-@click.option('--until', help='End date (YYYY-MM-DD)')
-@click.option('--format', '-f', 'output_format', type=click.Choice(['csv', 'xlsx']),
-              default='csv', help='Export format')
-@click.option('--output', '-o', 'output_file', help='Output file path')
+@click.option("--project", "-p", help="Project key")
+@click.option("--user", "-u", help="User (account ID or email)")
+@click.option("--since", "-s", help="Start date (YYYY-MM-DD)")
+@click.option("--until", help="End date (YYYY-MM-DD)")
+@click.option(
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["csv", "xlsx"]),
+    default="csv",
+    help="Export format",
+)
+@click.option("--output", "-o", "output_file", help="Output file path")
 @click.pass_context
-def time_export(ctx, project: str, user: str, since: str, until: str,
-                output_format: str, output_file: str):
+def time_export(
+    ctx,
+    project: str,
+    user: str,
+    since: str,
+    until: str,
+    output_format: str,
+    output_file: str,
+):
     """Export timesheets to CSV or Excel."""
     script_path = SKILLS_ROOT_DIR / "jira-time" / "scripts" / "export_timesheets.py"
 
@@ -203,14 +253,24 @@ def time_export(ctx, project: str, user: str, since: str, until: str,
 
 
 @time.command(name="bulk-log")
-@click.option('--jql', '-j', help='JQL query to find issues')
-@click.option('--issues', '-i', help='Comma-separated issue keys (e.g., PROJ-1,PROJ-2)')
-@click.option('--time', '-t', 'time_spent', required=True, help='Time to log (e.g., 2h, 30m)')
-@click.option('--comment', '-c', help='Worklog comment')
-@click.option('--dry-run', '-n', is_flag=True, help='Show what would be logged')
-@click.option('--force', '-f', is_flag=True, help='Skip confirmation')
+@click.option("--jql", "-j", help="JQL query to find issues")
+@click.option("--issues", "-i", help="Comma-separated issue keys (e.g., PROJ-1,PROJ-2)")
+@click.option(
+    "--time", "-t", "time_spent", required=True, help="Time to log (e.g., 2h, 30m)"
+)
+@click.option("--comment", "-c", help="Worklog comment")
+@click.option("--dry-run", "-n", is_flag=True, help="Show what would be logged")
+@click.option("--force", "-f", is_flag=True, help="Skip confirmation")
 @click.pass_context
-def time_bulk_log(ctx, jql: str, issues: str, time_spent: str, comment: str, dry_run: bool, force: bool):
+def time_bulk_log(
+    ctx,
+    jql: str,
+    issues: str,
+    time_spent: str,
+    comment: str,
+    dry_run: bool,
+    force: bool,
+):
     """Log time on multiple issues.
 
     Specify issues using either --jql or --issues (mutually exclusive).

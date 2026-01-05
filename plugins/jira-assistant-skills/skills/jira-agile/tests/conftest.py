@@ -7,19 +7,21 @@ Agile/Scrum functionality without hitting real JIRA instance.
 Note: Common markers (unit, integration, agile) are defined in the root pytest.ini.
 """
 
-import pytest
-from unittest.mock import Mock
 import sys
 from pathlib import Path
+from unittest.mock import Mock
 
+import pytest
 
 # Add shared lib to path so imports work in tests
-shared_lib_path = str(Path(__file__).parent.parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(
+    Path(__file__).parent.parent.parent.parent / "shared" / "scripts" / "lib"
+)
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
 # Add scripts to path for importing
-scripts_path = str(Path(__file__).parent.parent / 'scripts')
+scripts_path = str(Path(__file__).parent.parent / "scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
@@ -34,12 +36,12 @@ def mock_jira_client():
 
     # Mock issue types for subtask creation
     def mock_get(endpoint, *args, **kwargs):
-        if endpoint == '/rest/api/3/issuetype':
+        if endpoint == "/rest/api/3/issuetype":
             return [
-                {'id': '10000', 'name': 'Epic', 'subtask': False},
-                {'id': '10001', 'name': 'Story', 'subtask': False},
-                {'id': '10002', 'name': 'Task', 'subtask': False},
-                {'id': '10003', 'name': 'Sub-task', 'subtask': True},
+                {"id": "10000", "name": "Epic", "subtask": False},
+                {"id": "10001", "name": "Story", "subtask": False},
+                {"id": "10002", "name": "Task", "subtask": False},
+                {"id": "10003", "name": "Sub-task", "subtask": True},
             ]
         return {}
 
@@ -62,32 +64,21 @@ def sample_epic_response():
                 "content": [
                     {
                         "type": "paragraph",
-                        "content": [
-                            {"type": "text", "text": "Epic description"}
-                        ]
+                        "content": [{"type": "text", "text": "Epic description"}],
                     }
-                ]
+                ],
             },
-            "issuetype": {
-                "id": "10000",
-                "name": "Epic",
-                "subtask": False
-            },
-            "project": {
-                "key": "PROJ",
-                "name": "Test Project"
-            },
+            "issuetype": {"id": "10000", "name": "Epic", "subtask": False},
+            "project": {"key": "PROJ", "name": "Test Project"},
             "status": {
                 "name": "In Progress",
-                "statusCategory": {"key": "indeterminate"}
+                "statusCategory": {"key": "indeterminate"},
             },
-            "priority": {
-                "name": "Medium"
-            },
+            "priority": {"name": "Medium"},
             "assignee": None,
             "customfield_10011": "MVP",  # Epic Name
-            "customfield_10012": "blue"  # Epic Color
-        }
+            "customfield_10012": "blue",  # Epic Color
+        },
     }
 
 
@@ -102,7 +93,7 @@ def sample_sprint_response():
         "startDate": "2025-01-20T00:00:00.000Z",
         "endDate": "2025-02-03T00:00:00.000Z",
         "originBoardId": 123,
-        "goal": "Launch MVP"
+        "goal": "Launch MVP",
     }
 
 
@@ -114,10 +105,7 @@ def sample_board_response():
         "self": "https://test.atlassian.net/rest/agile/1.0/board/123",
         "name": "PROJ Scrum Board",
         "type": "scrum",
-        "location": {
-            "projectKey": "PROJ",
-            "projectName": "Test Project"
-        }
+        "location": {"projectKey": "PROJ", "projectName": "Test Project"},
     }
 
 
@@ -136,34 +124,21 @@ def sample_issue_response():
                 "content": [
                     {
                         "type": "paragraph",
-                        "content": [
-                            {"type": "text", "text": "Implement auth"}
-                        ]
+                        "content": [{"type": "text", "text": "Implement auth"}],
                     }
-                ]
+                ],
             },
-            "issuetype": {
-                "id": "10001",
-                "name": "Story",
-                "subtask": False
-            },
-            "project": {
-                "key": "PROJ",
-                "name": "Test Project"
-            },
-            "status": {
-                "name": "To Do"
-            },
-            "priority": {
-                "name": "High"
-            },
+            "issuetype": {"id": "10001", "name": "Story", "subtask": False},
+            "project": {"key": "PROJ", "name": "Test Project"},
+            "status": {"name": "To Do"},
+            "priority": {"name": "High"},
             "assignee": {
                 "accountId": "557058:test-user-id",
-                "displayName": "Test User"
+                "displayName": "Test User",
             },
             "customfield_10016": 5,  # Story Points
-            "customfield_10014": 456  # Sprint ID
-        }
+            "customfield_10014": 456,  # Sprint ID
+        },
     }
 
 
@@ -176,28 +151,19 @@ def sample_subtask_response():
         "self": "https://test.atlassian.net/rest/api/3/issue/10102",
         "fields": {
             "summary": "Implement login API",
-            "issuetype": {
-                "id": "10003",
-                "name": "Sub-task",
-                "subtask": True
-            },
-            "parent": {
-                "id": "10101",
-                "key": "PROJ-101"
-            },
-            "project": {
-                "key": "PROJ"
-            },
-            "status": {
-                "name": "In Progress"
-            }
-        }
+            "issuetype": {"id": "10003", "name": "Sub-task", "subtask": True},
+            "parent": {"id": "10101", "key": "PROJ-101"},
+            "project": {"key": "PROJ"},
+            "status": {"name": "In Progress"},
+        },
     }
 
 
 @pytest.fixture
 def mock_config_manager(mock_jira_client):
     """Mock config_manager.get_jira_client() to return mock client."""
+
     def _get_jira_client(profile=None):
         return mock_jira_client
+
     return _get_jira_client

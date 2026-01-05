@@ -7,25 +7,31 @@ Usage:
     python resolve_issue.py PROJ-123 --resolution "Won't Fix" --comment "Not a bug"
 """
 
-import sys
 import argparse
-from pathlib import Path
+import sys
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import print_success, format_transitions
-from jira_assistant_skills_lib import text_to_adf
-from jira_assistant_skills_lib import find_transition_by_keywords
-
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    find_transition_by_keywords,
+    format_transitions,
+    get_jira_client,
+    print_error,
+    print_success,
+    text_to_adf,
+    validate_issue_key,
+)
 
 # Keywords that indicate a resolution/completion transition
-RESOLVE_KEYWORDS = ['done', 'resolve', 'close', 'complete']
+RESOLVE_KEYWORDS = ["done", "resolve", "close", "complete"]
 
 
-def resolve_issue(issue_key: str, resolution: str = "Fixed",
-                 comment: str = None, profile: str = None) -> None:
+def resolve_issue(
+    issue_key: str,
+    resolution: str = "Fixed",
+    comment: str | None = None,
+    profile: str | None = None,
+) -> None:
     """
     Resolve an issue.
 
@@ -47,9 +53,7 @@ def resolve_issue(issue_key: str, resolution: str = "Fixed",
         raise ValidationError(f"No transitions available for {issue_key}")
 
     transition = find_transition_by_keywords(
-        transitions,
-        RESOLVE_KEYWORDS,
-        prefer_exact='done'
+        transitions, RESOLVE_KEYWORDS, prefer_exact="done"
     )
 
     if not transition:
@@ -59,32 +63,30 @@ def resolve_issue(issue_key: str, resolution: str = "Fixed",
             f"Available transitions:\n{available}"
         )
 
-    fields = {
-        'resolution': {'name': resolution}
-    }
+    fields = {"resolution": {"name": resolution}}
 
     if comment:
-        fields['comment'] = text_to_adf(comment)
+        fields["comment"] = text_to_adf(comment)
 
-    client.transition_issue(issue_key, transition['id'], fields=fields)
+    client.transition_issue(issue_key, transition["id"], fields=fields)
     client.close()
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Resolve a JIRA issue',
-        epilog='Example: python resolve_issue.py PROJ-123 --resolution Fixed'
+        description="Resolve a JIRA issue",
+        epilog="Example: python resolve_issue.py PROJ-123 --resolution Fixed",
     )
 
-    parser.add_argument('issue_key',
-                       help='Issue key (e.g., PROJ-123)')
-    parser.add_argument('--resolution', '-r',
-                       default='Fixed',
-                       help='Resolution (default: Fixed). Common: Fixed, Won\'t Fix, Duplicate, Cannot Reproduce, Won\'t Do')
-    parser.add_argument('--comment', '-c',
-                       help='Optional comment')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument("issue_key", help="Issue key (e.g., PROJ-123)")
+    parser.add_argument(
+        "--resolution",
+        "-r",
+        default="Fixed",
+        help="Resolution (default: Fixed). Common: Fixed, Won't Fix, Duplicate, Cannot Reproduce, Won't Do",
+    )
+    parser.add_argument("--comment", "-c", help="Optional comment")
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -93,7 +95,7 @@ def main(argv: list[str] | None = None):
             issue_key=args.issue_key,
             resolution=args.resolution,
             comment=args.comment,
-            profile=args.profile
+            profile=args.profile,
         )
 
         print_success(f"Resolved {args.issue_key} as {args.resolution}")
@@ -106,5 +108,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

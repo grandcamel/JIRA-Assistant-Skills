@@ -12,15 +12,16 @@ from pathlib import Path
 test_dir = Path(__file__).parent  # tests
 jira_agile_dir = test_dir.parent  # jira-agile
 skills_dir = jira_agile_dir.parent  # skills
-shared_lib_path = skills_dir / 'shared' / 'scripts' / 'lib'
-scripts_path = jira_agile_dir / 'scripts'
+shared_lib_path = skills_dir / "shared" / "scripts" / "lib"
+scripts_path = jira_agile_dir / "scripts"
 
 sys.path.insert(0, str(shared_lib_path))
 sys.path.insert(0, str(scripts_path))
 
-import pytest
-from unittest.mock import Mock, patch
 import copy
+from unittest.mock import patch
+
+import pytest
 
 
 @pytest.mark.agile
@@ -35,24 +36,21 @@ class TestManageSprint:
 
         # Sprint starts as 'future', becomes 'active'
         started_sprint = copy.deepcopy(sample_sprint_response)
-        started_sprint['state'] = 'active'
+        started_sprint["state"] = "active"
         mock_jira_client.update_sprint.return_value = started_sprint
 
         # Act
-        result = start_sprint(
-            sprint_id=456,
-            client=mock_jira_client
-        )
+        result = start_sprint(sprint_id=456, client=mock_jira_client)
 
         # Assert
         assert result is not None
-        assert result['state'] == 'active'
+        assert result["state"] == "active"
 
         # Verify API call
         mock_jira_client.update_sprint.assert_called_once()
         call_args = mock_jira_client.update_sprint.call_args
         assert call_args[0][0] == 456  # Sprint ID
-        assert call_args[1]['state'] == 'active'  # kwargs
+        assert call_args[1]["state"] == "active"  # kwargs
 
     def test_close_sprint(self, mock_jira_client, sample_sprint_response):
         """Test closing active sprint."""
@@ -61,46 +59,43 @@ class TestManageSprint:
 
         # Sprint becomes 'closed'
         closed_sprint = copy.deepcopy(sample_sprint_response)
-        closed_sprint['state'] = 'closed'
+        closed_sprint["state"] = "closed"
         mock_jira_client.update_sprint.return_value = closed_sprint
 
         # Act
-        result = close_sprint(
-            sprint_id=456,
-            client=mock_jira_client
-        )
+        result = close_sprint(sprint_id=456, client=mock_jira_client)
 
         # Assert
         assert result is not None
-        assert result['state'] == 'closed'
+        assert result["state"] == "closed"
 
         # Verify API call
         mock_jira_client.update_sprint.assert_called_once()
         call_args = mock_jira_client.update_sprint.call_args
-        assert call_args[1]['state'] == 'closed'  # kwargs
+        assert call_args[1]["state"] == "closed"  # kwargs
 
-    def test_close_sprint_with_incomplete_issues(self, mock_jira_client, sample_sprint_response):
+    def test_close_sprint_with_incomplete_issues(
+        self, mock_jira_client, sample_sprint_response
+    ):
         """Test moving incomplete issues to next sprint."""
         # Arrange
         from manage_sprint import close_sprint
 
         closed_sprint = copy.deepcopy(sample_sprint_response)
-        closed_sprint['state'] = 'closed'
+        closed_sprint["state"] = "closed"
         mock_jira_client.update_sprint.return_value = closed_sprint
-        mock_jira_client.move_issues_to_sprint.return_value = {'movedIssues': 3}
+        mock_jira_client.move_issues_to_sprint.return_value = {"movedIssues": 3}
 
         # Act
         result = close_sprint(
-            sprint_id=456,
-            move_incomplete_to=457,
-            client=mock_jira_client
+            sprint_id=456, move_incomplete_to=457, client=mock_jira_client
         )
 
         # Assert
         assert result is not None
-        assert result['state'] == 'closed'
-        assert 'moved_issues' in result
-        assert result['moved_issues'] == 3
+        assert result["state"] == "closed"
+        assert "moved_issues" in result
+        assert result["moved_issues"] == 3
 
     def test_update_sprint_dates(self, mock_jira_client, sample_sprint_response):
         """Test extending sprint end date."""
@@ -108,19 +103,17 @@ class TestManageSprint:
         from manage_sprint import update_sprint
 
         updated_sprint = copy.deepcopy(sample_sprint_response)
-        updated_sprint['endDate'] = '2025-02-10T00:00:00.000Z'
+        updated_sprint["endDate"] = "2025-02-10T00:00:00.000Z"
         mock_jira_client.update_sprint.return_value = updated_sprint
 
         # Act
         result = update_sprint(
-            sprint_id=456,
-            end_date='2025-02-10',
-            client=mock_jira_client
+            sprint_id=456, end_date="2025-02-10", client=mock_jira_client
         )
 
         # Assert
         assert result is not None
-        assert '2025-02-10' in result['endDate']
+        assert "2025-02-10" in result["endDate"]
 
     def test_update_sprint_goal(self, mock_jira_client, sample_sprint_response):
         """Test changing sprint goal mid-sprint."""
@@ -128,19 +121,17 @@ class TestManageSprint:
         from manage_sprint import update_sprint
 
         updated_sprint = copy.deepcopy(sample_sprint_response)
-        updated_sprint['goal'] = 'Updated goal: Ship v2.0'
+        updated_sprint["goal"] = "Updated goal: Ship v2.0"
         mock_jira_client.update_sprint.return_value = updated_sprint
 
         # Act
         result = update_sprint(
-            sprint_id=456,
-            goal='Updated goal: Ship v2.0',
-            client=mock_jira_client
+            sprint_id=456, goal="Updated goal: Ship v2.0", client=mock_jira_client
         )
 
         # Assert
         assert result is not None
-        assert result['goal'] == 'Updated goal: Ship v2.0'
+        assert result["goal"] == "Updated goal: Ship v2.0"
 
     def test_get_active_sprint(self, mock_jira_client, sample_sprint_response):
         """Test fetching current active sprint for board."""
@@ -148,20 +139,17 @@ class TestManageSprint:
         from manage_sprint import get_active_sprint
 
         mock_jira_client.get_board_sprints.return_value = {
-            'values': [sample_sprint_response],
-            'isLast': True
+            "values": [sample_sprint_response],
+            "isLast": True,
         }
 
         # Act
-        result = get_active_sprint(
-            board_id=123,
-            client=mock_jira_client
-        )
+        result = get_active_sprint(board_id=123, client=mock_jira_client)
 
         # Assert
         assert result is not None
-        assert result['state'] == 'active'
-        assert result['id'] == 456
+        assert result["state"] == "active"
+        assert result["id"] == 456
 
         # Verify API call with state filter
         mock_jira_client.get_board_sprints.assert_called_once()
@@ -175,19 +163,21 @@ class TestManageSprintCLI:
     def test_cli_main_exists(self):
         """Test CLI main function exists and is callable."""
         from manage_sprint import main
+
         assert callable(main)
 
     def test_cli_help_output(self, capsys):
         """Test that --help shows usage information."""
-        with patch('sys.argv', ['manage_sprint.py', '--help']):
+        with patch("sys.argv", ["manage_sprint.py", "--help"]):
             from manage_sprint import main
+
             try:
                 main()
             except SystemExit:
                 pass  # --help causes SystemExit
 
         captured = capsys.readouterr()
-        assert '--sprint' in captured.out or 'usage' in captured.out.lower()
+        assert "--sprint" in captured.out or "usage" in captured.out.lower()
 
 
 @pytest.mark.agile
@@ -197,81 +187,68 @@ class TestManageSprintErrorHandling:
 
     def test_authentication_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
-        from jira_assistant_skills_lib import AuthenticationError
         from manage_sprint import start_sprint
+
+        from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.update_sprint.side_effect = AuthenticationError(
             "Invalid API token"
         )
 
         with pytest.raises(AuthenticationError):
-            start_sprint(
-                sprint_id=456,
-                client=mock_jira_client
-            )
+            start_sprint(sprint_id=456, client=mock_jira_client)
 
     def test_forbidden_error(self, mock_jira_client):
         """Test handling of 403 forbidden."""
-        from jira_assistant_skills_lib import PermissionError
         from manage_sprint import start_sprint
+
+        from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.update_sprint.side_effect = PermissionError(
             "Insufficient permissions"
         )
 
         with pytest.raises(PermissionError):
-            start_sprint(
-                sprint_id=456,
-                client=mock_jira_client
-            )
+            start_sprint(sprint_id=456, client=mock_jira_client)
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        from jira_assistant_skills_lib import JiraError
         from manage_sprint import start_sprint
 
+        from jira_assistant_skills_lib import JiraError
+
         mock_jira_client.update_sprint.side_effect = JiraError(
-            "Rate limit exceeded",
-            status_code=429
+            "Rate limit exceeded", status_code=429
         )
 
         with pytest.raises(JiraError) as exc_info:
-            start_sprint(
-                sprint_id=456,
-                client=mock_jira_client
-            )
+            start_sprint(sprint_id=456, client=mock_jira_client)
         assert exc_info.value.status_code == 429
 
     def test_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
-        from jira_assistant_skills_lib import JiraError
         from manage_sprint import close_sprint
 
+        from jira_assistant_skills_lib import JiraError
+
         mock_jira_client.update_sprint.side_effect = JiraError(
-            "Internal server error",
-            status_code=500
+            "Internal server error", status_code=500
         )
 
         with pytest.raises(JiraError) as exc_info:
-            close_sprint(
-                sprint_id=456,
-                client=mock_jira_client
-            )
+            close_sprint(sprint_id=456, client=mock_jira_client)
         assert exc_info.value.status_code == 500
 
     def test_sprint_not_found(self, mock_jira_client):
         """Test error when sprint doesn't exist."""
-        from jira_assistant_skills_lib import JiraError
         from manage_sprint import start_sprint
 
+        from jira_assistant_skills_lib import JiraError
+
         mock_jira_client.update_sprint.side_effect = JiraError(
-            "Sprint does not exist",
-            status_code=404
+            "Sprint does not exist", status_code=404
         )
 
         with pytest.raises(JiraError) as exc_info:
-            start_sprint(
-                sprint_id=999,
-                client=mock_jira_client
-            )
+            start_sprint(sprint_id=999, client=mock_jira_client)
         assert exc_info.value.status_code == 404

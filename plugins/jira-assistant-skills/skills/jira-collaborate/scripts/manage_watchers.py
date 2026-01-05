@@ -8,29 +8,35 @@ Usage:
     python manage_watchers.py PROJ-123 --list
 """
 
-import sys
 import argparse
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    UserNotFoundError,
+    ValidationError,
+    format_table,
+    get_jira_client,
+    print_error,
+    print_success,
+    resolve_user_to_account_id,
+    validate_issue_key,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import print_success, format_table
-from jira_assistant_skills_lib import resolve_user_to_account_id, UserNotFoundError
-
-
-def list_watchers(issue_key: str, profile: str = None) -> list:
+def list_watchers(issue_key: str, profile: str | None = None) -> list:
     """List watchers on an issue."""
     issue_key = validate_issue_key(issue_key)
     client = get_jira_client(profile)
-    result = client.get(f'/rest/api/3/issue/{issue_key}/watchers',
-                       operation=f"get watchers for {issue_key}")
+    result = client.get(
+        f"/rest/api/3/issue/{issue_key}/watchers",
+        operation=f"get watchers for {issue_key}",
+    )
     client.close()
-    return result.get('watchers', [])
+    return result.get("watchers", [])
 
 
-def add_watcher(issue_key: str, user: str, profile: str = None) -> None:
+def add_watcher(issue_key: str, user: str, profile: str | None = None) -> None:
     """Add a watcher to an issue."""
     issue_key = validate_issue_key(issue_key)
     client = get_jira_client(profile)
@@ -41,13 +47,15 @@ def add_watcher(issue_key: str, user: str, profile: str = None) -> None:
         client.close()
         raise ValidationError(str(e))
 
-    client.post(f'/rest/api/3/issue/{issue_key}/watchers',
-               data=f'"{account_id}"',
-               operation=f"add watcher to {issue_key}")
+    client.post(
+        f"/rest/api/3/issue/{issue_key}/watchers",
+        data=f'"{account_id}"',
+        operation=f"add watcher to {issue_key}",
+    )
     client.close()
 
 
-def remove_watcher(issue_key: str, user: str, profile: str = None) -> None:
+def remove_watcher(issue_key: str, user: str, profile: str | None = None) -> None:
     """Remove a watcher from an issue."""
     issue_key = validate_issue_key(issue_key)
     client = get_jira_client(profile)
@@ -58,31 +66,29 @@ def remove_watcher(issue_key: str, user: str, profile: str = None) -> None:
         client.close()
         raise ValidationError(str(e))
 
-    client.delete(f'/rest/api/3/issue/{issue_key}/watchers?accountId={account_id}',
-                 operation=f"remove watcher from {issue_key}")
+    client.delete(
+        f"/rest/api/3/issue/{issue_key}/watchers?accountId={account_id}",
+        operation=f"remove watcher from {issue_key}",
+    )
     client.close()
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Manage watchers on a JIRA issue',
-        epilog='Example: python manage_watchers.py PROJ-123 --add user@example.com'
+        description="Manage watchers on a JIRA issue",
+        epilog="Example: python manage_watchers.py PROJ-123 --add user@example.com",
     )
 
-    parser.add_argument('issue_key',
-                       help='Issue key (e.g., PROJ-123)')
+    parser.add_argument("issue_key", help="Issue key (e.g., PROJ-123)")
 
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--add',
-                      help='Add watcher (account ID or email)')
-    group.add_argument('--remove',
-                      help='Remove watcher (account ID or email)')
-    group.add_argument('--list', '-l',
-                      action='store_true',
-                      help='List current watchers')
+    group.add_argument("--add", help="Add watcher (account ID or email)")
+    group.add_argument("--remove", help="Remove watcher (account ID or email)")
+    group.add_argument(
+        "--list", "-l", action="store_true", help="List current watchers"
+    )
 
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -94,8 +100,8 @@ def main(argv: list[str] | None = None):
             else:
                 data = [
                     {
-                        'Name': w.get('displayName', ''),
-                        'Email': w.get('emailAddress', '')
+                        "Name": w.get("displayName", ""),
+                        "Email": w.get("emailAddress", ""),
                     }
                     for w in watchers
                 ]
@@ -117,5 +123,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -9,13 +9,12 @@ import json
 import os
 import re
 import subprocess
-import sys
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import yaml
 
@@ -31,21 +30,23 @@ class TestStatus(Enum):
 @dataclass
 class TestResult:
     """Result of a single test execution."""
+
     test_id: str
     name: str
     status: TestStatus
     duration: float
     output: str = ""
     error: str = ""
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class SuiteResult:
     """Result of a test suite execution."""
+
     suite_name: str
     description: str
-    tests: List[TestResult] = field(default_factory=list)
+    tests: list[TestResult] = field(default_factory=list)
 
     @property
     def passed(self) -> int:
@@ -97,11 +98,9 @@ class ClaudeCodeRunner:
         if os.environ.get("ANTHROPIC_API_KEY"):
             return True
         claude_dir = Path.home() / ".claude"
-        if claude_dir.exists() and (claude_dir / "credentials.json").exists():
-            return True
-        return False
+        return bool(claude_dir.exists() and (claude_dir / "credentials.json").exists())
 
-    def send_prompt(self, prompt: str, timeout: Optional[int] = None) -> Dict[str, Any]:
+    def send_prompt(self, prompt: str, timeout: int | None = None) -> dict[str, Any]:
         """Send a prompt to Claude Code and capture the response."""
         timeout = timeout or self.timeout
         start_time = time.time()
@@ -109,9 +108,12 @@ class ClaudeCodeRunner:
         cmd = [
             "claude",
             "--print",
-            "--output-format", "text",
-            "--model", self.model,
-            "--max-turns", "1",
+            "--output-format",
+            "text",
+            "--model",
+            self.model,
+            "--max-turns",
+            "1",
             prompt,
         ]
 
@@ -150,7 +152,7 @@ class ClaudeCodeRunner:
                 "duration": time.time() - start_time,
             }
 
-    def install_plugin(self, plugin_path: str = ".") -> Dict[str, Any]:
+    def install_plugin(self, plugin_path: str = ".") -> dict[str, Any]:
         """Install a plugin from the given path."""
         return self.send_prompt(f"/plugin {plugin_path}")
 
@@ -159,7 +161,7 @@ class TestCaseValidator:
     """Validates test output against expected outcomes."""
 
     @staticmethod
-    def validate(output: str, error: str, expect: Dict[str, Any]) -> Dict[str, Any]:
+    def validate(output: str, error: str, expect: dict[str, Any]) -> dict[str, Any]:
         """Validate output against expectations."""
         failures = []
         details = {}
@@ -183,7 +185,9 @@ class TestCaseValidator:
                     found_any = True
                     break
             if not found_any:
-                failures.append(f"Output missing any of: {expect['output_contains_any']}")
+                failures.append(
+                    f"Output missing any of: {expect['output_contains_any']}"
+                )
 
         if expect.get("no_errors"):
             error_patterns = [r"error:", r"exception:", r"traceback", r"failed:"]
@@ -194,7 +198,12 @@ class TestCaseValidator:
                         break
 
         if expect.get("no_crashes"):
-            crash_patterns = [r"segmentation fault", r"core dumped", r"fatal error", r"panic:"]
+            crash_patterns = [
+                r"segmentation fault",
+                r"core dumped",
+                r"fatal error",
+                r"panic:",
+            ]
             for pattern in crash_patterns:
                 if re.search(pattern, combined_output, re.IGNORECASE):
                     failures.append(f"Found crash indicator: {pattern}")
@@ -226,12 +235,12 @@ class E2ETestRunner:
         )
         self.validator = TestCaseValidator()
 
-    def load_test_cases(self) -> Dict[str, Any]:
+    def load_test_cases(self) -> dict[str, Any]:
         """Load test cases from YAML file."""
         with open(self.test_cases_path) as f:
             return yaml.safe_load(f)
 
-    def run_test(self, test: Dict[str, Any]) -> TestResult:
+    def run_test(self, test: dict[str, Any]) -> TestResult:
         """Run a single test case."""
         test_id = test["id"]
         name = test["name"]
@@ -267,9 +276,11 @@ class E2ETestRunner:
             details={"validation": validation, "exit_code": result["exit_code"]},
         )
 
-    def run_suite(self, suite_name: str, suite: Dict[str, Any]) -> SuiteResult:
+    def run_suite(self, suite_name: str, suite: dict[str, Any]) -> SuiteResult:
         """Run all tests in a suite."""
-        result = SuiteResult(suite_name=suite_name, description=suite.get("description", ""))
+        result = SuiteResult(
+            suite_name=suite_name, description=suite.get("description", "")
+        )
 
         if self.verbose:
             print(f"\nSuite: {suite_name}")
@@ -284,7 +295,7 @@ class E2ETestRunner:
 
         return result
 
-    def run_all(self, suites: Optional[List[str]] = None) -> List[SuiteResult]:
+    def run_all(self, suites: list[str] | None = None) -> list[SuiteResult]:
         """Run all test suites."""
         test_cases = self.load_test_cases()
         results = []
@@ -297,7 +308,7 @@ class E2ETestRunner:
 
         return results
 
-    def print_summary(self, results: List[SuiteResult]) -> bool:
+    def print_summary(self, results: list[SuiteResult]) -> bool:
         """Print test execution summary."""
         total_passed = sum(r.passed for r in results)
         total_failed = sum(r.failed for r in results)
@@ -324,7 +335,7 @@ class E2ETestRunner:
         print("=" * 60)
         return total_failed == 0
 
-    def write_json_report(self, results: List[SuiteResult], output_path: Path):
+    def write_json_report(self, results: list[SuiteResult], output_path: Path):
         """Write results to JSON file."""
         data = {
             "timestamp": datetime.now().isoformat(),
@@ -351,7 +362,7 @@ class E2ETestRunner:
         with open(output_path, "w") as f:
             json.dump(data, f, indent=2)
 
-    def write_junit_report(self, results: List[SuiteResult], output_path: Path):
+    def write_junit_report(self, results: list[SuiteResult], output_path: Path):
         """Write results to JUnit XML format."""
         from xml.etree import ElementTree as ET
 
@@ -375,14 +386,16 @@ class E2ETestRunner:
                     time=str(test.duration),
                 )
                 if test.status != TestStatus.PASSED:
-                    failure = ET.SubElement(testcase, "failure", message=test.status.value)
+                    failure = ET.SubElement(
+                        testcase, "failure", message=test.status.value
+                    )
                     failure.text = test.error or str(test.details)
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         tree = ET.ElementTree(testsuites)
         tree.write(output_path, encoding="unicode", xml_declaration=True)
 
-    def write_html_report(self, results: List[SuiteResult], output_path: Path):
+    def write_html_report(self, results: list[SuiteResult], output_path: Path):
         """Write results to HTML report."""
         total_passed = sum(r.passed for r in results)
         total_failed = sum(r.failed for r in results)
@@ -409,13 +422,15 @@ class E2ETestRunner:
         <p class="passed"><strong>Passed:</strong> {total_passed}</p>
         <p class="failed"><strong>Failed:</strong> {total_failed}</p>
         <p><strong>Model:</strong> {self.model}</p>
-        <p><strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+        <p><strong>Generated:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
     </div>
 """
         for suite in results:
             html += f"<h2>{suite.suite_name}</h2><table><tr><th>Test</th><th>Status</th><th>Duration</th></tr>"
             for test in suite.tests:
-                status_class = "passed" if test.status == TestStatus.PASSED else "failed"
+                status_class = (
+                    "passed" if test.status == TestStatus.PASSED else "failed"
+                )
                 html += f'<tr><td>{test.name}</td><td class="{status_class}">{test.status.value}</td><td>{test.duration:.1f}s</td></tr>'
             html += "</table>"
 

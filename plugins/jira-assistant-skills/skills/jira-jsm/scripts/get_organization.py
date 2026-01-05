@@ -7,18 +7,14 @@ Usage:
     python get_organization.py 12345 --output json
 """
 
-import sys
-import os
 import argparse
 import json
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-
-
-def get_organization_func(organization_id: int, profile: str = None) -> dict:
+def get_organization_func(organization_id: int, profile: str | None = None) -> dict:
     """
     Get organization details.
 
@@ -36,7 +32,7 @@ def get_organization_func(organization_id: int, profile: str = None) -> dict:
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Get JSM organization details',
+        description="Get JSM organization details",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -45,36 +41,45 @@ Examples:
 
   JSON output:
     %(prog)s 12345 --output json
-        """
+        """,
     )
 
-    parser.add_argument('organization_id', type=int,
-                        help='Organization ID')
-    parser.add_argument('--output', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use from config')
-    parser.add_argument('--verbose', '-v', action='store_true',
-                        help='Show full API response')
+    parser.add_argument("organization_id", type=int, help="Organization ID")
+    parser.add_argument(
+        "--output",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use from config")
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Show full API response"
+    )
 
     args = parser.parse_args(argv)
 
     try:
         organization = get_organization_func(
-            organization_id=args.organization_id,
-            profile=args.profile
+            organization_id=args.organization_id, profile=args.profile
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             if args.verbose:
                 print(json.dumps(organization, indent=2))
             else:
-                print(json.dumps({
-                    'id': organization.get('id'),
-                    'name': organization.get('name')
-                }, indent=2))
+                print(
+                    json.dumps(
+                        {
+                            "id": organization.get("id"),
+                            "name": organization.get("name"),
+                        },
+                        indent=2,
+                    )
+                )
         else:
-            print(f"Organization: {organization.get('name')} (ID: {organization.get('id')})\n")
+            print(
+                f"Organization: {organization.get('name')} (ID: {organization.get('id')})\n"
+            )
 
             if args.verbose:
                 print("Full response:")
@@ -90,5 +95,5 @@ Examples:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

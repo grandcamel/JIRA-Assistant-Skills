@@ -8,18 +8,21 @@ Note: Common markers (unit, integration, time) are defined in the root pytest.in
 """
 
 import copy
-import pytest
-from unittest.mock import Mock
 import sys
 from pathlib import Path
+from unittest.mock import Mock
+
+import pytest
 
 # Add shared lib to path so imports work in tests
-shared_lib_path = str(Path(__file__).parent.parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(
+    Path(__file__).parent.parent.parent.parent / "shared" / "scripts" / "lib"
+)
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
 # Add scripts to path for importing
-scripts_path = str(Path(__file__).parent.parent / 'scripts')
+scripts_path = str(Path(__file__).parent.parent / "scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
@@ -44,13 +47,13 @@ def sample_worklog():
             "accountId": "5b10a2844c20165700ede21g",
             "emailAddress": "alice@company.com",
             "displayName": "Alice Smith",
-            "active": True
+            "active": True,
         },
         "updateAuthor": {
             "accountId": "5b10a2844c20165700ede21g",
             "emailAddress": "alice@company.com",
             "displayName": "Alice Smith",
-            "active": True
+            "active": True,
         },
         "created": "2025-01-15T09:30:00.000+0000",
         "updated": "2025-01-15T09:30:00.000+0000",
@@ -65,11 +68,11 @@ def sample_worklog():
                     "type": "paragraph",
                     "content": [
                         {"type": "text", "text": "Debugging authentication issue"}
-                    ]
+                    ],
                 }
-            ]
+            ],
         },
-        "issueId": "10123"
+        "issueId": "10123",
     }
 
 
@@ -91,13 +94,13 @@ def sample_worklogs(sample_worklog):
                     "accountId": "5b10a2844c20165700ede22h",
                     "emailAddress": "bob@company.com",
                     "displayName": "Bob Jones",
-                    "active": True
+                    "active": True,
                 },
                 "updateAuthor": {
                     "accountId": "5b10a2844c20165700ede22h",
                     "emailAddress": "bob@company.com",
                     "displayName": "Bob Jones",
-                    "active": True
+                    "active": True,
                 },
                 "created": "2025-01-15T14:30:00.000+0000",
                 "updated": "2025-01-15T14:30:00.000+0000",
@@ -110,13 +113,11 @@ def sample_worklogs(sample_worklog):
                     "content": [
                         {
                             "type": "paragraph",
-                            "content": [
-                                {"type": "text", "text": "Code review"}
-                            ]
+                            "content": [{"type": "text", "text": "Code review"}],
                         }
-                    ]
+                    ],
                 },
-                "issueId": "10123"
+                "issueId": "10123",
             },
             {
                 "id": "10047",
@@ -125,13 +126,13 @@ def sample_worklogs(sample_worklog):
                     "accountId": "5b10a2844c20165700ede21g",
                     "emailAddress": "alice@company.com",
                     "displayName": "Alice Smith",
-                    "active": True
+                    "active": True,
                 },
                 "updateAuthor": {
                     "accountId": "5b10a2844c20165700ede21g",
                     "emailAddress": "alice@company.com",
                     "displayName": "Alice Smith",
-                    "active": True
+                    "active": True,
                 },
                 "created": "2025-01-16T10:30:00.000+0000",
                 "updated": "2025-01-16T10:30:00.000+0000",
@@ -144,15 +145,13 @@ def sample_worklogs(sample_worklog):
                     "content": [
                         {
                             "type": "paragraph",
-                            "content": [
-                                {"type": "text", "text": "Implemented fix"}
-                            ]
+                            "content": [{"type": "text", "text": "Implemented fix"}],
                         }
-                    ]
+                    ],
                 },
-                "issueId": "10123"
-            }
-        ]
+                "issueId": "10123",
+            },
+        ],
     }
 
 
@@ -165,7 +164,7 @@ def sample_time_tracking():
         "remainingEstimate": "1d 4h",
         "remainingEstimateSeconds": 43200,
         "timeSpent": "4h",
-        "timeSpentSeconds": 14400
+        "timeSpentSeconds": 14400,
     }
 
 
@@ -181,8 +180,8 @@ def sample_issue_with_time_tracking(sample_time_tracking, sample_worklogs):
             "status": {"name": "In Progress"},
             "issuetype": {"name": "Story"},
             "timetracking": sample_time_tracking,
-            "worklog": sample_worklogs
-        }
+            "worklog": sample_worklogs,
+        },
     }
 
 
@@ -197,25 +196,22 @@ def sample_issue_no_time_tracking():
             "summary": "Quick fix",
             "status": {"name": "To Do"},
             "issuetype": {"name": "Task"},
-            "timetracking": {}
-        }
+            "timetracking": {},
+        },
     }
 
 
 @pytest.fixture
 def sample_empty_worklogs():
     """Sample empty worklogs response."""
-    return {
-        "startAt": 0,
-        "maxResults": 20,
-        "total": 0,
-        "worklogs": []
-    }
+    return {"startAt": 0, "maxResults": 20, "total": 0, "worklogs": []}
 
 
 @pytest.fixture
 def mock_config_manager(mock_jira_client):
     """Mock config_manager.get_jira_client() to return mock client."""
+
     def _get_jira_client(profile=None):
         return mock_jira_client
+
     return _get_jira_client

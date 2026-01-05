@@ -8,18 +8,21 @@ Note: Common markers (unit, integration, relationships) are defined in the root 
 """
 
 import copy
-import pytest
-from unittest.mock import Mock
 import sys
 from pathlib import Path
+from unittest.mock import Mock
+
+import pytest
 
 # Add shared lib to path so imports work in tests
-shared_lib_path = str(Path(__file__).parent.parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(
+    Path(__file__).parent.parent.parent.parent / "shared" / "scripts" / "lib"
+)
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
 # Add scripts to path for importing
-scripts_path = str(Path(__file__).parent.parent / 'scripts')
+scripts_path = str(Path(__file__).parent.parent / "scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
@@ -43,29 +46,29 @@ def sample_link_types():
             "name": "Blocks",
             "inward": "is blocked by",
             "outward": "blocks",
-            "self": "https://test.atlassian.net/rest/api/3/issueLinkType/10000"
+            "self": "https://test.atlassian.net/rest/api/3/issueLinkType/10000",
         },
         {
             "id": "10001",
             "name": "Cloners",
             "inward": "is cloned by",
             "outward": "clones",
-            "self": "https://test.atlassian.net/rest/api/3/issueLinkType/10001"
+            "self": "https://test.atlassian.net/rest/api/3/issueLinkType/10001",
         },
         {
             "id": "10002",
             "name": "Duplicate",
             "inward": "is duplicated by",
             "outward": "duplicates",
-            "self": "https://test.atlassian.net/rest/api/3/issueLinkType/10002"
+            "self": "https://test.atlassian.net/rest/api/3/issueLinkType/10002",
         },
         {
             "id": "10003",
             "name": "Relates",
             "inward": "relates to",
             "outward": "relates to",
-            "self": "https://test.atlassian.net/rest/api/3/issueLinkType/10003"
-        }
+            "self": "https://test.atlassian.net/rest/api/3/issueLinkType/10003",
+        },
     ]
 
 
@@ -79,7 +82,7 @@ def sample_issue_links():
                 "id": "10000",
                 "name": "Blocks",
                 "inward": "is blocked by",
-                "outward": "blocks"
+                "outward": "blocks",
             },
             "outwardIssue": {
                 "id": "10101",
@@ -88,9 +91,9 @@ def sample_issue_links():
                 "fields": {
                     "summary": "Payment gateway integration",
                     "status": {"name": "In Progress"},
-                    "issuetype": {"name": "Story"}
-                }
-            }
+                    "issuetype": {"name": "Story"},
+                },
+            },
         },
         {
             "id": "20002",
@@ -98,7 +101,7 @@ def sample_issue_links():
                 "id": "10003",
                 "name": "Relates",
                 "inward": "relates to",
-                "outward": "relates to"
+                "outward": "relates to",
             },
             "outwardIssue": {
                 "id": "10102",
@@ -107,9 +110,9 @@ def sample_issue_links():
                 "fields": {
                     "summary": "API documentation",
                     "status": {"name": "To Do"},
-                    "issuetype": {"name": "Task"}
-                }
-            }
+                    "issuetype": {"name": "Task"},
+                },
+            },
         },
         {
             "id": "20003",
@@ -117,7 +120,7 @@ def sample_issue_links():
                 "id": "10000",
                 "name": "Blocks",
                 "inward": "is blocked by",
-                "outward": "blocks"
+                "outward": "blocks",
             },
             "inwardIssue": {
                 "id": "10100",
@@ -126,10 +129,10 @@ def sample_issue_links():
                 "fields": {
                     "summary": "Database schema update",
                     "status": {"name": "Done"},
-                    "issuetype": {"name": "Story"}
-                }
-            }
-        }
+                    "issuetype": {"name": "Story"},
+                },
+            },
+        },
     ]
 
 
@@ -144,8 +147,8 @@ def sample_issue_with_links(sample_issue_links):
             "summary": "Main feature implementation",
             "status": {"name": "In Progress"},
             "issuetype": {"name": "Story"},
-            "issuelinks": copy.deepcopy(sample_issue_links)
-        }
+            "issuelinks": copy.deepcopy(sample_issue_links),
+        },
     }
 
 
@@ -160,14 +163,16 @@ def sample_issue_no_links():
             "summary": "Standalone task",
             "status": {"name": "To Do"},
             "issuetype": {"name": "Task"},
-            "issuelinks": []
-        }
+            "issuelinks": [],
+        },
     }
 
 
 @pytest.fixture
 def mock_config_manager(mock_jira_client):
     """Mock config_manager.get_jira_client() to return mock client."""
+
     def _get_jira_client(profile=None):
         return mock_jira_client
+
     return _get_jira_client

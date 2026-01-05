@@ -13,22 +13,34 @@ Usage:
     python transition_issue.py PROJ-123 --name "Done" --dry-run  # Preview with context hints
 """
 
-import sys
 import argparse
 import json
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    find_transition_by_name,
+    format_transitions,
+    get_jira_client,
+    get_project_context,
+    get_valid_transitions,
+    has_project_context,
+    print_error,
+    print_info,
+    print_success,
+    text_to_adf,
+    validate_issue_key,
+    validate_transition_id,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client, has_project_context, get_project_context
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import validate_issue_key, validate_transition_id
-from jira_assistant_skills_lib import print_success, print_info, format_transitions
-from jira_assistant_skills_lib import text_to_adf
-from jira_assistant_skills_lib import find_transition_by_name
-from jira_assistant_skills_lib import get_valid_transitions, get_statuses_for_issue_type
-
-
-def get_context_workflow_hint(project_key: str, issue_type: str, current_status: str, profile: str = None) -> str:
+def get_context_workflow_hint(
+    project_key: str,
+    issue_type: str,
+    current_status: str,
+    profile: str | None = None,
+) -> str:
     """
     Get workflow hint from project context if available.
 
@@ -60,11 +72,17 @@ def get_context_workflow_hint(project_key: str, issue_type: str, current_status:
     return "\n".join(lines)
 
 
-def transition_issue(issue_key: str, transition_id: str = None,
-                    transition_name: str = None, resolution: str = None,
-                    comment: str = None, fields: dict = None,
-                    sprint_id: int = None, profile: str = None,
-                    dry_run: bool = False) -> dict:
+def transition_issue(
+    issue_key: str,
+    transition_id: str | None = None,
+    transition_name: str | None = None,
+    resolution: str | None = None,
+    comment: str | None = None,
+    fields: dict | None = None,
+    sprint_id: int | None = None,
+    profile: str | None = None,
+    dry_run: bool = False,
+) -> dict:
     """
     Transition an issue to a new status.
 
@@ -90,26 +108,34 @@ def transition_issue(issue_key: str, transition_id: str = None,
     client = get_jira_client(profile)
 
     # Get issue details first for context hints
-    issue = client.get_issue(issue_key, fields=['status', 'issuetype', 'project'])
-    current_status = issue.get('fields', {}).get('status', {}).get('name', 'Unknown')
-    issue_type = issue.get('fields', {}).get('issuetype', {}).get('name', 'Unknown')
-    project_key = issue.get('fields', {}).get('project', {}).get('key', issue_key.split('-')[0])
+    issue = client.get_issue(issue_key, fields=["status", "issuetype", "project"])
+    current_status = issue.get("fields", {}).get("status", {}).get("name", "Unknown")
+    issue_type = issue.get("fields", {}).get("issuetype", {}).get("name", "Unknown")
+    project_key = (
+        issue.get("fields", {}).get("project", {}).get("key", issue_key.split("-")[0])
+    )
 
     transitions = client.get_transitions(issue_key)
 
     if not transitions:
-        context_hint = get_context_workflow_hint(project_key, issue_type, current_status, profile)
-        raise ValidationError(f"No transitions available for {issue_key} (status: {current_status}){context_hint}")
+        context_hint = get_context_workflow_hint(
+            project_key, issue_type, current_status, profile
+        )
+        raise ValidationError(
+            f"No transitions available for {issue_key} (status: {current_status}){context_hint}"
+        )
 
     if transition_name:
         transition = find_transition_by_name(transitions, transition_name)
-        transition_id = transition['id']
+        transition_id = transition["id"]
     else:
         transition_id = validate_transition_id(transition_id)
-        matching = [t for t in transitions if t['id'] == transition_id]
+        matching = [t for t in transitions if t["id"] == transition_id]
         if not matching:
             available = format_transitions(transitions)
-            context_hint = get_context_workflow_hint(project_key, issue_type, current_status, profile)
+            context_hint = get_context_workflow_hint(
+                project_key, issue_type, current_status, profile
+            )
             raise ValidationError(
                 f"Transition ID '{transition_id}' not available.\n\n{available}{context_hint}"
             )
@@ -118,23 +144,25 @@ def transition_issue(issue_key: str, transition_id: str = None,
     transition_fields = fields or {}
 
     if resolution:
-        transition_fields['resolution'] = {'name': resolution}
+        transition_fields["resolution"] = {"name": resolution}
 
     if comment:
-        transition_fields['comment'] = text_to_adf(comment)
+        transition_fields["comment"] = text_to_adf(comment)
 
-    target_status = transition.get('to', {}).get('name', transition.get('name', 'Unknown'))
+    target_status = transition.get("to", {}).get(
+        "name", transition.get("name", "Unknown")
+    )
 
     result = {
-        'issue_key': issue_key,
-        'transition': transition.get('name'),
-        'transition_id': transition_id,
-        'current_status': current_status,
-        'target_status': target_status,
-        'resolution': resolution,
-        'comment': comment is not None,
-        'sprint_id': sprint_id,
-        'dry_run': dry_run
+        "issue_key": issue_key,
+        "transition": transition.get("name"),
+        "transition_id": transition_id,
+        "current_status": current_status,
+        "target_status": target_status,
+        "resolution": resolution,
+        "comment": comment is not None,
+        "sprint_id": sprint_id,
+        "dry_run": dry_run,
     }
 
     if dry_run:
@@ -145,19 +173,27 @@ def transition_issue(issue_key: str, transition_id: str = None,
         if resolution:
             print(f"  Resolution: {resolution}")
         if comment:
-            print(f"  Comment: (would add comment)")
+            print("  Comment: (would add comment)")
         if sprint_id:
             print(f"  Sprint: Would move to sprint {sprint_id}")
 
         # Show context workflow hint if available
-        context_hint = get_context_workflow_hint(project_key, issue_type, target_status, profile)
+        context_hint = get_context_workflow_hint(
+            project_key, issue_type, target_status, profile
+        )
         if context_hint:
-            print(f"\n  After transition, expected options:{context_hint.replace(chr(10), chr(10) + '  ')}")
+            print(
+                f"\n  After transition, expected options:{context_hint.replace(chr(10), chr(10) + '  ')}"
+            )
 
         client.close()
         return result
 
-    client.transition_issue(issue_key, transition_id, fields=transition_fields if transition_fields else None)
+    client.transition_issue(
+        issue_key,
+        transition_id,
+        fields=transition_fields if transition_fields else None,
+    )
 
     # Move to sprint if specified
     if sprint_id:
@@ -169,39 +205,39 @@ def transition_issue(issue_key: str, transition_id: str = None,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Transition a JIRA issue to a new status',
-        epilog='Example: python transition_issue.py PROJ-123 --name "In Progress"'
+        description="Transition a JIRA issue to a new status",
+        epilog='Example: python transition_issue.py PROJ-123 --name "In Progress"',
     )
 
-    parser.add_argument('issue_key',
-                       help='Issue key (e.g., PROJ-123)')
+    parser.add_argument("issue_key", help="Issue key (e.g., PROJ-123)")
 
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--id',
-                      help='Transition ID')
-    group.add_argument('--name', '-n',
-                      help='Transition name (e.g., "In Progress", "Done")')
+    group.add_argument("--id", help="Transition ID")
+    group.add_argument(
+        "--name", "-n", help='Transition name (e.g., "In Progress", "Done")'
+    )
 
-    parser.add_argument('--resolution', '-r',
-                       help='Resolution (for Done transitions): Fixed, Won\'t Fix, Duplicate, etc.')
-    parser.add_argument('--comment', '-c',
-                       help='Comment to add during transition')
-    parser.add_argument('--sprint', '-s', type=int,
-                       help='Sprint ID to move issue to after transition')
-    parser.add_argument('--fields',
-                       help='Additional fields as JSON string')
-    parser.add_argument('--dry-run',
-                       action='store_true',
-                       help='Preview changes without making them')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument(
+        "--resolution",
+        "-r",
+        help="Resolution (for Done transitions): Fixed, Won't Fix, Duplicate, etc.",
+    )
+    parser.add_argument("--comment", "-c", help="Comment to add during transition")
+    parser.add_argument(
+        "--sprint", "-s", type=int, help="Sprint ID to move issue to after transition"
+    )
+    parser.add_argument("--fields", help="Additional fields as JSON string")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Preview changes without making them"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
         fields = json.loads(args.fields) if args.fields else None
 
-        result = transition_issue(
+        transition_issue(
             issue_key=args.issue_key,
             transition_id=args.id,
             transition_name=args.name,
@@ -210,7 +246,7 @@ def main(argv: list[str] | None = None):
             fields=fields,
             sprint_id=args.sprint,
             profile=args.profile,
-            dry_run=args.dry_run
+            dry_run=args.dry_run,
         )
 
         if args.dry_run:
@@ -231,5 +267,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

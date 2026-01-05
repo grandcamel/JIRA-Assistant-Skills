@@ -23,35 +23,45 @@ Usage:
     python bulk_transition.py --list-checkpoints
 """
 
-import sys
 import argparse
+import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Callable
-
+from typing import Any
 
 try:
     from tqdm import tqdm
+
     TQDM_AVAILABLE = True
 except ImportError:
     TQDM_AVAILABLE = False
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError, sanitize_error_message
-from jira_assistant_skills_lib import validate_issue_key, validate_jql
-from jira_assistant_skills_lib import print_success, print_warning, print_info
-from jira_assistant_skills_lib import text_to_adf
 from jira_assistant_skills_lib import (
-    BatchProcessor, BatchConfig, BatchProgress,
-    get_recommended_batch_size, generate_operation_id,
-    list_pending_checkpoints, CheckpointManager
+    BatchConfig,
+    BatchProcessor,
+    BatchProgress,
+    CheckpointManager,
+    JiraError,
+    ValidationError,
+    generate_operation_id,
+    get_jira_client,
+    get_recommended_batch_size,
+    list_pending_checkpoints,
+    print_error,
+    print_info,
+    print_success,
+    print_warning,
+    text_to_adf,
+    validate_issue_key,
+    validate_jql,
 )
 
 # Default batch size threshold for automatic batching
 BATCH_THRESHOLD = 500
 
 
-def find_transition(transitions: List[Dict], target_status: str) -> Optional[Dict]:
+def find_transition(transitions: list[dict], target_status: str) -> dict | None:
     """
     Find a transition that leads to the target status.
 
@@ -66,18 +76,21 @@ def find_transition(transitions: List[Dict], target_status: str) -> Optional[Dic
 
     # First try exact match on transition name
     for t in transitions:
-        if t['name'].lower() == target_lower:
+        if t["name"].lower() == target_lower:
             return t
 
     # Then try matching target status name
     for t in transitions:
-        to_status = t.get('to', {}).get('name', '').lower()
+        to_status = t.get("to", {}).get("name", "").lower()
         if to_status == target_lower:
             return t
 
     # Finally try partial match
     for t in transitions:
-        if target_lower in t['name'].lower() or target_lower in t.get('to', {}).get('name', '').lower():
+        if (
+            target_lower in t["name"].lower()
+            or target_lower in t.get("to", {}).get("name", "").lower()
+        ):
             return t
 
     return None
@@ -99,29 +112,29 @@ def confirm_bulk_operation(count: int, operation: str, threshold: int = 50) -> b
         return True
 
     print(f"\nWARNING: This operation will {operation} {count} issue(s).")
-    response = input(f"Are you sure you want to proceed? (yes/no): ").strip().lower()
-    return response == 'yes'
+    response = input("Are you sure you want to proceed? (yes/no): ").strip().lower()
+    return response == "yes"
 
 
 def bulk_transition_batched(
     client=None,
-    issue_keys: List[str] = None,
-    jql: str = None,
-    target_status: str = None,
-    resolution: str = None,
-    comment: str = None,
+    issue_keys: list[str] | None = None,
+    jql: str | None = None,
+    target_status: str | None = None,
+    resolution: str | None = None,
+    comment: str | None = None,
     dry_run: bool = False,
     max_issues: int = 10000,
-    batch_size: int = None,
+    batch_size: int | None = None,
     delay_between_batches: float = 1.0,
     delay_between_items: float = 0.1,
     enable_checkpoint: bool = False,
-    operation_id: str = None,
-    progress_callback: Callable = None,
-    profile: str = None,
+    operation_id: str | None = None,
+    progress_callback: Callable | None = None,
+    profile: str | None = None,
     show_progress: bool = True,
-    skip_confirmation: bool = False
-) -> Dict[str, Any]:
+    skip_confirmation: bool = False,
+) -> dict[str, Any]:
     """
     Transition multiple issues with batching and checkpoint support.
 
@@ -158,7 +171,7 @@ def bulk_transition_batched(
     try:
         # Get issues to process
         if issue_keys:
-            issues = [{'key': validate_issue_key(k)} for k in issue_keys[:max_issues]]
+            issues = [{"key": validate_issue_key(k)} for k in issue_keys[:max_issues]]
         elif jql:
             jql = validate_jql(jql)
             # For large queries, paginate
@@ -169,11 +182,11 @@ def bulk_transition_batched(
             while len(all_issues) < max_issues:
                 result = client.search_issues(
                     jql,
-                    fields=['key', 'summary', 'status'],
+                    fields=["key", "summary", "status"],
                     max_results=min(page_size, max_issues - len(all_issues)),
-                    start_at=start_at
+                    start_at=start_at,
                 )
-                page_issues = result.get('issues', [])
+                page_issues = result.get("issues", [])
                 if not page_issues:
                     break
                 all_issues.extend(page_issues)
@@ -189,12 +202,12 @@ def bulk_transition_batched(
 
         if total == 0:
             return {
-                'success': 0,
-                'failed': 0,
-                'total': 0,
-                'errors': {},
-                'processed': [],
-                'batched': False
+                "success": 0,
+                "failed": 0,
+                "total": 0,
+                "errors": {},
+                "processed": [],
+                "batched": False,
             }
 
         # Calculate batch size if not specified
@@ -205,38 +218,44 @@ def bulk_transition_batched(
         use_batching = total > BATCH_THRESHOLD or enable_checkpoint
 
         if dry_run:
-            print_info(f"[DRY RUN] Would transition {total} issue(s) to '{target_status}'")
+            print_info(
+                f"[DRY RUN] Would transition {total} issue(s) to '{target_status}'"
+            )
             if use_batching:
                 num_batches = (total + batch_size - 1) // batch_size
                 print_info(f"  Batching: {num_batches} batches of ~{batch_size} issues")
             for issue in issues[:20]:  # Only show first 20
-                key = issue.get('key')
-                current_status = issue.get('fields', {}).get('status', {}).get('name', 'Unknown')
+                key = issue.get("key")
+                current_status = (
+                    issue.get("fields", {}).get("status", {}).get("name", "Unknown")
+                )
                 print(f"  - {key} ({current_status} -> {target_status})")
             if total > 20:
                 print(f"  ... and {total - 20} more issues")
             return {
-                'dry_run': True,
-                'success': 0,
-                'failed': 0,
-                'would_process': total,
-                'total': total,
-                'errors': {},
-                'processed': [],
-                'batched': use_batching,
-                'batch_count': (total + batch_size - 1) // batch_size if use_batching else 1
+                "dry_run": True,
+                "success": 0,
+                "failed": 0,
+                "would_process": total,
+                "total": total,
+                "errors": {},
+                "processed": [],
+                "batched": use_batching,
+                "batch_count": (total + batch_size - 1) // batch_size
+                if use_batching
+                else 1,
             }
 
         # Confirmation for large operations
         if not skip_confirmation and total > 50:
             if not confirm_bulk_operation(total, f"transition to '{target_status}'"):
                 return {
-                    'cancelled': True,
-                    'success': 0,
-                    'failed': 0,
-                    'total': total,
-                    'errors': {},
-                    'processed': []
+                    "cancelled": True,
+                    "success": 0,
+                    "failed": 0,
+                    "total": total,
+                    "errors": {},
+                    "processed": [],
                 }
 
         # Generate operation ID for checkpointing
@@ -250,7 +269,7 @@ def bulk_transition_batched(
             delay_between_items=delay_between_items,
             max_items=max_issues,
             enable_checkpoints=enable_checkpoint,
-            operation_id=operation_id
+            operation_id=operation_id,
         )
 
         # Track results
@@ -260,9 +279,9 @@ def bulk_transition_batched(
         processed = []
 
         # Process function for each issue
-        def process_issue(issue: Dict) -> bool:
+        def process_issue(issue: dict) -> bool:
             nonlocal success, failed, errors, processed
-            issue_key = issue.get('key')
+            issue_key = issue.get("key")
 
             try:
                 # Get available transitions
@@ -272,7 +291,7 @@ def bulk_transition_batched(
                 transition = find_transition(transitions, target_status)
 
                 if not transition:
-                    available = [t['name'] for t in transitions]
+                    available = [t["name"] for t in transitions]
                     raise ValidationError(
                         f"Transition to '{target_status}' not available. "
                         f"Available: {', '.join(available)}"
@@ -281,10 +300,12 @@ def bulk_transition_batched(
                 # Build fields for transition
                 fields = {}
                 if resolution:
-                    fields['resolution'] = {'name': resolution}
+                    fields["resolution"] = {"name": resolution}
 
                 # Execute transition
-                client.transition_issue(issue_key, transition['id'], fields=fields if fields else None)
+                client.transition_issue(
+                    issue_key, transition["id"], fields=fields if fields else None
+                )
 
                 # Add comment if provided
                 if comment:
@@ -306,7 +327,7 @@ def bulk_transition_batched(
                     progress.processed_items,
                     progress.total_items,
                     progress.processed_keys[-1] if progress.processed_keys else "",
-                    'batch_complete'
+                    "batch_complete",
                 )
             elif show_progress and not TQDM_AVAILABLE:
                 pct = progress.percent_complete
@@ -317,40 +338,44 @@ def bulk_transition_batched(
 
         # Use tqdm for progress if available
         if TQDM_AVAILABLE and show_progress and not progress_callback:
-            with tqdm(total=total, desc=f"Transitioning to '{target_status}'", unit="issue") as pbar:
+            with tqdm(
+                total=total, desc=f"Transitioning to '{target_status}'", unit="issue"
+            ) as pbar:
                 batch_processor = BatchProcessor(
                     config=config,
-                    process_item=lambda issue: (process_issue(issue), pbar.update(1))[0],
-                    progress_callback=None
+                    process_item=lambda issue: (process_issue(issue), pbar.update(1))[
+                        0
+                    ],
+                    progress_callback=None,
                 )
                 batch_result = batch_processor.process(
                     issues,
-                    get_key=lambda x: x.get('key'),
+                    get_key=lambda x: x.get("key"),
                     resume=enable_checkpoint,
-                    dry_run=False
+                    dry_run=False,
                 )
         else:
             batch_processor = BatchProcessor(
                 config=config,
                 process_item=process_issue,
-                progress_callback=on_progress if use_batching else None
+                progress_callback=on_progress if use_batching else None,
             )
             batch_result = batch_processor.process(
                 issues,
-                get_key=lambda x: x.get('key'),
+                get_key=lambda x: x.get("key"),
                 resume=enable_checkpoint,
-                dry_run=False
+                dry_run=False,
             )
 
         return {
-            'success': success,
-            'failed': failed,
-            'total': total,
-            'errors': errors,
-            'processed': processed,
-            'batched': use_batching,
-            'batch_count': batch_result.total_batches,
-            'operation_id': operation_id if enable_checkpoint else None
+            "success": success,
+            "failed": failed,
+            "total": total,
+            "errors": errors,
+            "processed": processed,
+            "batched": use_batching,
+            "batch_count": batch_result.total_batches,
+            "operation_id": operation_id if enable_checkpoint else None,
         }
 
     finally:
@@ -360,20 +385,20 @@ def bulk_transition_batched(
 
 def bulk_transition(
     client=None,
-    issue_keys: List[str] = None,
-    jql: str = None,
-    target_status: str = None,
-    resolution: str = None,
-    comment: str = None,
+    issue_keys: list[str] | None = None,
+    jql: str | None = None,
+    target_status: str | None = None,
+    resolution: str | None = None,
+    comment: str | None = None,
     dry_run: bool = False,
     max_issues: int = 100,
     delay_between_ops: float = 0.1,
-    progress_callback: Callable = None,
-    profile: str = None,
+    progress_callback: Callable | None = None,
+    profile: str | None = None,
     show_progress: bool = True,
     confirm_threshold: int = 50,
-    skip_confirmation: bool = False
-) -> Dict[str, Any]:
+    skip_confirmation: bool = False,
+) -> dict[str, Any]:
     """
     Transition multiple issues to a new status.
 
@@ -404,11 +429,13 @@ def bulk_transition(
     try:
         # Get issues to process
         if issue_keys:
-            issues = [{'key': validate_issue_key(k)} for k in issue_keys[:max_issues]]
+            issues = [{"key": validate_issue_key(k)} for k in issue_keys[:max_issues]]
         elif jql:
             jql = validate_jql(jql)
-            result = client.search_issues(jql, fields=['key', 'summary', 'status'], max_results=max_issues)
-            issues = result.get('issues', [])
+            result = client.search_issues(
+                jql, fields=["key", "summary", "status"], max_results=max_issues
+            )
+            issues = result.get("issues", [])
         else:
             raise ValidationError("Either --issues or --jql must be provided")
 
@@ -416,27 +443,31 @@ def bulk_transition(
 
         if total == 0:
             return {
-                'success': 0,
-                'failed': 0,
-                'total': 0,
-                'errors': {},
-                'processed': []
+                "success": 0,
+                "failed": 0,
+                "total": 0,
+                "errors": {},
+                "processed": [],
             }
 
         if dry_run:
-            print_info(f"[DRY RUN] Would transition {total} issue(s) to '{target_status}':")
+            print_info(
+                f"[DRY RUN] Would transition {total} issue(s) to '{target_status}':"
+            )
             for issue in issues:
-                key = issue.get('key', issue.get('key'))
-                current_status = issue.get('fields', {}).get('status', {}).get('name', 'Unknown')
+                key = issue.get("key", issue.get("key"))
+                current_status = (
+                    issue.get("fields", {}).get("status", {}).get("name", "Unknown")
+                )
                 print(f"  - {key} ({current_status} -> {target_status})")
             return {
-                'dry_run': True,
-                'success': 0,
-                'failed': 0,
-                'would_process': total,
-                'total': total,
-                'errors': {},
-                'processed': []
+                "dry_run": True,
+                "success": 0,
+                "failed": 0,
+                "would_process": total,
+                "total": total,
+                "errors": {},
+                "processed": [],
             }
 
         # Confirmation for large operations
@@ -444,12 +475,12 @@ def bulk_transition(
             total, f"transition to '{target_status}'", confirm_threshold
         ):
             return {
-                'cancelled': True,
-                'success': 0,
-                'failed': 0,
-                'total': total,
-                'errors': {},
-                'processed': []
+                "cancelled": True,
+                "success": 0,
+                "failed": 0,
+                "total": total,
+                "errors": {},
+                "processed": [],
             }
 
         success = 0
@@ -464,13 +495,13 @@ def bulk_transition(
                 enumerate(issues, 1),
                 total=total,
                 desc=f"Transitioning to '{target_status}'",
-                unit="issue"
+                unit="issue",
             )
         else:
             issue_iterator = enumerate(issues, 1)
 
         for i, issue in issue_iterator:
-            issue_key = issue.get('key')
+            issue_key = issue.get("key")
 
             try:
                 # Get available transitions
@@ -480,7 +511,7 @@ def bulk_transition(
                 transition = find_transition(transitions, target_status)
 
                 if not transition:
-                    available = [t['name'] for t in transitions]
+                    available = [t["name"] for t in transitions]
                     raise ValidationError(
                         f"Transition to '{target_status}' not available. "
                         f"Available: {', '.join(available)}"
@@ -489,10 +520,12 @@ def bulk_transition(
                 # Build fields for transition
                 fields = {}
                 if resolution:
-                    fields['resolution'] = {'name': resolution}
+                    fields["resolution"] = {"name": resolution}
 
                 # Execute transition
-                client.transition_issue(issue_key, transition['id'], fields=fields if fields else None)
+                client.transition_issue(
+                    issue_key, transition["id"], fields=fields if fields else None
+                )
 
                 # Add comment if provided
                 if comment:
@@ -504,9 +537,11 @@ def bulk_transition(
                 if use_tqdm:
                     issue_iterator.set_postfix(success=success, failed=failed)
                 elif progress_callback:
-                    progress_callback(i, total, issue_key, 'success')
+                    progress_callback(i, total, issue_key, "success")
                 else:
-                    print_success(f"[{i}/{total}] Transitioned {issue_key} to '{target_status}'")
+                    print_success(
+                        f"[{i}/{total}] Transitioned {issue_key} to '{target_status}'"
+                    )
 
             except Exception as e:
                 failed += 1
@@ -515,7 +550,7 @@ def bulk_transition(
                 if use_tqdm:
                     issue_iterator.set_postfix(success=success, failed=failed)
                 elif progress_callback:
-                    progress_callback(i, total, issue_key, 'failed')
+                    progress_callback(i, total, issue_key, "failed")
                 else:
                     print_warning(f"[{i}/{total}] Failed {issue_key}: {e}")
 
@@ -524,11 +559,11 @@ def bulk_transition(
                 time.sleep(delay_between_ops)
 
         return {
-            'success': success,
-            'failed': failed,
-            'total': total,
-            'errors': errors,
-            'processed': processed
+            "success": success,
+            "failed": failed,
+            "total": total,
+            "errors": errors,
+            "processed": processed,
         }
 
     finally:
@@ -538,56 +573,68 @@ def bulk_transition(
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Bulk transition JIRA issues to new status',
-        epilog='''
+        description="Bulk transition JIRA issues to new status",
+        epilog="""
 Examples:
   %(prog)s --issues PROJ-1,PROJ-2 --to "Done"
   %(prog)s --jql "project=PROJ" --to "Done" --batch-size 100
   %(prog)s --jql "project=PROJ" --to "Done" --enable-checkpoint
   %(prog)s --resume transition-20231215-143022 --to "Done"
   %(prog)s --list-checkpoints
-        '''
+        """,
     )
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('--issues', '-i',
-                       help='Comma-separated issue keys (e.g., PROJ-1,PROJ-2)')
-    group.add_argument('--jql', '-q',
-                       help='JQL query to find issues')
-    group.add_argument('--resume',
-                       help='Resume from checkpoint (operation ID)')
-    group.add_argument('--list-checkpoints',
-                       action='store_true',
-                       help='List pending checkpoints that can be resumed')
+    group.add_argument(
+        "--issues", "-i", help="Comma-separated issue keys (e.g., PROJ-1,PROJ-2)"
+    )
+    group.add_argument("--jql", "-q", help="JQL query to find issues")
+    group.add_argument("--resume", help="Resume from checkpoint (operation ID)")
+    group.add_argument(
+        "--list-checkpoints",
+        action="store_true",
+        help="List pending checkpoints that can be resumed",
+    )
 
-    parser.add_argument('--to', '-t',
-                        dest='target_status',
-                        help='Target status name (e.g., "Done", "In Progress")')
-    parser.add_argument('--resolution', '-r',
-                        help='Resolution to set (e.g., Fixed, Won\'t Fix)')
-    parser.add_argument('--comment', '-c',
-                        help='Comment to add during transition')
-    parser.add_argument('--max-issues',
-                        type=int,
-                        default=10000,
-                        help='Maximum issues to process (default: 10000)')
-    parser.add_argument('--batch-size',
-                        type=int,
-                        help='Issues per batch (auto-calculated if not specified)')
-    parser.add_argument('--enable-checkpoint',
-                        action='store_true',
-                        help='Enable checkpoint/resume for large operations')
-    parser.add_argument('--dry-run',
-                        action='store_true',
-                        help='Preview changes without making them')
-    parser.add_argument('--yes', '-y',
-                        action='store_true',
-                        help='Skip confirmation prompt for large operations')
-    parser.add_argument('--no-progress',
-                        action='store_true',
-                        help='Disable progress bar')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use')
+    parser.add_argument(
+        "--to",
+        "-t",
+        dest="target_status",
+        help='Target status name (e.g., "Done", "In Progress")',
+    )
+    parser.add_argument(
+        "--resolution", "-r", help="Resolution to set (e.g., Fixed, Won't Fix)"
+    )
+    parser.add_argument("--comment", "-c", help="Comment to add during transition")
+    parser.add_argument(
+        "--max-issues",
+        type=int,
+        default=10000,
+        help="Maximum issues to process (default: 10000)",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        help="Issues per batch (auto-calculated if not specified)",
+    )
+    parser.add_argument(
+        "--enable-checkpoint",
+        action="store_true",
+        help="Enable checkpoint/resume for large operations",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Preview changes without making them"
+    )
+    parser.add_argument(
+        "--yes",
+        "-y",
+        action="store_true",
+        help="Skip confirmation prompt for large operations",
+    )
+    parser.add_argument(
+        "--no-progress", action="store_true", help="Disable progress bar"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -601,7 +648,9 @@ Examples:
                 print(f"Found {len(checkpoints)} pending checkpoint(s):\n")
                 for cp in checkpoints:
                     print(f"  ID: {cp['operation_id']}")
-                    print(f"    Progress: {cp['progress']:.1f}% ({cp['processed']}/{cp['total']})")
+                    print(
+                        f"    Progress: {cp['progress']:.1f}% ({cp['processed']}/{cp['total']})"
+                    )
                     print(f"    Started: {cp['started_at']}")
                     print(f"    Updated: {cp['updated_at']}")
                     print()
@@ -613,34 +662,43 @@ Examples:
                 parser.error("--to is required when resuming")
             # Load checkpoint and continue
             checkpoint_mgr = CheckpointManager(
-                str(Path.home() / ".jira-skills" / "checkpoints"),
-                args.resume
+                str(Path.home() / ".jira-skills" / "checkpoints"), args.resume
             )
             if not checkpoint_mgr.exists():
                 print(f"Error: Checkpoint '{args.resume}' not found.")
                 sys.exit(1)
             progress = checkpoint_mgr.load()
             print_info(f"Resuming from checkpoint: {args.resume}")
-            print_info(f"  Progress: {progress.processed_items}/{progress.total_items} ({progress.percent_complete:.1f}%)")
+            print_info(
+                f"  Progress: {progress.processed_items}/{progress.total_items} ({progress.percent_complete:.1f}%)"
+            )
             # Continue processing - the batch processor will skip already processed items
             # For now, we need the original JQL or issue list which we don't have
-            print("Note: Resume functionality requires storing the original query in checkpoint.")
+            print(
+                "Note: Resume functionality requires storing the original query in checkpoint."
+            )
             print("This feature is partially implemented.")
             sys.exit(0)
 
         # Require issues or JQL
         if not args.issues and not args.jql:
-            parser.error("Either --issues, --jql, --resume, or --list-checkpoints is required")
+            parser.error(
+                "Either --issues, --jql, --resume, or --list-checkpoints is required"
+            )
 
         if not args.target_status:
             parser.error("--to is required")
 
         issue_keys = None
         if args.issues:
-            issue_keys = [k.strip() for k in args.issues.split(',')]
+            issue_keys = [k.strip() for k in args.issues.split(",")]
 
         # Use batched version for large operations or when checkpoint is enabled
-        use_batched = args.batch_size or args.enable_checkpoint or args.max_issues > BATCH_THRESHOLD
+        use_batched = (
+            args.batch_size
+            or args.enable_checkpoint
+            or args.max_issues > BATCH_THRESHOLD
+        )
 
         if use_batched:
             result = bulk_transition_batched(
@@ -655,7 +713,7 @@ Examples:
                 enable_checkpoint=args.enable_checkpoint,
                 profile=args.profile,
                 show_progress=not args.no_progress,
-                skip_confirmation=args.yes
+                skip_confirmation=args.yes,
             )
         else:
             result = bulk_transition(
@@ -668,20 +726,20 @@ Examples:
                 max_issues=args.max_issues,
                 profile=args.profile,
                 show_progress=not args.no_progress,
-                skip_confirmation=args.yes
+                skip_confirmation=args.yes,
             )
 
-        if result.get('cancelled'):
+        if result.get("cancelled"):
             print("\nOperation cancelled by user.")
             sys.exit(0)
 
         print(f"\nSummary: {result['success']} succeeded, {result['failed']} failed")
-        if result.get('batched'):
+        if result.get("batched"):
             print(f"  Processed in {result.get('batch_count', 0)} batches")
-        if result.get('operation_id'):
+        if result.get("operation_id"):
             print(f"  Checkpoint ID: {result['operation_id']}")
 
-        if result['failed'] > 0:
+        if result["failed"] > 0:
             sys.exit(1)
 
     except JiraError as e:
@@ -695,5 +753,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

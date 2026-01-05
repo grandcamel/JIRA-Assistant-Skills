@@ -7,16 +7,17 @@ issue CRUD operations.
 Note: Common markers (unit, integration, slow) are defined in the root pytest.ini.
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock
-from copy import deepcopy
 import sys
+from copy import deepcopy
 from pathlib import Path
+from unittest.mock import Mock
+
+import pytest
 
 # Add paths to sys.path before any imports that depend on them
 _this_dir = Path(__file__).parent
-_shared_lib_path = str(_this_dir.parent.parent / 'shared' / 'scripts' / 'lib')
-_scripts_path = str(_this_dir.parent / 'scripts')
+_shared_lib_path = str(_this_dir.parent.parent / "shared" / "scripts" / "lib")
+_scripts_path = str(_this_dir.parent / "scripts")
 
 # Insert at beginning to ensure our paths take precedence
 for path in [_shared_lib_path, _scripts_path]:
@@ -52,53 +53,38 @@ def sample_issue():
                         "type": "paragraph",
                         "content": [
                             {"type": "text", "text": "This is a test description."}
-                        ]
+                        ],
                     }
-                ]
+                ],
             },
-            "issuetype": {
-                "id": "10001",
-                "name": "Bug",
-                "subtask": False
-            },
+            "issuetype": {"id": "10001", "name": "Bug", "subtask": False},
             "status": {
                 "id": "1",
                 "name": "Open",
-                "statusCategory": {
-                    "id": 2,
-                    "key": "new",
-                    "name": "To Do"
-                }
+                "statusCategory": {"id": 2, "key": "new", "name": "To Do"},
             },
-            "priority": {
-                "id": "3",
-                "name": "Medium"
-            },
+            "priority": {"id": "3", "name": "Medium"},
             "assignee": {
                 "accountId": "557058:test-user-id",
                 "displayName": "Test User",
                 "emailAddress": "test@example.com",
-                "active": True
+                "active": True,
             },
             "reporter": {
                 "accountId": "557058:reporter-id",
                 "displayName": "Reporter User",
                 "emailAddress": "reporter@example.com",
-                "active": True
+                "active": True,
             },
-            "project": {
-                "id": "10000",
-                "key": "PROJ",
-                "name": "Test Project"
-            },
+            "project": {"id": "10000", "key": "PROJ", "name": "Test Project"},
             "labels": ["bug", "urgent"],
             "components": [
                 {"id": "10100", "name": "Backend"},
-                {"id": "10101", "name": "API"}
+                {"id": "10101", "name": "API"},
             ],
             "created": "2025-01-15T10:30:00.000+0000",
-            "updated": "2025-01-20T14:45:00.000+0000"
-        }
+            "updated": "2025-01-20T14:45:00.000+0000",
+        },
     }
 
 
@@ -111,21 +97,10 @@ def sample_issue_minimal():
         "self": "https://test.atlassian.net/rest/api/3/issue/10002",
         "fields": {
             "summary": "Minimal Issue",
-            "issuetype": {
-                "id": "10002",
-                "name": "Task",
-                "subtask": False
-            },
-            "status": {
-                "id": "1",
-                "name": "Open"
-            },
-            "project": {
-                "id": "10000",
-                "key": "PROJ",
-                "name": "Test Project"
-            }
-        }
+            "issuetype": {"id": "10002", "name": "Task", "subtask": False},
+            "status": {"id": "1", "name": "Open"},
+            "project": {"id": "10000", "key": "PROJ", "name": "Test Project"},
+        },
     }
 
 
@@ -138,29 +113,18 @@ def sample_issue_with_time_tracking():
         "self": "https://test.atlassian.net/rest/api/3/issue/10003",
         "fields": {
             "summary": "Issue with Time Tracking",
-            "issuetype": {
-                "id": "10001",
-                "name": "Bug",
-                "subtask": False
-            },
-            "status": {
-                "id": "1",
-                "name": "Open"
-            },
-            "project": {
-                "id": "10000",
-                "key": "PROJ",
-                "name": "Test Project"
-            },
+            "issuetype": {"id": "10001", "name": "Bug", "subtask": False},
+            "status": {"id": "1", "name": "Open"},
+            "project": {"id": "10000", "key": "PROJ", "name": "Test Project"},
             "timetracking": {
                 "originalEstimate": "2d",
                 "remainingEstimate": "1d 4h",
                 "timeSpent": "4h",
                 "originalEstimateSeconds": 57600,
                 "remainingEstimateSeconds": 36000,
-                "timeSpentSeconds": 14400
-            }
-        }
+                "timeSpentSeconds": 14400,
+            },
+        },
     }
 
 
@@ -173,20 +137,9 @@ def sample_issue_with_links():
         "self": "https://test.atlassian.net/rest/api/3/issue/10004",
         "fields": {
             "summary": "Issue with Links",
-            "issuetype": {
-                "id": "10001",
-                "name": "Bug",
-                "subtask": False
-            },
-            "status": {
-                "id": "1",
-                "name": "Open"
-            },
-            "project": {
-                "id": "10000",
-                "key": "PROJ",
-                "name": "Test Project"
-            },
+            "issuetype": {"id": "10001", "name": "Bug", "subtask": False},
+            "status": {"id": "1", "name": "Open"},
+            "project": {"id": "10000", "key": "PROJ", "name": "Test Project"},
             "issuelinks": [
                 {
                     "id": "10200",
@@ -194,16 +147,16 @@ def sample_issue_with_links():
                         "id": "10000",
                         "name": "Blocks",
                         "inward": "is blocked by",
-                        "outward": "blocks"
+                        "outward": "blocks",
                     },
                     "outwardIssue": {
                         "id": "10005",
                         "key": "PROJ-127",
                         "fields": {
                             "summary": "Blocked Issue",
-                            "status": {"name": "Open"}
-                        }
-                    }
+                            "status": {"name": "Open"},
+                        },
+                    },
                 },
                 {
                     "id": "10201",
@@ -211,19 +164,19 @@ def sample_issue_with_links():
                         "id": "10001",
                         "name": "Relates",
                         "inward": "relates to",
-                        "outward": "relates to"
+                        "outward": "relates to",
                     },
                     "inwardIssue": {
                         "id": "10006",
                         "key": "PROJ-128",
                         "fields": {
                             "summary": "Related Issue",
-                            "status": {"name": "In Progress"}
-                        }
-                    }
-                }
-            ]
-        }
+                            "status": {"name": "In Progress"},
+                        },
+                    },
+                },
+            ],
+        },
     }
 
 
@@ -236,23 +189,12 @@ def sample_issue_with_agile():
         "self": "https://test.atlassian.net/rest/api/3/issue/10007",
         "fields": {
             "summary": "Story with Agile Fields",
-            "issuetype": {
-                "id": "10003",
-                "name": "Story",
-                "subtask": False
-            },
-            "status": {
-                "id": "1",
-                "name": "Open"
-            },
-            "project": {
-                "id": "10000",
-                "key": "PROJ",
-                "name": "Test Project"
-            },
+            "issuetype": {"id": "10003", "name": "Story", "subtask": False},
+            "status": {"id": "1", "name": "Open"},
+            "project": {"id": "10000", "key": "PROJ", "name": "Test Project"},
             "customfield_10014": "PROJ-100",  # Epic Link
-            "customfield_10016": 5.0  # Story Points
-        }
+            "customfield_10016": 5.0,  # Story Points
+        },
     }
 
 
@@ -262,7 +204,7 @@ def sample_created_issue():
     return {
         "id": "10010",
         "key": "PROJ-130",
-        "self": "https://test.atlassian.net/rest/api/3/issue/10010"
+        "self": "https://test.atlassian.net/rest/api/3/issue/10010",
     }
 
 
@@ -273,7 +215,7 @@ def sample_created_issue_with_links():
         "id": "10011",
         "key": "PROJ-131",
         "self": "https://test.atlassian.net/rest/api/3/issue/10011",
-        "links_created": ["blocks PROJ-123", "relates to PROJ-124"]
+        "links_created": ["blocks PROJ-123", "relates to PROJ-124"],
     }
 
 
@@ -285,19 +227,13 @@ def sample_issue_detailed(sample_issue):
         {
             "id": "10020",
             "key": "PROJ-140",
-            "fields": {
-                "summary": "Subtask 1",
-                "status": {"name": "Open"}
-            }
+            "fields": {"summary": "Subtask 1", "status": {"name": "Open"}},
         },
         {
             "id": "10021",
             "key": "PROJ-141",
-            "fields": {
-                "summary": "Subtask 2",
-                "status": {"name": "Done"}
-            }
-        }
+            "fields": {"summary": "Subtask 2", "status": {"name": "Done"}},
+        },
     ]
     return issue
 
@@ -305,6 +241,8 @@ def sample_issue_detailed(sample_issue):
 @pytest.fixture
 def mock_config_manager(mock_jira_client):
     """Mock config_manager.get_jira_client() to return mock client."""
+
     def _get_jira_client(profile=None):
         return mock_jira_client
+
     return _get_jira_client

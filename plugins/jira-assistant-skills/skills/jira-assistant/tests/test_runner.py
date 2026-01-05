@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 """Test runner wrapper for routing tests."""
 
-import json
+import logging
 import re
 import subprocess
-import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +13,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TestResult:
     """Result of a single test."""
+
     test_id: str
     passed: bool
     input_text: str = ""
@@ -28,6 +27,7 @@ class TestResult:
 @dataclass
 class TestSuiteResult:
     """Result of running a test suite."""
+
     passed: list[TestResult] = field(default_factory=list)
     failed: list[TestResult] = field(default_factory=list)
     skipped: list[str] = field(default_factory=list)
@@ -84,8 +84,10 @@ class TestRunner:
             "pytest",
             str(self.TEST_FILE),
             "-v",
-            "-k", test_id,
-            "--model", model,
+            "-k",
+            test_id,
+            "--model",
+            model,
             "--tb=short",
             "-x",  # Stop on first failure
         ]
@@ -152,7 +154,8 @@ class TestRunner:
             "pytest",
             str(self.TEST_FILE),
             "-v",
-            "--model", model,
+            "--model",
+            model,
             "--tb=short",
         ]
 
@@ -167,7 +170,9 @@ class TestRunner:
         if parallel > 1:
             cmd.extend(["-n", str(parallel)])
 
-        logger.info(f"Running {len(test_ids) if test_ids else 'all'} tests with model {model}")
+        logger.info(
+            f"Running {len(test_ids) if test_ids else 'all'} tests with model {model}"
+        )
         logger.debug(f"Command: {' '.join(cmd)}")
 
         try:
@@ -338,6 +343,7 @@ class TestRunner:
                 del sys.modules["test_routing"]
 
             from test_routing import GOLDEN_TESTS
+
             return GOLDEN_TESTS
         except ImportError as e:
             logger.warning(f"Could not import test data: {e}")
@@ -376,14 +382,10 @@ class TestRunner:
         Returns:
             List of test IDs that regressed
         """
-        current_passing = {r.test_id for r in current_result.passed}
+        {r.test_id for r in current_result.passed}
         current_failing = {r.test_id for r in current_result.failed}
 
-        regressions = [
-            test_id
-            for test_id in baseline
-            if test_id in current_failing
-        ]
+        regressions = [test_id for test_id in baseline if test_id in current_failing]
 
         if regressions:
             logger.warning(f"Detected {len(regressions)} regressions: {regressions}")

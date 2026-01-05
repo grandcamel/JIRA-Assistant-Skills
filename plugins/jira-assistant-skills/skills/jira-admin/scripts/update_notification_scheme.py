@@ -12,25 +12,27 @@ Usage:
     python update_notification_scheme.py 10000 --profile production --name "Prod Scheme"
 """
 
-import sys
 import argparse
 import json
-from pathlib import Path
-from typing import Dict, Any, Optional
+import sys
+from typing import Any
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError, NotFoundError
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
 
 def update_notification_scheme(
     client=None,
-    scheme_id: str = None,
-    name: Optional[str] = None,
-    description: Optional[str] = None,
+    scheme_id: str | None = None,
+    name: str | None = None,
+    description: str | None = None,
     dry_run: bool = False,
-    profile: Optional[str] = None
-) -> Dict[str, Any]:
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Update notification scheme metadata.
 
@@ -57,56 +59,53 @@ def update_notification_scheme(
     try:
         # Validate at least one change is provided
         if not name and not description:
-            raise ValidationError("At least one change (name or description) must be provided")
+            raise ValidationError(
+                "At least one change (name or description) must be provided"
+            )
 
         # Get current scheme to show before/after
-        current = client.get_notification_scheme(scheme_id, expand='notificationSchemeEvents')
+        current = client.get_notification_scheme(
+            scheme_id, expand="notificationSchemeEvents"
+        )
 
         # Build changes dict
         changes = {}
         data = {}
 
         if name is not None:
-            changes['name'] = {
-                'before': current.get('name'),
-                'after': name
-            }
-            data['name'] = name
+            changes["name"] = {"before": current.get("name"), "after": name}
+            data["name"] = name
 
         if description is not None:
-            changes['description'] = {
-                'before': current.get('description'),
-                'after': description
+            changes["description"] = {
+                "before": current.get("description"),
+                "after": description,
             }
-            data['description'] = description
+            data["description"] = description
 
         # Handle dry run
         if dry_run:
             return {
-                'dry_run': True,
-                'scheme_id': scheme_id,
-                'current': {
-                    'name': current.get('name'),
-                    'description': current.get('description')
+                "dry_run": True,
+                "scheme_id": scheme_id,
+                "current": {
+                    "name": current.get("name"),
+                    "description": current.get("description"),
                 },
-                'changes': changes
+                "changes": changes,
             }
 
         # Apply the update
         client.update_notification_scheme(scheme_id, data)
 
-        return {
-            'success': True,
-            'scheme_id': scheme_id,
-            'changes': changes
-        }
+        return {"success": True, "scheme_id": scheme_id, "changes": changes}
 
     finally:
-        if close_client and hasattr(client, 'close'):
+        if close_client and hasattr(client, "close"):
             client.close()
 
 
-def format_text_output(result: Dict[str, Any]) -> str:
+def format_text_output(result: dict[str, Any]) -> str:
     """
     Format result as human-readable text.
 
@@ -117,20 +116,20 @@ def format_text_output(result: Dict[str, Any]) -> str:
         Formatted text string
     """
     output = []
-    scheme_id = result.get('scheme_id', 'N/A')
+    scheme_id = result.get("scheme_id", "N/A")
 
-    if result.get('dry_run'):
+    if result.get("dry_run"):
         output.append(f"[DRY RUN] Would update notification scheme {scheme_id}")
         output.append("")
         output.append("Changes:")
 
-        changes = result.get('changes', {})
+        changes = result.get("changes", {})
         for field, values in changes.items():
-            before = values.get('before', 'N/A')
-            after = values.get('after', 'N/A')
+            before = values.get("before", "N/A")
+            after = values.get("after", "N/A")
             output.append(f"  {field.title()}:")
-            output.append(f"    Before: \"{before}\"")
-            output.append(f"    After:  \"{after}\"")
+            output.append(f'    Before: "{before}"')
+            output.append(f'    After:  "{after}"')
 
         output.append("")
         output.append("No changes made (dry run mode)")
@@ -138,19 +137,19 @@ def format_text_output(result: Dict[str, Any]) -> str:
         output.append(f"Notification Scheme Updated: {scheme_id}")
         output.append("-" * 40)
 
-        changes = result.get('changes', {})
+        changes = result.get("changes", {})
         for field, values in changes.items():
-            before = values.get('before', 'N/A')
-            after = values.get('after', 'N/A')
-            output.append(f"{field.title()}: \"{before}\" -> \"{after}\"")
+            before = values.get("before", "N/A")
+            after = values.get("after", "N/A")
+            output.append(f'{field.title()}: "{before}" -> "{after}"')
 
         output.append("")
         output.append(f"Success! Notification scheme {scheme_id} updated.")
 
-    return '\n'.join(output)
+    return "\n".join(output)
 
 
-def format_json_output(result: Dict[str, Any]) -> str:
+def format_json_output(result: dict[str, Any]) -> str:
     """
     Format result as JSON.
 
@@ -166,23 +165,29 @@ def format_json_output(result: Dict[str, Any]) -> str:
 def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Update notification scheme metadata in JIRA',
-        epilog='''
+        description="Update notification scheme metadata in JIRA",
+        epilog="""
 Examples:
     python update_notification_scheme.py 10000 --name "Updated Scheme Name"
     python update_notification_scheme.py 10000 --description "New description"
     python update_notification_scheme.py 10000 --name "Renamed Scheme" --description "Updated description"
     python update_notification_scheme.py 10000 --name "Test" --dry-run
-        '''
+        """,
     )
-    parser.add_argument('scheme_id', help='Notification scheme ID')
-    parser.add_argument('--name', '-n', help='New scheme name')
-    parser.add_argument('--description', '-d', help='New scheme description')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Show what would change without applying')
-    parser.add_argument('--output', '-o', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--profile', '-p', help='JIRA profile to use')
+    parser.add_argument("scheme_id", help="Notification scheme ID")
+    parser.add_argument("--name", "-n", help="New scheme name")
+    parser.add_argument("--description", "-d", help="New scheme description")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Show what would change without applying"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -195,10 +200,10 @@ Examples:
             name=args.name,
             description=args.description,
             dry_run=args.dry_run,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_json_output(result))
         else:
             print(format_text_output(result))
@@ -211,5 +216,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -9,20 +9,26 @@ Usage:
     python release_version.py PROJ --name "v1.0.0" --description "First stable release"
 """
 
-import sys
 import argparse
-from pathlib import Path
-from typing import Optional, Dict, Any
+import sys
 from datetime import datetime
+from typing import Any
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    print_success,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import print_success
-
-
-def release_version(version_id: str, release_date: str = None,
-                   description: str = None, profile: str = None) -> Dict[str, Any]:
+def release_version(
+    version_id: str,
+    release_date: str | None = None,
+    description: str | None = None,
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Release a version by ID.
 
@@ -37,15 +43,12 @@ def release_version(version_id: str, release_date: str = None,
     """
     # Default to today if not specified
     if release_date is None:
-        release_date = datetime.now().strftime('%Y-%m-%d')
+        release_date = datetime.now().strftime("%Y-%m-%d")
 
-    update_data = {
-        'released': True,
-        'releaseDate': release_date
-    }
+    update_data = {"released": True, "releaseDate": release_date}
 
     if description:
-        update_data['description'] = description
+        update_data["description"] = description
 
     client = get_jira_client(profile)
     result = client.update_version(version_id, **update_data)
@@ -54,9 +57,13 @@ def release_version(version_id: str, release_date: str = None,
     return result
 
 
-def release_version_by_name(project: str, version_name: str,
-                            release_date: str = None, description: str = None,
-                            profile: str = None) -> Dict[str, Any]:
+def release_version_by_name(
+    project: str,
+    version_name: str,
+    release_date: str | None = None,
+    description: str | None = None,
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Release a version by name (requires project lookup).
 
@@ -80,24 +87,23 @@ def release_version_by_name(project: str, version_name: str,
     # Find version by name
     version_id = None
     for v in versions:
-        if v['name'] == version_name:
-            version_id = v['id']
+        if v["name"] == version_name:
+            version_id = v["id"]
             break
 
     if not version_id:
-        raise ValidationError(f"Version '{version_name}' not found in project {project}")
+        raise ValidationError(
+            f"Version '{version_name}' not found in project {project}"
+        )
 
     # Release the version
     if release_date is None:
-        release_date = datetime.now().strftime('%Y-%m-%d')
+        release_date = datetime.now().strftime("%Y-%m-%d")
 
-    update_data = {
-        'released': True,
-        'releaseDate': release_date
-    }
+    update_data = {"released": True, "releaseDate": release_date}
 
     if description:
-        update_data['description'] = description
+        update_data["description"] = description
 
     result = client.update_version(version_id, **update_data)
     client.close()
@@ -105,8 +111,11 @@ def release_version_by_name(project: str, version_name: str,
     return result
 
 
-def release_version_dry_run(version_id: str, release_date: str = None,
-                            description: str = None) -> Dict[str, Any]:
+def release_version_dry_run(
+    version_id: str,
+    release_date: str | None = None,
+    description: str | None = None,
+) -> dict[str, Any]:
     """
     Show what would be released without releasing.
 
@@ -119,16 +128,16 @@ def release_version_dry_run(version_id: str, release_date: str = None,
         Update data that would be applied
     """
     if release_date is None:
-        release_date = datetime.now().strftime('%Y-%m-%d')
+        release_date = datetime.now().strftime("%Y-%m-%d")
 
     update_data = {
-        'version_id': version_id,
-        'released': True,
-        'releaseDate': release_date
+        "version_id": version_id,
+        "released": True,
+        "releaseDate": release_date,
     }
 
     if description:
-        update_data['description'] = description
+        update_data["description"] = description
 
     return update_data
 
@@ -136,32 +145,32 @@ def release_version_dry_run(version_id: str, release_date: str = None,
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Release a project version in JIRA',
-        epilog='''
+        description="Release a project version in JIRA",
+        epilog="""
 Examples:
   %(prog)s --id 10000
   %(prog)s --id 10000 --date 2025-03-01
   %(prog)s PROJ --name "v1.0.0"
   %(prog)s PROJ --name "v1.0.0" --description "First stable release"
   %(prog)s --id 10000 --dry-run
-        '''
+        """,
     )
 
-    parser.add_argument('project',
-                       nargs='?',
-                       help='Project key (required when using --name)')
-    parser.add_argument('--id',
-                       help='Version ID to release')
-    parser.add_argument('--name', '-n',
-                       help='Version name (requires project)')
-    parser.add_argument('--date', '-d',
-                       help='Release date in YYYY-MM-DD format (default: today)')
-    parser.add_argument('--description',
-                       help='Update version description')
-    parser.add_argument('--dry-run', action='store_true',
-                       help='Show what would be released without releasing')
-    parser.add_argument('--profile', '-p',
-                       help='JIRA profile to use')
+    parser.add_argument(
+        "project", nargs="?", help="Project key (required when using --name)"
+    )
+    parser.add_argument("--id", help="Version ID to release")
+    parser.add_argument("--name", "-n", help="Version name (requires project)")
+    parser.add_argument(
+        "--date", "-d", help="Release date in YYYY-MM-DD format (default: today)"
+    )
+    parser.add_argument("--description", help="Update version description")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be released without releasing",
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -185,7 +194,7 @@ Examples:
                 update_data = release_version_dry_run(
                     version_id=args.id,
                     release_date=args.date,
-                    description=args.description
+                    description=args.description,
                 )
                 print(f"[DRY RUN] Would release version {args.id}:\n")
             else:
@@ -194,7 +203,7 @@ Examples:
                 sys.exit(1)
 
             print(f"  Release Date: {update_data['releaseDate']}")
-            if update_data.get('description'):
+            if update_data.get("description"):
                 print(f"  Description: {update_data['description']}")
             print("\nNo version released (dry-run mode).")
 
@@ -205,22 +214,22 @@ Examples:
                     version_id=args.id,
                     release_date=args.date,
                     description=args.description,
-                    profile=args.profile
+                    profile=args.profile,
                 )
-                version_name = version.get('name', args.id)
+                version_name = version.get("name", args.id)
             else:
                 version = release_version_by_name(
                     project=args.project,
                     version_name=args.name,
                     release_date=args.date,
                     description=args.description,
-                    profile=args.profile
+                    profile=args.profile,
                 )
-                version_name = version.get('name', args.name)
+                version_name = version.get("name", args.name)
 
             print_success(f"Released version '{version_name}' (ID: {version['id']})")
             print(f"\nRelease Date: {version['releaseDate']}")
-            if version.get('description'):
+            if version.get("description"):
                 print(f"Description: {version['description']}")
 
     except ValidationError as e:
@@ -234,5 +243,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

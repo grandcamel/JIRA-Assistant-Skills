@@ -6,18 +6,14 @@ Deletes a filter owned by the current user.
 """
 
 import argparse
-import json
 import sys
-from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 
 # Add shared library to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, print_error
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-def get_filter_info(client, filter_id: str) -> Dict[str, Any]:
+def get_filter_info(client, filter_id: str) -> dict[str, Any]:
     """
     Get filter info for confirmation.
 
@@ -58,7 +54,7 @@ def dry_run_delete(client, filter_id: str) -> str:
     lines = [
         "DRY RUN - No changes will be made",
         "",
-        f"Would delete filter:",
+        "Would delete filter:",
         f"  ID:   {filter_id}",
         f"  Name: {filter_data.get('name', 'N/A')}",
         f"  JQL:  {filter_data.get('jql', 'N/A')}",
@@ -67,7 +63,7 @@ def dry_run_delete(client, filter_id: str) -> str:
     return "\n".join(lines)
 
 
-def confirm_delete(filter_data: Dict[str, Any]) -> bool:
+def confirm_delete(filter_data: dict[str, Any]) -> bool:
     """
     Prompt for confirmation.
 
@@ -84,29 +80,29 @@ def confirm_delete(filter_data: Dict[str, Any]) -> bool:
     print()
 
     response = input("Type 'yes' to confirm: ")
-    return response.strip().lower() == 'yes'
+    return response.strip().lower() == "yes"
 
 
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Delete a saved filter.',
-        epilog='''
+        description="Delete a saved filter.",
+        epilog="""
 Examples:
   %(prog)s 10042                   # Delete with confirmation
   %(prog)s 10042 --yes             # Skip confirmation
   %(prog)s 10042 --dry-run         # Preview without deleting
-        '''
+        """,
     )
 
-    parser.add_argument('filter_id',
-                        help='Filter ID to delete')
-    parser.add_argument('--yes', '-y', action='store_true',
-                        help='Skip confirmation prompt')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Preview what would be deleted')
-    parser.add_argument('--profile', '-p',
-                        help='JIRA profile to use')
+    parser.add_argument("filter_id", help="Filter ID to delete")
+    parser.add_argument(
+        "--yes", "-y", action="store_true", help="Skip confirmation prompt"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Preview what would be deleted"
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -121,10 +117,9 @@ Examples:
         filter_data = get_filter_info(client, args.filter_id)
 
         # Confirm unless --yes
-        if not args.yes:
-            if not confirm_delete(filter_data):
-                print("Cancelled.")
-                return
+        if not args.yes and not confirm_delete(filter_data):
+            print("Cancelled.")
+            return
 
         # Delete
         delete_filter(client, args.filter_id)
@@ -136,5 +131,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

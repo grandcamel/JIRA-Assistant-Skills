@@ -5,25 +5,29 @@ Add a field to a JIRA screen.
 Adds a field to a specific tab or the default tab.
 """
 
-import sys
 import argparse
-import json
-from pathlib import Path
-from typing import Dict, Any, Optional
+import sys
+from typing import Any
 
 # Add shared lib to path
+from jira_assistant_skills_lib import (
+    JiraError,
+    NotFoundError,
+    format_json,
+    get_jira_client,
+    print_error,
+    print_success,
+)
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, NotFoundError
-from jira_assistant_skills_lib import format_json, print_success
 
-
-def add_field_to_screen(screen_id: int,
-                        field_id: str,
-                        tab_id: Optional[int] = None,
-                        tab_name: Optional[str] = None,
-                        client=None,
-                        dry_run: bool = False) -> Dict[str, Any]:
+def add_field_to_screen(
+    screen_id: int,
+    field_id: str,
+    tab_id: int | None = None,
+    tab_name: str | None = None,
+    client=None,
+    dry_run: bool = False,
+) -> dict[str, Any]:
     """
     Add a field to a screen tab.
 
@@ -40,6 +44,7 @@ def add_field_to_screen(screen_id: int,
     """
     if client is None:
         from jira_assistant_skills_lib import get_jira_client
+
         client = get_jira_client()
 
     # If neither tab_id nor tab_name specified, use first tab
@@ -51,39 +56,39 @@ def add_field_to_screen(screen_id: int,
         if tab_name:
             # Find tab by name
             for tab in tabs:
-                if tab.get('name', '').lower() == tab_name.lower():
-                    tab_id = tab['id']
+                if tab.get("name", "").lower() == tab_name.lower():
+                    tab_id = tab["id"]
                     break
             if tab_id is None:
                 raise NotFoundError(f"Tab '{tab_name}' not found on screen {screen_id}")
         else:
             # Use first tab
-            tab_id = tabs[0]['id']
+            tab_id = tabs[0]["id"]
 
     if dry_run:
         # Validate field exists in available fields
         available = client.get_screen_available_fields(screen_id)
-        available_ids = [f.get('id') for f in available]
+        available_ids = [f.get("id") for f in available]
 
         if field_id in available_ids:
             return {
-                'dry_run': True,
-                'action': 'add_field',
-                'screen_id': screen_id,
-                'tab_id': tab_id,
-                'field_id': field_id,
-                'status': 'would_succeed'
+                "dry_run": True,
+                "action": "add_field",
+                "screen_id": screen_id,
+                "tab_id": tab_id,
+                "field_id": field_id,
+                "status": "would_succeed",
             }
         else:
             # Field might already be on screen or not exist
             return {
-                'dry_run': True,
-                'action': 'add_field',
-                'screen_id': screen_id,
-                'tab_id': tab_id,
-                'field_id': field_id,
-                'status': 'field_not_available',
-                'note': 'Field may already be on screen or does not exist'
+                "dry_run": True,
+                "action": "add_field",
+                "screen_id": screen_id,
+                "tab_id": tab_id,
+                "field_id": field_id,
+                "status": "field_not_available",
+                "note": "Field may already be on screen or does not exist",
             }
 
     # Actually add the field
@@ -93,8 +98,8 @@ def add_field_to_screen(screen_id: int,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Add a field to a JIRA screen',
-        epilog='''
+        description="Add a field to a JIRA screen",
+        epilog="""
 Examples:
     # Add field to first tab
     python add_field_to_screen.py 1 customfield_10016
@@ -110,22 +115,30 @@ Examples:
 
     # JSON output
     python add_field_to_screen.py 1 customfield_10016 --output json
-'''
+""",
     )
 
-    parser.add_argument('screen_id', type=int,
-                        help='Screen ID')
-    parser.add_argument('field_id',
-                        help='Field ID to add (e.g., customfield_10016)')
-    parser.add_argument('--tab', '-t', dest='tab_id', type=int,
-                        help='Tab ID to add field to')
-    parser.add_argument('--tab-name', dest='tab_name',
-                        help='Tab name to add field to (alternative to --tab)')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Validate without making changes')
-    parser.add_argument('--output', '-o', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--profile', '-p', help='JIRA profile to use')
+    parser.add_argument("screen_id", type=int, help="Screen ID")
+    parser.add_argument("field_id", help="Field ID to add (e.g., customfield_10016)")
+    parser.add_argument(
+        "--tab", "-t", dest="tab_id", type=int, help="Tab ID to add field to"
+    )
+    parser.add_argument(
+        "--tab-name",
+        dest="tab_name",
+        help="Tab name to add field to (alternative to --tab)",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Validate without making changes"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -138,25 +151,29 @@ Examples:
             tab_id=args.tab_id,
             tab_name=args.tab_name,
             client=client,
-            dry_run=args.dry_run
+            dry_run=args.dry_run,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_json(result))
         else:
             if args.dry_run:
-                status = result.get('status', 'unknown')
-                if status == 'would_succeed':
-                    print(f"[DRY RUN] Would add field '{args.field_id}' to screen {args.screen_id}")
+                status = result.get("status", "unknown")
+                if status == "would_succeed":
+                    print(
+                        f"[DRY RUN] Would add field '{args.field_id}' to screen {args.screen_id}"
+                    )
                 else:
                     print(f"[DRY RUN] {result.get('note', 'Field cannot be added')}")
             else:
-                print_success(f"Added field '{result.get('name', args.field_id)}' to screen {args.screen_id}")
+                print_success(
+                    f"Added field '{result.get('name', args.field_id)}' to screen {args.screen_id}"
+                )
 
     except JiraError as e:
         print_error(e)
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

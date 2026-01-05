@@ -1,4 +1,5 @@
 import click
+
 from jira_assistant_skills.utils import SKILLS_ROOT_DIR, run_skill_script_subprocess
 
 
@@ -9,20 +10,49 @@ def bulk():
 
 
 @bulk.command(name="transition")
-@click.option('--jql', '-q', help='JQL query to find issues')
-@click.option('--issues', '-i', help='Comma-separated issue keys (e.g., PROJ-1,PROJ-2)')
-@click.option('--to', '-t', 'target_status', required=True, help='Target status name (e.g., "Done", "In Progress")')
-@click.option('--comment', '-c', help='Add comment with transition')
-@click.option('--resolution', '-r', help='Resolution for Done transitions')
-@click.option('--dry-run', '-n', is_flag=True, help='Show what would be changed without making changes')
-@click.option('--max-issues', '-m', type=int, default=50, help='Maximum issues to process')
-@click.option('--batch-size', type=int, help='Issues per batch (auto-calculated if not specified)')
-@click.option('--enable-checkpoint', is_flag=True, help='Enable checkpoint/resume for large operations')
-@click.option('--force', '-f', is_flag=True, help='Skip confirmation')
+@click.option("--jql", "-q", help="JQL query to find issues")
+@click.option("--issues", "-i", help="Comma-separated issue keys (e.g., PROJ-1,PROJ-2)")
+@click.option(
+    "--to",
+    "-t",
+    "target_status",
+    required=True,
+    help='Target status name (e.g., "Done", "In Progress")',
+)
+@click.option("--comment", "-c", help="Add comment with transition")
+@click.option("--resolution", "-r", help="Resolution for Done transitions")
+@click.option(
+    "--dry-run",
+    "-n",
+    is_flag=True,
+    help="Show what would be changed without making changes",
+)
+@click.option(
+    "--max-issues", "-m", type=int, default=50, help="Maximum issues to process"
+)
+@click.option(
+    "--batch-size", type=int, help="Issues per batch (auto-calculated if not specified)"
+)
+@click.option(
+    "--enable-checkpoint",
+    is_flag=True,
+    help="Enable checkpoint/resume for large operations",
+)
+@click.option("--force", "-f", is_flag=True, help="Skip confirmation")
 @click.pass_context
-def bulk_transition(ctx, jql: str, issues: str, target_status: str, comment: str,
-                    resolution: str, dry_run: bool, max_issues: int, batch_size: int,
-                    enable_checkpoint: bool, force: bool):
+def bulk_transition(
+    ctx,
+    jql: str,
+    issues: str,
+    target_status: str,
+    comment: str,
+    resolution: str,
+    dry_run: bool,
+    max_issues: int,
+    batch_size: int,
+    enable_checkpoint: bool,
+    force: bool,
+):
     """Transition multiple issues to a new status.
 
     Specify issues using either --jql or --issues (mutually exclusive).
@@ -63,19 +93,41 @@ def bulk_transition(ctx, jql: str, issues: str, target_status: str, comment: str
 
 
 @bulk.command(name="assign")
-@click.option('--jql', '-q', help='JQL query to find issues')
-@click.option('--issues', '-i', help='Comma-separated issue keys (e.g., PROJ-1,PROJ-2)')
-@click.option('--assignee', '-a', help='User to assign (account ID, email, or "self")')
-@click.option('--unassign', is_flag=True, help='Unassign all matching issues')
-@click.option('--dry-run', '-n', is_flag=True, help='Show what would be changed without making changes')
-@click.option('--max-issues', '-m', type=int, default=50, help='Maximum issues to process')
-@click.option('--batch-size', type=int, help='Issues per batch (auto-calculated if not specified)')
-@click.option('--enable-checkpoint', is_flag=True, help='Enable checkpoint/resume for large operations')
-@click.option('--force', '-f', is_flag=True, help='Skip confirmation')
+@click.option("--jql", "-q", help="JQL query to find issues")
+@click.option("--issues", "-i", help="Comma-separated issue keys (e.g., PROJ-1,PROJ-2)")
+@click.option("--assignee", "-a", help='User to assign (account ID, email, or "self")')
+@click.option("--unassign", is_flag=True, help="Unassign all matching issues")
+@click.option(
+    "--dry-run",
+    "-n",
+    is_flag=True,
+    help="Show what would be changed without making changes",
+)
+@click.option(
+    "--max-issues", "-m", type=int, default=50, help="Maximum issues to process"
+)
+@click.option(
+    "--batch-size", type=int, help="Issues per batch (auto-calculated if not specified)"
+)
+@click.option(
+    "--enable-checkpoint",
+    is_flag=True,
+    help="Enable checkpoint/resume for large operations",
+)
+@click.option("--force", "-f", is_flag=True, help="Skip confirmation")
 @click.pass_context
-def bulk_assign(ctx, jql: str, issues: str, assignee: str, unassign: bool,
-                dry_run: bool, max_issues: int, batch_size: int,
-                enable_checkpoint: bool, force: bool):
+def bulk_assign(
+    ctx,
+    jql: str,
+    issues: str,
+    assignee: str,
+    unassign: bool,
+    dry_run: bool,
+    max_issues: int,
+    batch_size: int,
+    enable_checkpoint: bool,
+    force: bool,
+):
     """Assign or unassign multiple issues.
 
     Specify issues using either --jql or --issues (mutually exclusive).
@@ -121,17 +173,44 @@ def bulk_assign(ctx, jql: str, issues: str, assignee: str, unassign: bool,
 
 
 @bulk.command(name="set-priority")
-@click.option('--jql', '-q', help='JQL query to find issues')
-@click.option('--issues', '-i', help='Comma-separated issue keys (e.g., PROJ-1,PROJ-2)')
-@click.option('--priority', '-p', required=True, help='Priority name (Highest, High, Medium, Low, Lowest)')
-@click.option('--dry-run', '-n', is_flag=True, help='Show what would be changed without making changes')
-@click.option('--max-issues', '-m', type=int, default=50, help='Maximum issues to process')
-@click.option('--batch-size', type=int, help='Issues per batch (auto-calculated if not specified)')
-@click.option('--enable-checkpoint', is_flag=True, help='Enable checkpoint/resume for large operations')
-@click.option('--force', '-f', is_flag=True, help='Skip confirmation')
+@click.option("--jql", "-q", help="JQL query to find issues")
+@click.option("--issues", "-i", help="Comma-separated issue keys (e.g., PROJ-1,PROJ-2)")
+@click.option(
+    "--priority",
+    "-p",
+    required=True,
+    help="Priority name (Highest, High, Medium, Low, Lowest)",
+)
+@click.option(
+    "--dry-run",
+    "-n",
+    is_flag=True,
+    help="Show what would be changed without making changes",
+)
+@click.option(
+    "--max-issues", "-m", type=int, default=50, help="Maximum issues to process"
+)
+@click.option(
+    "--batch-size", type=int, help="Issues per batch (auto-calculated if not specified)"
+)
+@click.option(
+    "--enable-checkpoint",
+    is_flag=True,
+    help="Enable checkpoint/resume for large operations",
+)
+@click.option("--force", "-f", is_flag=True, help="Skip confirmation")
 @click.pass_context
-def bulk_set_priority(ctx, jql: str, issues: str, priority: str, dry_run: bool,
-                      max_issues: int, batch_size: int, enable_checkpoint: bool, force: bool):
+def bulk_set_priority(
+    ctx,
+    jql: str,
+    issues: str,
+    priority: str,
+    dry_run: bool,
+    max_issues: int,
+    batch_size: int,
+    enable_checkpoint: bool,
+    force: bool,
+):
     """Set priority for multiple issues.
 
     Specify issues using either --jql or --issues (mutually exclusive).
@@ -168,21 +247,45 @@ def bulk_set_priority(ctx, jql: str, issues: str, priority: str, dry_run: bool,
 
 
 @bulk.command(name="clone")
-@click.option('--jql', '-q', help='JQL query to find issues')
-@click.option('--issues', '-i', help='Comma-separated issue keys (e.g., PROJ-1,PROJ-2)')
-@click.option('--target-project', '-t', help='Target project key for clones')
-@click.option('--prefix', '-P', help='Prefix for cloned issue summaries')
-@click.option('--include-links', '-l', is_flag=True, help='Clone issue links')
-@click.option('--include-subtasks', '-s', is_flag=True, help='Clone subtasks')
-@click.option('--dry-run', '-n', is_flag=True, help='Show what would be changed without making changes')
-@click.option('--max-issues', '-m', type=int, default=50, help='Maximum issues to process')
-@click.option('--batch-size', type=int, help='Issues per batch (auto-calculated if not specified)')
-@click.option('--enable-checkpoint', is_flag=True, help='Enable checkpoint/resume for large operations')
-@click.option('--force', '-f', is_flag=True, help='Skip confirmation')
+@click.option("--jql", "-q", help="JQL query to find issues")
+@click.option("--issues", "-i", help="Comma-separated issue keys (e.g., PROJ-1,PROJ-2)")
+@click.option("--target-project", "-t", help="Target project key for clones")
+@click.option("--prefix", "-P", help="Prefix for cloned issue summaries")
+@click.option("--include-links", "-l", is_flag=True, help="Clone issue links")
+@click.option("--include-subtasks", "-s", is_flag=True, help="Clone subtasks")
+@click.option(
+    "--dry-run",
+    "-n",
+    is_flag=True,
+    help="Show what would be changed without making changes",
+)
+@click.option(
+    "--max-issues", "-m", type=int, default=50, help="Maximum issues to process"
+)
+@click.option(
+    "--batch-size", type=int, help="Issues per batch (auto-calculated if not specified)"
+)
+@click.option(
+    "--enable-checkpoint",
+    is_flag=True,
+    help="Enable checkpoint/resume for large operations",
+)
+@click.option("--force", "-f", is_flag=True, help="Skip confirmation")
 @click.pass_context
-def bulk_clone(ctx, jql: str, issues: str, target_project: str, prefix: str,
-               include_links: bool, include_subtasks: bool, dry_run: bool,
-               max_issues: int, batch_size: int, enable_checkpoint: bool, force: bool):
+def bulk_clone(
+    ctx,
+    jql: str,
+    issues: str,
+    target_project: str,
+    prefix: str,
+    include_links: bool,
+    include_subtasks: bool,
+    dry_run: bool,
+    max_issues: int,
+    batch_size: int,
+    enable_checkpoint: bool,
+    force: bool,
+):
     """Clone multiple issues.
 
     Specify issues using either --jql or --issues (mutually exclusive).

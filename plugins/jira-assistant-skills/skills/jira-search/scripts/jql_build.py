@@ -9,35 +9,33 @@ with optional validation.
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 # Add shared library to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, print_error
-
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 # Predefined templates for common queries
 TEMPLATES = {
-    'my-open': 'assignee = currentUser() AND status != Done',
-    'my-bugs': 'assignee = currentUser() AND type = Bug AND status != Done',
-    'my-recent': 'assignee = currentUser() AND updated >= -7d ORDER BY updated DESC',
-    'unassigned': 'assignee IS EMPTY AND status != Done',
-    'sprint-incomplete': 'sprint in openSprints() AND status != Done',
-    'sprint-complete': 'sprint in openSprints() AND status = Done',
-    'blockers': 'priority = Highest AND status != Done',
-    'overdue': 'duedate < now() AND status != Done',
-    'created-today': 'created >= startOfDay()',
-    'updated-today': 'updated >= startOfDay()',
-    'no-estimate': 'timeoriginalestimate IS EMPTY AND type != Epic',
+    "my-open": "assignee = currentUser() AND status != Done",
+    "my-bugs": "assignee = currentUser() AND type = Bug AND status != Done",
+    "my-recent": "assignee = currentUser() AND updated >= -7d ORDER BY updated DESC",
+    "unassigned": "assignee IS EMPTY AND status != Done",
+    "sprint-incomplete": "sprint in openSprints() AND status != Done",
+    "sprint-complete": "sprint in openSprints() AND status = Done",
+    "blockers": "priority = Highest AND status != Done",
+    "overdue": "duedate < now() AND status != Done",
+    "created-today": "created >= startOfDay()",
+    "updated-today": "updated >= startOfDay()",
+    "no-estimate": "timeoriginalestimate IS EMPTY AND type != Epic",
 }
 
 
-def build_jql(clauses: List[str],
-              operator: str = 'AND',
-              order_by: str = None,
-              order_desc: bool = False) -> str:
+def build_jql(
+    clauses: list[str],
+    operator: str = "AND",
+    order_by: str | None = None,
+    order_desc: bool = False,
+) -> str:
     """
     Build JQL query from clauses.
 
@@ -51,21 +49,22 @@ def build_jql(clauses: List[str],
         Complete JQL query string
     """
     if not clauses:
-        return ''
+        return ""
 
     # Join clauses with operator
-    jql = f' {operator} '.join(clauses)
+    jql = f" {operator} ".join(clauses)
 
     # Add ORDER BY if specified
     if order_by:
-        direction = 'DESC' if order_desc else 'ASC'
-        jql = f'{jql} ORDER BY {order_by} {direction}'
+        direction = "DESC" if order_desc else "ASC"
+        jql = f"{jql} ORDER BY {order_by} {direction}"
 
     return jql
 
 
-def build_from_template(template_name: str,
-                        substitutions: Dict[str, str] = None) -> str:
+def build_from_template(
+    template_name: str, substitutions: dict[str, str] | None = None
+) -> str:
     """
     Build JQL from a predefined template.
 
@@ -77,8 +76,10 @@ def build_from_template(template_name: str,
         JQL query string
     """
     if template_name not in TEMPLATES:
-        raise ValueError(f"Unknown template: {template_name}. "
-                        f"Available: {', '.join(TEMPLATES.keys())}")
+        raise ValueError(
+            f"Unknown template: {template_name}. "
+            f"Available: {', '.join(TEMPLATES.keys())}"
+        )
 
     jql = TEMPLATES[template_name]
 
@@ -90,11 +91,14 @@ def build_from_template(template_name: str,
     return jql
 
 
-def build_and_validate(client, clauses: List[str] = None,
-                       template: str = None,
-                       operator: str = 'AND',
-                       order_by: str = None,
-                       order_desc: bool = False) -> Dict[str, Any]:
+def build_and_validate(
+    client,
+    clauses: list[str] | None = None,
+    template: str | None = None,
+    operator: str = "AND",
+    order_by: str | None = None,
+    order_desc: bool = False,
+) -> dict[str, Any]:
     """
     Build and validate a JQL query.
 
@@ -115,18 +119,14 @@ def build_and_validate(client, clauses: List[str] = None,
         jql = build_jql(clauses or [], operator, order_by, order_desc)
 
     if not jql:
-        return {'jql': '', 'valid': False, 'errors': ['No query built']}
+        return {"jql": "", "valid": False, "errors": ["No query built"]}
 
     # Validate
     result = client.parse_jql([jql])
-    parsed = result.get('queries', [{}])[0]
-    errors = parsed.get('errors', [])
+    parsed = result.get("queries", [{}])[0]
+    errors = parsed.get("errors", [])
 
-    return {
-        'jql': jql,
-        'valid': len(errors) == 0,
-        'errors': errors
-    }
+    return {"jql": jql, "valid": len(errors) == 0, "errors": errors}
 
 
 def format_for_copy(jql: str) -> str:
@@ -160,35 +160,44 @@ def list_templates() -> str:
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Build JQL queries from components.',
-        epilog='''
+        description="Build JQL queries from components.",
+        epilog="""
 Examples:
   %(prog)s --clause "project = PROJ" --clause "status != Done"
   %(prog)s --clause "project = PROJ" --order-by created --desc
   %(prog)s --template my-bugs
   %(prog)s --template my-open --validate
   %(prog)s --list-templates
-        '''
+        """,
     )
 
-    parser.add_argument('--clause', '-c', action='append', dest='clauses',
-                        help='JQL clause (can be repeated)')
-    parser.add_argument('--template', '-t',
-                        help='Use predefined template')
-    parser.add_argument('--operator', '-op', choices=['AND', 'OR'],
-                        default='AND', help='Clause join operator')
-    parser.add_argument('--order-by', '-o',
-                        help='Field to order by')
-    parser.add_argument('--desc', action='store_true',
-                        help='Use descending order')
-    parser.add_argument('--validate', '-v', action='store_true',
-                        help='Validate the built query')
-    parser.add_argument('--list-templates', '-l', action='store_true',
-                        help='List available templates')
-    parser.add_argument('--output', choices=['text', 'json'],
-                        default='text', help='Output format')
-    parser.add_argument('--profile', '-p',
-                        help='JIRA profile to use')
+    parser.add_argument(
+        "--clause",
+        "-c",
+        action="append",
+        dest="clauses",
+        help="JQL clause (can be repeated)",
+    )
+    parser.add_argument("--template", "-t", help="Use predefined template")
+    parser.add_argument(
+        "--operator",
+        "-op",
+        choices=["AND", "OR"],
+        default="AND",
+        help="Clause join operator",
+    )
+    parser.add_argument("--order-by", "-o", help="Field to order by")
+    parser.add_argument("--desc", action="store_true", help="Use descending order")
+    parser.add_argument(
+        "--validate", "-v", action="store_true", help="Validate the built query"
+    )
+    parser.add_argument(
+        "--list-templates", "-l", action="store_true", help="List available templates"
+    )
+    parser.add_argument(
+        "--output", choices=["text", "json"], default="text", help="Output format"
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -205,12 +214,7 @@ Examples:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
     elif args.clauses:
-        jql = build_jql(
-            args.clauses,
-            args.operator,
-            args.order_by,
-            args.desc
-        )
+        jql = build_jql(args.clauses, args.operator, args.order_by, args.desc)
     else:
         parser.error("Provide --clause or --template to build a query")
 
@@ -219,17 +223,18 @@ Examples:
         try:
             client = get_jira_client(args.profile)
             result = client.parse_jql([jql])
-            parsed = result.get('queries', [{}])[0]
-            errors = parsed.get('errors', [])
+            parsed = result.get("queries", [{}])[0]
+            errors = parsed.get("errors", [])
 
-            if args.output == 'json':
-                print(json.dumps({
-                    'jql': jql,
-                    'valid': len(errors) == 0,
-                    'errors': errors
-                }, indent=2))
+            if args.output == "json":
+                print(
+                    json.dumps(
+                        {"jql": jql, "valid": len(errors) == 0, "errors": errors},
+                        indent=2,
+                    )
+                )
             else:
-                print(f"Built JQL Query:")
+                print("Built JQL Query:")
                 print(f"{jql}")
                 print()
                 if errors:
@@ -245,14 +250,14 @@ Examples:
             sys.exit(1)
     else:
         # Just output the query
-        if args.output == 'json':
-            print(json.dumps({'jql': jql}, indent=2))
+        if args.output == "json":
+            print(json.dumps({"jql": jql}, indent=2))
         else:
-            print(f"Built JQL Query:")
+            print("Built JQL Query:")
             print(f"{jql}")
             print()
             print("Use --validate to check syntax against JIRA")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

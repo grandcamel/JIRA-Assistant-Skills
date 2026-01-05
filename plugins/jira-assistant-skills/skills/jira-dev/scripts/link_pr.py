@@ -11,24 +11,25 @@ Usage:
     python link_pr.py PROJ-123 --pr https://bitbucket.org/org/repo/pull-requests/101
 """
 
-import sys
-import os
 import argparse
 import json
 import re
-from pathlib import Path
-from typing import Optional, Dict, Any
+import sys
+from typing import Any
 from urllib.parse import urlparse
 
 # Add shared lib path
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    validate_issue_key,
+    wiki_markup_to_adf,
+)
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import wiki_markup_to_adf
 
-
-def parse_pr_url(pr_url: str) -> Dict[str, Any]:
+def parse_pr_url(pr_url: str) -> dict[str, Any]:
     """
     Parse pull request URL to extract provider and details.
 
@@ -51,57 +52,56 @@ def parse_pr_url(pr_url: str) -> Dict[str, Any]:
 
     parsed = urlparse(pr_url)
     host = parsed.netloc.lower()
-    path = parsed.path.strip('/')
+    path = parsed.path.strip("/")
 
     # GitHub: /owner/repo/pull/123
-    if 'github' in host:
-        match = re.match(r'^([^/]+)/([^/]+)/pull/(\d+)', path)
+    if "github" in host:
+        match = re.match(r"^([^/]+)/([^/]+)/pull/(\d+)", path)
         if match:
             return {
-                'provider': 'github',
-                'owner': match.group(1),
-                'repo': match.group(2),
-                'pr_number': int(match.group(3)),
-                'url': pr_url
+                "provider": "github",
+                "owner": match.group(1),
+                "repo": match.group(2),
+                "pr_number": int(match.group(3)),
+                "url": pr_url,
             }
 
     # GitLab: /owner/repo/-/merge_requests/123
-    elif 'gitlab' in host:
-        match = re.match(r'^([^/]+)/([^/]+)/-/merge_requests/(\d+)', path)
+    elif "gitlab" in host:
+        match = re.match(r"^([^/]+)/([^/]+)/-/merge_requests/(\d+)", path)
         if match:
             return {
-                'provider': 'gitlab',
-                'owner': match.group(1),
-                'repo': match.group(2),
-                'pr_number': int(match.group(3)),
-                'url': pr_url
+                "provider": "gitlab",
+                "owner": match.group(1),
+                "repo": match.group(2),
+                "pr_number": int(match.group(3)),
+                "url": pr_url,
             }
 
     # Bitbucket: /owner/repo/pull-requests/123
-    elif 'bitbucket' in host:
-        match = re.match(r'^([^/]+)/([^/]+)/pull-requests/(\d+)', path)
+    elif "bitbucket" in host:
+        match = re.match(r"^([^/]+)/([^/]+)/pull-requests/(\d+)", path)
         if match:
             return {
-                'provider': 'bitbucket',
-                'owner': match.group(1),
-                'repo': match.group(2),
-                'pr_number': int(match.group(3)),
-                'url': pr_url
+                "provider": "bitbucket",
+                "owner": match.group(1),
+                "repo": match.group(2),
+                "pr_number": int(match.group(3)),
+                "url": pr_url,
             }
 
     raise ValidationError(
-        f"Unrecognized PR URL format: {pr_url}. "
-        "Supported: GitHub, GitLab, Bitbucket"
+        f"Unrecognized PR URL format: {pr_url}. Supported: GitHub, GitLab, Bitbucket"
     )
 
 
 def build_pr_comment(
     pr_url: str,
     pr_number: int,
-    title: Optional[str] = None,
-    status: Optional[str] = None,
-    author: Optional[str] = None,
-    provider: Optional[str] = None
+    title: str | None = None,
+    status: str | None = None,
+    author: str | None = None,
+    provider: str | None = None,
 ) -> str:
     """
     Build formatted PR comment for JIRA.
@@ -129,28 +129,26 @@ def build_pr_comment(
         lines.append(f"*Title:* {title}")
 
     if status:
-        status_emoji = {
-            'open': 'OPEN',
-            'merged': 'MERGED',
-            'closed': 'CLOSED'
-        }.get(status.lower(), status.upper())
+        status_emoji = {"open": "OPEN", "merged": "MERGED", "closed": "CLOSED"}.get(
+            status.lower(), status.upper()
+        )
         lines.append(f"*Status:* {status_emoji}")
 
     if author:
         lines.append(f"*Author:* {author}")
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def link_pr(
     issue_key: str,
     pr_url: str,
-    title: Optional[str] = None,
-    status: Optional[str] = None,
-    author: Optional[str] = None,
-    profile: Optional[str] = None,
-    client=None
-) -> Dict[str, Any]:
+    title: str | None = None,
+    status: str | None = None,
+    author: str | None = None,
+    profile: str | None = None,
+    client=None,
+) -> dict[str, Any]:
     """
     Link a pull request to a JIRA issue by adding a comment.
 
@@ -174,11 +172,11 @@ def link_pr(
     # Build comment
     comment_body = build_pr_comment(
         pr_url=pr_url,
-        pr_number=pr_info['pr_number'],
+        pr_number=pr_info["pr_number"],
         title=title,
         status=status,
         author=author,
-        provider=pr_info['provider']
+        provider=pr_info["provider"],
     )
 
     # Create comment via JIRA API
@@ -188,23 +186,21 @@ def link_pr(
         close_client = True
     try:
         # Convert wiki markup to ADF using shared helper
-        comment_data = {
-            "body": wiki_markup_to_adf(comment_body)
-        }
+        comment_data = {"body": wiki_markup_to_adf(comment_body)}
 
         result = client.post(
-            f'/rest/api/3/issue/{issue_key}/comment',
+            f"/rest/api/3/issue/{issue_key}/comment",
             data=comment_data,
-            operation=f"link PR to {issue_key}"
+            operation=f"link PR to {issue_key}",
         )
 
         return {
-            'success': True,
-            'issue_key': issue_key,
-            'pr_url': pr_url,
-            'pr_number': pr_info['pr_number'],
-            'provider': pr_info['provider'],
-            'comment_id': result.get('id')
+            "success": True,
+            "issue_key": issue_key,
+            "pr_url": pr_url,
+            "pr_number": pr_info["pr_number"],
+            "provider": pr_info["provider"],
+            "comment_id": result.get("id"),
         }
 
     finally:
@@ -214,28 +210,21 @@ def link_pr(
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Link Pull Request to JIRA issue',
-        epilog='Example: python link_pr.py PROJ-123 --pr https://github.com/org/repo/pull/456'
+        description="Link Pull Request to JIRA issue",
+        epilog="Example: python link_pr.py PROJ-123 --pr https://github.com/org/repo/pull/456",
     )
 
-    parser.add_argument('issue_key',
-                        help='JIRA issue key (e.g., PROJ-123)')
-    parser.add_argument('--pr', '-p',
-                        required=True,
-                        help='Pull request URL')
-    parser.add_argument('--title', '-t',
-                        help='PR title')
-    parser.add_argument('--status', '-s',
-                        choices=['open', 'merged', 'closed'],
-                        help='PR status')
-    parser.add_argument('--author', '-a',
-                        help='PR author')
-    parser.add_argument('--output', '-o',
-                        choices=['text', 'json'],
-                        default='text',
-                        help='Output format')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use')
+    parser.add_argument("issue_key", help="JIRA issue key (e.g., PROJ-123)")
+    parser.add_argument("--pr", "-p", required=True, help="Pull request URL")
+    parser.add_argument("--title", "-t", help="PR title")
+    parser.add_argument(
+        "--status", "-s", choices=["open", "merged", "closed"], help="PR status"
+    )
+    parser.add_argument("--author", "-a", help="PR author")
+    parser.add_argument(
+        "--output", "-o", choices=["text", "json"], default="text", help="Output format"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -246,15 +235,17 @@ def main(argv: list[str] | None = None):
             title=args.title,
             status=args.status,
             author=args.author,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(result, indent=2))
         else:
-            if result['success']:
-                pr_type = "MR" if result['provider'] == 'gitlab' else "PR"
-                print(f"Linked {pr_type} #{result['pr_number']} to {result['issue_key']}")
+            if result["success"]:
+                pr_type = "MR" if result["provider"] == "gitlab" else "PR"
+                print(
+                    f"Linked {pr_type} #{result['pr_number']} to {result['issue_key']}"
+                )
             else:
                 print(f"Failed to link PR: {result.get('error')}", file=sys.stderr)
                 sys.exit(1)
@@ -267,5 +258,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

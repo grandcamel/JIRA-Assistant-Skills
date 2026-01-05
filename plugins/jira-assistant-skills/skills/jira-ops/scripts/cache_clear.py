@@ -26,7 +26,9 @@ import sys
 from pathlib import Path
 
 # Add shared lib to path
-shared_lib_path = str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(
+    Path(__file__).parent.parent.parent / "shared" / "scripts" / "lib"
+)
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
@@ -42,40 +44,28 @@ Examples:
     python cache_clear.py                    # Clear all cache
     python cache_clear.py --category issue   # Clear issue category
     python cache_clear.py --pattern "PROJ-*" # Clear keys matching pattern
-        """
+        """,
     )
     parser.add_argument(
         "--category",
         type=str,
         choices=["issue", "project", "user", "field", "search", "default"],
-        help="Clear only entries in this category"
+        help="Clear only entries in this category",
     )
     parser.add_argument(
-        "--pattern",
-        type=str,
-        help="Clear keys matching glob pattern (e.g., 'PROJ-*')"
+        "--pattern", type=str, help="Clear keys matching glob pattern (e.g., 'PROJ-*')"
     )
-    parser.add_argument(
-        "--key",
-        type=str,
-        help="Clear specific cache key"
-    )
+    parser.add_argument("--key", type=str, help="Clear specific cache key")
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Show what would be cleared without actually clearing"
+        help="Show what would be cleared without actually clearing",
     )
     parser.add_argument(
-        "--force",
-        "-f",
-        action="store_true",
-        help="Skip confirmation prompt"
+        "--force", "-f", action="store_true", help="Skip confirmation prompt"
     )
     parser.add_argument(
-        "--cache-dir",
-        type=str,
-        default=None,
-        help="Custom cache directory"
+        "--cache-dir", type=str, default=None, help="Custom cache directory"
     )
 
     args = parser.parse_args(argv)
@@ -93,7 +83,9 @@ Examples:
                 sys.exit(1)
         elif args.pattern:
             if args.category:
-                description = f"keys matching '{args.pattern}' in category '{args.category}'"
+                description = (
+                    f"keys matching '{args.pattern}' in category '{args.category}'"
+                )
             else:
                 description = f"keys matching '{args.pattern}' in all categories"
         elif args.category:
@@ -104,7 +96,9 @@ Examples:
         if args.dry_run:
             print(f"DRY RUN: Would clear {description}")
             print(f"  Current entries: {stats_before.entry_count:,}")
-            print(f"  Current size: {stats_before.total_size_bytes / (1024*1024):.1f} MB")
+            print(
+                f"  Current size: {stats_before.total_size_bytes / (1024 * 1024):.1f} MB"
+            )
             return
 
         # Confirm unless --force
@@ -128,7 +122,7 @@ Examples:
 
         stats_after = cache.get_stats()
         freed = stats_before.total_size_bytes - stats_after.total_size_bytes
-        print(f"Freed {freed / (1024*1024):.1f} MB")
+        print(f"Freed {freed / (1024 * 1024):.1f} MB")
 
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)

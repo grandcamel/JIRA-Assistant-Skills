@@ -11,31 +11,28 @@ Supports:
 """
 
 import argparse
-import sys
-import json
 import csv
-from pathlib import Path
+import json
+import sys
 from io import StringIO
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 # Known system groups
 SYSTEM_GROUPS = [
-    'jira-administrators',
-    'jira-users',
-    'jira-software-users',
-    'site-admins',
-    'atlassian-addons-admin'
+    "jira-administrators",
+    "jira-users",
+    "jira-software-users",
+    "site-admins",
+    "atlassian-addons-admin",
 ]
 
 
-def list_groups(client, query: str = '', max_results: int = 50,
-                case_insensitive: bool = True) -> List[Dict[str, Any]]:
+def list_groups(
+    client, query: str = "", max_results: int = 50, case_insensitive: bool = True
+) -> list[dict[str, Any]]:
     """
     List all groups with optional filtering.
 
@@ -49,15 +46,14 @@ def list_groups(client, query: str = '', max_results: int = 50,
         List of group objects
     """
     result = client.find_groups(
-        query=query,
-        max_results=max_results,
-        caseInsensitive=case_insensitive
+        query=query, max_results=max_results, caseInsensitive=case_insensitive
     )
-    return result.get('groups', [])
+    return result.get("groups", [])
 
 
-def list_groups_with_member_counts(client, query: str = '',
-                                   max_results: int = 50) -> List[Dict[str, Any]]:
+def list_groups_with_member_counts(
+    client, query: str = "", max_results: int = 50
+) -> list[dict[str, Any]]:
     """
     List groups with member count for each group.
 
@@ -76,12 +72,12 @@ def list_groups_with_member_counts(client, query: str = '',
     for group in groups:
         try:
             members_result = client.get_group_members(
-                group_name=group['name'],
-                max_results=1  # Just need the count
+                group_name=group["name"],
+                max_results=1,  # Just need the count
             )
-            group['memberCount'] = members_result.get('total', 0)
+            group["memberCount"] = members_result.get("total", 0)
         except Exception:
-            group['memberCount'] = 'N/A'
+            group["memberCount"] = "N/A"
 
     return groups
 
@@ -99,9 +95,11 @@ def is_system_group(group_name: str) -> bool:
     return group_name in SYSTEM_GROUPS
 
 
-def format_groups_table(groups: List[Dict[str, Any]],
-                        show_member_count: bool = False,
-                        highlight_system: bool = False) -> str:
+def format_groups_table(
+    groups: list[dict[str, Any]],
+    show_member_count: bool = False,
+    highlight_system: bool = False,
+) -> str:
     """
     Format groups as a table.
 
@@ -118,31 +116,30 @@ def format_groups_table(groups: List[Dict[str, Any]],
     except ImportError:
         return format_groups_simple(groups, show_member_count, highlight_system)
 
-    headers = ['Name', 'Group ID']
+    headers = ["Name", "Group ID"]
     if show_member_count:
-        headers.append('Members')
+        headers.append("Members")
     if highlight_system:
-        headers.append('Type')
+        headers.append("Type")
 
     rows = []
     for group in groups:
-        name = group.get('name', 'N/A')
-        row = [
-            name,
-            group.get('groupId', 'N/A')
-        ]
+        name = group.get("name", "N/A")
+        row = [name, group.get("groupId", "N/A")]
         if show_member_count:
-            row.append(group.get('memberCount', '-'))
+            row.append(group.get("memberCount", "-"))
         if highlight_system:
-            row.append('System' if is_system_group(name) else 'Custom')
+            row.append("System" if is_system_group(name) else "Custom")
         rows.append(row)
 
-    return tabulate(rows, headers=headers, tablefmt='simple')
+    return tabulate(rows, headers=headers, tablefmt="simple")
 
 
-def format_groups_simple(groups: List[Dict[str, Any]],
-                         show_member_count: bool = False,
-                         highlight_system: bool = False) -> str:
+def format_groups_simple(
+    groups: list[dict[str, Any]],
+    show_member_count: bool = False,
+    highlight_system: bool = False,
+) -> str:
     """
     Simple fallback formatting when tabulate is not available.
 
@@ -156,17 +153,17 @@ def format_groups_simple(groups: List[Dict[str, Any]],
     """
     lines = []
     for group in groups:
-        name = group.get('name', 'N/A')
+        name = group.get("name", "N/A")
         line = f"{name:<30} {group.get('groupId', 'N/A'):<40}"
         if show_member_count:
             line += f" {group.get('memberCount', '-'):>8}"
         if highlight_system:
             line += f" {'System' if is_system_group(name) else 'Custom':>8}"
         lines.append(line)
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
-def format_groups_json(groups: List[Dict[str, Any]]) -> str:
+def format_groups_json(groups: list[dict[str, Any]]) -> str:
     """
     Format groups as JSON.
 
@@ -179,8 +176,9 @@ def format_groups_json(groups: List[Dict[str, Any]]) -> str:
     return json.dumps(groups, indent=2)
 
 
-def format_groups_csv(groups: List[Dict[str, Any]],
-                      show_member_count: bool = False) -> str:
+def format_groups_csv(
+    groups: list[dict[str, Any]], show_member_count: bool = False
+) -> str:
     """
     Format groups as CSV.
 
@@ -192,20 +190,17 @@ def format_groups_csv(groups: List[Dict[str, Any]],
         CSV string
     """
     output = StringIO()
-    fieldnames = ['name', 'groupId']
+    fieldnames = ["name", "groupId"]
     if show_member_count:
-        fieldnames.append('memberCount')
+        fieldnames.append("memberCount")
 
-    writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction='ignore')
+    writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction="ignore")
     writer.writeheader()
 
     for group in groups:
-        row = {
-            'name': group.get('name', ''),
-            'groupId': group.get('groupId', '')
-        }
+        row = {"name": group.get("name", ""), "groupId": group.get("groupId", "")}
         if show_member_count:
-            row['memberCount'] = group.get('memberCount', '')
+            row["memberCount"] = group.get("memberCount", "")
         writer.writerow(row)
 
     return output.getvalue()
@@ -213,8 +208,8 @@ def format_groups_csv(groups: List[Dict[str, Any]],
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='List JIRA groups with optional filtering',
-        epilog='''
+        description="List JIRA groups with optional filtering",
+        epilog="""
 Examples:
   %(prog)s                              # List all groups
   %(prog)s --query "developers"         # Filter by name
@@ -222,21 +217,39 @@ Examples:
   %(prog)s --show-system                # Highlight system groups
   %(prog)s --output json                # JSON output
   %(prog)s --output csv > groups.csv    # Export to CSV
-''',
-        formatter_class=argparse.RawDescriptionHelpFormatter
+""",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument('--query', '-q', default='',
-                        help='Filter groups by name (partial match)')
-    parser.add_argument('--include-members', '-m', action='store_true',
-                        help='Include member counts (slower)')
-    parser.add_argument('--show-system', '-s', action='store_true',
-                        help='Highlight system/built-in groups')
-    parser.add_argument('--max-results', type=int, default=50,
-                        help='Maximum results to return (default: 50)')
-    parser.add_argument('--output', '-o', choices=['table', 'json', 'csv'],
-                        default='table', help='Output format (default: table)')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument(
+        "--query", "-q", default="", help="Filter groups by name (partial match)"
+    )
+    parser.add_argument(
+        "--include-members",
+        "-m",
+        action="store_true",
+        help="Include member counts (slower)",
+    )
+    parser.add_argument(
+        "--show-system",
+        "-s",
+        action="store_true",
+        help="Highlight system/built-in groups",
+    )
+    parser.add_argument(
+        "--max-results",
+        type=int,
+        default=50,
+        help="Maximum results to return (default: 50)",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["table", "json", "csv"],
+        default="table",
+        help="Output format (default: table)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -246,36 +259,32 @@ Examples:
         # Get groups
         if args.include_members:
             groups = list_groups_with_member_counts(
-                client,
-                query=args.query,
-                max_results=args.max_results
+                client, query=args.query, max_results=args.max_results
             )
         else:
-            groups = list_groups(
-                client,
-                query=args.query,
-                max_results=args.max_results
-            )
+            groups = list_groups(client, query=args.query, max_results=args.max_results)
 
         # Format output
         if not groups:
-            query_info = f' matching "{args.query}"' if args.query else ''
-            print(f'No groups found{query_info}')
+            query_info = f' matching "{args.query}"' if args.query else ""
+            print(f"No groups found{query_info}")
             sys.exit(0)
 
-        query_info = f' matching "{args.query}"' if args.query else ''
-        print(f'Found {len(groups)} group(s){query_info}\n')
+        query_info = f' matching "{args.query}"' if args.query else ""
+        print(f"Found {len(groups)} group(s){query_info}\n")
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_groups_json(groups))
-        elif args.output == 'csv':
+        elif args.output == "csv":
             print(format_groups_csv(groups, show_member_count=args.include_members))
         else:
-            print(format_groups_table(
-                groups,
-                show_member_count=args.include_members,
-                highlight_system=args.show_system
-            ))
+            print(
+                format_groups_table(
+                    groups,
+                    show_member_count=args.include_members,
+                    highlight_system=args.show_system,
+                )
+            )
 
         client.close()
 
@@ -287,5 +296,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -9,16 +9,13 @@ sharing it with projects, groups, or globally.
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Any
 
 # Add shared library to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, print_error
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-def build_project_permission(project_id: str) -> Dict[str, Any]:
+def build_project_permission(project_id: str) -> dict[str, Any]:
     """
     Build project share permission.
 
@@ -28,13 +25,10 @@ def build_project_permission(project_id: str) -> Dict[str, Any]:
     Returns:
         Permission object
     """
-    return {
-        'type': 'project',
-        'project': {'id': project_id}
-    }
+    return {"type": "project", "project": {"id": project_id}}
 
 
-def build_group_permission(group_name: str) -> Dict[str, Any]:
+def build_group_permission(group_name: str) -> dict[str, Any]:
     """
     Build group share permission.
 
@@ -44,26 +38,27 @@ def build_group_permission(group_name: str) -> Dict[str, Any]:
     Returns:
         Permission object
     """
-    return {
-        'type': 'group',
-        'group': {'name': group_name}
-    }
+    return {"type": "group", "group": {"name": group_name}}
 
 
-def build_global_permission() -> Dict[str, Any]:
+def build_global_permission() -> dict[str, Any]:
     """
     Build global share permission.
 
     Returns:
         Permission object
     """
-    return {'type': 'global'}
+    return {"type": "global"}
 
 
-def create_filter(client, name: str, jql: str,
-                  description: str = None,
-                  favourite: bool = False,
-                  share_permissions: List[Dict[str, Any]] = None) -> Dict[str, Any]:
+def create_filter(
+    client,
+    name: str,
+    jql: str,
+    description: str | None = None,
+    favourite: bool = False,
+    share_permissions: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     """
     Create a new filter.
 
@@ -83,11 +78,11 @@ def create_filter(client, name: str, jql: str,
         jql=jql,
         description=description,
         favourite=favourite,
-        share_permissions=share_permissions
+        share_permissions=share_permissions,
     )
 
 
-def format_filter_text(filter_data: Dict[str, Any]) -> str:
+def format_filter_text(filter_data: dict[str, Any]) -> str:
     """
     Format created filter for display.
 
@@ -103,38 +98,40 @@ def format_filter_text(filter_data: Dict[str, Any]) -> str:
     lines.append(f"  Name:        {filter_data.get('name', 'N/A')}")
     lines.append(f"  JQL:         {filter_data.get('jql', 'N/A')}")
 
-    description = filter_data.get('description')
+    description = filter_data.get("description")
     lines.append(f"  Description: {description if description else '(none)'}")
 
     lines.append(f"  Favourite:   {'Yes' if filter_data.get('favourite') else 'No'}")
 
     # Sharing info
-    permissions = filter_data.get('sharePermissions', [])
+    permissions = filter_data.get("sharePermissions", [])
     if permissions:
         share_info = []
         for p in permissions:
-            ptype = p.get('type', '')
-            if ptype == 'project':
-                proj = p.get('project', {})
+            ptype = p.get("type", "")
+            if ptype == "project":
+                proj = p.get("project", {})
                 share_info.append(f"Project: {proj.get('key', proj.get('id', '?'))}")
-            elif ptype == 'group':
-                grp = p.get('group', {})
+            elif ptype == "group":
+                grp = p.get("group", {})
                 share_info.append(f"Group: {grp.get('name', '?')}")
-            elif ptype == 'global':
+            elif ptype == "global":
                 share_info.append("Global (all users)")
-            elif ptype == 'loggedin':
+            elif ptype == "loggedin":
                 share_info.append("Logged-in users")
         lines.append(f"  Shared:      {', '.join(share_info)}")
     else:
         lines.append("  Shared:      Private (only you)")
 
     lines.append("")
-    view_url = filter_data.get('viewUrl', '')
+    view_url = filter_data.get("viewUrl", "")
     if view_url:
         lines.append(f"  View URL: {view_url}")
 
     lines.append("")
-    lines.append(f"To run this filter: python jql_search.py --filter {filter_data.get('id')}")
+    lines.append(
+        f"To run this filter: python jql_search.py --filter {filter_data.get('id')}"
+    )
 
     return "\n".join(lines)
 
@@ -142,8 +139,8 @@ def format_filter_text(filter_data: Dict[str, Any]) -> str:
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Create a saved filter.',
-        epilog='''
+        description="Create a saved filter.",
+        epilog="""
 Examples:
   %(prog)s --name "My Bugs" --jql "project = PROJ AND type = Bug"
   %(prog)s --name "Sprint Issues" --jql "sprint in openSprints()" --description "Active sprint work"
@@ -151,27 +148,28 @@ Examples:
   %(prog)s --name "Project Bugs" --jql "..." --share-project 10000
   %(prog)s --name "Dev Bugs" --jql "..." --share-group developers
   %(prog)s --name "Public View" --jql "..." --share-global
-        '''
+        """,
     )
 
-    parser.add_argument('--name', '-n', required=True,
-                        help='Filter name')
-    parser.add_argument('--jql', '-j', required=True,
-                        help='JQL query string')
-    parser.add_argument('--description', '-d',
-                        help='Filter description')
-    parser.add_argument('--favourite', '-f', action='store_true',
-                        help='Mark as favourite')
-    parser.add_argument('--share-project',
-                        help='Share with project (ID or key)')
-    parser.add_argument('--share-group',
-                        help='Share with group')
-    parser.add_argument('--share-global', action='store_true',
-                        help='Share with all users')
-    parser.add_argument('--output', '-o', choices=['text', 'json'],
-                        default='text', help='Output format (default: text)')
-    parser.add_argument('--profile', '-p',
-                        help='JIRA profile to use')
+    parser.add_argument("--name", "-n", required=True, help="Filter name")
+    parser.add_argument("--jql", "-j", required=True, help="JQL query string")
+    parser.add_argument("--description", "-d", help="Filter description")
+    parser.add_argument(
+        "--favourite", "-f", action="store_true", help="Mark as favourite"
+    )
+    parser.add_argument("--share-project", help="Share with project (ID or key)")
+    parser.add_argument("--share-group", help="Share with group")
+    parser.add_argument(
+        "--share-global", action="store_true", help="Share with all users"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -193,10 +191,10 @@ Examples:
             jql=args.jql,
             description=args.description,
             favourite=args.favourite,
-            share_permissions=permissions if permissions else None
+            share_permissions=permissions if permissions else None,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(result, indent=2))
         else:
             print(format_filter_text(result))
@@ -206,5 +204,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -2,15 +2,15 @@
 Tests for create_service_desk.py script.
 """
 
-import sys
 import json
+import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
 # Add scripts directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 
 def test_create_service_desk(mock_jira_client):
@@ -21,15 +21,19 @@ def test_create_service_desk(mock_jira_client):
         "id": "5",
         "projectId": "10005",
         "projectName": "New Service Desk",
-        "projectKey": "NSD"
+        "projectKey": "NSD",
     }
 
-    with patch('create_service_desk.get_jira_client', return_value=mock_jira_client):
-        result = create_service_desk("New Service Desk", "NSD", "com.atlassian.servicedesk:simplified-it-service-desk")
+    with patch("create_service_desk.get_jira_client", return_value=mock_jira_client):
+        result = create_service_desk(
+            "New Service Desk",
+            "NSD",
+            "com.atlassian.servicedesk:simplified-it-service-desk",
+        )
 
         assert result is not None
-        assert result['projectKey'] == "NSD"
-        assert result['projectName'] == "New Service Desk"
+        assert result["projectKey"] == "NSD"
+        assert result["projectName"] == "New Service Desk"
 
 
 def test_validate_project_key(mock_jira_client):
@@ -37,27 +41,31 @@ def test_validate_project_key(mock_jira_client):
     from create_service_desk import validate_project_key
 
     # Valid keys
-    assert validate_project_key("NSD") == True
-    assert validate_project_key("IT") == True
-    assert validate_project_key("HR") == True
+    assert validate_project_key("NSD")
+    assert validate_project_key("IT")
+    assert validate_project_key("HR")
 
     # Invalid keys
-    assert validate_project_key("n") == False  # Too short
-    assert validate_project_key("TOOLONGKEY1") == False  # Too long (11 chars)
-    assert validate_project_key("123") == False  # No letters
-    assert validate_project_key("new-key") == False  # Invalid chars
+    assert not validate_project_key("n")  # Too short
+    assert not validate_project_key("TOOLONGKEY1")  # Too long (11 chars)
+    assert not validate_project_key("123")  # No letters
+    assert not validate_project_key("new-key")  # Invalid chars
 
 
 def test_dry_run_mode(mock_jira_client, capsys):
     """Test dry-run mode without creating."""
     from create_service_desk import format_create_preview
 
-    format_create_preview("New Service Desk", "NSD", "com.atlassian.servicedesk:simplified-it-service-desk")
+    format_create_preview(
+        "New Service Desk",
+        "NSD",
+        "com.atlassian.servicedesk:simplified-it-service-desk",
+    )
 
     captured = capsys.readouterr()
-    assert 'DRY RUN' in captured.out or 'Preview' in captured.out
-    assert 'New Service Desk' in captured.out
-    assert 'NSD' in captured.out
+    assert "DRY RUN" in captured.out or "Preview" in captured.out
+    assert "New Service Desk" in captured.out
+    assert "NSD" in captured.out
 
 
 def test_format_text_output(mock_jira_client, capsys):
@@ -68,14 +76,16 @@ def test_format_text_output(mock_jira_client, capsys):
         "id": "5",
         "projectId": "10005",
         "projectName": "New Service Desk",
-        "projectKey": "NSD"
+        "projectKey": "NSD",
     }
 
     format_service_desk_created_text(service_desk)
 
     captured = capsys.readouterr()
-    assert 'Created Service Desk' in captured.out or 'Successfully created' in captured.out
-    assert 'NSD' in captured.out
+    assert (
+        "Created Service Desk" in captured.out or "Successfully created" in captured.out
+    )
+    assert "NSD" in captured.out
 
 
 def test_format_json_output(mock_jira_client):
@@ -86,13 +96,13 @@ def test_format_json_output(mock_jira_client):
         "id": "5",
         "projectId": "10005",
         "projectName": "New Service Desk",
-        "projectKey": "NSD"
+        "projectKey": "NSD",
     }
 
     json_output = format_service_desk_created_json(service_desk)
     parsed = json.loads(json_output)
 
-    assert parsed['projectKey'] == "NSD"
+    assert parsed["projectKey"] == "NSD"
 
 
 def test_list_available_templates(mock_jira_client, capsys):
@@ -102,16 +112,26 @@ def test_list_available_templates(mock_jira_client, capsys):
     list_available_templates()
 
     captured = capsys.readouterr()
-    assert 'Available Templates' in captured.out or 'com.atlassian.servicedesk' in captured.out
+    assert (
+        "Available Templates" in captured.out
+        or "com.atlassian.servicedesk" in captured.out
+    )
 
 
 def test_admin_permission_required(mock_jira_client):
     """Test that admin permission is required."""
     from create_service_desk import create_service_desk
+
     from jira_assistant_skills_lib import JiraError
 
-    mock_jira_client.create_service_desk.side_effect = JiraError("Insufficient permissions")
+    mock_jira_client.create_service_desk.side_effect = JiraError(
+        "Insufficient permissions"
+    )
 
-    with patch('create_service_desk.get_jira_client', return_value=mock_jira_client):
+    with patch("create_service_desk.get_jira_client", return_value=mock_jira_client):
         with pytest.raises(JiraError, match="Insufficient permissions"):
-            create_service_desk("New Service Desk", "NSD", "com.atlassian.servicedesk:simplified-it-service-desk")
+            create_service_desk(
+                "New Service Desk",
+                "NSD",
+                "com.atlassian.servicedesk:simplified-it-service-desk",
+            )

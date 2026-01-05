@@ -7,21 +7,26 @@ Tests cover:
 - cache_warm.py (mock API calls)
 """
 
-import pytest
 import json
 import sys
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
+
+import pytest
 
 # Add shared lib to path (use resolve for absolute paths)
-shared_lib_path = str(Path(__file__).resolve().parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(
+    Path(__file__).resolve().parent.parent.parent / "shared" / "scripts" / "lib"
+)
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
 # Add scripts to path for importing
-scripts_path = str(Path(__file__).resolve().parent.parent / 'scripts')
+scripts_path = str(Path(__file__).resolve().parent.parent / "scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
+
+import contextlib
 
 from jira_assistant_skills_lib import JiraCache
 
@@ -43,13 +48,11 @@ class TestCacheStatusScript:
         # Import and run the script's main function
         import cache_status
 
-        with patch('sys.argv', ['cache_status.py', '--cache-dir', temp_cache_dir]):
-            with patch('sys.stdout') as mock_stdout:
+        with patch("sys.argv", ["cache_status.py", "--cache-dir", temp_cache_dir]):
+            with patch("sys.stdout"):
                 # Just verify it doesn't crash
-                try:
+                with contextlib.suppress(SystemExit):
                     cache_status.main()
-                except SystemExit:
-                    pass
 
     def test_cache_status_json_output(self, temp_cache_dir):
         """Test JSON output mode."""
@@ -57,16 +60,19 @@ class TestCacheStatusScript:
         cache.set("issue1", {"key": "PROJ-1"}, category="issue")
         cache.close()
 
-        import cache_status
         import io
 
+        import cache_status
+
         captured_output = io.StringIO()
-        with patch('sys.argv', ['cache_status.py', '--json', '--cache-dir', temp_cache_dir]):
-            with patch('sys.stdout', captured_output):
-                try:
-                    cache_status.main()
-                except SystemExit:
-                    pass
+        with (
+            patch(
+                "sys.argv", ["cache_status.py", "--json", "--cache-dir", temp_cache_dir]
+            ),
+            patch("sys.stdout", captured_output),
+            contextlib.suppress(SystemExit),
+        ):
+            cache_status.main()
 
         output = captured_output.getvalue()
         if output:
@@ -89,11 +95,13 @@ class TestCacheClearScript:
 
         import cache_clear
 
-        with patch('sys.argv', ['cache_clear.py', '--force', '--cache-dir', temp_cache_dir]):
-            try:
-                cache_clear.main()
-            except SystemExit:
-                pass
+        with (
+            patch(
+                "sys.argv", ["cache_clear.py", "--force", "--cache-dir", temp_cache_dir]
+            ),
+            contextlib.suppress(SystemExit),
+        ):
+            cache_clear.main()
 
         # Verify cache is empty
         cache2 = JiraCache(cache_dir=temp_cache_dir)
@@ -109,11 +117,21 @@ class TestCacheClearScript:
 
         import cache_clear
 
-        with patch('sys.argv', ['cache_clear.py', '--category', 'issue', '--force', '--cache-dir', temp_cache_dir]):
-            try:
-                cache_clear.main()
-            except SystemExit:
-                pass
+        with (
+            patch(
+                "sys.argv",
+                [
+                    "cache_clear.py",
+                    "--category",
+                    "issue",
+                    "--force",
+                    "--cache-dir",
+                    temp_cache_dir,
+                ],
+            ),
+            contextlib.suppress(SystemExit),
+        ):
+            cache_clear.main()
 
         # Verify only issue category is cleared
         cache2 = JiraCache(cache_dir=temp_cache_dir)
@@ -130,11 +148,23 @@ class TestCacheClearScript:
 
         import cache_clear
 
-        with patch('sys.argv', ['cache_clear.py', '--pattern', 'PROJ-*', '--category', 'issue', '--force', '--cache-dir', temp_cache_dir]):
-            try:
-                cache_clear.main()
-            except SystemExit:
-                pass
+        with (
+            patch(
+                "sys.argv",
+                [
+                    "cache_clear.py",
+                    "--pattern",
+                    "PROJ-*",
+                    "--category",
+                    "issue",
+                    "--force",
+                    "--cache-dir",
+                    temp_cache_dir,
+                ],
+            ),
+            contextlib.suppress(SystemExit),
+        ):
+            cache_clear.main()
 
         # Verify pattern clearing
         cache2 = JiraCache(cache_dir=temp_cache_dir)
@@ -150,11 +180,14 @@ class TestCacheClearScript:
 
         import cache_clear
 
-        with patch('sys.argv', ['cache_clear.py', '--dry-run', '--cache-dir', temp_cache_dir]):
-            try:
-                cache_clear.main()
-            except SystemExit:
-                pass
+        with (
+            patch(
+                "sys.argv",
+                ["cache_clear.py", "--dry-run", "--cache-dir", temp_cache_dir],
+            ),
+            contextlib.suppress(SystemExit),
+        ):
+            cache_clear.main()
 
         # Verify cache is NOT cleared
         cache2 = JiraCache(cache_dir=temp_cache_dir)
@@ -170,23 +203,30 @@ class TestCacheWarmScript:
         """Test pre-warming project cache."""
         mock_jira_client.get.return_value = [
             {"key": "PROJ1", "name": "Project 1"},
-            {"key": "PROJ2", "name": "Project 2"}
+            {"key": "PROJ2", "name": "Project 2"},
         ]
 
         import cache_warm
 
-        with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-            with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                with patch('sys.argv', ['cache_warm.py', '--projects', '--cache-dir', temp_cache_dir, '-v']):
-                    try:
+        with patch("cache_warm.get_jira_client", return_value=mock_jira_client):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                with patch(
+                    "sys.argv",
+                    [
+                        "cache_warm.py",
+                        "--projects",
+                        "--cache-dir",
+                        temp_cache_dir,
+                        "-v",
+                    ],
+                ):
+                    with contextlib.suppress(SystemExit):
                         cache_warm.main()
-                    except SystemExit:
-                        pass
 
         # Verify projects were cached
         cache = JiraCache(cache_dir=temp_cache_dir)
         # Check that we attempted to cache
-        stats = cache.get_stats()
+        cache.get_stats()
         # At least attempted to cache something
 
     def test_cache_warm_fields(self, temp_cache_dir, mock_jira_client):
@@ -200,22 +240,24 @@ class TestCacheWarmScript:
 
         import cache_warm
 
-        with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-            with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                with patch('sys.argv', ['cache_warm.py', '--fields', '--cache-dir', temp_cache_dir]):
-                    try:
+        with patch("cache_warm.get_jira_client", return_value=mock_jira_client):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                with patch(
+                    "sys.argv",
+                    ["cache_warm.py", "--fields", "--cache-dir", temp_cache_dir],
+                ):
+                    with contextlib.suppress(SystemExit):
                         cache_warm.main()
-                    except SystemExit:
-                        pass
 
     def test_cache_warm_requires_option(self, temp_cache_dir):
         """Test that at least one option is required."""
-        import cache_warm
         import io
 
+        import cache_warm
+
         captured_stderr = io.StringIO()
-        with patch('sys.argv', ['cache_warm.py', '--cache-dir', temp_cache_dir]):
-            with patch('sys.stderr', captured_stderr):
+        with patch("sys.argv", ["cache_warm.py", "--cache-dir", temp_cache_dir]):
+            with patch("sys.stderr", captured_stderr):
                 with pytest.raises(SystemExit) as exc_info:
                     cache_warm.main()
                 assert exc_info.value.code == 1

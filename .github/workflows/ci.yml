@@ -136,7 +136,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12"]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -150,7 +150,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install jira-assistant-skills-lib pytest pytest-asyncio pytest-cov
+          pip install jira-assistant-skills-lib pytest pytest-asyncio pytest-cov pyyaml
 
       - name: Run unit tests
         run: |
@@ -159,10 +159,18 @@ jobs:
             if [ -d "$skill_dir" ]; then
               skill_name=$(basename $(dirname $skill_dir))
               echo "Testing $skill_name..."
+              # Disable exit-on-error for pytest, capture exit code
+              set +e
               python -m pytest "$skill_dir" -v \
                 --ignore="${skill_dir}live_integration" \
-                -m "not live and not slow" \
-                || exit 1
+                -m "not live and not slow"
+              exit_code=$?
+              set -e
+              # Exit code 5 means no tests collected (all filtered out) - treat as success
+              if [ $exit_code -ne 0 ] && [ $exit_code -ne 5 ]; then
+                echo "Tests failed for $skill_name with exit code $exit_code"
+                exit 1
+              fi
             fi
           done
 

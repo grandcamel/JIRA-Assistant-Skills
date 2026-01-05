@@ -1,7 +1,8 @@
 """Tests for decline_request.py - Decline approval request."""
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import Mock, patch
 
 
 def test_decline_request(mock_jira_client, sample_approval_pending):
@@ -11,17 +12,20 @@ def test_decline_request(mock_jira_client, sample_approval_pending):
         "id": "10050",
         "name": "Change Approval",
         "finalDecision": "decline",
-        "completedDate": "2025-01-17T14:30:00.000+0000"
+        "completedDate": "2025-01-17T14:30:00.000+0000",
     }
     mock_jira_client.answer_approval.return_value = declined_approval
 
     from decline_request import main
-    with patch('decline_request.get_jira_client', return_value=mock_jira_client):
-        with patch('builtins.input', return_value='yes'):
-            result = main(['REQ-123', '--approval-id', '10050'])
+
+    with patch("decline_request.get_jira_client", return_value=mock_jira_client):
+        with patch("builtins.input", return_value="yes"):
+            result = main(["REQ-123", "--approval-id", "10050"])
 
     assert result == 0
-    mock_jira_client.answer_approval.assert_called_once_with('REQ-123', '10050', 'decline')
+    mock_jira_client.answer_approval.assert_called_once_with(
+        "REQ-123", "10050", "decline"
+    )
 
 
 def test_decline_request_not_pending(mock_jira_client, sample_approval_pending):
@@ -32,10 +36,11 @@ def test_decline_request_not_pending(mock_jira_client, sample_approval_pending):
     mock_jira_client.answer_approval.side_effect = JiraError("Approval is not pending")
 
     from decline_request import main
-    with patch('decline_request.get_jira_client', return_value=mock_jira_client):
-        with patch('builtins.input', return_value='yes'):
+
+    with patch("decline_request.get_jira_client", return_value=mock_jira_client):
+        with patch("builtins.input", return_value="yes"):
             with pytest.raises(SystemExit) as exc_info:
-                result = main(['REQ-123', '--approval-id', '10050'])
+                main(["REQ-123", "--approval-id", "10050"])
 
     assert exc_info.value.code == 1
 
@@ -48,10 +53,11 @@ def test_decline_request_not_approver(mock_jira_client, sample_approval_pending)
     mock_jira_client.answer_approval.side_effect = PermissionError("Not an approver")
 
     from decline_request import main
-    with patch('decline_request.get_jira_client', return_value=mock_jira_client):
-        with patch('builtins.input', return_value='yes'):
+
+    with patch("decline_request.get_jira_client", return_value=mock_jira_client):
+        with patch("builtins.input", return_value="yes"):
             with pytest.raises(SystemExit) as exc_info:
-                result = main(['REQ-123', '--approval-id', '10050'])
+                main(["REQ-123", "--approval-id", "10050"])
 
     assert exc_info.value.code == 1
 
@@ -63,9 +69,10 @@ def test_decline_with_confirmation(mock_jira_client, sample_approval_pending):
     mock_jira_client.answer_approval.return_value = declined_approval
 
     from decline_request import main
-    with patch('decline_request.get_jira_client', return_value=mock_jira_client):
-        with patch('builtins.input', return_value='yes'):
-            result = main(['REQ-123', '--approval-id', '10050'])
+
+    with patch("decline_request.get_jira_client", return_value=mock_jira_client):
+        with patch("builtins.input", return_value="yes"):
+            result = main(["REQ-123", "--approval-id", "10050"])
 
     assert result == 0
 
@@ -75,12 +82,13 @@ def test_decline_dry_run(mock_jira_client, sample_approval_pending, capsys):
     mock_jira_client.get_request_approval.return_value = sample_approval_pending
 
     from decline_request import main
-    with patch('decline_request.get_jira_client', return_value=mock_jira_client):
-        result = main(['REQ-123', '--approval-id', '10050', '--dry-run'])
+
+    with patch("decline_request.get_jira_client", return_value=mock_jira_client):
+        result = main(["REQ-123", "--approval-id", "10050", "--dry-run"])
 
     assert result == 0
     captured = capsys.readouterr()
-    assert 'DRY RUN' in captured.out
+    assert "DRY RUN" in captured.out
     mock_jira_client.answer_approval.assert_not_called()
 
 
@@ -90,20 +98,21 @@ def test_decline_request_output(mock_jira_client, capsys):
         "id": "10050",
         "name": "Change Approval",
         "finalDecision": "decline",
-        "completedDate": "2025-01-17T14:30:00.000+0000"
+        "completedDate": "2025-01-17T14:30:00.000+0000",
     }
     mock_jira_client.get_request_approval.return_value = {
         "id": "10050",
         "name": "Change Approval",
-        "finalDecision": "pending"
+        "finalDecision": "pending",
     }
     mock_jira_client.answer_approval.return_value = declined_approval
 
     from decline_request import main
-    with patch('decline_request.get_jira_client', return_value=mock_jira_client):
-        with patch('builtins.input', return_value='yes'):
-            result = main(['REQ-123', '--approval-id', '10050'])
+
+    with patch("decline_request.get_jira_client", return_value=mock_jira_client):
+        with patch("builtins.input", return_value="yes"):
+            result = main(["REQ-123", "--approval-id", "10050"])
 
     assert result == 0
     captured = capsys.readouterr()
-    assert 'decline' in captured.out.lower()
+    assert "decline" in captured.out.lower()

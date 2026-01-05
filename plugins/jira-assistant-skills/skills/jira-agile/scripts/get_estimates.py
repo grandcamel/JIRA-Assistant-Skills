@@ -9,26 +9,30 @@ Usage:
     python get_estimates.py --sprint 456 --group-by status
 """
 
-import sys
 import argparse
 import json
-from pathlib import Path
-from typing import Optional
+import sys
 from collections import defaultdict
 
 # Add shared lib to path
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_agile_fields,
+    get_jira_client,
+    print_error,
+    print_success,
+    validate_issue_key,
+)
 
-from jira_assistant_skills_lib import get_jira_client, get_agile_fields
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import print_success
 
-
-def get_estimates(sprint_id: int = None,
-                  epic_key: str = None,
-                  group_by: str = None,
-                  profile: str = None,
-                  client=None) -> dict:
+def get_estimates(
+    sprint_id: int | None = None,
+    epic_key: str | None = None,
+    group_by: str | None = None,
+    profile: str | None = None,
+    client=None,
+) -> dict:
     """
     Get story point estimation summary.
 
@@ -59,20 +63,20 @@ def get_estimates(sprint_id: int = None,
     try:
         # Get Agile field IDs from configuration
         agile_fields = get_agile_fields(profile)
-        story_points_field = agile_fields['story_points']
+        story_points_field = agile_fields["story_points"]
 
         # Get issues
         if sprint_id:
             result = client.get_sprint_issues(sprint_id)
-            issues = result.get('issues', [])
+            issues = result.get("issues", [])
         else:
             # Search for issues in epic
             epic_key = validate_issue_key(epic_key)
             jql = f'"Epic Link" = {epic_key}'
-            result = client.search_issues(jql, fields=[
-                'summary', 'status', 'assignee', story_points_field
-            ])
-            issues = result.get('issues', [])
+            result = client.search_issues(
+                jql, fields=["summary", "status", "assignee", story_points_field]
+            )
+            issues = result.get("issues", [])
 
         # Calculate totals
         total_points = 0
@@ -80,35 +84,35 @@ def get_estimates(sprint_id: int = None,
         by_assignee = defaultdict(float)
 
         for issue in issues:
-            fields = issue.get('fields', {})
+            fields = issue.get("fields", {})
             points = fields.get(story_points_field) or 0
 
             total_points += points
 
             # Group by status
-            status = fields.get('status', {}).get('name', 'Unknown')
+            status = fields.get("status", {}).get("name", "Unknown")
             by_status[status] += points
 
             # Group by assignee
-            assignee = fields.get('assignee')
+            assignee = fields.get("assignee")
             if assignee:
-                assignee_name = assignee.get('displayName', 'Unknown')
+                assignee_name = assignee.get("displayName", "Unknown")
             else:
-                assignee_name = 'Unassigned'
+                assignee_name = "Unassigned"
             by_assignee[assignee_name] += points
 
         # Build result
         response = {
-            'total_points': total_points,
-            'issue_count': len(issues),
-            'by_status': dict(by_status),
-            'by_assignee': dict(by_assignee)
+            "total_points": total_points,
+            "issue_count": len(issues),
+            "by_status": dict(by_status),
+            "by_assignee": dict(by_assignee),
         }
 
         if sprint_id:
-            response['sprint_id'] = sprint_id
+            response["sprint_id"] = sprint_id
         if epic_key:
-            response['epic_key'] = epic_key
+            response["epic_key"] = epic_key
 
         return response
 
@@ -119,26 +123,22 @@ def get_estimates(sprint_id: int = None,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Get story point estimation summary',
-        epilog='Example: python get_estimates.py --sprint 456'
+        description="Get story point estimation summary",
+        epilog="Example: python get_estimates.py --sprint 456",
     )
 
     # Source options (mutually exclusive)
     source_group = parser.add_mutually_exclusive_group(required=True)
-    source_group.add_argument('--sprint', '-s', type=int,
-                             help='Sprint ID')
-    source_group.add_argument('--epic', '-e',
-                             help='Epic key')
+    source_group.add_argument("--sprint", "-s", type=int, help="Sprint ID")
+    source_group.add_argument("--epic", "-e", help="Epic key")
 
-    parser.add_argument('--group-by', '-g',
-                       choices=['assignee', 'status'],
-                       help='Group results')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use')
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format')
+    parser.add_argument(
+        "--group-by", "-g", choices=["assignee", "status"], help="Group results"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
+    parser.add_argument(
+        "--output", "-o", choices=["text", "json"], default="text", help="Output format"
+    )
 
     args = parser.parse_args(argv)
 
@@ -147,10 +147,10 @@ def main(argv: list[str] | None = None):
             sprint_id=args.sprint,
             epic_key=args.epic,
             group_by=args.group_by,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(result, indent=2))
         else:
             if args.sprint:
@@ -158,22 +158,26 @@ def main(argv: list[str] | None = None):
             else:
                 print_success(f"Epic {args.epic} Estimates")
 
-            print(f"Total: {result['total_points']} points ({result['issue_count']} issues)")
+            print(
+                f"Total: {result['total_points']} points ({result['issue_count']} issues)"
+            )
 
             # Show by status
-            if result['by_status']:
-                done_pts = result['by_status'].get('Done', 0)
-                total = result['total_points'] or 1
-                print(f"\nBy Status:")
-                for status, points in sorted(result['by_status'].items()):
+            if result["by_status"]:
+                result["by_status"].get("Done", 0)
+                total = result["total_points"] or 1
+                print("\nBy Status:")
+                for status, points in sorted(result["by_status"].items()):
                     pct = (points / total) * 100 if total > 0 else 0
                     print(f"  {status}: {points} points ({pct:.0f}%)")
 
             # Show by assignee if requested
-            if args.group_by == 'assignee' and result['by_assignee']:
-                total = result['total_points'] or 1
-                print(f"\nBy Assignee:")
-                for assignee, points in sorted(result['by_assignee'].items(), key=lambda x: -x[1]):
+            if args.group_by == "assignee" and result["by_assignee"]:
+                total = result["total_points"] or 1
+                print("\nBy Assignee:")
+                for assignee, points in sorted(
+                    result["by_assignee"].items(), key=lambda x: -x[1]
+                ):
                     pct = (points / total) * 100 if total > 0 else 0
                     print(f"  {assignee}: {points} points ({pct:.0f}%)")
 
@@ -188,5 +192,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

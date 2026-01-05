@@ -22,16 +22,18 @@ Examples:
 """
 
 import argparse
-import sys
 import json
-from pathlib import Path
-from typing import Optional, Dict, Any
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, ValidationError, print_error
-from jira_assistant_skills_lib import validate_project_key
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    validate_project_key,
+)
 
 
 def delete_project(
@@ -39,8 +41,8 @@ def delete_project(
     enable_undo: bool = True,
     force: bool = False,
     dry_run: bool = False,
-    client=None
-) -> Optional[Dict[str, Any]]:
+    client=None,
+) -> dict[str, Any] | None:
     """
     Delete a JIRA project.
 
@@ -84,10 +86,7 @@ def delete_project(
             client.close()
 
 
-def delete_project_async(
-    project_key: str,
-    client=None
-) -> str:
+def delete_project_async(project_key: str, client=None) -> str:
     """
     Delete a large project asynchronously.
 
@@ -118,7 +117,7 @@ def delete_project_async(
             client.close()
 
 
-def poll_task_status(task_id: str, client=None) -> Dict[str, Any]:
+def poll_task_status(task_id: str, client=None) -> dict[str, Any]:
     """
     Poll async task status.
 
@@ -145,7 +144,7 @@ def poll_task_status(task_id: str, client=None) -> Dict[str, Any]:
             client.close()
 
 
-def format_dry_run(project: Dict[str, Any]) -> str:
+def format_dry_run(project: dict[str, Any]) -> str:
     """Format dry run output."""
     lines = [
         "DRY RUN - Would delete the following project:",
@@ -157,12 +156,12 @@ def format_dry_run(project: Dict[str, Any]) -> str:
     ]
 
     # Lead
-    lead = project.get('lead')
+    lead = project.get("lead")
     if lead:
         lines.append(f"  Lead:        {lead.get('displayName', 'N/A')}")
 
     # Category
-    category = project.get('projectCategory')
+    category = project.get("projectCategory")
     if category:
         lines.append(f"  Category:    {category.get('name', 'N/A')}")
 
@@ -194,7 +193,7 @@ def confirm_deletion(project_key: str, project_name: str, enable_undo: bool) -> 
     print("\nThis will delete all issues, boards, sprints, and related data.")
 
     response = input("\nAre you sure you want to continue? (yes/no): ")
-    return response.lower().strip() in ('yes', 'y')
+    return response.lower().strip() in ("yes", "y")
 
 
 def main(argv: list[str] | None = None):
@@ -219,49 +218,38 @@ Examples:
 Warning:
   Deleting a project removes all issues, boards, sprints, and other data.
   By default, projects go to trash and can be restored within 60 days.
-        """
+        """,
     )
 
     # Required arguments
-    parser.add_argument(
-        "project_key",
-        help="Project key to delete (e.g., PROJ)"
-    )
+    parser.add_argument("project_key", help="Project key to delete (e.g., PROJ)")
 
     # Options
     parser.add_argument(
-        "--yes", "-y",
-        action="store_true",
-        help="Skip confirmation prompt"
+        "--yes", "-y", action="store_true", help="Skip confirmation prompt"
     )
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Preview deletion without executing"
+        "--dry-run", action="store_true", help="Preview deletion without executing"
     )
     parser.add_argument(
-        "--no-undo",
-        action="store_true",
-        help="Permanently delete (skip trash)"
+        "--no-undo", action="store_true", help="Permanently delete (skip trash)"
     )
     parser.add_argument(
         "--async",
         dest="async_delete",
         action="store_true",
-        help="Use async deletion for large projects"
+        help="Use async deletion for large projects",
     )
 
     # Output options
     parser.add_argument(
-        "--output", "-o",
-        choices=['text', 'json'],
-        default='text',
-        help="Output format (default: text)"
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
     )
-    parser.add_argument(
-        "--profile",
-        help="Configuration profile to use"
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -271,12 +259,10 @@ Warning:
         # Handle dry run
         if args.dry_run:
             project = delete_project(
-                project_key=args.project_key,
-                dry_run=True,
-                client=client
+                project_key=args.project_key, dry_run=True, client=client
             )
-            if args.output == 'json':
-                print(json.dumps({'dry_run': True, 'project': project}, indent=2))
+            if args.output == "json":
+                print(json.dumps({"dry_run": True, "project": project}, indent=2))
             else:
                 print(format_dry_run(project))
             sys.exit(0)
@@ -285,23 +271,17 @@ Warning:
         project = client.get_project(args.project_key)
 
         # Confirm unless --yes
-        if not args.yes:
-            if not confirm_deletion(
-                args.project_key,
-                project.get('name', ''),
-                not args.no_undo
-            ):
-                print("Deletion cancelled.")
-                sys.exit(0)
+        if not args.yes and not confirm_deletion(
+            args.project_key, project.get("name", ""), not args.no_undo
+        ):
+            print("Deletion cancelled.")
+            sys.exit(0)
 
         # Handle async deletion
         if args.async_delete:
-            task_id = delete_project_async(
-                project_key=args.project_key,
-                client=client
-            )
-            if args.output == 'json':
-                print(json.dumps({'task_id': task_id, 'status': 'started'}, indent=2))
+            task_id = delete_project_async(project_key=args.project_key, client=client)
+            if args.output == "json":
+                print(json.dumps({"task_id": task_id, "status": "started"}, indent=2))
             else:
                 print(f"Async deletion started. Task ID: {task_id}")
                 print("Use the task ID to check deletion status.")
@@ -312,15 +292,20 @@ Warning:
             project_key=args.project_key,
             enable_undo=not args.no_undo,
             force=True,
-            client=client
+            client=client,
         )
 
-        if args.output == 'json':
-            print(json.dumps({
-                'deleted': True,
-                'project_key': args.project_key,
-                'in_trash': not args.no_undo
-            }, indent=2))
+        if args.output == "json":
+            print(
+                json.dumps(
+                    {
+                        "deleted": True,
+                        "project_key": args.project_key,
+                        "in_trash": not args.no_undo,
+                    },
+                    indent=2,
+                )
+            )
         else:
             if args.no_undo:
                 print(f"Project {args.project_key} permanently deleted.")
@@ -335,7 +320,7 @@ Warning:
         print_error(e)
         sys.exit(1)
     finally:
-        if 'client' in locals():
+        if "client" in locals():
             client.close()
 
 

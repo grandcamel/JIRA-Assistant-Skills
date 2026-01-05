@@ -21,17 +21,19 @@ projects first.
 
 import argparse
 import sys
-from pathlib import Path
-from typing import Dict, Any, Tuple, List
+from typing import Any
 
 # Add shared lib to path
+from jira_assistant_skills_lib import (
+    JiraError,
+    NotFoundError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError, NotFoundError
-from jira_assistant_skills_lib import format_json
 
-
-def get_scheme_for_deletion(client, scheme_id: int) -> Dict[str, Any]:
+def get_scheme_for_deletion(client, scheme_id: int) -> dict[str, Any]:
     """
     Get scheme info before deletion.
 
@@ -45,7 +47,7 @@ def get_scheme_for_deletion(client, scheme_id: int) -> Dict[str, Any]:
     return client.get_permission_scheme(scheme_id)
 
 
-def check_scheme_in_use(client, scheme_id: int) -> Tuple[bool, List[Dict[str, Any]]]:
+def check_scheme_in_use(client, scheme_id: int) -> tuple[bool, list[dict[str, Any]]]:
     """
     Check if a scheme is in use by any projects.
 
@@ -66,25 +68,26 @@ def check_scheme_in_use(client, scheme_id: int) -> Tuple[bool, List[Dict[str, An
 
     while True:
         response = client.get(
-            '/rest/api/3/project/search',
+            "/rest/api/3/project/search",
             params={
-                'startAt': start_at,
-                'maxResults': max_results,
-                'expand': 'permissionScheme'
+                "startAt": start_at,
+                "maxResults": max_results,
+                "expand": "permissionScheme",
             },
-            operation="search projects for permission scheme"
+            operation="search projects for permission scheme",
         )
 
-        for project in response.get('values', []):
+        for project in response.get("values", []):
             # Check if this project uses the scheme
-            perm_scheme = project.get('permissionScheme', {})
-            if perm_scheme.get('id') == scheme_id or str(perm_scheme.get('id')) == str(scheme_id):
-                projects.append({
-                    'key': project.get('key'),
-                    'name': project.get('name')
-                })
+            perm_scheme = project.get("permissionScheme", {})
+            if perm_scheme.get("id") == scheme_id or str(perm_scheme.get("id")) == str(
+                scheme_id
+            ):
+                projects.append(
+                    {"key": project.get("key"), "name": project.get("name")}
+                )
 
-        if response.get('isLast', True):
+        if response.get("isLast", True):
             break
         start_at += max_results
 
@@ -92,10 +95,7 @@ def check_scheme_in_use(client, scheme_id: int) -> Tuple[bool, List[Dict[str, An
 
 
 def delete_permission_scheme(
-    client,
-    scheme_id: int,
-    confirm: bool = False,
-    dry_run: bool = False
+    client, scheme_id: int, confirm: bool = False, dry_run: bool = False
 ) -> bool:
     """
     Delete a permission scheme.
@@ -126,13 +126,13 @@ def delete_permission_scheme(
 
 
 def format_check_result(
-    scheme: Dict[str, Any],
-    in_use: bool,
-    projects: List[Dict[str, Any]]
+    scheme: dict[str, Any], in_use: bool, projects: list[dict[str, Any]]
 ) -> str:
     """Format usage check result."""
     lines = []
-    lines.append(f"Permission Scheme: {scheme.get('name', 'Unknown')} (ID: {scheme.get('id')})")
+    lines.append(
+        f"Permission Scheme: {scheme.get('name', 'Unknown')} (ID: {scheme.get('id')})"
+    )
 
     if in_use:
         lines.append(f"\nScheme is IN USE by {len(projects)} project(s):")
@@ -143,50 +143,42 @@ def format_check_result(
         lines.append("\nScheme is NOT in use by any projects.")
         lines.append("Safe to delete with --confirm flag.")
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Delete a JIRA permission scheme',
-        epilog='''
+        description="Delete a JIRA permission scheme",
+        epilog="""
 Examples:
   %(prog)s 10050 --confirm
   %(prog)s 10050 --check-only
   %(prog)s 10050 --dry-run --confirm
-'''
+""",
+    )
+    parser.add_argument("scheme_id", type=int, help="Permission scheme ID to delete")
+    parser.add_argument(
+        "--confirm",
+        action="store_true",
+        help="Confirm deletion (required for actual delete)",
     )
     parser.add_argument(
-        'scheme_id',
-        type=int,
-        help='Permission scheme ID to delete'
+        "--check-only",
+        action="store_true",
+        help="Only check if scheme is in use, do not delete",
     )
     parser.add_argument(
-        '--confirm',
-        action='store_true',
-        help='Confirm deletion (required for actual delete)'
+        "--dry-run", action="store_true", help="Preview deletion without making changes"
     )
     parser.add_argument(
-        '--check-only',
-        action='store_true',
-        help='Only check if scheme is in use, do not delete'
+        "--output",
+        "-o",
+        choices=["table", "json"],
+        default="table",
+        help="Output format (default: table)",
     )
-    parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Preview deletion without making changes'
-    )
-    parser.add_argument(
-        '--output', '-o',
-        choices=['table', 'json'],
-        default='table',
-        help='Output format (default: table)'
-    )
-    parser.add_argument(
-        '--profile', '-p',
-        help='JIRA profile to use'
-    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -217,11 +209,7 @@ Examples:
             print("No changes made (dry-run mode)")
             return
 
-        delete_permission_scheme(
-            client,
-            scheme_id=args.scheme_id,
-            confirm=args.confirm
-        )
+        delete_permission_scheme(client, scheme_id=args.scheme_id, confirm=args.confirm)
 
         print(f"Deleted permission scheme: {scheme.get('name')} (ID: {args.scheme_id})")
 
@@ -233,5 +221,5 @@ Examples:
         sys.exit(130)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

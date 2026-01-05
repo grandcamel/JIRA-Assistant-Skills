@@ -22,23 +22,22 @@ Examples:
 """
 
 import argparse
-import sys
 import json
-import os
-from pathlib import Path
-from typing import Dict, Any, Optional
+import sys
+from typing import Any
 
 # Add shared lib to path
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    validate_avatar_file,
+    validate_project_key,
+)
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, ValidationError, print_error
-from jira_assistant_skills_lib import validate_project_key, validate_avatar_file
 
-
-def list_avatars(
-    project_key: str,
-    client=None
-) -> Dict[str, Any]:
+def list_avatars(project_key: str, client=None) -> dict[str, Any]:
     """
     List available avatars for a project.
 
@@ -68,11 +67,7 @@ def list_avatars(
             client.close()
 
 
-def set_avatar(
-    project_key: str,
-    avatar_id: str,
-    client=None
-) -> Dict[str, Any]:
+def set_avatar(project_key: str, avatar_id: str, client=None) -> dict[str, Any]:
     """
     Set a project avatar by ID.
 
@@ -97,10 +92,10 @@ def set_avatar(
     try:
         client.set_project_avatar(project_key, avatar_id)
         return {
-            'success': True,
-            'project_key': project_key,
-            'avatar_id': avatar_id,
-            'message': f"Avatar {avatar_id} set for project {project_key}"
+            "success": True,
+            "project_key": project_key,
+            "avatar_id": avatar_id,
+            "message": f"Avatar {avatar_id} set for project {project_key}",
         }
 
     finally:
@@ -108,11 +103,7 @@ def set_avatar(
             client.close()
 
 
-def upload_avatar(
-    project_key: str,
-    file_path: str,
-    client=None
-) -> Dict[str, Any]:
+def upload_avatar(project_key: str, file_path: str, client=None) -> dict[str, Any]:
     """
     Upload a custom avatar from file.
 
@@ -145,11 +136,7 @@ def upload_avatar(
             client.close()
 
 
-def delete_avatar(
-    project_key: str,
-    avatar_id: str,
-    client=None
-) -> Dict[str, Any]:
+def delete_avatar(project_key: str, avatar_id: str, client=None) -> dict[str, Any]:
     """
     Delete a custom avatar.
 
@@ -174,10 +161,10 @@ def delete_avatar(
     try:
         client.delete_project_avatar(project_key, avatar_id)
         return {
-            'success': True,
-            'project_key': project_key,
-            'avatar_id': avatar_id,
-            'message': f"Avatar {avatar_id} deleted from project {project_key}"
+            "success": True,
+            "project_key": project_key,
+            "avatar_id": avatar_id,
+            "message": f"Avatar {avatar_id} deleted from project {project_key}",
         }
 
     finally:
@@ -185,7 +172,7 @@ def delete_avatar(
             client.close()
 
 
-def format_avatars_output(avatars: Dict[str, Any], output_format: str = "text") -> str:
+def format_avatars_output(avatars: dict[str, Any], output_format: str = "text") -> str:
     """Format avatars list for output."""
     if output_format == "json":
         return json.dumps(avatars, indent=2)
@@ -193,8 +180,8 @@ def format_avatars_output(avatars: Dict[str, Any], output_format: str = "text") 
     # Text output
     lines = ["Available Avatars:", "=" * 60, ""]
 
-    system_avatars = avatars.get('system', [])
-    custom_avatars = avatars.get('custom', [])
+    system_avatars = avatars.get("system", [])
+    custom_avatars = avatars.get("custom", [])
 
     if system_avatars:
         lines.append("System Avatars:")
@@ -206,7 +193,9 @@ def format_avatars_output(avatars: Dict[str, Any], output_format: str = "text") 
     if custom_avatars:
         lines.append("Custom Avatars:")
         for avatar in custom_avatars:
-            lines.append(f"  ID: {avatar.get('id', 'N/A')} (Owner: {avatar.get('owner', 'N/A')})")
+            lines.append(
+                f"  ID: {avatar.get('id', 'N/A')} (Owner: {avatar.get('owner', 'N/A')})"
+            )
     else:
         lines.append("No custom avatars.")
 
@@ -216,12 +205,12 @@ def format_avatars_output(avatars: Dict[str, Any], output_format: str = "text") 
     return "\n".join(lines)
 
 
-def format_result_output(result: Dict[str, Any], output_format: str = "text") -> str:
+def format_result_output(result: dict[str, Any], output_format: str = "text") -> str:
     """Format result for output."""
     if output_format == "json":
         return json.dumps(result, indent=2)
 
-    return result.get('message', 'Operation completed.')
+    return result.get("message", "Operation completed.")
 
 
 def main(argv: list[str] | None = None):
@@ -242,48 +231,37 @@ Examples:
 
   # Delete a custom avatar
   %(prog)s PROJ --delete 10300
-        """
+        """,
     )
 
     # Required arguments
-    parser.add_argument(
-        "project_key",
-        help="Project key (e.g., PROJ)"
-    )
+    parser.add_argument("project_key", help="Project key (e.g., PROJ)")
 
     # Operations (mutually exclusive)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
-        "--list", "-l",
-        action="store_true",
-        help="List available avatars"
+        "--list", "-l", action="store_true", help="List available avatars"
     )
+    group.add_argument("--avatar-id", "-a", help="Set avatar by ID")
     group.add_argument(
-        "--avatar-id", "-a",
-        help="Set avatar by ID"
-    )
-    group.add_argument(
-        "--file", "-f",
+        "--file",
+        "-f",
         dest="file_path",
-        help="Upload avatar from file (PNG, JPEG, GIF)"
+        help="Upload avatar from file (PNG, JPEG, GIF)",
     )
     group.add_argument(
-        "--delete", "-d",
-        dest="delete_id",
-        help="Delete custom avatar by ID"
+        "--delete", "-d", dest="delete_id", help="Delete custom avatar by ID"
     )
 
     # Output options
     parser.add_argument(
-        "--output", "-o",
-        choices=['text', 'json'],
-        default='text',
-        help="Output format (default: text)"
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
     )
-    parser.add_argument(
-        "--profile",
-        help="Configuration profile to use"
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -291,38 +269,29 @@ Examples:
         client = get_jira_client(profile=args.profile)
 
         if args.list:
-            result = list_avatars(
-                project_key=args.project_key,
-                client=client
-            )
+            result = list_avatars(project_key=args.project_key, client=client)
             print(format_avatars_output(result, args.output))
 
         elif args.avatar_id:
             result = set_avatar(
-                project_key=args.project_key,
-                avatar_id=args.avatar_id,
-                client=client
+                project_key=args.project_key, avatar_id=args.avatar_id, client=client
             )
             print(format_result_output(result, args.output))
 
         elif args.file_path:
             result = upload_avatar(
-                project_key=args.project_key,
-                file_path=args.file_path,
-                client=client
+                project_key=args.project_key, file_path=args.file_path, client=client
             )
             if args.output == "json":
                 print(json.dumps(result, indent=2))
             else:
-                print(f"Avatar uploaded successfully!")
+                print("Avatar uploaded successfully!")
                 print(f"  ID: {result.get('id', 'N/A')}")
                 print(f"  Project: {args.project_key}")
 
         elif args.delete_id:
             result = delete_avatar(
-                project_key=args.project_key,
-                avatar_id=args.delete_id,
-                client=client
+                project_key=args.project_key, avatar_id=args.delete_id, client=client
             )
             print(format_result_output(result, args.output))
 
@@ -333,7 +302,7 @@ Examples:
         print_error(e)
         sys.exit(1)
     finally:
-        if 'client' in locals():
+        if "client" in locals():
             client.close()
 
 

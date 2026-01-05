@@ -4,9 +4,9 @@ Tests for get_dependencies.py
 TDD tests for finding all issue dependencies.
 """
 
-import pytest
 from unittest.mock import patch
-import json
+
+import pytest
 
 
 @pytest.mark.relationships
@@ -19,35 +19,48 @@ class TestGetDependencies:
         mock_jira_client.get_issue_links.return_value = sample_issue_links
 
         import get_dependencies
-        with patch.object(get_dependencies, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(
+            get_dependencies, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_dependencies.get_dependencies("PROJ-123")
 
         # Should find all 3 linked issues
-        assert len(result['dependencies']) == 3
+        assert len(result["dependencies"]) == 3
 
     def test_dependencies_by_type(self, mock_jira_client, sample_issue_links):
         """Test filtering dependencies by link type."""
         mock_jira_client.get_issue_links.return_value = sample_issue_links
 
         import get_dependencies
-        with patch.object(get_dependencies, 'get_jira_client', return_value=mock_jira_client):
-            result = get_dependencies.get_dependencies("PROJ-123", link_types=["Blocks"])
+
+        with patch.object(
+            get_dependencies, "get_jira_client", return_value=mock_jira_client
+        ):
+            result = get_dependencies.get_dependencies(
+                "PROJ-123", link_types=["Blocks"]
+            )
 
         # Should only find Blocks links (2 in sample)
-        assert len(result['dependencies']) == 2
-        for dep in result['dependencies']:
-            assert dep['link_type'] == 'Blocks'
+        assert len(result["dependencies"]) == 2
+        for dep in result["dependencies"]:
+            assert dep["link_type"] == "Blocks"
 
-    def test_dependencies_with_status_summary(self, mock_jira_client, sample_issue_links):
+    def test_dependencies_with_status_summary(
+        self, mock_jira_client, sample_issue_links
+    ):
         """Test showing dependency status summary."""
         mock_jira_client.get_issue_links.return_value = sample_issue_links
 
         import get_dependencies
-        with patch.object(get_dependencies, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(
+            get_dependencies, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_dependencies.get_dependencies("PROJ-123")
 
         # Should include status counts
-        assert 'status_summary' in result
+        assert "status_summary" in result
         # sample_issue_links has: Done (1), In Progress (1), To Do (1)
 
     def test_dependencies_mermaid_format(self, mock_jira_client, sample_issue_links):
@@ -55,28 +68,36 @@ class TestGetDependencies:
         mock_jira_client.get_issue_links.return_value = sample_issue_links
 
         import get_dependencies
-        with patch.object(get_dependencies, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(
+            get_dependencies, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_dependencies.get_dependencies("PROJ-123")
-            output = get_dependencies.format_dependencies(result, output_format='mermaid')
+            output = get_dependencies.format_dependencies(
+                result, output_format="mermaid"
+            )
 
         # Should be valid Mermaid diagram starting with 'graph' or 'flowchart'
         # Mermaid diagrams typically start with one of these directives
         output_lower = output.lower()
-        assert 'graph' in output_lower or 'flowchart' in output_lower
-        assert 'PROJ-123' in output
+        assert "graph" in output_lower or "flowchart" in output_lower
+        assert "PROJ-123" in output
 
     def test_dependencies_dot_format(self, mock_jira_client, sample_issue_links):
         """Test DOT/Graphviz output for visualization."""
         mock_jira_client.get_issue_links.return_value = sample_issue_links
 
         import get_dependencies
-        with patch.object(get_dependencies, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(
+            get_dependencies, "get_jira_client", return_value=mock_jira_client
+        ):
             result = get_dependencies.get_dependencies("PROJ-123")
-            output = get_dependencies.format_dependencies(result, output_format='dot')
+            output = get_dependencies.format_dependencies(result, output_format="dot")
 
         # Should be valid DOT format
-        assert 'digraph' in output
-        assert 'PROJ' in output
+        assert "digraph" in output
+        assert "PROJ" in output
 
 
 @pytest.mark.relationships
@@ -88,23 +109,37 @@ class TestGetDependenciesErrorHandling:
         """Test handling of 401 unauthorized."""
         from jira_assistant_skills_lib import AuthenticationError
 
-        mock_jira_client.get_issue_links.side_effect = AuthenticationError("Invalid token")
+        mock_jira_client.get_issue_links.side_effect = AuthenticationError(
+            "Invalid token"
+        )
 
         import get_dependencies
-        with patch.object(get_dependencies, 'get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(AuthenticationError):
-                get_dependencies.get_dependencies("PROJ-123")
+
+        with (
+            patch.object(
+                get_dependencies, "get_jira_client", return_value=mock_jira_client
+            ),
+            pytest.raises(AuthenticationError),
+        ):
+            get_dependencies.get_dependencies("PROJ-123")
 
     def test_forbidden_error(self, mock_jira_client):
         """Test handling of 403 forbidden."""
         from jira_assistant_skills_lib import PermissionError
 
-        mock_jira_client.get_issue_links.side_effect = PermissionError("Insufficient permissions")
+        mock_jira_client.get_issue_links.side_effect = PermissionError(
+            "Insufficient permissions"
+        )
 
         import get_dependencies
-        with patch.object(get_dependencies, 'get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(PermissionError):
-                get_dependencies.get_dependencies("PROJ-123")
+
+        with (
+            patch.object(
+                get_dependencies, "get_jira_client", return_value=mock_jira_client
+            ),
+            pytest.raises(PermissionError),
+        ):
+            get_dependencies.get_dependencies("PROJ-123")
 
     def test_issue_not_found_error(self, mock_jira_client):
         """Test handling of 404 issue not found."""
@@ -113,9 +148,14 @@ class TestGetDependenciesErrorHandling:
         mock_jira_client.get_issue_links.side_effect = NotFoundError("Issue not found")
 
         import get_dependencies
-        with patch.object(get_dependencies, 'get_jira_client', return_value=mock_jira_client):
-            with pytest.raises(NotFoundError):
-                get_dependencies.get_dependencies("PROJ-999")
+
+        with (
+            patch.object(
+                get_dependencies, "get_jira_client", return_value=mock_jira_client
+            ),
+            pytest.raises(NotFoundError),
+        ):
+            get_dependencies.get_dependencies("PROJ-999")
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
@@ -126,7 +166,10 @@ class TestGetDependenciesErrorHandling:
         )
 
         import get_dependencies
-        with patch.object(get_dependencies, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(
+            get_dependencies, "get_jira_client", return_value=mock_jira_client
+        ):
             with pytest.raises(JiraError) as exc_info:
                 get_dependencies.get_dependencies("PROJ-123")
             assert exc_info.value.status_code == 429
@@ -140,7 +183,10 @@ class TestGetDependenciesErrorHandling:
         )
 
         import get_dependencies
-        with patch.object(get_dependencies, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(
+            get_dependencies, "get_jira_client", return_value=mock_jira_client
+        ):
             with pytest.raises(JiraError) as exc_info:
                 get_dependencies.get_dependencies("PROJ-123")
             assert exc_info.value.status_code == 500

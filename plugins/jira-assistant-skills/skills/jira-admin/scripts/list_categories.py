@@ -13,21 +13,15 @@ Examples:
 """
 
 import argparse
-import sys
 import json
-from pathlib import Path
-from typing import Dict, Any, List
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, print_error
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-def list_categories(
-    output_format: str = "table",
-    client=None
-) -> List[Dict[str, Any]]:
+def list_categories(output_format: str = "table", client=None) -> list[dict[str, Any]]:
     """
     List all project categories.
 
@@ -56,7 +50,9 @@ def list_categories(
             client.close()
 
 
-def format_output(categories: List[Dict[str, Any]], output_format: str = "table") -> str:
+def format_output(
+    categories: list[dict[str, Any]], output_format: str = "table"
+) -> str:
     """Format categories for output."""
     if output_format == "json":
         return json.dumps(categories, indent=2)
@@ -65,36 +61,27 @@ def format_output(categories: List[Dict[str, Any]], output_format: str = "table"
         return "No project categories found."
 
     # Table format
-    lines = [
-        "Project Categories:",
-        "=" * 60,
-        ""
-    ]
+    lines = ["Project Categories:", "=" * 60, ""]
 
     headers = ["ID", "Name", "Description"]
 
     # Try to use tabulate if available
     try:
         from tabulate import tabulate
+
         rows = []
         for cat in categories:
-            desc = cat.get('description', '-')[:40] if cat.get('description') else '-'
-            rows.append([
-                cat.get('id', '-'),
-                cat.get('name', '-'),
-                desc
-            ])
+            desc = cat.get("description", "-")[:40] if cat.get("description") else "-"
+            rows.append([cat.get("id", "-"), cat.get("name", "-"), desc])
         lines.append(tabulate(rows, headers=headers, tablefmt="grid"))
     except ImportError:
         # Simple format
         lines.append(f"{'ID':<10} {'Name':<25} {'Description':<30}")
         lines.append("-" * 65)
         for cat in categories:
-            desc = cat.get('description', '-')[:30] if cat.get('description') else '-'
+            desc = cat.get("description", "-")[:30] if cat.get("description") else "-"
             lines.append(
-                f"{cat.get('id', '-'):<10} "
-                f"{cat.get('name', '-'):<25} "
-                f"{desc:<30}"
+                f"{cat.get('id', '-'):<10} {cat.get('name', '-'):<25} {desc:<30}"
             )
 
     lines.append("")
@@ -115,30 +102,25 @@ Examples:
 
   # JSON output
   %(prog)s --output json
-        """
+        """,
     )
 
     # Output options
     parser.add_argument(
-        "--output", "-o",
-        choices=['table', 'json'],
-        default='table',
-        help="Output format (default: table)"
+        "--output",
+        "-o",
+        choices=["table", "json"],
+        default="table",
+        help="Output format (default: table)",
     )
-    parser.add_argument(
-        "--profile",
-        help="Configuration profile to use"
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(profile=args.profile)
 
-        result = list_categories(
-            output_format=args.output,
-            client=client
-        )
+        result = list_categories(output_format=args.output, client=client)
 
         print(format_output(result, args.output))
 
@@ -146,7 +128,7 @@ Examples:
         print_error(e)
         sys.exit(1)
     finally:
-        if 'client' in locals():
+        if "client" in locals():
             client.close()
 
 

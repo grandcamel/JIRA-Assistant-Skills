@@ -4,13 +4,14 @@ Tests for search_kb.py script.
 Tests KB article search functionality with query terms and result formatting.
 """
 
-import pytest
-from unittest.mock import patch, Mock
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
+from unittest.mock import patch
 
-scripts_path = str(Path(__file__).parent.parent / 'scripts')
+import pytest
+
+scripts_path = str(Path(__file__).parent.parent / "scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
@@ -26,18 +27,20 @@ class TestSearchKB:
         """Test basic KB search with query term."""
         mock_jira_client.search_kb_articles.return_value = sample_kb_search_results
 
-        with patch('search_kb.get_jira_client', return_value=mock_jira_client):
+        with patch("search_kb.get_jira_client", return_value=mock_jira_client):
             results = search_kb.search_kb(1, "password")
 
         assert len(results) == 3
-        assert results[0]['title'] == "How to reset your password"
+        assert results[0]["title"] == "How to reset your password"
         mock_jira_client.search_kb_articles.assert_called_once_with(1, "password", 50)
 
-    def test_search_kb_with_max_results(self, mock_jira_client, sample_kb_search_results):
+    def test_search_kb_with_max_results(
+        self, mock_jira_client, sample_kb_search_results
+    ):
         """Test search with custom max results limit."""
         mock_jira_client.search_kb_articles.return_value = sample_kb_search_results[:2]
 
-        with patch('search_kb.get_jira_client', return_value=mock_jira_client):
+        with patch("search_kb.get_jira_client", return_value=mock_jira_client):
             results = search_kb.search_kb(1, "password", max_results=2)
 
         assert len(results) == 2
@@ -47,7 +50,7 @@ class TestSearchKB:
         """Test behavior when no articles match."""
         mock_jira_client.search_kb_articles.return_value = []
 
-        with patch('search_kb.get_jira_client', return_value=mock_jira_client):
+        with patch("search_kb.get_jira_client", return_value=mock_jira_client):
             results = search_kb.search_kb(1, "nonexistent")
 
         assert len(results) == 0
@@ -73,12 +76,12 @@ class TestSearchKB:
 
         data = json.loads(output)
         assert len(data) == 3
-        assert data[0]['id'] == "131073"
+        assert data[0]["id"] == "131073"
 
     def test_search_kb_with_highlighting(self, sample_kb_search_results):
         """Test search with excerpts highlighting."""
         # Verify excerpts contain <em> tags for highlighting
-        assert '<em>password</em>' in sample_kb_search_results[0]['excerpt']
+        assert "<em>password</em>" in sample_kb_search_results[0]["excerpt"]
 
 
 @pytest.mark.jsm
@@ -90,9 +93,11 @@ class TestSearchKBApiErrors:
         """Test handling of 401 unauthorized."""
         from jira_assistant_skills_lib import AuthenticationError
 
-        mock_jira_client.search_kb_articles.side_effect = AuthenticationError("Invalid token")
+        mock_jira_client.search_kb_articles.side_effect = AuthenticationError(
+            "Invalid token"
+        )
 
-        with patch('search_kb.get_jira_client', return_value=mock_jira_client):
+        with patch("search_kb.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(AuthenticationError):
                 search_kb.search_kb(1, "password")
 
@@ -100,9 +105,11 @@ class TestSearchKBApiErrors:
         """Test handling of 403 forbidden."""
         from jira_assistant_skills_lib import PermissionError
 
-        mock_jira_client.search_kb_articles.side_effect = PermissionError("Access denied")
+        mock_jira_client.search_kb_articles.side_effect = PermissionError(
+            "Access denied"
+        )
 
-        with patch('search_kb.get_jira_client', return_value=mock_jira_client):
+        with patch("search_kb.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(PermissionError):
                 search_kb.search_kb(1, "password")
 
@@ -114,7 +121,7 @@ class TestSearchKBApiErrors:
             "Rate limit exceeded", status_code=429
         )
 
-        with patch('search_kb.get_jira_client', return_value=mock_jira_client):
+        with patch("search_kb.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(JiraError) as exc_info:
                 search_kb.search_kb(1, "password")
             assert exc_info.value.status_code == 429
@@ -127,7 +134,7 @@ class TestSearchKBApiErrors:
             "Internal server error", status_code=500
         )
 
-        with patch('search_kb.get_jira_client', return_value=mock_jira_client):
+        with patch("search_kb.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(JiraError) as exc_info:
                 search_kb.search_kb(1, "password")
             assert exc_info.value.status_code == 500

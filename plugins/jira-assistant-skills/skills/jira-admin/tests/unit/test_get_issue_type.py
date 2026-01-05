@@ -13,14 +13,14 @@ test_dir = Path(__file__).parent  # unit
 tests_dir = test_dir.parent  # tests
 jira_admin_dir = tests_dir.parent  # jira-admin
 skills_dir = jira_admin_dir.parent  # skills
-shared_lib_path = skills_dir / 'shared' / 'scripts' / 'lib'
-scripts_path = jira_admin_dir / 'scripts'
+shared_lib_path = skills_dir / "shared" / "scripts" / "lib"
+scripts_path = jira_admin_dir / "scripts"
 
 sys.path.insert(0, str(shared_lib_path))
 sys.path.insert(0, str(scripts_path))
 
+
 import pytest
-from unittest.mock import Mock, patch
 
 
 @pytest.mark.admin
@@ -40,9 +40,9 @@ class TestGetIssueType:
 
         # Assert
         assert result is not None
-        assert result['id'] == "10000"
-        assert result['name'] == "Epic"
-        assert result['hierarchyLevel'] == 1
+        assert result["id"] == "10000"
+        assert result["name"] == "Epic"
+        assert result["hierarchyLevel"] == 1
         mock_jira_client.get_issue_type.assert_called_once_with("10000")
 
     def test_get_issue_type_not_found(self, mock_jira_client):
@@ -71,10 +71,12 @@ class TestGetIssueType:
         result = get_issue_type(issue_type_id="10000", client=mock_jira_client)
 
         # Assert
-        assert 'hierarchyLevel' in result
-        assert result['hierarchyLevel'] == 1
+        assert "hierarchyLevel" in result
+        assert result["hierarchyLevel"] == 1
 
-    def test_get_issue_type_shows_subtask_flag(self, mock_jira_client, subtask_response):
+    def test_get_issue_type_shows_subtask_flag(
+        self, mock_jira_client, subtask_response
+    ):
         """Should show subtask flag correctly."""
         # Arrange
         mock_jira_client.get_issue_type.return_value = subtask_response
@@ -85,10 +87,12 @@ class TestGetIssueType:
         result = get_issue_type(issue_type_id="10004", client=mock_jira_client)
 
         # Assert
-        assert result['subtask'] is True
-        assert result['hierarchyLevel'] == -1
+        assert result["subtask"] is True
+        assert result["hierarchyLevel"] == -1
 
-    def test_get_issue_type_shows_scope(self, mock_jira_client, project_scoped_issue_type):
+    def test_get_issue_type_shows_scope(
+        self, mock_jira_client, project_scoped_issue_type
+    ):
         """Should display scope (global vs project-specific)."""
         # Arrange
         mock_jira_client.get_issue_type.return_value = project_scoped_issue_type
@@ -99,9 +103,9 @@ class TestGetIssueType:
         result = get_issue_type(issue_type_id="10100", client=mock_jira_client)
 
         # Assert
-        assert 'scope' in result
-        assert result['scope']['type'] == 'PROJECT'
-        assert result['scope']['project']['id'] == '10000'
+        assert "scope" in result
+        assert result["scope"]["type"] == "PROJECT"
+        assert result["scope"]["project"]["id"] == "10000"
 
     def test_get_issue_type_with_alternatives(
         self, mock_jira_client, epic_response, alternatives_response
@@ -109,15 +113,15 @@ class TestGetIssueType:
         """Should show alternative issue types when requested."""
         # Arrange
         mock_jira_client.get_issue_type.return_value = epic_response
-        mock_jira_client.get_issue_type_alternatives.return_value = alternatives_response
+        mock_jira_client.get_issue_type_alternatives.return_value = (
+            alternatives_response
+        )
 
         from get_issue_type import get_issue_type
 
         # Act
         result = get_issue_type(
-            issue_type_id="10000",
-            client=mock_jira_client,
-            show_alternatives=True
+            issue_type_id="10000", client=mock_jira_client, show_alternatives=True
         )
 
         # Assert
@@ -130,8 +134,7 @@ class TestGetIssueType:
         from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_issue_type.side_effect = JiraError(
-            "Server error",
-            status_code=500
+            "Server error", status_code=500
         )
 
         from get_issue_type import get_issue_type

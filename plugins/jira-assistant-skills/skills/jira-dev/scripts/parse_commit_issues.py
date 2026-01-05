@@ -12,47 +12,38 @@ Usage:
     python parse_commit_issues.py "PROJ-123, OTHER-456" --project PROJ
 """
 
-import sys
-import os
 import argparse
 import json
 import re
-from pathlib import Path
-from typing import List, Optional
+import sys
 
 # Add shared lib path
 
 # Issue key pattern: PROJECT-NUMBER
 # Matches: PROJ-123, ABC-1, MYPROJECT-99999
-ISSUE_KEY_PATTERN = re.compile(
-    r'\b([A-Z][A-Z0-9]+-[0-9]+)\b',
-    re.IGNORECASE
-)
+ISSUE_KEY_PATTERN = re.compile(r"\b([A-Z][A-Z0-9]+-[0-9]+)\b", re.IGNORECASE)
 
 # Prefixes that often precede issue keys
 COMMIT_PREFIXES = [
-    'fixes',
-    'fixed',
-    'fix',
-    'closes',
-    'closed',
-    'close',
-    'resolves',
-    'resolved',
-    'resolve',
-    'refs',
-    'ref',
-    'references',
-    'related to',
-    'relates to',
-    'see',
+    "fixes",
+    "fixed",
+    "fix",
+    "closes",
+    "closed",
+    "close",
+    "resolves",
+    "resolved",
+    "resolve",
+    "refs",
+    "ref",
+    "references",
+    "related to",
+    "relates to",
+    "see",
 ]
 
 
-def parse_issue_keys(
-    message: str,
-    project_filter: Optional[str] = None
-) -> List[str]:
+def parse_issue_keys(message: str, project_filter: str | None = None) -> list[str]:
     """
     Extract JIRA issue keys from a commit message.
 
@@ -88,7 +79,7 @@ def parse_issue_keys(
 
             # Apply project filter if specified
             if project_filter:
-                project = key.split('-')[0]
+                project = key.split("-")[0]
                 if project.upper() != project_filter.upper():
                     continue
 
@@ -98,10 +89,8 @@ def parse_issue_keys(
 
 
 def parse_from_lines(
-    lines: List[str],
-    project_filter: Optional[str] = None,
-    unique: bool = True
-) -> List[str]:
+    lines: list[str], project_filter: str | None = None, unique: bool = True
+) -> list[str]:
     """
     Parse issue keys from multiple lines.
 
@@ -132,10 +121,7 @@ def parse_from_lines(
     return all_keys
 
 
-def format_output(
-    issue_keys: List[str],
-    output_format: str = 'text'
-) -> str:
+def format_output(issue_keys: list[str], output_format: str = "text") -> str:
     """
     Format issue keys for output.
 
@@ -146,47 +132,49 @@ def format_output(
     Returns:
         Formatted output string
     """
-    if output_format == 'json':
-        return json.dumps({
-            'issue_keys': issue_keys,
-            'count': len(issue_keys)
-        }, indent=2)
+    if output_format == "json":
+        return json.dumps(
+            {"issue_keys": issue_keys, "count": len(issue_keys)}, indent=2
+        )
 
-    elif output_format == 'csv':
-        return ','.join(issue_keys)
+    elif output_format == "csv":
+        return ",".join(issue_keys)
 
     else:  # text
-        return '\n'.join(issue_keys)
+        return "\n".join(issue_keys)
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Parse JIRA issue keys from commit messages',
-        epilog='Example: python parse_commit_issues.py "PROJ-123: Fix bug"'
+        description="Parse JIRA issue keys from commit messages",
+        epilog='Example: python parse_commit_issues.py "PROJ-123: Fix bug"',
     )
 
-    parser.add_argument('message',
-                        nargs='?',
-                        help='Commit message to parse')
-    parser.add_argument('--from-stdin',
-                        action='store_true',
-                        help='Read from stdin (for git log pipe)')
-    parser.add_argument('--project', '-p',
-                        help='Filter by project key')
-    parser.add_argument('--output', '-o',
-                        choices=['text', 'json', 'csv'],
-                        default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--unique', '-u',
-                        action='store_true',
-                        default=True,
-                        help='Return unique issue keys only (default: True)')
+    parser.add_argument("message", nargs="?", help="Commit message to parse")
+    parser.add_argument(
+        "--from-stdin", action="store_true", help="Read from stdin (for git log pipe)"
+    )
+    parser.add_argument("--project", "-p", help="Filter by project key")
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json", "csv"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument(
+        "--unique",
+        "-u",
+        action="store_true",
+        default=True,
+        help="Return unique issue keys only (default: True)",
+    )
 
     args = parser.parse_args(argv)
 
     # Get input
     if args.from_stdin:
-        lines = sys.stdin.read().strip().split('\n')
+        lines = sys.stdin.read().strip().split("\n")
         issue_keys = parse_from_lines(lines, args.project, args.unique)
     elif args.message:
         issue_keys = parse_issue_keys(args.message, args.project)
@@ -198,10 +186,10 @@ def main(argv: list[str] | None = None):
     if issue_keys:
         output = format_output(issue_keys, args.output)
         print(output)
-    elif args.output == 'json':
+    elif args.output == "json":
         print(format_output([], args.output))
     # For text/csv, print nothing if no keys found
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

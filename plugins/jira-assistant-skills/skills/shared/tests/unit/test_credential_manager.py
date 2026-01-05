@@ -10,26 +10,25 @@ Tests credential storage, retrieval, and validation across multiple backends:
 import json
 import os
 import sys
-import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 # Add lib to path for imports
-LIB_PATH = Path(__file__).parent.parent.parent / 'scripts' / 'lib'
+LIB_PATH = Path(__file__).parent.parent.parent / "scripts" / "lib"
 sys.path.insert(0, str(LIB_PATH))
 
+from assistant_skills_lib.error_handler import AuthenticationError, ValidationError
+
 from jira_assistant_skills_lib import (
-    CredentialManager,
     CredentialBackend,
+    CredentialManager,
     CredentialNotFoundError,
-    is_keychain_available,
     get_credentials,
-    store_credentials,
+    is_keychain_available,
     validate_credentials,
 )
-from assistant_skills_lib.error_handler import ValidationError, AuthenticationError
 
 
 class TestCredentialBackend:
@@ -48,11 +47,12 @@ class TestKeychainAvailability:
     def test_keychain_available_when_keyring_works(self):
         """Test keychain is available when keyring works."""
         import jira_assistant_skills_lib.credential_manager as cm
+
         original_available = cm.KEYRING_AVAILABLE
 
         try:
             cm.KEYRING_AVAILABLE = True
-            with patch.object(cm, 'keyring', create=True) as mock_keyring:
+            with patch.object(cm, "keyring", create=True) as mock_keyring:
                 mock_keyring.get_keyring.return_value = MagicMock()
                 assert CredentialManager.is_keychain_available() is True
         finally:
@@ -61,6 +61,7 @@ class TestKeychainAvailability:
     def test_keychain_unavailable_when_not_installed(self):
         """Test keychain unavailable when keyring not installed."""
         import jira_assistant_skills_lib.credential_manager as cm
+
         original_available = cm.KEYRING_AVAILABLE
 
         try:
@@ -72,11 +73,12 @@ class TestKeychainAvailability:
     def test_keychain_unavailable_when_backend_fails(self):
         """Test keychain unavailable when backend fails."""
         import jira_assistant_skills_lib.credential_manager as cm
+
         original_available = cm.KEYRING_AVAILABLE
 
         try:
             cm.KEYRING_AVAILABLE = True
-            with patch.object(cm, 'keyring', create=True) as mock_keyring:
+            with patch.object(cm, "keyring", create=True) as mock_keyring:
                 mock_keyring.get_keyring.side_effect = Exception("Backend error")
                 assert CredentialManager.is_keychain_available() is False
         finally:
@@ -102,56 +104,68 @@ class TestEnvironmentCredentials:
 
     def test_get_credentials_from_env_all_set(self):
         """Test getting all credentials from environment."""
-        with patch.dict(os.environ, {
-            'JIRA_SITE_URL': 'https://test.atlassian.net',
-            'JIRA_EMAIL': 'test@example.com',
-            'JIRA_API_TOKEN': 'test-token-123'
-        }, clear=False):
+        with patch.dict(
+            os.environ,
+            {
+                "JIRA_SITE_URL": "https://test.atlassian.net",
+                "JIRA_EMAIL": "test@example.com",
+                "JIRA_API_TOKEN": "test-token-123",
+            },
+            clear=False,
+        ):
             manager = CredentialManager()
             url, email, token = manager.get_credentials_from_env()
 
-            assert url == 'https://test.atlassian.net'
-            assert email == 'test@example.com'
-            assert token == 'test-token-123'
+            assert url == "https://test.atlassian.net"
+            assert email == "test@example.com"
+            assert token == "test-token-123"
 
     def test_get_credentials_from_env_profile_specific_token(self):
         """Test profile-specific token takes precedence."""
-        with patch.dict(os.environ, {
-            'JIRA_SITE_URL': 'https://test.atlassian.net',
-            'JIRA_EMAIL': 'test@example.com',
-            'JIRA_API_TOKEN': 'generic-token',
-            'JIRA_API_TOKEN_PRODUCTION': 'production-token'
-        }, clear=False):
+        with patch.dict(
+            os.environ,
+            {
+                "JIRA_SITE_URL": "https://test.atlassian.net",
+                "JIRA_EMAIL": "test@example.com",
+                "JIRA_API_TOKEN": "generic-token",
+                "JIRA_API_TOKEN_PRODUCTION": "production-token",
+            },
+            clear=False,
+        ):
             manager = CredentialManager("production")
-            url, email, token = manager.get_credentials_from_env("production")
+            _url, _email, token = manager.get_credentials_from_env("production")
 
-            assert token == 'production-token'
+            assert token == "production-token"
 
     def test_get_credentials_from_env_fallback_to_generic_token(self):
         """Test fallback to generic token when profile-specific not set."""
-        with patch.dict(os.environ, {
-            'JIRA_SITE_URL': 'https://test.atlassian.net',
-            'JIRA_EMAIL': 'test@example.com',
-            'JIRA_API_TOKEN': 'generic-token'
-        }, clear=False):
+        with patch.dict(
+            os.environ,
+            {
+                "JIRA_SITE_URL": "https://test.atlassian.net",
+                "JIRA_EMAIL": "test@example.com",
+                "JIRA_API_TOKEN": "generic-token",
+            },
+            clear=False,
+        ):
             manager = CredentialManager("development")
-            url, email, token = manager.get_credentials_from_env("development")
+            _url, _email, token = manager.get_credentials_from_env("development")
 
-            assert token == 'generic-token'
+            assert token == "generic-token"
 
     def test_get_credentials_from_env_partial(self):
         """Test getting partial credentials from environment."""
-        with patch.dict(os.environ, {
-            'JIRA_SITE_URL': 'https://test.atlassian.net'
-        }, clear=False):
+        with patch.dict(
+            os.environ, {"JIRA_SITE_URL": "https://test.atlassian.net"}, clear=False
+        ):
             # Clear other vars if they exist
-            for var in ['JIRA_EMAIL', 'JIRA_API_TOKEN']:
+            for var in ["JIRA_EMAIL", "JIRA_API_TOKEN"]:
                 os.environ.pop(var, None)
 
             manager = CredentialManager()
             url, email, token = manager.get_credentials_from_env()
 
-            assert url == 'https://test.atlassian.net'
+            assert url == "https://test.atlassian.net"
             assert email is None
             assert token is None
 
@@ -162,27 +176,30 @@ class TestKeychainCredentials:
     def test_get_credentials_from_keychain_success(self):
         """Test successful keychain retrieval."""
         import jira_assistant_skills_lib.credential_manager as cm
+
         original_available = cm.KEYRING_AVAILABLE
 
         try:
             cm.KEYRING_AVAILABLE = True
-            with patch.object(cm, 'keyring', create=True) as mock_keyring:
+            with patch.object(cm, "keyring", create=True) as mock_keyring:
                 mock_keyring.get_keyring.return_value = MagicMock()
-                mock_keyring.get_password.return_value = json.dumps({
-                    'url': 'https://keychain.atlassian.net',
-                    'email': 'keychain@example.com',
-                    'api_token': 'keychain-token'
-                })
+                mock_keyring.get_password.return_value = json.dumps(
+                    {
+                        "url": "https://keychain.atlassian.net",
+                        "email": "keychain@example.com",
+                        "api_token": "keychain-token",
+                    }
+                )
 
                 manager = CredentialManager("production")
                 url, email, token = manager.get_credentials_from_keychain()
 
-                assert url == 'https://keychain.atlassian.net'
-                assert email == 'keychain@example.com'
-                assert token == 'keychain-token'
+                assert url == "https://keychain.atlassian.net"
+                assert email == "keychain@example.com"
+                assert token == "keychain-token"
 
                 mock_keyring.get_password.assert_called_once_with(
-                    'jira-assistant-production', 'credentials'
+                    "jira-assistant-production", "credentials"
                 )
         finally:
             cm.KEYRING_AVAILABLE = original_available
@@ -190,11 +207,12 @@ class TestKeychainCredentials:
     def test_get_credentials_from_keychain_not_found(self):
         """Test keychain returns None when no credentials stored."""
         import jira_assistant_skills_lib.credential_manager as cm
+
         original_available = cm.KEYRING_AVAILABLE
 
         try:
             cm.KEYRING_AVAILABLE = True
-            with patch.object(cm, 'keyring', create=True) as mock_keyring:
+            with patch.object(cm, "keyring", create=True) as mock_keyring:
                 mock_keyring.get_keyring.return_value = MagicMock()
                 mock_keyring.get_password.return_value = None
 
@@ -210,6 +228,7 @@ class TestKeychainCredentials:
     def test_get_credentials_from_keychain_not_available(self):
         """Test keychain returns None when not available."""
         import jira_assistant_skills_lib.credential_manager as cm
+
         original_available = cm.KEYRING_AVAILABLE
 
         try:
@@ -230,26 +249,22 @@ class TestJsonCredentials:
     def test_get_credentials_from_json_success(self, tmp_path):
         """Test successful JSON file retrieval."""
         # Create mock .claude directory structure
-        claude_dir = tmp_path / '.claude'
+        claude_dir = tmp_path / ".claude"
         claude_dir.mkdir()
 
         settings = {
-            'jira': {
-                'profiles': {
-                    'production': {
-                        'url': 'https://json.atlassian.net'
+            "jira": {
+                "profiles": {"production": {"url": "https://json.atlassian.net"}},
+                "credentials": {
+                    "production": {
+                        "email": "json@example.com",
+                        "api_token": "json-token",
                     }
                 },
-                'credentials': {
-                    'production': {
-                        'email': 'json@example.com',
-                        'api_token': 'json-token'
-                    }
-                }
             }
         }
 
-        settings_file = claude_dir / 'settings.local.json'
+        settings_file = claude_dir / "settings.local.json"
         settings_file.write_text(json.dumps(settings))
 
         # Patch _find_claude_dir to return our temp directory
@@ -258,13 +273,13 @@ class TestJsonCredentials:
 
         url, email, token = manager.get_credentials_from_json()
 
-        assert url == 'https://json.atlassian.net'
-        assert email == 'json@example.com'
-        assert token == 'json-token'
+        assert url == "https://json.atlassian.net"
+        assert email == "json@example.com"
+        assert token == "json-token"
 
     def test_get_credentials_from_json_no_file(self, tmp_path):
         """Test JSON returns None when file doesn't exist."""
-        claude_dir = tmp_path / '.claude'
+        claude_dir = tmp_path / ".claude"
         claude_dir.mkdir()
 
         manager = CredentialManager()
@@ -294,36 +309,45 @@ class TestGetCredentials:
     def test_env_vars_take_precedence(self, tmp_path):
         """Test environment variables override other sources."""
         # Set up JSON credentials
-        claude_dir = tmp_path / '.claude'
+        claude_dir = tmp_path / ".claude"
         claude_dir.mkdir()
 
         settings = {
-            'jira': {
-                'profiles': {'production': {'url': 'https://json.atlassian.net'}},
-                'credentials': {'production': {'email': 'json@example.com', 'api_token': 'json-token'}}
+            "jira": {
+                "profiles": {"production": {"url": "https://json.atlassian.net"}},
+                "credentials": {
+                    "production": {
+                        "email": "json@example.com",
+                        "api_token": "json-token",
+                    }
+                },
             }
         }
-        (claude_dir / 'settings.local.json').write_text(json.dumps(settings))
+        (claude_dir / "settings.local.json").write_text(json.dumps(settings))
 
         # Set environment variables (should take precedence)
-        with patch.dict(os.environ, {
-            'JIRA_SITE_URL': 'https://env.atlassian.net',
-            'JIRA_EMAIL': 'env@example.com',
-            'JIRA_API_TOKEN': 'env-token'
-        }, clear=False):
+        with patch.dict(
+            os.environ,
+            {
+                "JIRA_SITE_URL": "https://env.atlassian.net",
+                "JIRA_EMAIL": "env@example.com",
+                "JIRA_API_TOKEN": "env-token",
+            },
+            clear=False,
+        ):
             manager = CredentialManager("production")
             manager._claude_dir = claude_dir
 
             url, email, token = manager.get_credentials()
 
-            assert url == 'https://env.atlassian.net'
-            assert email == 'env@example.com'
-            assert token == 'env-token'
+            assert url == "https://env.atlassian.net"
+            assert email == "env@example.com"
+            assert token == "env-token"
 
     def test_raises_when_no_credentials(self):
         """Test raises CredentialNotFoundError when no credentials found."""
         # Clear environment variables
-        env_vars = ['JIRA_SITE_URL', 'JIRA_EMAIL', 'JIRA_API_TOKEN']
+        env_vars = ["JIRA_SITE_URL", "JIRA_EMAIL", "JIRA_API_TOKEN"]
         with patch.dict(os.environ, {}, clear=True):
             for var in env_vars:
                 os.environ.pop(var, None)
@@ -341,19 +365,20 @@ class TestStoreCredentials:
     def test_store_to_keychain(self):
         """Test storing credentials to keychain."""
         import jira_assistant_skills_lib.credential_manager as cm
+
         original_available = cm.KEYRING_AVAILABLE
 
         try:
             cm.KEYRING_AVAILABLE = True
-            with patch.object(cm, 'keyring', create=True) as mock_keyring:
+            with patch.object(cm, "keyring", create=True) as mock_keyring:
                 mock_keyring.get_keyring.return_value = MagicMock()
 
                 manager = CredentialManager("production")
                 backend = manager.store_credentials(
-                    'https://test.atlassian.net',
-                    'test@example.com',
-                    'test-token',
-                    backend=CredentialBackend.KEYCHAIN
+                    "https://test.atlassian.net",
+                    "test@example.com",
+                    "test-token",
+                    backend=CredentialBackend.KEYCHAIN,
                 )
 
                 assert backend == CredentialBackend.KEYCHAIN
@@ -361,43 +386,48 @@ class TestStoreCredentials:
 
                 # Verify the call arguments
                 call_args = mock_keyring.set_password.call_args
-                assert call_args[0][0] == 'jira-assistant-production'
-                assert call_args[0][1] == 'credentials'
+                assert call_args[0][0] == "jira-assistant-production"
+                assert call_args[0][1] == "credentials"
 
                 # Verify JSON content
                 stored_json = json.loads(call_args[0][2])
-                assert stored_json['url'] == 'https://test.atlassian.net'
-                assert stored_json['email'] == 'test@example.com'
-                assert stored_json['api_token'] == 'test-token'
+                assert stored_json["url"] == "https://test.atlassian.net"
+                assert stored_json["email"] == "test@example.com"
+                assert stored_json["api_token"] == "test-token"
         finally:
             cm.KEYRING_AVAILABLE = original_available
 
     def test_store_to_json(self, tmp_path):
         """Test storing credentials to JSON file."""
-        claude_dir = tmp_path / '.claude'
+        claude_dir = tmp_path / ".claude"
         claude_dir.mkdir()
 
         manager = CredentialManager("production")
         manager._claude_dir = claude_dir
 
         backend = manager.store_credentials(
-            'https://test.atlassian.net',
-            'test@example.com',
-            'test-token',
-            backend=CredentialBackend.JSON_FILE
+            "https://test.atlassian.net",
+            "test@example.com",
+            "test-token",
+            backend=CredentialBackend.JSON_FILE,
         )
 
         assert backend == CredentialBackend.JSON_FILE
 
         # Verify file was created
-        settings_file = claude_dir / 'settings.local.json'
+        settings_file = claude_dir / "settings.local.json"
         assert settings_file.exists()
 
         # Verify content
         content = json.loads(settings_file.read_text())
-        assert content['jira']['profiles']['production']['url'] == 'https://test.atlassian.net'
-        assert content['jira']['credentials']['production']['email'] == 'test@example.com'
-        assert content['jira']['credentials']['production']['api_token'] == 'test-token'
+        assert (
+            content["jira"]["profiles"]["production"]["url"]
+            == "https://test.atlassian.net"
+        )
+        assert (
+            content["jira"]["credentials"]["production"]["email"] == "test@example.com"
+        )
+        assert content["jira"]["credentials"]["production"]["api_token"] == "test-token"
 
     def test_store_validates_url(self):
         """Test store validates URL format - rejects HTTP (requires HTTPS)."""
@@ -405,9 +435,9 @@ class TestStoreCredentials:
 
         with pytest.raises(ValidationError):
             manager.store_credentials(
-                'http://insecure.atlassian.net',  # HTTP is rejected, HTTPS required
-                'test@example.com',
-                'test-token'
+                "http://insecure.atlassian.net",  # HTTP is rejected, HTTPS required
+                "test@example.com",
+                "test-token",
             )
 
     def test_store_validates_email(self):
@@ -416,9 +446,7 @@ class TestStoreCredentials:
 
         with pytest.raises(ValidationError):
             manager.store_credentials(
-                'https://test.atlassian.net',
-                'invalid-email',
-                'test-token'
+                "https://test.atlassian.net", "invalid-email", "test-token"
             )
 
     def test_store_validates_token_not_empty(self):
@@ -427,9 +455,7 @@ class TestStoreCredentials:
 
         with pytest.raises(ValidationError):
             manager.store_credentials(
-                'https://test.atlassian.net',
-                'test@example.com',
-                ''
+                "https://test.atlassian.net", "test@example.com", ""
             )
 
 
@@ -439,11 +465,12 @@ class TestDeleteCredentials:
     def test_delete_from_keychain(self):
         """Test deleting credentials from keychain."""
         import jira_assistant_skills_lib.credential_manager as cm
+
         original_available = cm.KEYRING_AVAILABLE
 
         try:
             cm.KEYRING_AVAILABLE = True
-            with patch.object(cm, 'keyring', create=True) as mock_keyring:
+            with patch.object(cm, "keyring", create=True) as mock_keyring:
                 mock_keyring.get_keyring.return_value = MagicMock()
 
                 manager = CredentialManager("production")
@@ -451,70 +478,68 @@ class TestDeleteCredentials:
 
                 assert result is True
                 mock_keyring.delete_password.assert_called_once_with(
-                    'jira-assistant-production', 'credentials'
+                    "jira-assistant-production", "credentials"
                 )
         finally:
             cm.KEYRING_AVAILABLE = original_available
 
     def test_delete_from_json(self, tmp_path):
         """Test deleting credentials from JSON file."""
-        claude_dir = tmp_path / '.claude'
+        claude_dir = tmp_path / ".claude"
         claude_dir.mkdir()
 
         # Create settings file with credentials
         settings = {
-            'jira': {
-                'credentials': {
-                    'production': {
-                        'email': 'test@example.com',
-                        'api_token': 'test-token'
+            "jira": {
+                "credentials": {
+                    "production": {
+                        "email": "test@example.com",
+                        "api_token": "test-token",
                     }
                 }
             }
         }
-        settings_file = claude_dir / 'settings.local.json'
+        settings_file = claude_dir / "settings.local.json"
         settings_file.write_text(json.dumps(settings))
 
         manager = CredentialManager("production")
         manager._claude_dir = claude_dir
 
         # Mock keychain as unavailable
-        with patch.object(manager, 'is_keychain_available', return_value=False):
+        with patch.object(manager, "is_keychain_available", return_value=False):
             result = manager.delete_credentials()
 
         assert result is True
 
         # Verify credentials removed
         content = json.loads(settings_file.read_text())
-        assert 'production' not in content['jira']['credentials']
+        assert "production" not in content["jira"]["credentials"]
 
 
 class TestValidateCredentials:
     """Test credential validation."""
 
-    @patch('requests.get')
+    @patch("requests.get")
     def test_validate_success(self, mock_get):
         """Test successful credential validation."""
         mock_response = MagicMock()
         mock_response.ok = True
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            'displayName': 'Test User',
-            'accountId': '123456'
+            "displayName": "Test User",
+            "accountId": "123456",
         }
         mock_get.return_value = mock_response
 
         manager = CredentialManager()
         result = manager.validate_credentials(
-            'https://test.atlassian.net',
-            'test@example.com',
-            'test-token'
+            "https://test.atlassian.net", "test@example.com", "test-token"
         )
 
-        assert result['displayName'] == 'Test User'
-        assert result['accountId'] == '123456'
+        assert result["displayName"] == "Test User"
+        assert result["accountId"] == "123456"
 
-    @patch('requests.get')
+    @patch("requests.get")
     def test_validate_401_raises_auth_error(self, mock_get):
         """Test 401 response raises AuthenticationError."""
         mock_response = MagicMock()
@@ -526,28 +551,26 @@ class TestValidateCredentials:
 
         with pytest.raises(AuthenticationError):
             manager.validate_credentials(
-                'https://test.atlassian.net',
-                'test@example.com',
-                'bad-token'
+                "https://test.atlassian.net", "test@example.com", "bad-token"
             )
 
-    @patch('requests.get')
+    @patch("requests.get")
     def test_validate_connection_error(self, mock_get):
         """Test connection error handling."""
         import requests as real_requests
+
         mock_get.side_effect = real_requests.exceptions.ConnectionError()
 
         manager = CredentialManager()
 
         from jira_assistant_skills_lib import JiraError
+
         with pytest.raises(JiraError) as exc_info:
             manager.validate_credentials(
-                'https://unreachable.atlassian.net',
-                'test@example.com',
-                'test-token'
+                "https://unreachable.atlassian.net", "test@example.com", "test-token"
             )
 
-        assert 'Cannot connect' in str(exc_info.value)
+        assert "Cannot connect" in str(exc_info.value)
 
 
 class TestConvenienceFunctions:
@@ -556,11 +579,12 @@ class TestConvenienceFunctions:
     def test_is_keychain_available_function(self):
         """Test is_keychain_available convenience function."""
         import jira_assistant_skills_lib.credential_manager as cm
+
         original_available = cm.KEYRING_AVAILABLE
 
         try:
             cm.KEYRING_AVAILABLE = True
-            with patch.object(cm, 'keyring', create=True) as mock_keyring:
+            with patch.object(cm, "keyring", create=True) as mock_keyring:
                 mock_keyring.get_keyring.return_value = MagicMock()
                 assert is_keychain_available() is True
         finally:
@@ -568,30 +592,32 @@ class TestConvenienceFunctions:
 
     def test_get_credentials_function(self):
         """Test get_credentials convenience function."""
-        with patch.dict(os.environ, {
-            'JIRA_SITE_URL': 'https://test.atlassian.net',
-            'JIRA_EMAIL': 'test@example.com',
-            'JIRA_API_TOKEN': 'test-token'
-        }, clear=False):
+        with patch.dict(
+            os.environ,
+            {
+                "JIRA_SITE_URL": "https://test.atlassian.net",
+                "JIRA_EMAIL": "test@example.com",
+                "JIRA_API_TOKEN": "test-token",
+            },
+            clear=False,
+        ):
             url, email, token = get_credentials("production")
 
-            assert url == 'https://test.atlassian.net'
-            assert email == 'test@example.com'
-            assert token == 'test-token'
+            assert url == "https://test.atlassian.net"
+            assert email == "test@example.com"
+            assert token == "test-token"
 
-    @patch('requests.get')
+    @patch("requests.get")
     def test_validate_credentials_function(self, mock_get):
         """Test validate_credentials convenience function."""
         mock_response = MagicMock()
         mock_response.ok = True
         mock_response.status_code = 200
-        mock_response.json.return_value = {'displayName': 'Test'}
+        mock_response.json.return_value = {"displayName": "Test"}
         mock_get.return_value = mock_response
 
         result = validate_credentials(
-            'https://test.atlassian.net',
-            'test@example.com',
-            'test-token'
+            "https://test.atlassian.net", "test@example.com", "test-token"
         )
 
-        assert result['displayName'] == 'Test'
+        assert result["displayName"] == "Test"

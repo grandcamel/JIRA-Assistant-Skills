@@ -8,19 +8,19 @@ Usage:
     python create_organization.py --name "Test Org" --dry-run
 """
 
-import sys
-import os
 import argparse
 import json
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    get_jira_client,
+    print_error,
+    print_success,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import print_success
-
-
-def create_organization_func(name: str, profile: str = None) -> dict:
+def create_organization_func(name: str, profile: str | None = None) -> dict:
     """
     Create an organization.
 
@@ -38,7 +38,7 @@ def create_organization_func(name: str, profile: str = None) -> dict:
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Create a JSM organization',
+        description="Create a JSM organization",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -50,19 +50,25 @@ Examples:
 
   Dry-run:
     %(prog)s --name "Test Org" --dry-run
-        """
+        """,
     )
 
-    parser.add_argument('--name', required=True,
-                        help='Organization name')
-    parser.add_argument('--output', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Show what would be created without creating')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use from config')
-    parser.add_argument('--verbose', '-v', action='store_true',
-                        help='Show full API response')
+    parser.add_argument("--name", required=True, help="Organization name")
+    parser.add_argument(
+        "--output",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be created without creating",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use from config")
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Show full API response"
+    )
 
     args = parser.parse_args(argv)
 
@@ -73,23 +79,25 @@ Examples:
 
         if args.dry_run:
             print("DRY RUN MODE - No changes will be made\n")
-            print(f"Would create organization:")
+            print("Would create organization:")
             print(f"  Name: {args.name}")
             return 0
 
-        organization = create_organization_func(
-            name=args.name,
-            profile=args.profile
-        )
+        organization = create_organization_func(name=args.name, profile=args.profile)
 
-        if args.output == 'json':
+        if args.output == "json":
             if args.verbose:
                 print(json.dumps(organization, indent=2))
             else:
-                print(json.dumps({
-                    'id': organization.get('id'),
-                    'name': organization.get('name')
-                }, indent=2))
+                print(
+                    json.dumps(
+                        {
+                            "id": organization.get("id"),
+                            "name": organization.get("name"),
+                        },
+                        indent=2,
+                    )
+                )
         else:
             print_success("Organization created successfully!")
             print()
@@ -111,5 +119,5 @@ Examples:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

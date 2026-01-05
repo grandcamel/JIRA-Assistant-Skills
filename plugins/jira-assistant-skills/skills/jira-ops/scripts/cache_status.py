@@ -28,7 +28,9 @@ import sys
 from pathlib import Path
 
 # Add shared lib to path
-shared_lib_path = str(Path(__file__).parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(
+    Path(__file__).parent.parent.parent / "shared" / "scripts" / "lib"
+)
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
@@ -55,31 +57,19 @@ def main(argv: list[str] | None = None):
 Examples:
     python cache_status.py              # Show cache status
     python cache_status.py --json       # Output as JSON
-        """
+        """,
     )
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Output as JSON"
-    )
+    parser.add_argument("--json", action="store_true", help="Output as JSON")
     parser.add_argument(
         "--profile",
         type=str,
         default=None,
-        help="JIRA profile (for future multi-profile cache support)"
+        help="JIRA profile (for future multi-profile cache support)",
     )
     parser.add_argument(
-        "--cache-dir",
-        type=str,
-        default=None,
-        help="Custom cache directory"
+        "--cache-dir", type=str, default=None, help="Custom cache directory"
     )
-    parser.add_argument(
-        "--verbose",
-        "-v",
-        action="store_true",
-        help="Verbose output"
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     args = parser.parse_args(argv)
 
@@ -95,23 +85,29 @@ Examples:
                 "hits": stats.hits,
                 "misses": stats.misses,
                 "hit_rate": stats.hit_rate,
-                "by_category": stats.by_category
+                "by_category": stats.by_category,
             }
             print(json.dumps(output, indent=2))
         else:
             print("\nCache Statistics:")
-            print(f"  Total Size: {format_bytes(stats.total_size_bytes)} / {format_bytes(cache.max_size)}")
+            print(
+                f"  Total Size: {format_bytes(stats.total_size_bytes)} / {format_bytes(cache.max_size)}"
+            )
             print(f"  Entries: {stats.entry_count:,}")
 
             if stats.hits + stats.misses > 0:
-                print(f"  Hit Rate: {stats.hit_rate * 100:.1f}% ({stats.hits:,} hits, {stats.misses:,} misses)")
+                print(
+                    f"  Hit Rate: {stats.hit_rate * 100:.1f}% ({stats.hits:,} hits, {stats.misses:,} misses)"
+                )
             else:
                 print("  Hit Rate: N/A (no requests)")
 
             if stats.by_category:
                 print("\nBy Category:")
                 for category, cat_stats in sorted(stats.by_category.items()):
-                    print(f"  {category}: {cat_stats['count']:,} entries, {format_bytes(cat_stats['size_bytes'])}")
+                    print(
+                        f"  {category}: {cat_stats['count']:,} entries, {format_bytes(cat_stats['size_bytes'])}"
+                    )
             else:
                 print("\nNo cached entries.")
 

@@ -11,23 +11,23 @@ Usage:
     python get_automation_template.py TEMPLATE_ID --profile development
 """
 
-import sys
-import json
 import argparse
-from pathlib import Path
-from typing import Optional, Dict, Any
+import json
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_automation_client
-from jira_assistant_skills_lib import print_error, JiraError, AutomationError
+from jira_assistant_skills_lib import (
+    AutomationError,
+    JiraError,
+    get_automation_client,
+    print_error,
+)
 
 
 def get_automation_template(
-    client=None,
-    template_id: str = None,
-    profile: Optional[str] = None
-) -> Dict[str, Any]:
+    client=None, template_id: str | None = None, profile: str | None = None
+) -> dict[str, Any]:
     """
     Get automation template details.
 
@@ -51,7 +51,7 @@ def get_automation_template(
     return client.get_template(template_id)
 
 
-def format_template_output(template: Dict[str, Any]) -> str:
+def format_template_output(template: dict[str, Any]) -> str:
     """Format template for human-readable output."""
     lines = []
 
@@ -63,15 +63,15 @@ def format_template_output(template: Dict[str, Any]) -> str:
     lines.append(f"ID: {template.get('id', 'N/A')}")
     lines.append(f"Category: {template.get('category', 'N/A')}")
 
-    if template.get('description'):
-        lines.append(f"\nDescription:")
+    if template.get("description"):
+        lines.append("\nDescription:")
         lines.append(f"  {template.get('description')}")
 
-    tags = template.get('tags', [])
+    tags = template.get("tags", [])
     if tags:
         lines.append(f"\nTags: {', '.join(tags)}")
 
-    parameters = template.get('parameters', [])
+    parameters = template.get("parameters", [])
     if parameters:
         lines.append("")
         lines.append("-" * 40)
@@ -79,11 +79,13 @@ def format_template_output(template: Dict[str, Any]) -> str:
         lines.append("-" * 40)
 
         for param in parameters:
-            required = "(required)" if param.get('required') else "(optional)"
-            lines.append(f"\n  {param.get('name')} [{param.get('type', 'string')}] {required}")
-            if param.get('description'):
+            required = "(required)" if param.get("required") else "(optional)"
+            lines.append(
+                f"\n  {param.get('name')} [{param.get('type', 'string')}] {required}"
+            )
+            if param.get("description"):
                 lines.append(f"    {param.get('description')}")
-            if param.get('default'):
+            if param.get("default"):
                 lines.append(f"    Default: {param.get('default')}")
 
     lines.append("")
@@ -92,8 +94,8 @@ def format_template_output(template: Dict[str, Any]) -> str:
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Get automation template details',
-        epilog='''
+        description="Get automation template details",
+        epilog="""
 Examples:
     # Get template by ID
     python get_automation_template.py template-001
@@ -103,23 +105,27 @@ Examples:
 
     # Use specific profile
     python get_automation_template.py template-001 --profile development
-        '''
+        """,
     )
 
-    parser.add_argument('template_id', help='Template ID')
-    parser.add_argument('--output', '-o', choices=['text', 'json'],
-                        default='text', help='Output format (default: text)')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument("template_id", help="Template ID")
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         template = get_automation_template(
-            template_id=args.template_id,
-            profile=args.profile
+            template_id=args.template_id, profile=args.profile
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(template, indent=2))
         else:
             output = format_template_output(template)
@@ -136,5 +142,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

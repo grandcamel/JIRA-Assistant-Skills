@@ -5,36 +5,31 @@ Tests the project context loader, caching, merging, and helper functions
 for lazy loading project metadata, workflows, patterns, and defaults.
 """
 
-import pytest
-import sys
-import json
-import tempfile
 import shutil
+import sys
+import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+
+import pytest
 
 # Add lib path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts' / 'lib'))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts" / "lib"))
 
 from jira_assistant_skills_lib import (
     ProjectContext,
-    get_project_context,
     clear_context_cache,
-    get_defaults_for_issue_type,
-    get_valid_transitions,
-    get_statuses_for_issue_type,
-    suggest_assignee,
-    get_common_labels,
-    validate_transition,
     format_context_summary,
-    has_project_context,
+    get_common_labels,
+    get_defaults_for_issue_type,
+    get_statuses_for_issue_type,
+    get_valid_transitions,
+    suggest_assignee,
+    validate_transition,
 )
 from jira_assistant_skills_lib.project_context import (
-    load_json_file,
-    load_skill_context,
-    load_settings_context,
-    merge_contexts,
     _deep_merge,
+    load_json_file,
+    merge_contexts,
 )
 
 
@@ -42,9 +37,9 @@ from jira_assistant_skills_lib.project_context import (
 def temp_skill_dir():
     """Create a temporary skill directory structure."""
     temp_dir = tempfile.mkdtemp(prefix="skill_test_")
-    skill_dir = Path(temp_dir) / 'skills' / 'jira-project-TESTPROJ'
+    skill_dir = Path(temp_dir) / "skills" / "jira-project-TESTPROJ"
     skill_dir.mkdir(parents=True)
-    (skill_dir / 'context').mkdir()
+    (skill_dir / "context").mkdir()
 
     yield skill_dir
 
@@ -62,25 +57,33 @@ def sample_metadata():
         "issue_types": [
             {"id": "10001", "name": "Bug", "subtask": False},
             {"id": "10002", "name": "Story", "subtask": False},
-            {"id": "10003", "name": "Task", "subtask": False}
+            {"id": "10003", "name": "Task", "subtask": False},
         ],
         "components": [
             {"id": "10100", "name": "Backend", "lead": "john@example.com"},
-            {"id": "10101", "name": "Frontend"}
+            {"id": "10101", "name": "Frontend"},
         ],
         "versions": [
             {"id": "10200", "name": "v1.0.0", "released": True, "archived": False},
-            {"id": "10201", "name": "v2.0.0", "released": False, "archived": False}
+            {"id": "10201", "name": "v2.0.0", "released": False, "archived": False},
         ],
         "priorities": [
             {"id": "1", "name": "Highest"},
             {"id": "2", "name": "High"},
-            {"id": "3", "name": "Medium"}
+            {"id": "3", "name": "Medium"},
         ],
         "assignable_users": [
-            {"account_id": "user1", "display_name": "John Doe", "email": "john@example.com"},
-            {"account_id": "user2", "display_name": "Jane Smith", "email": "jane@example.com"}
-        ]
+            {
+                "account_id": "user1",
+                "display_name": "John Doe",
+                "email": "john@example.com",
+            },
+            {
+                "account_id": "user2",
+                "display_name": "Jane Smith",
+                "email": "jane@example.com",
+            },
+        ],
     }
 
 
@@ -95,20 +98,24 @@ def sample_workflows():
                 "statuses": [
                     {"id": "1", "name": "Open", "category": "TO_DO"},
                     {"id": "3", "name": "In Progress", "category": "IN_PROGRESS"},
-                    {"id": "5", "name": "Done", "category": "DONE"}
+                    {"id": "5", "name": "Done", "category": "DONE"},
                 ],
                 "transitions": {
                     "Open": [
-                        {"id": "11", "name": "Start Progress", "to_status": "In Progress"}
+                        {
+                            "id": "11",
+                            "name": "Start Progress",
+                            "to_status": "In Progress",
+                        }
                     ],
                     "In Progress": [
                         {"id": "21", "name": "Done", "to_status": "Done"},
-                        {"id": "22", "name": "Reopen", "to_status": "Open"}
+                        {"id": "22", "name": "Reopen", "to_status": "Open"},
                     ],
-                    "Done": []
-                }
+                    "Done": [],
+                },
             }
-        }
+        },
     }
 
 
@@ -124,22 +131,38 @@ def sample_patterns():
             "Bug": {
                 "issue_count": 30,
                 "assignees": {
-                    "user1": {"display_name": "John Doe", "count": 20, "percentage": 66.7},
-                    "user2": {"display_name": "Jane Smith", "count": 10, "percentage": 33.3}
+                    "user1": {
+                        "display_name": "John Doe",
+                        "count": 20,
+                        "percentage": 66.7,
+                    },
+                    "user2": {
+                        "display_name": "Jane Smith",
+                        "count": 10,
+                        "percentage": 33.3,
+                    },
                 },
                 "labels": {"backend": 15, "urgent": 8, "regression": 5},
                 "components": {"Backend": 25, "Frontend": 5},
                 "priorities": {
                     "High": {"count": 20, "percentage": 66.7},
-                    "Medium": {"count": 10, "percentage": 33.3}
-                }
+                    "Medium": {"count": 10, "percentage": 33.3},
+                },
             }
         },
         "common_labels": ["backend", "frontend", "urgent"],
         "top_assignees": [
-            {"account_id": "user1", "display_name": "John Doe", "total_assignments": 35},
-            {"account_id": "user2", "display_name": "Jane Smith", "total_assignments": 15}
-        ]
+            {
+                "account_id": "user1",
+                "display_name": "John Doe",
+                "total_assignments": 35,
+            },
+            {
+                "account_id": "user2",
+                "display_name": "Jane Smith",
+                "total_assignments": 15,
+            },
+        ],
     }
 
 
@@ -153,16 +176,11 @@ def sample_defaults():
             "Bug": {
                 "priority": "High",
                 "labels": ["needs-triage"],
-                "components": ["Backend"]
+                "components": ["Backend"],
             },
-            "Story": {
-                "story_points": 3,
-                "labels": ["needs-refinement"]
-            }
+            "Story": {"story_points": 3, "labels": ["needs-refinement"]},
         },
-        "global": {
-            "labels": ["team-alpha"]
-        }
+        "global": {"labels": ["team-alpha"]},
     }
 
 
@@ -178,15 +196,13 @@ class TestProjectContext:
         assert ctx.workflows == {}
         assert ctx.patterns == {}
         assert ctx.defaults == {}
-        assert ctx.source == 'none'
+        assert ctx.source == "none"
         assert ctx.has_context() is False
 
     def test_context_with_data(self, sample_metadata):
         """Test ProjectContext with data."""
         ctx = ProjectContext(
-            project_key="PROJ",
-            metadata=sample_metadata,
-            source='skill'
+            project_key="PROJ", metadata=sample_metadata, source="skill"
         )
         assert ctx.has_context() is True
         assert len(ctx.get_issue_types()) == 3
@@ -200,9 +216,9 @@ class TestProjectContext:
         ctx = ProjectContext(project_key="PROJ", metadata=sample_metadata)
         types = ctx.get_issue_types()
         assert len(types) == 3
-        type_names = [t['name'] for t in types]
-        assert 'Bug' in type_names
-        assert 'Story' in type_names
+        type_names = [t["name"] for t in types]
+        assert "Bug" in type_names
+        assert "Story" in type_names
 
 
 @pytest.mark.unit
@@ -224,7 +240,7 @@ class TestLoadJsonFile:
     def test_load_invalid_json(self, tmp_path):
         """Test loading invalid JSON returns None."""
         json_file = tmp_path / "invalid.json"
-        json_file.write_text('not valid json')
+        json_file.write_text("not valid json")
         result = load_json_file(json_file)
         assert result is None
 
@@ -263,30 +279,30 @@ class TestMergeContexts:
         """Test merge with both None."""
         result, source = merge_contexts(None, None)
         assert result == {}
-        assert source == 'none'
+        assert source == "none"
 
     def test_skill_only(self, sample_metadata):
         """Test merge with only skill context."""
         skill_ctx = {"metadata": sample_metadata}
         result, source = merge_contexts(skill_ctx, None)
         assert result == skill_ctx
-        assert source == 'skill'
+        assert source == "skill"
 
     def test_settings_only(self, sample_defaults):
         """Test merge with only settings context."""
         settings_ctx = {"defaults": sample_defaults}
         result, source = merge_contexts(None, settings_ctx)
         assert result == settings_ctx
-        assert source == 'settings'
+        assert source == "settings"
 
     def test_merged(self, sample_metadata, sample_defaults):
         """Test merge with both contexts."""
         skill_ctx = {"metadata": sample_metadata}
         settings_ctx = {"defaults": sample_defaults}
         result, source = merge_contexts(skill_ctx, settings_ctx)
-        assert 'metadata' in result
-        assert 'defaults' in result
-        assert source == 'merged'
+        assert "metadata" in result
+        assert "defaults" in result
+        assert source == "merged"
 
 
 @pytest.mark.unit
@@ -297,22 +313,22 @@ class TestGetDefaultsForIssueType:
         """Test getting global defaults."""
         ctx = ProjectContext(project_key="PROJ", defaults=sample_defaults)
         defaults = get_defaults_for_issue_type(ctx, "Unknown")
-        assert defaults.get('labels') == ['team-alpha']
+        assert defaults.get("labels") == ["team-alpha"]
 
     def test_type_specific_defaults(self, sample_defaults):
         """Test getting type-specific defaults merged with global."""
         ctx = ProjectContext(project_key="PROJ", defaults=sample_defaults)
         defaults = get_defaults_for_issue_type(ctx, "Bug")
-        assert defaults.get('priority') == 'High'
+        assert defaults.get("priority") == "High"
         # Labels should include both global and type-specific
-        assert 'needs-triage' in defaults.get('labels', [])
-        assert 'team-alpha' in defaults.get('labels', [])
+        assert "needs-triage" in defaults.get("labels", [])
+        assert "team-alpha" in defaults.get("labels", [])
 
     def test_story_points_for_story(self, sample_defaults):
         """Test story points default for Story type."""
         ctx = ProjectContext(project_key="PROJ", defaults=sample_defaults)
         defaults = get_defaults_for_issue_type(ctx, "Story")
-        assert defaults.get('story_points') == 3
+        assert defaults.get("story_points") == 3
 
 
 @pytest.mark.unit
@@ -324,15 +340,15 @@ class TestGetValidTransitions:
         ctx = ProjectContext(project_key="PROJ", workflows=sample_workflows)
         transitions = get_valid_transitions(ctx, "Bug", "Open")
         assert len(transitions) == 1
-        assert transitions[0]['name'] == "Start Progress"
-        assert transitions[0]['to_status'] == "In Progress"
+        assert transitions[0]["name"] == "Start Progress"
+        assert transitions[0]["to_status"] == "In Progress"
 
     def test_transitions_from_in_progress(self, sample_workflows):
         """Test getting transitions from In Progress status."""
         ctx = ProjectContext(project_key="PROJ", workflows=sample_workflows)
         transitions = get_valid_transitions(ctx, "Bug", "In Progress")
         assert len(transitions) == 2
-        transition_names = [t['name'] for t in transitions]
+        transition_names = [t["name"] for t in transitions]
         assert "Done" in transition_names
         assert "Reopen" in transition_names
 
@@ -358,10 +374,10 @@ class TestGetStatusesForIssueType:
         ctx = ProjectContext(project_key="PROJ", workflows=sample_workflows)
         statuses = get_statuses_for_issue_type(ctx, "Bug")
         assert len(statuses) == 3
-        status_names = [s['name'] for s in statuses]
-        assert 'Open' in status_names
-        assert 'In Progress' in status_names
-        assert 'Done' in status_names
+        status_names = [s["name"] for s in statuses]
+        assert "Open" in status_names
+        assert "In Progress" in status_names
+        assert "Done" in status_names
 
     def test_unknown_type_returns_empty(self, sample_workflows):
         """Test unknown type returns empty list."""
@@ -447,8 +463,8 @@ class TestFormatContextSummary:
             metadata=sample_metadata,
             patterns=sample_patterns,
             defaults=sample_defaults,
-            source='skill',
-            discovered_at="2025-12-26T10:30:00Z"
+            source="skill",
+            discovered_at="2025-12-26T10:30:00Z",
         )
         summary = format_context_summary(ctx)
         assert "Project: TESTPROJ" in summary

@@ -4,8 +4,9 @@ Tests for link_issue.py
 TDD tests for creating links between issues.
 """
 
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 # Import will be done inside tests after path setup via conftest
 
@@ -20,11 +21,9 @@ class TestLinkIssue:
         mock_jira_client.get_link_types.return_value = sample_link_types
 
         import link_issue
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
-            link_issue.link_issue(
-                issue_key="PROJ-1",
-                blocks="PROJ-2"
-            )
+
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
+            link_issue.link_issue(issue_key="PROJ-1", blocks="PROJ-2")
 
         mock_jira_client.create_link.assert_called_once_with(
             "Blocks", "PROJ-2", "PROJ-1", None
@@ -35,11 +34,9 @@ class TestLinkIssue:
         mock_jira_client.get_link_types.return_value = sample_link_types
 
         import link_issue
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
-            link_issue.link_issue(
-                issue_key="PROJ-1",
-                duplicates="PROJ-2"
-            )
+
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
+            link_issue.link_issue(issue_key="PROJ-1", duplicates="PROJ-2")
 
         mock_jira_client.create_link.assert_called_once_with(
             "Duplicate", "PROJ-2", "PROJ-1", None
@@ -50,11 +47,9 @@ class TestLinkIssue:
         mock_jira_client.get_link_types.return_value = sample_link_types
 
         import link_issue
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
-            link_issue.link_issue(
-                issue_key="PROJ-1",
-                relates_to="PROJ-2"
-            )
+
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
+            link_issue.link_issue(issue_key="PROJ-1", relates_to="PROJ-2")
 
         mock_jira_client.create_link.assert_called_once_with(
             "Relates", "PROJ-2", "PROJ-1", None
@@ -65,11 +60,9 @@ class TestLinkIssue:
         mock_jira_client.get_link_types.return_value = sample_link_types
 
         import link_issue
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
-            link_issue.link_issue(
-                issue_key="PROJ-1",
-                clones="PROJ-2"
-            )
+
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
+            link_issue.link_issue(issue_key="PROJ-1", clones="PROJ-2")
 
         mock_jira_client.create_link.assert_called_once_with(
             "Cloners", "PROJ-2", "PROJ-1", None
@@ -80,11 +73,12 @@ class TestLinkIssue:
         mock_jira_client.get_link_types.return_value = sample_link_types
 
         import link_issue
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
             link_issue.link_issue(
                 issue_key="PROJ-1",
                 blocks="PROJ-2",
-                comment="Dependency added for release"
+                comment="Dependency added for release",
             )
 
         # Verify comment was passed (as ADF)
@@ -98,39 +92,31 @@ class TestLinkIssue:
         import link_issue
         from assistant_skills_lib.error_handler import ValidationError
 
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
             with pytest.raises(ValidationError) as exc_info:
                 link_issue.link_issue(
-                    issue_key="PROJ-1",
-                    link_type="NonExistent",
-                    target_issue="PROJ-2"
+                    issue_key="PROJ-1", link_type="NonExistent", target_issue="PROJ-2"
                 )
 
         assert "not found" in str(exc_info.value).lower()
 
     def test_link_invalid_issue(self, mock_jira_client, sample_link_types):
         """Test error when issue key is invalid."""
+        import link_issue
         from assistant_skills_lib.error_handler import ValidationError
 
-        import link_issue
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
             with pytest.raises(ValidationError):
-                link_issue.link_issue(
-                    issue_key="invalid",
-                    blocks="PROJ-2"
-                )
+                link_issue.link_issue(issue_key="invalid", blocks="PROJ-2")
 
     def test_link_self_reference(self, mock_jira_client, sample_link_types):
         """Test validation preventing linking issue to itself."""
+        import link_issue
         from assistant_skills_lib.error_handler import ValidationError
 
-        import link_issue
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
             with pytest.raises(ValidationError) as exc_info:
-                link_issue.link_issue(
-                    issue_key="PROJ-1",
-                    blocks="PROJ-1"
-                )
+                link_issue.link_issue(issue_key="PROJ-1", blocks="PROJ-1")
 
         assert "itself" in str(exc_info.value).lower()
 
@@ -139,11 +125,10 @@ class TestLinkIssue:
         mock_jira_client.get_link_types.return_value = sample_link_types
 
         import link_issue
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
             link_issue.link_issue(
-                issue_key="PROJ-1",
-                link_type="Blocks",
-                target_issue="PROJ-2"
+                issue_key="PROJ-1", link_type="Blocks", target_issue="PROJ-2"
             )
 
         mock_jira_client.create_link.assert_called_once()
@@ -153,11 +138,10 @@ class TestLinkIssue:
         mock_jira_client.get_link_types.return_value = sample_link_types
 
         import link_issue
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
             result = link_issue.link_issue(
-                issue_key="PROJ-1",
-                blocks="PROJ-2",
-                dry_run=True
+                issue_key="PROJ-1", blocks="PROJ-2", dry_run=True
             )
 
         # Should NOT call create_link
@@ -181,7 +165,8 @@ class TestLinkIssueErrorHandling:
         mock_jira_client.create_link.side_effect = AuthenticationError("Invalid token")
 
         import link_issue
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
             with pytest.raises(AuthenticationError):
                 link_issue.link_issue(issue_key="PROJ-1", blocks="PROJ-2")
 
@@ -190,10 +175,13 @@ class TestLinkIssueErrorHandling:
         from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.get_link_types.return_value = sample_link_types
-        mock_jira_client.create_link.side_effect = PermissionError("Insufficient permissions")
+        mock_jira_client.create_link.side_effect = PermissionError(
+            "Insufficient permissions"
+        )
 
         import link_issue
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
             with pytest.raises(PermissionError):
                 link_issue.link_issue(issue_key="PROJ-1", blocks="PROJ-2")
 
@@ -202,10 +190,13 @@ class TestLinkIssueErrorHandling:
         from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get_link_types.return_value = sample_link_types
-        mock_jira_client.create_link.side_effect = NotFoundError("Issue PROJ-2 not found")
+        mock_jira_client.create_link.side_effect = NotFoundError(
+            "Issue PROJ-2 not found"
+        )
 
         import link_issue
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
             with pytest.raises(NotFoundError):
                 link_issue.link_issue(issue_key="PROJ-1", blocks="PROJ-2")
 
@@ -219,7 +210,8 @@ class TestLinkIssueErrorHandling:
         )
 
         import link_issue
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
             with pytest.raises(JiraError) as exc_info:
                 link_issue.link_issue(issue_key="PROJ-1", blocks="PROJ-2")
             assert exc_info.value.status_code == 429
@@ -234,7 +226,8 @@ class TestLinkIssueErrorHandling:
         )
 
         import link_issue
-        with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+
+        with patch.object(link_issue, "get_jira_client", return_value=mock_jira_client):
             with pytest.raises(JiraError) as exc_info:
                 link_issue.link_issue(issue_key="PROJ-1", blocks="PROJ-2")
             assert exc_info.value.status_code == 500

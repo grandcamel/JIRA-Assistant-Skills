@@ -8,19 +8,20 @@ Usage:
     python get_request_type.py 1 25 --show-fields
 """
 
-import sys
-import os
 import argparse
-import json
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_json,
+    get_jira_client,
+    print_error,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import format_json
-
-
-def get_request_type(service_desk_id: str, request_type_id: str, profile: str = None) -> dict:
+def get_request_type(
+    service_desk_id: str, request_type_id: str, profile: str | None = None
+) -> dict:
     """
     Get request type details.
 
@@ -53,20 +54,20 @@ def format_request_type_text(request_type: dict, show_fields: bool = False) -> N
     print(f"Name:           {request_type.get('name', '')}")
     print(f"Description:    {request_type.get('description', '')}")
 
-    if 'helpText' in request_type:
+    if "helpText" in request_type:
         print(f"Help Text:      {request_type.get('helpText', '')}")
 
     print()
     print(f"Service Desk ID: {request_type.get('serviceDeskId', '')}")
     print(f"Issue Type ID:   {request_type.get('issueTypeId', '')}")
 
-    if 'groupIds' in request_type:
-        groups = request_type.get('groupIds', [])
+    if "groupIds" in request_type:
+        groups = request_type.get("groupIds", [])
         print(f"Groups:          {', '.join(groups) if groups else 'None'}")
 
-    if 'icon' in request_type:
-        icon = request_type.get('icon', {})
-        if 'id' in icon:
+    if "icon" in request_type:
+        icon = request_type.get("icon", {})
+        if "id" in icon:
             print()
             print("Portal Configuration:")
             print(f"  Icon ID:       {icon.get('id', '')}")
@@ -74,7 +75,9 @@ def format_request_type_text(request_type: dict, show_fields: bool = False) -> N
     if show_fields:
         print()
         print("To see required fields:")
-        print(f"  python get_request_type_fields.py {request_type.get('serviceDeskId', '')} {request_type.get('id', '')}")
+        print(
+            f"  python get_request_type_fields.py {request_type.get('serviceDeskId', '')} {request_type.get('id', '')}"
+        )
 
 
 def format_request_type_json(request_type: dict) -> str:
@@ -92,36 +95,34 @@ def format_request_type_json(request_type: dict) -> str:
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Get JSM request type details',
-        epilog='Example: python get_request_type.py 1 25'
+        description="Get JSM request type details",
+        epilog="Example: python get_request_type.py 1 25",
     )
 
-    parser.add_argument('service_desk_id',
-                       help='Service desk ID')
-    parser.add_argument('request_type_id',
-                       help='Request type ID')
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format (default: text)')
-    parser.add_argument('--show-fields', '-f',
-                       action='store_true',
-                       help='Show hint to view fields')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument("service_desk_id", help="Service desk ID")
+    parser.add_argument("request_type_id", help="Request type ID")
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument(
+        "--show-fields", "-f", action="store_true", help="Show hint to view fields"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
         # Fetch request type
         request_type = get_request_type(
-            args.service_desk_id,
-            args.request_type_id,
-            profile=args.profile
+            args.service_desk_id, args.request_type_id, profile=args.profile
         )
 
         # Output results
-        if args.output == 'json':
+        if args.output == "json":
             print(format_request_type_json(request_type))
         else:
             format_request_type_text(request_type, args.show_fields)
@@ -134,5 +135,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

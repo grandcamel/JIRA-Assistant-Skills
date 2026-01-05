@@ -1,10 +1,11 @@
 """Pytest configuration and fixtures for E2E tests."""
 
 import os
-import pytest
 from pathlib import Path
 
-from .runner import E2ETestRunner, ClaudeCodeRunner
+import pytest
+
+from .runner import ClaudeCodeRunner, E2ETestRunner
 
 
 def pytest_addoption(parser):
@@ -37,9 +38,7 @@ def e2e_enabled():
 
     if api_key:
         return True
-    if claude_dir.exists() and (claude_dir / "credentials.json").exists():
-        return True
-    return False
+    return bool(claude_dir.exists() and (claude_dir / "credentials.json").exists())
 
 
 @pytest.fixture(scope="session")
@@ -87,7 +86,9 @@ def claude_runner(project_root, e2e_timeout, e2e_model, e2e_verbose, e2e_enabled
 
 
 @pytest.fixture(scope="session")
-def e2e_runner(test_cases_path, project_root, e2e_timeout, e2e_model, e2e_verbose, e2e_enabled):
+def e2e_runner(
+    test_cases_path, project_root, e2e_timeout, e2e_model, e2e_verbose, e2e_enabled
+):
     """Create E2E test runner."""
     if not e2e_enabled:
         pytest.skip("E2E tests disabled (no API key or OAuth credentials)")
@@ -109,7 +110,10 @@ def installed_plugin(claude_runner, e2e_enabled):
 
     # Use the plugin path from the project structure
     result = claude_runner.install_plugin("plugins/jira-assistant-skills")
-    if not result["success"] and "already installed" not in result.get("output", "").lower():
+    if (
+        not result["success"]
+        and "already installed" not in result.get("output", "").lower()
+    ):
         pytest.fail(f"Failed to install plugin: {result.get('error', 'Unknown error')}")
 
     return result

@@ -5,13 +5,14 @@ Tests verify that argparse configurations are correct and handle
 various input combinations properly.
 """
 
-import pytest
 import sys
 from pathlib import Path
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
+import pytest
 
 # Add scripts path
-scripts_path = str(Path(__file__).parent.parent / 'scripts')
+scripts_path = str(Path(__file__).parent.parent / "scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
@@ -25,8 +26,8 @@ class TestListFieldsCLI:
         """Test list_fields works with no arguments."""
         import list_fields
 
-        with patch('sys.argv', ['list_fields.py']):
-            with patch.object(list_fields, 'get_jira_client') as mock_client:
+        with patch("sys.argv", ["list_fields.py"]):
+            with patch.object(list_fields, "get_jira_client") as mock_client:
                 mock_client.return_value.get.return_value = []
                 mock_client.return_value.close = Mock()
                 try:
@@ -40,8 +41,8 @@ class TestListFieldsCLI:
         import list_fields
 
         # Test with --all flag (shows all fields including system)
-        with patch('sys.argv', ['list_fields.py', '--all']):
-            with patch.object(list_fields, 'get_jira_client') as mock_client:
+        with patch("sys.argv", ["list_fields.py", "--all"]):
+            with patch.object(list_fields, "get_jira_client") as mock_client:
                 mock_client.return_value.get.return_value = []
                 mock_client.return_value.close = Mock()
                 try:
@@ -54,8 +55,8 @@ class TestListFieldsCLI:
         """Test --filter option for searching fields by name."""
         import list_fields
 
-        with patch('sys.argv', ['list_fields.py', '--filter', 'story']):
-            with patch.object(list_fields, 'get_jira_client') as mock_client:
+        with patch("sys.argv", ["list_fields.py", "--filter", "story"]):
+            with patch.object(list_fields, "get_jira_client") as mock_client:
                 mock_client.return_value.get.return_value = []
                 mock_client.return_value.close = Mock()
                 try:
@@ -68,9 +69,9 @@ class TestListFieldsCLI:
         """Test output format options."""
         import list_fields
 
-        for fmt in ['text', 'json']:
-            with patch('sys.argv', ['list_fields.py', '--output', fmt]):
-                with patch.object(list_fields, 'get_jira_client') as mock_client:
+        for fmt in ["text", "json"]:
+            with patch("sys.argv", ["list_fields.py", "--output", fmt]):
+                with patch.object(list_fields, "get_jira_client") as mock_client:
                     mock_client.return_value.get.return_value = []
                     mock_client.return_value.close = Mock()
                     try:
@@ -83,8 +84,8 @@ class TestListFieldsCLI:
         """Test --profile option."""
         import list_fields
 
-        with patch('sys.argv', ['list_fields.py', '--profile', 'development']):
-            with patch.object(list_fields, 'get_jira_client') as mock_client:
+        with patch("sys.argv", ["list_fields.py", "--profile", "development"]):
+            with patch.object(list_fields, "get_jira_client") as mock_client:
                 mock_client.return_value.get.return_value = []
                 mock_client.return_value.close = Mock()
                 try:
@@ -104,7 +105,7 @@ class TestCreateFieldCLI:
         import create_field
 
         with pytest.raises(SystemExit) as exc_info:
-            with patch('sys.argv', ['create_field.py', '--type', 'text']):
+            with patch("sys.argv", ["create_field.py", "--type", "text"]):
                 create_field.main()
 
         assert exc_info.value.code == 2
@@ -114,7 +115,7 @@ class TestCreateFieldCLI:
         import create_field
 
         with pytest.raises(SystemExit) as exc_info:
-            with patch('sys.argv', ['create_field.py', 'MyField']):
+            with patch("sys.argv", ["create_field.py", "MyField"]):
                 create_field.main()
 
         assert exc_info.value.code == 2
@@ -123,36 +124,59 @@ class TestCreateFieldCLI:
         """Test valid field type choices."""
         import create_field
 
-        valid_types = ['text', 'textarea', 'number', 'date', 'datetime', 'select', 'multiselect', 'checkbox']
+        valid_types = [
+            "text",
+            "textarea",
+            "number",
+            "date",
+            "datetime",
+            "select",
+            "multiselect",
+            "checkbox",
+        ]
 
         for field_type in valid_types:
-            with patch('sys.argv', ['create_field.py', '--name', 'MyField', '--type', field_type]):
-                with patch.object(create_field, 'get_jira_client') as mock_client:
-                    mock_client.return_value.post.return_value = {'id': 'customfield_10100'}
-                    mock_client.return_value.close = Mock()
-                    try:
-                        create_field.main()
-                    except SystemExit as e:
-                        if e.code == 2:
-                            pytest.fail(f"Field type '{field_type}' should be valid")
-
-    def test_optional_description(self):
-        """Test --description option."""
-        import create_field
-
-        with patch('sys.argv', [
-            'create_field.py', '--name', 'MyField',
-            '--type', 'text',
-            '--description', 'A custom field for testing'
-        ]):
-            with patch.object(create_field, 'get_jira_client') as mock_client:
-                mock_client.return_value.post.return_value = {'id': 'customfield_10100'}
+            with (
+                patch(
+                    "sys.argv",
+                    ["create_field.py", "--name", "MyField", "--type", field_type],
+                ),
+                patch.object(create_field, "get_jira_client") as mock_client,
+            ):
+                mock_client.return_value.post.return_value = {"id": "customfield_10100"}
                 mock_client.return_value.close = Mock()
                 try:
                     create_field.main()
                 except SystemExit as e:
                     if e.code == 2:
-                        pytest.fail("--description should be valid")
+                        pytest.fail(f"Field type '{field_type}' should be valid")
+
+    def test_optional_description(self):
+        """Test --description option."""
+        import create_field
+
+        with (
+            patch(
+                "sys.argv",
+                [
+                    "create_field.py",
+                    "--name",
+                    "MyField",
+                    "--type",
+                    "text",
+                    "--description",
+                    "A custom field for testing",
+                ],
+            ),
+            patch.object(create_field, "get_jira_client") as mock_client,
+        ):
+            mock_client.return_value.post.return_value = {"id": "customfield_10100"}
+            mock_client.return_value.close = Mock()
+            try:
+                create_field.main()
+            except SystemExit as e:
+                if e.code == 2:
+                    pytest.fail("--description should be valid")
 
 
 @pytest.mark.fields
@@ -165,7 +189,7 @@ class TestConfigureAgileFieldsCLI:
         import configure_agile_fields
 
         with pytest.raises(SystemExit) as exc_info:
-            with patch('sys.argv', ['configure_agile_fields.py']):
+            with patch("sys.argv", ["configure_agile_fields.py"]):
                 configure_agile_fields.main()
 
         assert exc_info.value.code == 2
@@ -174,8 +198,8 @@ class TestConfigureAgileFieldsCLI:
         """Test valid positional project argument."""
         import configure_agile_fields
 
-        with patch('sys.argv', ['configure_agile_fields.py', 'PROJ']):
-            with patch.object(configure_agile_fields, 'get_jira_client') as mock_client:
+        with patch("sys.argv", ["configure_agile_fields.py", "PROJ"]):
+            with patch.object(configure_agile_fields, "get_jira_client") as mock_client:
                 mock_client.return_value.get.return_value = []
                 mock_client.return_value.close = Mock()
                 try:
@@ -189,30 +213,33 @@ class TestConfigureAgileFieldsCLI:
         import configure_agile_fields
 
         # Discovery is automatic in this script - no --discover flag needed
-        with patch('sys.argv', ['configure_agile_fields.py', 'PROJ']):
-            with patch.object(configure_agile_fields, 'get_jira_client') as mock_client:
+        with patch("sys.argv", ["configure_agile_fields.py", "PROJ"]):
+            with patch.object(configure_agile_fields, "get_jira_client") as mock_client:
                 mock_client.return_value.get.return_value = []
                 mock_client.return_value.close = Mock()
                 try:
                     configure_agile_fields.main()
                 except SystemExit as e:
                     if e.code == 2:
-                        pytest.fail("positional project with auto-discovery should be valid")
+                        pytest.fail(
+                            "positional project with auto-discovery should be valid"
+                        )
 
     def test_profile_option(self):
         """Test --profile option with positional project."""
         import configure_agile_fields
 
-        with patch('sys.argv', [
-            'configure_agile_fields.py',
-            'PROJ',
-            '--profile', 'development'
-        ]):
-            with patch.object(configure_agile_fields, 'get_jira_client') as mock_client:
-                mock_client.return_value.get.return_value = []
-                mock_client.return_value.close = Mock()
-                try:
-                    configure_agile_fields.main()
-                except SystemExit as e:
-                    if e.code == 2:
-                        pytest.fail("--profile should be valid")
+        with (
+            patch(
+                "sys.argv",
+                ["configure_agile_fields.py", "PROJ", "--profile", "development"],
+            ),
+            patch.object(configure_agile_fields, "get_jira_client") as mock_client,
+        ):
+            mock_client.return_value.get.return_value = []
+            mock_client.return_value.close = Mock()
+            try:
+                configure_agile_fields.main()
+            except SystemExit as e:
+                if e.code == 2:
+                    pytest.fail("--profile should be valid")

@@ -17,32 +17,32 @@ Examples:
 """
 
 import argparse
-import sys
 import json
-from pathlib import Path
-from typing import Optional, Dict, Any
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, ValidationError, print_error
 from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    validate_assignee_type,
     validate_project_key,
     validate_project_name,
-    validate_assignee_type,
 )
 
 
 def update_project(
     project_key: str,
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    lead: Optional[str] = None,
-    url: Optional[str] = None,
-    assignee_type: Optional[str] = None,
-    category_id: Optional[int] = None,
-    client=None
-) -> Dict[str, Any]:
+    name: str | None = None,
+    description: str | None = None,
+    lead: str | None = None,
+    url: str | None = None,
+    assignee_type: str | None = None,
+    category_id: int | None = None,
+    client=None,
+) -> dict[str, Any]:
     """
     Update a JIRA project.
 
@@ -90,11 +90,11 @@ def update_project(
         # Resolve lead if it's an email
         lead_account_id = None
         if lead:
-            if '@' in lead:
+            if "@" in lead:
                 # Search for user by email
                 users = client.search_users(lead, max_results=1)
                 if users:
-                    lead_account_id = users[0].get('accountId')
+                    lead_account_id = users[0].get("accountId")
                 else:
                     raise ValidationError(f"User not found: {lead}")
             else:
@@ -103,17 +103,17 @@ def update_project(
         # Build update kwargs
         kwargs = {}
         if name:
-            kwargs['name'] = name
+            kwargs["name"] = name
         if description is not None:  # Allow empty string to clear
-            kwargs['description'] = description
+            kwargs["description"] = description
         if lead_account_id:
-            kwargs['lead'] = lead_account_id
+            kwargs["lead"] = lead_account_id
         if url is not None:
-            kwargs['url'] = url
+            kwargs["url"] = url
         if assignee_type:
-            kwargs['assignee_type'] = assignee_type
+            kwargs["assignee_type"] = assignee_type
         if category_id is not None:
-            kwargs['category_id'] = category_id
+            kwargs["category_id"] = category_id
 
         # Update project
         result = client.update_project(project_key, **kwargs)
@@ -125,7 +125,7 @@ def update_project(
             client.close()
 
 
-def format_output(project: Dict[str, Any], output_format: str = "text") -> str:
+def format_output(project: dict[str, Any], output_format: str = "text") -> str:
     """Format project data for output."""
     if output_format == "json":
         return json.dumps(project, indent=2)
@@ -139,27 +139,29 @@ def format_output(project: Dict[str, Any], output_format: str = "text") -> str:
     ]
 
     # Lead
-    lead = project.get('lead')
+    lead = project.get("lead")
     if lead:
         lines.append(f"  Lead:        {lead.get('displayName', 'N/A')}")
 
     # Category
-    category = project.get('projectCategory')
+    category = project.get("projectCategory")
     if category:
         lines.append(f"  Category:    {category.get('name', 'N/A')}")
 
     # Description
-    description = project.get('description')
+    description = project.get("description")
     if description:
-        lines.append(f"  Description: {description[:50]}{'...' if len(description) > 50 else ''}")
+        lines.append(
+            f"  Description: {description[:50]}{'...' if len(description) > 50 else ''}"
+        )
 
     # URL
-    url = project.get('url')
+    url = project.get("url")
     if url:
         lines.append(f"  URL:         {url}")
 
     # Assignee Type
-    assignee_type = project.get('assigneeType')
+    assignee_type = project.get("assigneeType")
     if assignee_type:
         lines.append(f"  Assignee:    {assignee_type}")
 
@@ -190,54 +192,37 @@ Examples:
 
   # Update multiple fields
   %(prog)s PROJ --name "Updated" --url https://example.com
-        """
+        """,
     )
 
     # Required arguments
-    parser.add_argument(
-        "project_key",
-        help="Project key to update (e.g., PROJ)"
-    )
+    parser.add_argument("project_key", help="Project key to update (e.g., PROJ)")
 
     # Update fields
+    parser.add_argument("--name", "-n", help="New project name")
     parser.add_argument(
-        "--name", "-n",
-        help="New project name"
+        "--description",
+        "-d",
+        help="New project description (use empty string to clear)",
     )
-    parser.add_argument(
-        "--description", "-d",
-        help="New project description (use empty string to clear)"
-    )
-    parser.add_argument(
-        "--lead", "-l",
-        help="New project lead (email or account ID)"
-    )
-    parser.add_argument(
-        "--url", "-u",
-        help="New project URL"
-    )
+    parser.add_argument("--lead", "-l", help="New project lead (email or account ID)")
+    parser.add_argument("--url", "-u", help="New project URL")
     parser.add_argument(
         "--assignee-type",
-        choices=['PROJECT_LEAD', 'UNASSIGNED', 'COMPONENT_LEAD'],
-        help="Default assignee type for new issues"
+        choices=["PROJECT_LEAD", "UNASSIGNED", "COMPONENT_LEAD"],
+        help="Default assignee type for new issues",
     )
-    parser.add_argument(
-        "--category",
-        type=int,
-        help="Category ID to assign project to"
-    )
+    parser.add_argument("--category", type=int, help="Category ID to assign project to")
 
     # Output options
     parser.add_argument(
-        "--output", "-o",
-        choices=['text', 'json'],
-        default='text',
-        help="Output format (default: text)"
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
     )
-    parser.add_argument(
-        "--profile",
-        help="Configuration profile to use"
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -252,7 +237,7 @@ Examples:
             url=args.url,
             assignee_type=args.assignee_type,
             category_id=args.category,
-            client=client
+            client=client,
         )
 
         print(format_output(result, args.output))
@@ -264,7 +249,7 @@ Examples:
         print_error(e)
         sys.exit(1)
     finally:
-        if 'client' in locals():
+        if "client" in locals():
             client.close()
 
 

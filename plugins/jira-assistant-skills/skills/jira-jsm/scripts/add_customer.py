@@ -8,15 +8,15 @@ Usage:
     python add_customer.py SD-1 --account-id id1 --dry-run
 """
 
-import sys
-import os
 import argparse
-from pathlib import Path
+import sys
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import print_success
+from jira_assistant_skills_lib import (
+    JiraError,
+    get_jira_client,
+    print_error,
+    print_success,
+)
 
 
 def parse_account_ids(account_id_string: str) -> list:
@@ -29,7 +29,7 @@ def parse_account_ids(account_id_string: str) -> list:
     Returns:
         List of account IDs
     """
-    return [id.strip() for id in account_id_string.split(',') if id.strip()]
+    return [id.strip() for id in account_id_string.split(",") if id.strip()]
 
 
 def validate_account_ids(account_ids: list) -> bool:
@@ -47,8 +47,9 @@ def validate_account_ids(account_ids: list) -> bool:
     return all(id.strip() for id in account_ids)
 
 
-def add_customer_to_service_desk(service_desk_id: str, account_ids: list,
-                                  profile: str = None) -> None:
+def add_customer_to_service_desk(
+    service_desk_id: str, account_ids: list, profile: str | None = None
+) -> None:
     """
     Add customers to a service desk.
 
@@ -64,7 +65,7 @@ def add_customer_to_service_desk(service_desk_id: str, account_ids: list,
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Add customers to a JSM service desk',
+        description="Add customers to a JSM service desk",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -76,17 +77,17 @@ Examples:
 
   Dry-run:
     %(prog)s SD-1 --account-id id1 --dry-run
-        """
+        """,
     )
 
-    parser.add_argument('service_desk_id',
-                        help='Service desk ID or key (e.g., SD-1)')
-    parser.add_argument('--account-id', required=True,
-                        help='Customer account ID(s) (comma-separated)')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Show what would be added without adding')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use from config')
+    parser.add_argument("service_desk_id", help="Service desk ID or key (e.g., SD-1)")
+    parser.add_argument(
+        "--account-id", required=True, help="Customer account ID(s) (comma-separated)"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Show what would be added without adding"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -99,7 +100,9 @@ Examples:
 
         if args.dry_run:
             print("DRY RUN MODE - No changes will be made\n")
-            print(f"Would add {len(account_ids)} customer(s) to service desk {args.service_desk_id}:")
+            print(
+                f"Would add {len(account_ids)} customer(s) to service desk {args.service_desk_id}:"
+            )
             for account_id in account_ids:
                 print(f"  - {account_id}")
             return 0
@@ -107,10 +110,12 @@ Examples:
         add_customer_to_service_desk(
             service_desk_id=args.service_desk_id,
             account_ids=account_ids,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        print_success(f"Successfully added {len(account_ids)} customer(s) to service desk {args.service_desk_id}")
+        print_success(
+            f"Successfully added {len(account_ids)} customer(s) to service desk {args.service_desk_id}"
+        )
 
         return 0
 
@@ -122,5 +127,5 @@ Examples:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

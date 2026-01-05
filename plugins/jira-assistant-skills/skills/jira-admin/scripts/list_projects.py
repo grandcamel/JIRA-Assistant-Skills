@@ -23,30 +23,27 @@ Examples:
 """
 
 import argparse
-import sys
-import json
 import csv
+import json
+import sys
 from io import StringIO
-from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, print_error
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
 def list_projects(
-    query: Optional[str] = None,
-    project_type: Optional[str] = None,
-    category_id: Optional[int] = None,
+    query: str | None = None,
+    project_type: str | None = None,
+    category_id: int | None = None,
     include_archived: bool = False,
-    expand: Optional[List[str]] = None,
+    expand: list[str] | None = None,
     start_at: int = 0,
     max_results: int = 50,
     output_format: str = "table",
-    client=None
-) -> Dict[str, Any]:
+    client=None,
+) -> dict[str, Any]:
     """
     List and search projects.
 
@@ -75,9 +72,9 @@ def list_projects(
 
     try:
         # Build status filter
-        status = ['live']
+        status = ["live"]
         if include_archived:
-            status.append('archived')
+            status.append("archived")
 
         result = client.search_projects(
             query=query,
@@ -86,7 +83,7 @@ def list_projects(
             status=status,
             expand=expand,
             start_at=start_at,
-            max_results=max_results
+            max_results=max_results,
         )
 
         return result
@@ -97,10 +94,8 @@ def list_projects(
 
 
 def list_trash_projects(
-    start_at: int = 0,
-    max_results: int = 50,
-    client=None
-) -> Dict[str, Any]:
+    start_at: int = 0, max_results: int = 50, client=None
+) -> dict[str, Any]:
     """
     List projects in trash.
 
@@ -123,9 +118,7 @@ def list_trash_projects(
 
     try:
         result = client.search_projects(
-            status=['deleted'],
-            start_at=start_at,
-            max_results=max_results
+            status=["deleted"], start_at=start_at, max_results=max_results
         )
 
         return result
@@ -135,7 +128,7 @@ def list_trash_projects(
             client.close()
 
 
-def format_table(projects: List[Dict[str, Any]]) -> str:
+def format_table(projects: list[dict[str, Any]]) -> str:
     """Format projects as table."""
     if not projects:
         return "No projects found."
@@ -144,23 +137,26 @@ def format_table(projects: List[Dict[str, Any]]) -> str:
     rows = []
 
     for proj in projects:
-        category = proj.get('projectCategory', {})
-        category_name = category.get('name', '-') if category else '-'
+        category = proj.get("projectCategory", {})
+        category_name = category.get("name", "-") if category else "-"
 
-        lead = proj.get('lead', {})
-        lead_name = lead.get('displayName', '-') if lead else '-'
+        lead = proj.get("lead", {})
+        lead_name = lead.get("displayName", "-") if lead else "-"
 
-        rows.append([
-            proj.get('key', '-'),
-            proj.get('name', '-')[:40],
-            proj.get('projectTypeKey', '-'),
-            category_name,
-            lead_name[:20]
-        ])
+        rows.append(
+            [
+                proj.get("key", "-"),
+                proj.get("name", "-")[:40],
+                proj.get("projectTypeKey", "-"),
+                category_name,
+                lead_name[:20],
+            ]
+        )
 
     # Use tabulate if available, otherwise simple format
     try:
         from tabulate import tabulate
+
         return tabulate(rows, headers=headers, tablefmt="grid")
     except ImportError:
         # Simple format
@@ -171,7 +167,7 @@ def format_table(projects: List[Dict[str, Any]]) -> str:
         return "\n".join(lines)
 
 
-def format_csv(projects: List[Dict[str, Any]]) -> str:
+def format_csv(projects: list[dict[str, Any]]) -> str:
     """Format projects as CSV."""
     if not projects:
         return ""
@@ -184,28 +180,30 @@ def format_csv(projects: List[Dict[str, Any]]) -> str:
 
     # Rows
     for proj in projects:
-        category = proj.get('projectCategory', {})
-        category_name = category.get('name', '') if category else ''
+        category = proj.get("projectCategory", {})
+        category_name = category.get("name", "") if category else ""
 
-        lead = proj.get('lead', {})
-        lead_name = lead.get('displayName', '') if lead else ''
+        lead = proj.get("lead", {})
+        lead_name = lead.get("displayName", "") if lead else ""
 
-        writer.writerow([
-            proj.get('key', ''),
-            proj.get('name', ''),
-            proj.get('projectTypeKey', ''),
-            category_name,
-            lead_name,
-            proj.get('id', ''),
-            proj.get('self', '')
-        ])
+        writer.writerow(
+            [
+                proj.get("key", ""),
+                proj.get("name", ""),
+                proj.get("projectTypeKey", ""),
+                category_name,
+                lead_name,
+                proj.get("id", ""),
+                proj.get("self", ""),
+            ]
+        )
 
     return output.getvalue()
 
 
-def format_output(result: Dict[str, Any], output_format: str = "table") -> str:
+def format_output(result: dict[str, Any], output_format: str = "table") -> str:
     """Format search results for output."""
-    projects = result.get('values', [])
+    projects = result.get("values", [])
 
     if output_format == "json":
         return json.dumps(result, indent=2)
@@ -217,20 +215,22 @@ def format_output(result: Dict[str, Any], output_format: str = "table") -> str:
     lines = [format_table(projects)]
 
     # Add pagination info
-    total = result.get('total', len(projects))
-    start_at = result.get('startAt', 0)
+    total = result.get("total", len(projects))
+    start_at = result.get("startAt", 0)
 
     if total > len(projects):
-        lines.append(f"\nShowing {start_at + 1}-{start_at + len(projects)} of {total} projects")
-        if not result.get('isLast', True):
+        lines.append(
+            f"\nShowing {start_at + 1}-{start_at + len(projects)} of {total} projects"
+        )
+        if not result.get("isLast", True):
             lines.append(f"Use --start-at {start_at + len(projects)} to see more")
 
     return "\n".join(lines)
 
 
-def format_trash_output(result: Dict[str, Any], output_format: str = "table") -> str:
+def format_trash_output(result: dict[str, Any], output_format: str = "table") -> str:
     """Format trash results for output."""
-    projects = result.get('values', [])
+    projects = result.get("values", [])
 
     if output_format == "json":
         return json.dumps(result, indent=2)
@@ -244,16 +244,18 @@ def format_trash_output(result: Dict[str, Any], output_format: str = "table") ->
         writer.writerow(["Key", "Name", "Deleted Date", "Retention Till", "Deleted By"])
 
         for proj in projects:
-            deleted_by = proj.get('deletedBy', {})
-            deleted_by_name = deleted_by.get('displayName', '') if deleted_by else ''
+            deleted_by = proj.get("deletedBy", {})
+            deleted_by_name = deleted_by.get("displayName", "") if deleted_by else ""
 
-            writer.writerow([
-                proj.get('key', ''),
-                proj.get('name', ''),
-                proj.get('deletedDate', ''),
-                proj.get('retentionTillDate', ''),
-                deleted_by_name
-            ])
+            writer.writerow(
+                [
+                    proj.get("key", ""),
+                    proj.get("name", ""),
+                    proj.get("deletedDate", ""),
+                    proj.get("retentionTillDate", ""),
+                    deleted_by_name,
+                ]
+            )
         return output.getvalue()
 
     # Table format
@@ -263,17 +265,20 @@ def format_trash_output(result: Dict[str, Any], output_format: str = "table") ->
     rows = []
 
     for proj in projects:
-        deleted_by = proj.get('deletedBy', {})
+        deleted_by = proj.get("deletedBy", {})
 
-        rows.append([
-            proj.get('key', '-'),
-            proj.get('name', '-')[:30],
-            proj.get('deletedDate', '-')[:10],
-            proj.get('retentionTillDate', '-')[:10]
-        ])
+        rows.append(
+            [
+                proj.get("key", "-"),
+                proj.get("name", "-")[:30],
+                proj.get("deletedDate", "-")[:10],
+                proj.get("retentionTillDate", "-")[:10],
+            ]
+        )
 
     try:
         from tabulate import tabulate
+
         lines.append(tabulate(rows, headers=headers, tablefmt="grid"))
     except ImportError:
         lines.append("\t".join(headers))
@@ -308,33 +313,23 @@ Examples:
 
   # Export to CSV
   %(prog)s --output csv > projects.csv
-        """
+        """,
     )
 
     # Filter options
+    parser.add_argument("--search", "-s", help="Search projects by name or key")
     parser.add_argument(
-        "--search", "-s",
-        help="Search projects by name or key"
+        "--type",
+        "-t",
+        choices=["software", "business", "service_desk"],
+        help="Filter by project type",
+    )
+    parser.add_argument("--category", "-c", type=int, help="Filter by category ID")
+    parser.add_argument(
+        "--include-archived", action="store_true", help="Include archived projects"
     )
     parser.add_argument(
-        "--type", "-t",
-        choices=['software', 'business', 'service_desk'],
-        help="Filter by project type"
-    )
-    parser.add_argument(
-        "--category", "-c",
-        type=int,
-        help="Filter by category ID"
-    )
-    parser.add_argument(
-        "--include-archived",
-        action="store_true",
-        help="Include archived projects"
-    )
-    parser.add_argument(
-        "--trash",
-        action="store_true",
-        help="List projects in trash instead"
+        "--trash", action="store_true", help="List projects in trash instead"
     )
 
     # Pagination
@@ -342,32 +337,31 @@ Examples:
         "--start-at",
         type=int,
         default=0,
-        help="Starting index for pagination (default: 0)"
+        help="Starting index for pagination (default: 0)",
     )
     parser.add_argument(
         "--max-results",
         type=int,
         default=50,
-        help="Maximum results per page (default: 50)"
+        help="Maximum results per page (default: 50)",
     )
 
     # Expand options
     parser.add_argument(
-        "--expand", "-e",
-        help="Comma-separated fields to expand (description, lead, issueTypes)"
+        "--expand",
+        "-e",
+        help="Comma-separated fields to expand (description, lead, issueTypes)",
     )
 
     # Output options
     parser.add_argument(
-        "--output", "-o",
-        choices=['table', 'json', 'csv'],
-        default='table',
-        help="Output format (default: table)"
+        "--output",
+        "-o",
+        choices=["table", "json", "csv"],
+        default="table",
+        help="Output format (default: table)",
     )
-    parser.add_argument(
-        "--profile",
-        help="Configuration profile to use"
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -377,9 +371,7 @@ Examples:
         # Handle trash listing
         if args.trash:
             result = list_trash_projects(
-                start_at=args.start_at,
-                max_results=args.max_results,
-                client=client
+                start_at=args.start_at, max_results=args.max_results, client=client
             )
             print(format_trash_output(result, args.output))
             sys.exit(0)
@@ -387,7 +379,7 @@ Examples:
         # Parse expand list
         expand_list = None
         if args.expand:
-            expand_list = [x.strip() for x in args.expand.split(',')]
+            expand_list = [x.strip() for x in args.expand.split(",")]
 
         result = list_projects(
             query=args.search,
@@ -398,7 +390,7 @@ Examples:
             start_at=args.start_at,
             max_results=args.max_results,
             output_format=args.output,
-            client=client
+            client=client,
         )
 
         print(format_output(result, args.output))
@@ -407,7 +399,7 @@ Examples:
         print_error(e)
         sys.exit(1)
     finally:
-        if 'client' in locals():
+        if "client" in locals():
             client.close()
 
 

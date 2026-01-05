@@ -5,13 +5,14 @@ Tests verify that argparse configurations are correct and handle
 various input combinations properly.
 """
 
-import pytest
 import sys
 from pathlib import Path
-from unittest.mock import patch, Mock
+from unittest.mock import patch
+
+import pytest
 
 # Add scripts path
-scripts_path = str(Path(__file__).parent.parent / 'scripts')
+scripts_path = str(Path(__file__).parent.parent / "scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
@@ -25,7 +26,7 @@ class TestCacheStatusCLI:
         """Test cache_status works with no arguments."""
         import cache_status
 
-        with patch('sys.argv', ['cache_status.py']):
+        with patch("sys.argv", ["cache_status.py"]):
             # Should work without any arguments (uses default cache dir)
             try:
                 cache_status.main()
@@ -37,7 +38,7 @@ class TestCacheStatusCLI:
         """Test --json flag."""
         import cache_status
 
-        with patch('sys.argv', ['cache_status.py', '--json']):
+        with patch("sys.argv", ["cache_status.py", "--json"]):
             try:
                 cache_status.main()
             except SystemExit as e:
@@ -48,7 +49,7 @@ class TestCacheStatusCLI:
         """Test --cache-dir option."""
         import cache_status
 
-        with patch('sys.argv', ['cache_status.py', '--cache-dir', temp_cache_dir]):
+        with patch("sys.argv", ["cache_status.py", "--cache-dir", temp_cache_dir]):
             try:
                 cache_status.main()
             except SystemExit as e:
@@ -59,7 +60,7 @@ class TestCacheStatusCLI:
         """Test -v/--verbose flag."""
         import cache_status
 
-        with patch('sys.argv', ['cache_status.py', '-v']):
+        with patch("sys.argv", ["cache_status.py", "-v"]):
             try:
                 cache_status.main()
             except SystemExit as e:
@@ -77,7 +78,9 @@ class TestCacheClearCLI:
         import cache_clear
 
         # Without --force or --dry-run, should prompt (we test with --force)
-        with patch('sys.argv', ['cache_clear.py', '--cache-dir', temp_cache_dir, '--force']):
+        with patch(
+            "sys.argv", ["cache_clear.py", "--cache-dir", temp_cache_dir, "--force"]
+        ):
             try:
                 cache_clear.main()
             except SystemExit as e:
@@ -88,12 +91,17 @@ class TestCacheClearCLI:
         """Test --category option."""
         import cache_clear
 
-        with patch('sys.argv', [
-            'cache_clear.py',
-            '--category', 'issue',
-            '--force',
-            '--cache-dir', temp_cache_dir
-        ]):
+        with patch(
+            "sys.argv",
+            [
+                "cache_clear.py",
+                "--category",
+                "issue",
+                "--force",
+                "--cache-dir",
+                temp_cache_dir,
+            ],
+        ):
             try:
                 cache_clear.main()
             except SystemExit as e:
@@ -104,13 +112,19 @@ class TestCacheClearCLI:
         """Test --pattern option."""
         import cache_clear
 
-        with patch('sys.argv', [
-            'cache_clear.py',
-            '--pattern', 'PROJ-*',
-            '--category', 'issue',
-            '--force',
-            '--cache-dir', temp_cache_dir
-        ]):
+        with patch(
+            "sys.argv",
+            [
+                "cache_clear.py",
+                "--pattern",
+                "PROJ-*",
+                "--category",
+                "issue",
+                "--force",
+                "--cache-dir",
+                temp_cache_dir,
+            ],
+        ):
             try:
                 cache_clear.main()
             except SystemExit as e:
@@ -121,7 +135,9 @@ class TestCacheClearCLI:
         """Test --dry-run option."""
         import cache_clear
 
-        with patch('sys.argv', ['cache_clear.py', '--dry-run', '--cache-dir', temp_cache_dir]):
+        with patch(
+            "sys.argv", ["cache_clear.py", "--dry-run", "--cache-dir", temp_cache_dir]
+        ):
             try:
                 cache_clear.main()
             except SystemExit as e:
@@ -139,7 +155,7 @@ class TestCacheWarmCLI:
         import cache_warm
 
         with pytest.raises(SystemExit) as exc_info:
-            with patch('sys.argv', ['cache_warm.py', '--cache-dir', temp_cache_dir]):
+            with patch("sys.argv", ["cache_warm.py", "--cache-dir", temp_cache_dir]):
                 cache_warm.main()
 
         assert exc_info.value.code == 1  # Should fail without warming options
@@ -148,54 +164,72 @@ class TestCacheWarmCLI:
         """Test --projects option."""
         import cache_warm
 
-        with patch('sys.argv', ['cache_warm.py', '--projects', '--cache-dir', temp_cache_dir]):
-            with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-                with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                    mock_jira_client.get.return_value = []
-                    try:
-                        cache_warm.main()
-                    except SystemExit as e:
-                        if e.code == 2:
-                            pytest.fail("--projects should be valid")
+        with (
+            patch(
+                "sys.argv",
+                ["cache_warm.py", "--projects", "--cache-dir", temp_cache_dir],
+            ),
+            patch("cache_warm.get_jira_client", return_value=mock_jira_client),
+        ):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                mock_jira_client.get.return_value = []
+                try:
+                    cache_warm.main()
+                except SystemExit as e:
+                    if e.code == 2:
+                        pytest.fail("--projects should be valid")
 
     def test_fields_option(self, temp_cache_dir, mock_jira_client):
         """Test --fields option."""
         import cache_warm
 
-        with patch('sys.argv', ['cache_warm.py', '--fields', '--cache-dir', temp_cache_dir]):
-            with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-                with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                    mock_jira_client.get.return_value = []
-                    try:
-                        cache_warm.main()
-                    except SystemExit as e:
-                        if e.code == 2:
-                            pytest.fail("--fields should be valid")
+        with (
+            patch(
+                "sys.argv", ["cache_warm.py", "--fields", "--cache-dir", temp_cache_dir]
+            ),
+            patch("cache_warm.get_jira_client", return_value=mock_jira_client),
+        ):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                mock_jira_client.get.return_value = []
+                try:
+                    cache_warm.main()
+                except SystemExit as e:
+                    if e.code == 2:
+                        pytest.fail("--fields should be valid")
 
     def test_all_option(self, temp_cache_dir, mock_jira_client):
         """Test --all option."""
         import cache_warm
 
-        with patch('sys.argv', ['cache_warm.py', '--all', '--cache-dir', temp_cache_dir]):
-            with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-                with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                    mock_jira_client.get.return_value = []
-                    try:
-                        cache_warm.main()
-                    except SystemExit as e:
-                        if e.code == 2:
-                            pytest.fail("--all should be valid")
+        with (
+            patch(
+                "sys.argv", ["cache_warm.py", "--all", "--cache-dir", temp_cache_dir]
+            ),
+            patch("cache_warm.get_jira_client", return_value=mock_jira_client),
+        ):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                mock_jira_client.get.return_value = []
+                try:
+                    cache_warm.main()
+                except SystemExit as e:
+                    if e.code == 2:
+                        pytest.fail("--all should be valid")
 
     def test_verbose_flag(self, temp_cache_dir, mock_jira_client):
         """Test -v/--verbose flag."""
         import cache_warm
 
-        with patch('sys.argv', ['cache_warm.py', '--projects', '-v', '--cache-dir', temp_cache_dir]):
-            with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-                with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                    mock_jira_client.get.return_value = []
-                    try:
-                        cache_warm.main()
-                    except SystemExit as e:
-                        if e.code == 2:
-                            pytest.fail("-v flag should be valid")
+        with (
+            patch(
+                "sys.argv",
+                ["cache_warm.py", "--projects", "-v", "--cache-dir", temp_cache_dir],
+            ),
+            patch("cache_warm.get_jira_client", return_value=mock_jira_client),
+        ):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                mock_jira_client.get.return_value = []
+                try:
+                    cache_warm.main()
+                except SystemExit as e:
+                    if e.code == 2:
+                        pytest.fail("-v flag should be valid")

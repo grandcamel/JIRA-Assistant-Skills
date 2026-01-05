@@ -11,25 +11,28 @@ Usage:
     python toggle_automation_rule.py RULE_ID --profile development
 """
 
-import sys
-import json
 import argparse
-from pathlib import Path
-from typing import Optional, Dict, Any
+import json
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_automation_client
-from jira_assistant_skills_lib import print_error, JiraError, AutomationError, AutomationNotFoundError
+from jira_assistant_skills_lib import (
+    AutomationError,
+    AutomationNotFoundError,
+    JiraError,
+    get_automation_client,
+    print_error,
+)
 
 
 def toggle_automation_rule(
     client=None,
-    rule_id: Optional[str] = None,
-    name: Optional[str] = None,
+    rule_id: str | None = None,
+    name: str | None = None,
     dry_run: bool = False,
-    profile: Optional[str] = None
-) -> Dict[str, Any]:
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Toggle automation rule state.
 
@@ -58,38 +61,40 @@ def toggle_automation_rule(
     # If name provided, search for it first
     if name and not rule_id:
         response = client.search_rules(limit=100)
-        rules = response.get('values', [])
+        rules = response.get("values", [])
 
-        matching_rules = [r for r in rules if r.get('name') == name]
+        matching_rules = [r for r in rules if r.get("name") == name]
         if not matching_rules:
-            matching_rules = [r for r in rules if name.lower() in r.get('name', '').lower()]
+            matching_rules = [
+                r for r in rules if name.lower() in r.get("name", "").lower()
+            ]
 
         if not matching_rules:
             raise AutomationNotFoundError("Automation rule", name)
 
         if len(matching_rules) > 1:
-            names = [r.get('name') for r in matching_rules]
+            names = [r.get("name") for r in matching_rules]
             raise ValueError(f"Multiple rules match '{name}': {names}")
 
-        rule_id = matching_rules[0].get('id')
+        rule_id = matching_rules[0].get("id")
 
     # Get current state
     rule = client.get_rule(rule_id)
-    current_state = rule.get('state', 'UNKNOWN')
-    new_state = 'DISABLED' if current_state == 'ENABLED' else 'ENABLED'
+    current_state = rule.get("state", "UNKNOWN")
+    new_state = "DISABLED" if current_state == "ENABLED" else "ENABLED"
 
     if dry_run:
         return {
-            'dry_run': True,
-            'would_toggle': True,
-            'rule_id': rule_id,
-            'name': rule.get('name'),
-            'current_state': current_state,
-            'new_state': new_state
+            "dry_run": True,
+            "would_toggle": True,
+            "rule_id": rule_id,
+            "name": rule.get("name"),
+            "current_state": current_state,
+            "new_state": new_state,
         }
 
     # Toggle the state
-    if current_state == 'ENABLED':
+    if current_state == "ENABLED":
         return client.disable_rule(rule_id)
     else:
         return client.enable_rule(rule_id)
@@ -97,8 +102,8 @@ def toggle_automation_rule(
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Toggle automation rule state',
-        epilog='''
+        description="Toggle automation rule state",
+        epilog="""
 Examples:
     # Toggle rule by ID
     python toggle_automation_rule.py "ari:cloud:jira::site/12345..."
@@ -114,16 +119,22 @@ Examples:
 
     # Use specific profile
     python toggle_automation_rule.py RULE_ID --profile development
-        '''
+        """,
     )
 
-    parser.add_argument('rule_id', nargs='?', help='Rule ID (UUID/ARI format)')
-    parser.add_argument('--name', '-n', help='Rule name to search for')
-    parser.add_argument('--dry-run', '-d', action='store_true',
-                        help='Preview changes without applying')
-    parser.add_argument('--output', '-o', choices=['text', 'json'],
-                        default='text', help='Output format (default: text)')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument("rule_id", nargs="?", help="Rule ID (UUID/ARI format)")
+    parser.add_argument("--name", "-n", help="Rule name to search for")
+    parser.add_argument(
+        "--dry-run", "-d", action="store_true", help="Preview changes without applying"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -135,10 +146,10 @@ Examples:
             rule_id=args.rule_id,
             name=args.name,
             dry_run=args.dry_run,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(result, indent=2))
         else:
             if args.dry_run:
@@ -153,7 +164,7 @@ Examples:
                 print(f"Rule ID: {result.get('id')}")
                 print(f"Name: {result.get('name')}")
                 print(f"New State: {result.get('state')}")
-                print(f"\nSuccess: Rule state has been toggled.")
+                print("\nSuccess: Rule state has been toggled.")
 
     except (JiraError, AutomationError) as e:
         print_error(e)
@@ -166,5 +177,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

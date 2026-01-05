@@ -9,20 +9,21 @@ Tests cover:
 - Result mapping to original requests
 """
 
-import pytest
 import asyncio
-from datetime import timedelta
-from pathlib import Path
-from unittest.mock import Mock, MagicMock, patch
 import sys
+from pathlib import Path
+
+import pytest
 
 # Add shared lib to path (absolute path)
 # From tests/ -> jira-ops/ -> skills/ then into shared/scripts/lib
-shared_lib_path = str(Path(__file__).resolve().parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(
+    Path(__file__).resolve().parent.parent.parent / "shared" / "scripts" / "lib"
+)
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
-from jira_assistant_skills_lib import RequestBatcher, BatchResult, BatchError
+from jira_assistant_skills_lib import RequestBatcher
 
 
 @pytest.mark.ops
@@ -55,10 +56,10 @@ class TestBatchCollectRequests:
         """Test adding request with parameters."""
         batcher = RequestBatcher(mock_jira_client)
 
-        request_id = batcher.add(
+        batcher.add(
             "GET",
             "/rest/api/3/search/jql",
-            params={"jql": "project = PROJ", "maxResults": 50}
+            params={"jql": "project = PROJ", "maxResults": 50},
         )
 
         assert len(batcher.requests) == 1
@@ -68,11 +69,7 @@ class TestBatchCollectRequests:
         """Test adding POST request with data."""
         batcher = RequestBatcher(mock_jira_client)
 
-        request_id = batcher.add(
-            "POST",
-            "/rest/api/3/issue",
-            data={"fields": {"summary": "Test"}}
-        )
+        batcher.add("POST", "/rest/api/3/issue", data={"fields": {"summary": "Test"}})
 
         assert len(batcher.requests) == 1
         assert batcher.requests[0]["data"]["fields"]["summary"] == "Test"
@@ -175,6 +172,7 @@ class TestBatchErrorHandling:
     @pytest.mark.asyncio
     async def test_batch_partial_failure(self, mock_jira_client):
         """Test handling partial failures in batch."""
+
         def mock_get(endpoint, *args, **kwargs):
             if "PROJ-2" in endpoint:
                 raise Exception("API Error")
@@ -290,6 +288,7 @@ class TestBatchResultMapping:
     @pytest.mark.asyncio
     async def test_batch_result_mapping_correct(self, mock_jira_client):
         """Test results are mapped to correct request IDs."""
+
         def mock_get(endpoint, *args, **kwargs):
             key = endpoint.split("/")[-1]
             return {"key": key}
@@ -346,9 +345,7 @@ class TestBatchMethods:
         batcher = RequestBatcher(mock_jira_client)
 
         request_id = batcher.add(
-            "POST",
-            "/rest/api/3/issue",
-            data={"fields": {"summary": "Test"}}
+            "POST", "/rest/api/3/issue", data={"fields": {"summary": "Test"}}
         )
         results = await batcher.execute()
 
@@ -362,9 +359,7 @@ class TestBatchMethods:
         batcher = RequestBatcher(mock_jira_client)
 
         request_id = batcher.add(
-            "PUT",
-            "/rest/api/3/issue/PROJ-1",
-            data={"fields": {"summary": "Updated"}}
+            "PUT", "/rest/api/3/issue/PROJ-1", data={"fields": {"summary": "Updated"}}
         )
         results = await batcher.execute()
 
@@ -399,7 +394,9 @@ class TestBatchErrorCodes:
     @pytest.mark.asyncio
     async def test_batch_handles_401_unauthorized(self, mock_jira_client):
         """Test handling of 401 authentication error."""
-        mock_jira_client.get.side_effect = Exception("Authentication failed: 401 Unauthorized")
+        mock_jira_client.get.side_effect = Exception(
+            "Authentication failed: 401 Unauthorized"
+        )
         batcher = RequestBatcher(mock_jira_client)
 
         request_id = batcher.add("GET", "/rest/api/3/issue/PROJ-1")
@@ -407,7 +404,10 @@ class TestBatchErrorCodes:
 
         assert results[request_id].success is False
         assert results[request_id].error is not None
-        assert "401" in results[request_id].error or "Authentication" in results[request_id].error
+        assert (
+            "401" in results[request_id].error
+            or "Authentication" in results[request_id].error
+        )
 
     @pytest.mark.asyncio
     async def test_batch_handles_403_forbidden(self, mock_jira_client):
@@ -420,7 +420,10 @@ class TestBatchErrorCodes:
 
         assert results[request_id].success is False
         assert results[request_id].error is not None
-        assert "403" in results[request_id].error or "Permission" in results[request_id].error
+        assert (
+            "403" in results[request_id].error
+            or "Permission" in results[request_id].error
+        )
 
     @pytest.mark.asyncio
     async def test_batch_handles_404_not_found(self, mock_jira_client):
@@ -433,12 +436,17 @@ class TestBatchErrorCodes:
 
         assert results[request_id].success is False
         assert results[request_id].error is not None
-        assert "404" in results[request_id].error or "not found" in results[request_id].error.lower()
+        assert (
+            "404" in results[request_id].error
+            or "not found" in results[request_id].error.lower()
+        )
 
     @pytest.mark.asyncio
     async def test_batch_handles_429_rate_limit(self, mock_jira_client):
         """Test handling of 429 rate limit error."""
-        mock_jira_client.get.side_effect = Exception("Rate limit exceeded: 429 Too Many Requests")
+        mock_jira_client.get.side_effect = Exception(
+            "Rate limit exceeded: 429 Too Many Requests"
+        )
         batcher = RequestBatcher(mock_jira_client)
 
         request_id = batcher.add("GET", "/rest/api/3/issue/PROJ-1")
@@ -459,7 +467,10 @@ class TestBatchErrorCodes:
 
         assert results[request_id].success is False
         assert results[request_id].error is not None
-        assert "500" in results[request_id].error or "server" in results[request_id].error.lower()
+        assert (
+            "500" in results[request_id].error
+            or "server" in results[request_id].error.lower()
+        )
 
     @pytest.mark.asyncio
     async def test_batch_delete_method(self, mock_jira_client):
@@ -482,4 +493,7 @@ class TestBatchErrorCodes:
         results = await batcher.execute()
 
         assert results[request_id].success is False
-        assert "Unsupported" in results[request_id].error or "method" in results[request_id].error.lower()
+        assert (
+            "Unsupported" in results[request_id].error
+            or "method" in results[request_id].error.lower()
+        )

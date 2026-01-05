@@ -13,23 +13,27 @@ Usage:
     python jql_history.py --clear
 """
 
-import sys
 import argparse
 import json
-import os
-from pathlib import Path
+import sys
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from pathlib import Path
+from typing import Any
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import format_table, print_success, print_info
-from jira_assistant_skills_lib import validate_jql
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    format_table,
+    get_jira_client,
+    print_error,
+    print_info,
+    print_success,
+    validate_jql,
+)
 
 # Default history file location
-HISTORY_DIR = Path.home() / '.jira-skills'
-HISTORY_FILE = HISTORY_DIR / 'jql_history.json'
+HISTORY_DIR = Path.home() / ".jira-skills"
+HISTORY_FILE = HISTORY_DIR / "jql_history.json"
 
 
 def ensure_history_dir():
@@ -37,7 +41,7 @@ def ensure_history_dir():
     HISTORY_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def load_history() -> Dict[str, Any]:
+def load_history() -> dict[str, Any]:
     """
     Load query history from file.
 
@@ -45,16 +49,16 @@ def load_history() -> Dict[str, Any]:
         History dict with queries list and metadata
     """
     if not HISTORY_FILE.exists():
-        return {'queries': [], 'version': 1}
+        return {"queries": [], "version": 1}
 
     try:
-        with open(HISTORY_FILE, 'r') as f:
+        with open(HISTORY_FILE) as f:
             return json.load(f)
-    except (json.JSONDecodeError, IOError):
-        return {'queries': [], 'version': 1}
+    except (OSError, json.JSONDecodeError):
+        return {"queries": [], "version": 1}
 
 
-def save_history(history: Dict[str, Any]) -> None:
+def save_history(history: dict[str, Any]) -> None:
     """
     Save query history to file.
 
@@ -62,11 +66,13 @@ def save_history(history: Dict[str, Any]) -> None:
         history: History dict to save
     """
     ensure_history_dir()
-    with open(HISTORY_FILE, 'w') as f:
+    with open(HISTORY_FILE, "w") as f:
         json.dump(history, f, indent=2)
 
 
-def add_query(jql: str, name: str = None, description: str = None) -> Dict[str, Any]:
+def add_query(
+    jql: str, name: str | None = None, description: str | None = None
+) -> dict[str, Any]:
     """
     Add a query to history.
 
@@ -82,27 +88,29 @@ def add_query(jql: str, name: str = None, description: str = None) -> Dict[str, 
 
     # Check for duplicate names
     if name:
-        for q in history['queries']:
-            if q.get('name') == name:
-                raise ValidationError(f"Query with name '{name}' already exists. Use --delete first or choose a different name.")
+        for q in history["queries"]:
+            if q.get("name") == name:
+                raise ValidationError(
+                    f"Query with name '{name}' already exists. Use --delete first or choose a different name."
+                )
 
     entry = {
-        'id': len(history['queries']) + 1,
-        'jql': jql,
-        'name': name,
-        'description': description,
-        'created': datetime.now().isoformat(),
-        'last_used': None,
-        'use_count': 0
+        "id": len(history["queries"]) + 1,
+        "jql": jql,
+        "name": name,
+        "description": description,
+        "created": datetime.now().isoformat(),
+        "last_used": None,
+        "use_count": 0,
     }
 
-    history['queries'].append(entry)
+    history["queries"].append(entry)
     save_history(history)
 
     return entry
 
 
-def get_query(identifier: str) -> Optional[Dict[str, Any]]:
+def get_query(identifier: str) -> dict[str, Any] | None:
     """
     Get a query by ID or name.
 
@@ -117,15 +125,15 @@ def get_query(identifier: str) -> Optional[Dict[str, Any]]:
     # Try as ID first
     try:
         query_id = int(identifier)
-        for q in history['queries']:
-            if q.get('id') == query_id:
+        for q in history["queries"]:
+            if q.get("id") == query_id:
                 return q
     except ValueError:
         pass
 
     # Try as name
-    for q in history['queries']:
-        if q.get('name') == identifier:
+    for q in history["queries"]:
+        if q.get("name") == identifier:
             return q
 
     return None
@@ -140,10 +148,10 @@ def update_query_usage(query_id: int) -> None:
     """
     history = load_history()
 
-    for q in history['queries']:
-        if q.get('id') == query_id:
-            q['last_used'] = datetime.now().isoformat()
-            q['use_count'] = q.get('use_count', 0) + 1
+    for q in history["queries"]:
+        if q.get("id") == query_id:
+            q["last_used"] = datetime.now().isoformat()
+            q["use_count"] = q.get("use_count", 0) + 1
             break
 
     save_history(history)
@@ -160,16 +168,18 @@ def delete_query(identifier: str) -> bool:
         True if deleted, False if not found
     """
     history = load_history()
-    original_count = len(history['queries'])
+    original_count = len(history["queries"])
 
     # Filter out the query
     try:
         query_id = int(identifier)
-        history['queries'] = [q for q in history['queries'] if q.get('id') != query_id]
+        history["queries"] = [q for q in history["queries"] if q.get("id") != query_id]
     except ValueError:
-        history['queries'] = [q for q in history['queries'] if q.get('name') != identifier]
+        history["queries"] = [
+            q for q in history["queries"] if q.get("name") != identifier
+        ]
 
-    if len(history['queries']) < original_count:
+    if len(history["queries"]) < original_count:
         save_history(history)
         return True
 
@@ -184,13 +194,13 @@ def clear_history() -> int:
         Number of queries cleared
     """
     history = load_history()
-    count = len(history['queries'])
-    history['queries'] = []
+    count = len(history["queries"])
+    history["queries"] = []
     save_history(history)
     return count
 
 
-def list_queries(top: int = None, sort_by: str = 'id') -> List[Dict[str, Any]]:
+def list_queries(top: int | None = None, sort_by: str = "id") -> list[dict[str, Any]]:
     """
     List queries from history.
 
@@ -202,17 +212,17 @@ def list_queries(top: int = None, sort_by: str = 'id') -> List[Dict[str, Any]]:
         List of query entries
     """
     history = load_history()
-    queries = history['queries']
+    queries = history["queries"]
 
     # Sort
-    if sort_by == 'use_count':
-        queries.sort(key=lambda x: x.get('use_count', 0), reverse=True)
-    elif sort_by == 'last_used':
-        queries.sort(key=lambda x: x.get('last_used') or '', reverse=True)
-    elif sort_by == 'created':
-        queries.sort(key=lambda x: x.get('created') or '', reverse=True)
+    if sort_by == "use_count":
+        queries.sort(key=lambda x: x.get("use_count", 0), reverse=True)
+    elif sort_by == "last_used":
+        queries.sort(key=lambda x: x.get("last_used") or "", reverse=True)
+    elif sort_by == "created":
+        queries.sort(key=lambda x: x.get("created") or "", reverse=True)
     else:
-        queries.sort(key=lambda x: x.get('id', 0))
+        queries.sort(key=lambda x: x.get("id", 0))
 
     if top:
         queries = queries[:top]
@@ -231,9 +241,9 @@ def export_history(output_path: str) -> int:
         Number of queries exported
     """
     history = load_history()
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         json.dump(history, f, indent=2)
-    return len(history['queries'])
+    return len(history["queries"])
 
 
 def import_history(input_path: str, merge: bool = True) -> int:
@@ -247,59 +257,63 @@ def import_history(input_path: str, merge: bool = True) -> int:
     Returns:
         Number of queries imported
     """
-    with open(input_path, 'r') as f:
+    with open(input_path) as f:
         imported = json.load(f)
 
     if not merge:
         save_history(imported)
-        return len(imported.get('queries', []))
+        return len(imported.get("queries", []))
 
     # Merge with existing
     history = load_history()
-    existing_names = {q.get('name') for q in history['queries'] if q.get('name')}
-    max_id = max([q.get('id', 0) for q in history['queries']] + [0])
+    existing_names = {q.get("name") for q in history["queries"] if q.get("name")}
+    max_id = max([q.get("id", 0) for q in history["queries"]] + [0])
 
     imported_count = 0
-    for q in imported.get('queries', []):
+    for q in imported.get("queries", []):
         # Skip if name already exists
-        if q.get('name') and q.get('name') in existing_names:
+        if q.get("name") and q.get("name") in existing_names:
             continue
 
         max_id += 1
-        q['id'] = max_id
-        history['queries'].append(q)
+        q["id"] = max_id
+        history["queries"].append(q)
         imported_count += 1
 
     save_history(history)
     return imported_count
 
 
-def format_query_list(queries: List[Dict[str, Any]]) -> str:
+def format_query_list(queries: list[dict[str, Any]]) -> str:
     """Format query list as a table."""
     if not queries:
         return "No queries in history."
 
     table_data = []
     for q in queries:
-        table_data.append({
-            'id': q.get('id', ''),
-            'name': q.get('name') or '-',
-            'jql': (q.get('jql', '')[:50] + '...') if len(q.get('jql', '')) > 50 else q.get('jql', ''),
-            'uses': q.get('use_count', 0),
-            'last_used': (q.get('last_used') or '')[:10]
-        })
+        table_data.append(
+            {
+                "id": q.get("id", ""),
+                "name": q.get("name") or "-",
+                "jql": (q.get("jql", "")[:50] + "...")
+                if len(q.get("jql", "")) > 50
+                else q.get("jql", ""),
+                "uses": q.get("use_count", 0),
+                "last_used": (q.get("last_used") or "")[:10],
+            }
+        )
 
     return format_table(
         table_data,
-        columns=['id', 'name', 'jql', 'uses', 'last_used'],
-        headers=['ID', 'Name', 'JQL', 'Uses', 'Last Used']
+        columns=["id", "name", "jql", "uses", "last_used"],
+        headers=["ID", "Name", "JQL", "Uses", "Last Used"],
     )
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Manage JQL query history and cache',
-        epilog='''
+        description="Manage JQL query history and cache",
+        epilog="""
 Examples:
   %(prog)s --list
   %(prog)s --add "project = PROJ" --name my-issues
@@ -310,66 +324,73 @@ Examples:
   %(prog)s --clear
   %(prog)s --export history.json
   %(prog)s --import history.json
-        '''
+        """,
     )
 
     # Action group
     action_group = parser.add_mutually_exclusive_group(required=True)
-    action_group.add_argument('--list', '-l',
-                             action='store_true',
-                             help='List saved queries')
-    action_group.add_argument('--add', '-a',
-                             metavar='JQL',
-                             help='Add a new query to history')
-    action_group.add_argument('--run', '-r',
-                             metavar='ID_OR_NAME',
-                             help='Run a query from history')
-    action_group.add_argument('--delete', '-d',
-                             metavar='ID_OR_NAME',
-                             help='Delete a query from history')
-    action_group.add_argument('--clear',
-                             action='store_true',
-                             help='Clear all query history')
-    action_group.add_argument('--export',
-                             metavar='FILE',
-                             help='Export history to JSON file')
-    action_group.add_argument('--import',
-                             dest='import_file',
-                             metavar='FILE',
-                             help='Import history from JSON file')
+    action_group.add_argument(
+        "--list", "-l", action="store_true", help="List saved queries"
+    )
+    action_group.add_argument(
+        "--add", "-a", metavar="JQL", help="Add a new query to history"
+    )
+    action_group.add_argument(
+        "--run", "-r", metavar="ID_OR_NAME", help="Run a query from history"
+    )
+    action_group.add_argument(
+        "--delete", "-d", metavar="ID_OR_NAME", help="Delete a query from history"
+    )
+    action_group.add_argument(
+        "--clear", action="store_true", help="Clear all query history"
+    )
+    action_group.add_argument(
+        "--export", metavar="FILE", help="Export history to JSON file"
+    )
+    action_group.add_argument(
+        "--import",
+        dest="import_file",
+        metavar="FILE",
+        help="Import history from JSON file",
+    )
 
     # Options for --add
-    parser.add_argument('--name', '-n',
-                       help='Name/alias for the query (with --add)')
-    parser.add_argument('--description',
-                       help='Description for the query (with --add)')
+    parser.add_argument("--name", "-n", help="Name/alias for the query (with --add)")
+    parser.add_argument("--description", help="Description for the query (with --add)")
 
     # Options for --list
-    parser.add_argument('--top', '-t',
-                       type=int,
-                       help='Show top N most used queries')
-    parser.add_argument('--sort',
-                       choices=['id', 'use_count', 'last_used', 'created'],
-                       default='id',
-                       help='Sort queries by field (default: id)')
+    parser.add_argument("--top", "-t", type=int, help="Show top N most used queries")
+    parser.add_argument(
+        "--sort",
+        choices=["id", "use_count", "last_used", "created"],
+        default="id",
+        help="Sort queries by field (default: id)",
+    )
 
     # Options for --run
-    parser.add_argument('--max-results', '-m',
-                       type=int,
-                       default=50,
-                       help='Maximum results when running query (default: 50)')
+    parser.add_argument(
+        "--max-results",
+        "-m",
+        type=int,
+        default=50,
+        help="Maximum results when running query (default: 50)",
+    )
 
     # Options for --import
-    parser.add_argument('--replace',
-                       action='store_true',
-                       help='Replace history instead of merging (with --import)')
+    parser.add_argument(
+        "--replace",
+        action="store_true",
+        help="Replace history instead of merging (with --import)",
+    )
 
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format (default: text)')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (with --run)')
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (with --run)")
 
     args = parser.parse_args(argv)
 
@@ -377,7 +398,7 @@ Examples:
         if args.list:
             queries = list_queries(top=args.top, sort_by=args.sort)
 
-            if args.output == 'json':
+            if args.output == "json":
                 print(json.dumps(queries, indent=2))
             else:
                 print("JQL Query History")
@@ -391,10 +412,10 @@ Examples:
             jql = validate_jql(args.add)
             entry = add_query(jql, name=args.name, description=args.description)
 
-            if args.output == 'json':
+            if args.output == "json":
                 print(json.dumps(entry, indent=2))
             else:
-                name_info = f" (name: {entry['name']})" if entry['name'] else ""
+                name_info = f" (name: {entry['name']})" if entry["name"] else ""
                 print_success(f"Added query #{entry['id']}{name_info}")
                 print(f"  JQL: {entry['jql']}")
 
@@ -403,46 +424,58 @@ Examples:
             if not query:
                 raise ValidationError(f"Query '{args.run}' not found in history")
 
-            jql = query['jql']
-            update_query_usage(query['id'])
+            jql = query["jql"]
+            update_query_usage(query["id"])
 
             # Execute the query
             client = get_jira_client(args.profile)
             results = client.search_issues(
                 jql,
-                fields=['key', 'summary', 'status', 'priority', 'issuetype', 'assignee', 'reporter'],
-                max_results=args.max_results
+                fields=[
+                    "key",
+                    "summary",
+                    "status",
+                    "priority",
+                    "issuetype",
+                    "assignee",
+                    "reporter",
+                ],
+                max_results=args.max_results,
             )
             client.close()
 
-            if args.output == 'json':
+            if args.output == "json":
                 print(json.dumps(results, indent=2))
             else:
-                name_info = f" ({query['name']})" if query.get('name') else ""
+                name_info = f" ({query['name']})" if query.get("name") else ""
                 print_info(f"Running query #{query['id']}{name_info}")
                 print(f"JQL: {jql}")
                 print()
 
-                issues = results.get('issues', [])
-                total = results.get('total', 0)
+                issues = results.get("issues", [])
+                total = results.get("total", 0)
 
                 if issues:
                     table_data = []
                     for issue in issues:
-                        fields = issue.get('fields', {})
-                        table_data.append({
-                            'key': issue.get('key', ''),
-                            'type': fields.get('issuetype', {}).get('name', ''),
-                            'status': fields.get('status', {}).get('name', ''),
-                            'priority': fields.get('priority', {}).get('name', ''),
-                            'summary': fields.get('summary', '')[:50]
-                        })
+                        fields = issue.get("fields", {})
+                        table_data.append(
+                            {
+                                "key": issue.get("key", ""),
+                                "type": fields.get("issuetype", {}).get("name", ""),
+                                "status": fields.get("status", {}).get("name", ""),
+                                "priority": fields.get("priority", {}).get("name", ""),
+                                "summary": fields.get("summary", "")[:50],
+                            }
+                        )
 
-                    print(format_table(
-                        table_data,
-                        columns=['key', 'type', 'status', 'priority', 'summary'],
-                        headers=['Key', 'Type', 'Status', 'Priority', 'Summary']
-                    ))
+                    print(
+                        format_table(
+                            table_data,
+                            columns=["key", "type", "status", "priority", "summary"],
+                            headers=["Key", "Type", "Status", "Priority", "Summary"],
+                        )
+                    )
                     print()
 
                 print(f"Found {total} issue(s)")
@@ -474,5 +507,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

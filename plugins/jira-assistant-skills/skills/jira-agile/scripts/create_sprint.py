@@ -8,26 +8,32 @@ Usage:
     python create_sprint.py --board 123 --name "Sprint 42" --goal "Launch MVP"
 """
 
-import sys
 import argparse
 import json
-from pathlib import Path
-from datetime import datetime, timedelta
-from typing import Optional
+import sys
+from datetime import datetime
 
 # Add shared lib to path
-
 # Imports from shared library
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import print_success
-from jira_assistant_skills_lib import parse_date_to_iso
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    parse_date_to_iso,
+    print_error,
+    print_success,
+)
 
 
-def create_sprint(board_id: int, name: str,
-                  start_date: str = None, end_date: str = None,
-                  goal: str = None,
-                  profile: str = None, client=None) -> dict:
+def create_sprint(
+    board_id: int,
+    name: str,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    goal: str | None = None,
+    profile: str | None = None,
+    client=None,
+) -> dict:
     """
     Create a new Sprint in JIRA.
 
@@ -63,25 +69,22 @@ def create_sprint(board_id: int, name: str,
 
     # Validate date range
     if parsed_start and parsed_end:
-        start_dt = datetime.fromisoformat(parsed_start.replace('Z', '+00:00'))
-        end_dt = datetime.fromisoformat(parsed_end.replace('Z', '+00:00'))
+        start_dt = datetime.fromisoformat(parsed_start.replace("Z", "+00:00"))
+        end_dt = datetime.fromisoformat(parsed_end.replace("Z", "+00:00"))
         if end_dt <= start_dt:
             raise ValidationError("End date must be after start date")
 
     # Build sprint data
-    sprint_data = {
-        'originBoardId': board_id,
-        'name': name
-    }
+    sprint_data = {"originBoardId": board_id, "name": name}
 
     if parsed_start:
-        sprint_data['startDate'] = parsed_start
+        sprint_data["startDate"] = parsed_start
 
     if parsed_end:
-        sprint_data['endDate'] = parsed_end
+        sprint_data["endDate"] = parsed_end
 
     if goal:
-        sprint_data['goal'] = goal
+        sprint_data["goal"] = goal
 
     # Initialize client
     if not client:
@@ -95,9 +98,9 @@ def create_sprint(board_id: int, name: str,
         result = client.create_sprint(
             board_id=board_id,
             name=name,
-            goal=sprint_data.get('goal'),
-            start_date=sprint_data.get('startDate'),
-            end_date=sprint_data.get('endDate')
+            goal=sprint_data.get("goal"),
+            start_date=sprint_data.get("startDate"),
+            end_date=sprint_data.get("endDate"),
         )
         return result
 
@@ -108,26 +111,23 @@ def create_sprint(board_id: int, name: str,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Create a new Sprint in JIRA',
-        epilog='Example: python create_sprint.py --board 123 --name "Sprint 42" --goal "Launch MVP"'
+        description="Create a new Sprint in JIRA",
+        epilog='Example: python create_sprint.py --board 123 --name "Sprint 42" --goal "Launch MVP"',
     )
 
-    parser.add_argument('--board', '-b', type=int, required=True,
-                       help='Scrum board ID')
-    parser.add_argument('--name', '-n', required=True,
-                       help='Sprint name')
-    parser.add_argument('--start', '-s',
-                       help='Start date (YYYY-MM-DD)')
-    parser.add_argument('--end', '-e',
-                       help='End date (YYYY-MM-DD)')
-    parser.add_argument('--goal', '-g',
-                       help='Sprint goal')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format (default: text)')
+    parser.add_argument("--board", "-b", type=int, required=True, help="Scrum board ID")
+    parser.add_argument("--name", "-n", required=True, help="Sprint name")
+    parser.add_argument("--start", "-s", help="Start date (YYYY-MM-DD)")
+    parser.add_argument("--end", "-e", help="End date (YYYY-MM-DD)")
+    parser.add_argument("--goal", "-g", help="Sprint goal")
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
 
     args = parser.parse_args(argv)
 
@@ -138,13 +138,13 @@ def main(argv: list[str] | None = None):
             start_date=args.start,
             end_date=args.end,
             goal=args.goal,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        sprint_id = result.get('id')
-        sprint_name = result.get('name')
+        sprint_id = result.get("id")
+        sprint_name = result.get("name")
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(result, indent=2))
         else:
             print_success(f"Created sprint: {sprint_name} (ID: {sprint_id})")
@@ -165,5 +165,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

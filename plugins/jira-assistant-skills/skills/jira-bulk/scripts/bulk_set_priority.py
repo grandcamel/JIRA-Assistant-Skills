@@ -14,20 +14,33 @@ Usage:
     python bulk_set_priority.py --jql "labels=urgent" --priority Highest --dry-run
 """
 
-import sys
 import argparse
-from pathlib import Path
-from typing import List, Dict, Any, Callable
+import sys
+from collections.abc import Callable
+from typing import Any
 
+from bulk_utils import execute_bulk_operation, get_issues_to_process
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-
-from bulk_utils import get_issues_to_process, execute_bulk_operation
-
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
 # Standard JIRA priorities
-STANDARD_PRIORITIES = ['Highest', 'High', 'Medium', 'Low', 'Lowest', 'Blocker', 'Critical', 'Major', 'Minor', 'Trivial']
+STANDARD_PRIORITIES = [
+    "Highest",
+    "High",
+    "Medium",
+    "Low",
+    "Lowest",
+    "Blocker",
+    "Critical",
+    "Major",
+    "Minor",
+    "Trivial",
+]
 
 
 def validate_priority(priority: str) -> str:
@@ -56,18 +69,18 @@ def validate_priority(priority: str) -> str:
 
 def bulk_set_priority(
     client=None,
-    issue_keys: List[str] = None,
-    jql: str = None,
-    priority: str = None,
+    issue_keys: list[str] | None = None,
+    jql: str | None = None,
+    priority: str | None = None,
     dry_run: bool = False,
     max_issues: int = 100,
     delay_between_ops: float = 0.1,
-    progress_callback: Callable = None,
-    profile: str = None,
+    progress_callback: Callable | None = None,
+    profile: str | None = None,
     show_progress: bool = True,
     confirm_threshold: int = 50,
-    skip_confirmation: bool = False
-) -> Dict[str, Any]:
+    skip_confirmation: bool = False,
+) -> dict[str, Any]:
     """
     Set priority on multiple issues.
 
@@ -103,24 +116,22 @@ def bulk_set_priority(
             issue_keys=issue_keys,
             jql=jql,
             max_issues=max_issues,
-            fields=['key', 'summary', 'priority']
+            fields=["key", "summary", "priority"],
         )
 
-        def priority_operation(issue: Dict, index: int, total: int) -> str:
+        def priority_operation(issue: dict, index: int, total: int) -> str:
             """Execute priority update for a single issue."""
-            issue_key = issue.get('key')
+            issue_key = issue.get("key")
             client.update_issue(
-                issue_key,
-                fields={'priority': {'name': priority}},
-                notify_users=False
+                issue_key, fields={"priority": {"name": priority}}, notify_users=False
             )
             return priority
 
-        def format_dry_run_item(issue: Dict) -> str:
+        def format_dry_run_item(issue: dict) -> str:
             """Format issue for dry-run preview."""
-            key = issue.get('key')
-            current = issue.get('fields', {}).get('priority')
-            current_name = current.get('name', 'None') if current else 'None'
+            key = issue.get("key")
+            current = issue.get("fields", {}).get("priority")
+            current_name = current.get("name", "None") if current else "None"
             return f"{key} ({current_name} -> {priority})"
 
         # Execute bulk operation using shared utility
@@ -132,12 +143,13 @@ def bulk_set_priority(
             dry_run_item_formatter=format_dry_run_item,
             delay=delay_between_ops,
             progress_callback=progress_callback,
-            success_message_formatter=lambda key, _: f"Set {key} priority to '{priority}'",
+            success_message_formatter=lambda key,
+            _: f"Set {key} priority to '{priority}'",
             show_progress=show_progress,
             progress_desc=f"Setting priority to '{priority}'",
             confirm_threshold=confirm_threshold,
             skip_confirmation=skip_confirmation,
-            operation_name=f"set priority to '{priority}' on"
+            operation_name=f"set priority to '{priority}' on",
         )
 
         return result
@@ -149,33 +161,41 @@ def bulk_set_priority(
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Bulk set priority on JIRA issues',
-        epilog='Example: python bulk_set_priority.py --issues PROJ-1,PROJ-2 --priority High'
+        description="Bulk set priority on JIRA issues",
+        epilog="Example: python bulk_set_priority.py --issues PROJ-1,PROJ-2 --priority High",
     )
 
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--issues', '-i',
-                       help='Comma-separated issue keys (e.g., PROJ-1,PROJ-2)')
-    group.add_argument('--jql', '-q',
-                       help='JQL query to find issues')
+    group.add_argument(
+        "--issues", "-i", help="Comma-separated issue keys (e.g., PROJ-1,PROJ-2)"
+    )
+    group.add_argument("--jql", "-q", help="JQL query to find issues")
 
-    parser.add_argument('--priority', '-p', required=True,
-                        help=f'Priority to set ({", ".join(STANDARD_PRIORITIES[:5])})')
-    parser.add_argument('--max-issues',
-                        type=int,
-                        default=100,
-                        help='Maximum issues to process (default: 100)')
-    parser.add_argument('--dry-run',
-                        action='store_true',
-                        help='Preview changes without making them')
-    parser.add_argument('--yes', '-y',
-                        action='store_true',
-                        help='Skip confirmation prompt for large operations')
-    parser.add_argument('--no-progress',
-                        action='store_true',
-                        help='Disable progress bar')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use')
+    parser.add_argument(
+        "--priority",
+        "-p",
+        required=True,
+        help=f"Priority to set ({', '.join(STANDARD_PRIORITIES[:5])})",
+    )
+    parser.add_argument(
+        "--max-issues",
+        type=int,
+        default=100,
+        help="Maximum issues to process (default: 100)",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Preview changes without making them"
+    )
+    parser.add_argument(
+        "--yes",
+        "-y",
+        action="store_true",
+        help="Skip confirmation prompt for large operations",
+    )
+    parser.add_argument(
+        "--no-progress", action="store_true", help="Disable progress bar"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -185,7 +205,7 @@ def main(argv: list[str] | None = None):
 
         issue_keys = None
         if args.issues:
-            issue_keys = [k.strip() for k in args.issues.split(',')]
+            issue_keys = [k.strip() for k in args.issues.split(",")]
 
         result = bulk_set_priority(
             issue_keys=issue_keys,
@@ -195,16 +215,16 @@ def main(argv: list[str] | None = None):
             max_issues=args.max_issues,
             profile=args.profile,
             show_progress=not args.no_progress,
-            skip_confirmation=args.yes
+            skip_confirmation=args.yes,
         )
 
-        if result.get('cancelled'):
+        if result.get("cancelled"):
             print("\nOperation cancelled by user.")
             sys.exit(0)
 
         print(f"\nSummary: {result['success']} succeeded, {result['failed']} failed")
 
-        if result['failed'] > 0:
+        if result["failed"] > 0:
             sys.exit(1)
 
     except JiraError as e:
@@ -218,5 +238,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

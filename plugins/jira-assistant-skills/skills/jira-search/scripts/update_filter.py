@@ -8,20 +8,20 @@ Updates the name, JQL, or description of an existing filter.
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any
 
 # Add shared library to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, print_error
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-def update_filter(client, filter_id: str,
-                  name: str = None,
-                  jql: str = None,
-                  description: str = None,
-                  favourite: bool = None) -> Dict[str, Any]:
+def update_filter(
+    client,
+    filter_id: str,
+    name: str | None = None,
+    jql: str | None = None,
+    description: str | None = None,
+    favourite: bool | None = None,
+) -> dict[str, Any]:
     """
     Update a filter.
 
@@ -37,16 +37,11 @@ def update_filter(client, filter_id: str,
         Updated filter object
     """
     return client.update_filter(
-        filter_id,
-        name=name,
-        jql=jql,
-        description=description,
-        favourite=favourite
+        filter_id, name=name, jql=jql, description=description, favourite=favourite
     )
 
 
-def format_update_result(filter_data: Dict[str, Any],
-                         changes: Dict[str, Any]) -> str:
+def format_update_result(filter_data: dict[str, Any], changes: dict[str, Any]) -> str:
     """
     Format update result for display.
 
@@ -63,7 +58,7 @@ def format_update_result(filter_data: Dict[str, Any],
     lines.append(f"  Name:        {filter_data.get('name', 'N/A')}")
     lines.append(f"  JQL:         {filter_data.get('jql', 'N/A')}")
 
-    description = filter_data.get('description')
+    description = filter_data.get("description")
     lines.append(f"  Description: {description if description else '(none)'}")
 
     lines.append("")
@@ -79,28 +74,28 @@ def format_update_result(filter_data: Dict[str, Any],
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Update a saved filter.',
-        epilog='''
+        description="Update a saved filter.",
+        epilog="""
 Examples:
   %(prog)s 10042 --name "My Open Bugs"
   %(prog)s 10042 --jql "project = PROJ AND type = Bug AND status != Done"
   %(prog)s 10042 --description "All open bugs in the project"
   %(prog)s 10042 --name "New Name" --jql "..." --description "..."
-        '''
+        """,
     )
 
-    parser.add_argument('filter_id',
-                        help='Filter ID to update')
-    parser.add_argument('--name', '-n',
-                        help='New filter name')
-    parser.add_argument('--jql', '-j',
-                        help='New JQL query')
-    parser.add_argument('--description', '-d',
-                        help='New description')
-    parser.add_argument('--output', '-o', choices=['text', 'json'],
-                        default='text', help='Output format (default: text)')
-    parser.add_argument('--profile', '-p',
-                        help='JIRA profile to use')
+    parser.add_argument("filter_id", help="Filter ID to update")
+    parser.add_argument("--name", "-n", help="New filter name")
+    parser.add_argument("--jql", "-j", help="New JQL query")
+    parser.add_argument("--description", "-d", help="New description")
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -111,21 +106,17 @@ Examples:
     try:
         client = get_jira_client(args.profile)
 
-        changes = {
-            'name': args.name,
-            'jql': args.jql,
-            'description': args.description
-        }
+        changes = {"name": args.name, "jql": args.jql, "description": args.description}
 
         result = update_filter(
             client,
             args.filter_id,
             name=args.name,
             jql=args.jql,
-            description=args.description
+            description=args.description,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(result, indent=2))
         else:
             print(format_update_result(result, changes))
@@ -135,5 +126,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

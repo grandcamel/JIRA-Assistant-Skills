@@ -19,20 +19,28 @@ Usage:
     python assign_issue.py PROJ-123 --unassign
 """
 
-import sys
 import argparse
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    print_info,
+    print_success,
+    validate_issue_key,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import print_success, print_info
-
-
-def assign_issue(issue_key: str, user: str = None, assign_to_self: bool = False,
-                unassign: bool = False, profile: str = None,
-                dry_run: bool = False) -> dict:
+def assign_issue(
+    issue_key: str,
+    user: str | None = None,
+    assign_to_self: bool = False,
+    unassign: bool = False,
+    profile: str | None = None,
+    dry_run: bool = False,
+) -> dict:
     """
     Assign or reassign an issue.
 
@@ -59,7 +67,7 @@ def assign_issue(issue_key: str, user: str = None, assign_to_self: bool = False,
         action = "unassign"
         target_display = "Unassigned"
     elif assign_to_self:
-        account_id = '-1'
+        account_id = "-1"
         action = "assign to self"
         target_display = "yourself"
     else:
@@ -71,16 +79,20 @@ def assign_issue(issue_key: str, user: str = None, assign_to_self: bool = False,
         target_display = user
 
     # Get current assignee for dry-run display
-    issue = client.get_issue(issue_key, fields=['assignee'])
-    current_assignee = issue.get('fields', {}).get('assignee')
-    current_display = current_assignee.get('displayName', 'Unknown') if current_assignee else 'Unassigned'
+    issue = client.get_issue(issue_key, fields=["assignee"])
+    current_assignee = issue.get("fields", {}).get("assignee")
+    current_display = (
+        current_assignee.get("displayName", "Unknown")
+        if current_assignee
+        else "Unassigned"
+    )
 
     result = {
-        'issue_key': issue_key,
-        'action': action,
-        'current_assignee': current_display,
-        'target_assignee': target_display,
-        'dry_run': dry_run
+        "issue_key": issue_key,
+        "action": action,
+        "current_assignee": current_display,
+        "target_assignee": target_display,
+        "dry_run": dry_run,
     }
 
     if dry_run:
@@ -97,49 +109,46 @@ def assign_issue(issue_key: str, user: str = None, assign_to_self: bool = False,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Assign or reassign a JIRA issue',
-        epilog='''Examples:
+        description="Assign or reassign a JIRA issue",
+        epilog="""Examples:
   python assign_issue.py PROJ-123 --user user@example.com      # By email
   python assign_issue.py PROJ-123 --user 5b10ac8d82e05b22cc7d4ef5  # By account ID (preferred)
   python assign_issue.py PROJ-123 --self                        # Assign to yourself
   python assign_issue.py PROJ-123 --unassign                    # Remove assignee
 
 Note: Account IDs are more reliable than emails. Find them via:
-  python jql_search.py "assignee = user@example.com" --output json''',
-        formatter_class=argparse.RawDescriptionHelpFormatter
+  python jql_search.py "assignee = user@example.com" --output json""",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument('issue_key',
-                       help='Issue key (e.g., PROJ-123)')
+    parser.add_argument("issue_key", help="Issue key (e.g., PROJ-123)")
 
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--user', '-u',
-                      help='User to assign. Accepts: (1) Atlassian account ID (e.g., 5b10ac8d82e05b22cc7d4ef5), '
-                           '(2) email address (e.g., user@example.com), or (3) display name. '
-                           'Account IDs are preferred for reliability. Use jira-search to find account IDs.')
-    group.add_argument('--self', '-s',
-                      action='store_true',
-                      help='Assign to yourself')
-    group.add_argument('--unassign',
-                      action='store_true',
-                      help='Remove assignee')
+    group.add_argument(
+        "--user",
+        "-u",
+        help="User to assign. Accepts: (1) Atlassian account ID (e.g., 5b10ac8d82e05b22cc7d4ef5), "
+        "(2) email address (e.g., user@example.com), or (3) display name. "
+        "Account IDs are preferred for reliability. Use jira-search to find account IDs.",
+    )
+    group.add_argument("--self", "-s", action="store_true", help="Assign to yourself")
+    group.add_argument("--unassign", action="store_true", help="Remove assignee")
 
-    parser.add_argument('--dry-run',
-                       action='store_true',
-                       help='Preview changes without making them')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Preview changes without making them"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
-        result = assign_issue(
+        assign_issue(
             issue_key=args.issue_key,
             user=args.user,
             assign_to_self=args.self,
             unassign=args.unassign,
             profile=args.profile,
-            dry_run=args.dry_run
+            dry_run=args.dry_run,
         )
 
         if args.dry_run:
@@ -160,5 +169,5 @@ Note: Account IDs are more reliable than emails. Find them via:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -12,20 +12,25 @@ Supports:
 
 import argparse
 import sys
-from pathlib import Path
-from typing import Optional
 
 # Add shared lib to path
+from jira_assistant_skills_lib import (
+    JiraError,
+    NotFoundError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError, NotFoundError
 
-
-def remove_user_from_group(client, account_id: str,
-                           group_name: Optional[str] = None,
-                           group_id: Optional[str] = None,
-                           confirmed: bool = False,
-                           dry_run: bool = False) -> None:
+def remove_user_from_group(
+    client,
+    account_id: str,
+    group_name: str | None = None,
+    group_id: str | None = None,
+    confirmed: bool = False,
+    dry_run: bool = False,
+) -> None:
     """
     Remove a user from a group.
 
@@ -50,17 +55,18 @@ def remove_user_from_group(client, account_id: str,
         )
 
     client.remove_user_from_group(
-        account_id=account_id,
-        group_name=group_name,
-        group_id=group_id
+        account_id=account_id, group_name=group_name, group_id=group_id
     )
 
 
-def remove_user_by_email(client, email: str,
-                         group_name: Optional[str] = None,
-                         group_id: Optional[str] = None,
-                         confirmed: bool = False,
-                         dry_run: bool = False) -> str:
+def remove_user_by_email(
+    client,
+    email: str,
+    group_name: str | None = None,
+    group_id: str | None = None,
+    confirmed: bool = False,
+    dry_run: bool = False,
+) -> str:
     """
     Remove a user from a group by email lookup.
 
@@ -85,7 +91,7 @@ def remove_user_by_email(client, email: str,
     # Find exact email match
     matched_user = None
     for user in users:
-        if user.get('emailAddress', '').lower() == email.lower():
+        if user.get("emailAddress", "").lower() == email.lower():
             matched_user = user
             break
 
@@ -94,20 +100,22 @@ def remove_user_by_email(client, email: str,
 
     remove_user_from_group(
         client,
-        account_id=matched_user['accountId'],
+        account_id=matched_user["accountId"],
         group_name=group_name,
         group_id=group_id,
         confirmed=confirmed,
-        dry_run=dry_run
+        dry_run=dry_run,
     )
 
-    return matched_user['accountId']
+    return matched_user["accountId"]
 
 
-def format_dry_run_preview(account_id: Optional[str] = None,
-                           email: Optional[str] = None,
-                           group_name: Optional[str] = None,
-                           group_id: Optional[str] = None) -> str:
+def format_dry_run_preview(
+    account_id: str | None = None,
+    email: str | None = None,
+    group_name: str | None = None,
+    group_id: str | None = None,
+) -> str:
     """
     Format dry-run preview message.
 
@@ -133,12 +141,15 @@ def format_dry_run_preview(account_id: Optional[str] = None,
         lines.append(f"Group ID:    {group_id}")
     lines.append("")
     lines.append("This is a dry run. No changes will be made.")
-    lines.append("Remove --dry-run and add --confirm to remove the user from the group.")
-    return '\n'.join(lines)
+    lines.append(
+        "Remove --dry-run and add --confirm to remove the user from the group."
+    )
+    return "\n".join(lines)
 
 
-def format_success_message(account_id: str, group_name: Optional[str] = None,
-                           group_id: Optional[str] = None) -> str:
+def format_success_message(
+    account_id: str, group_name: str | None = None, group_id: str | None = None
+) -> str:
     """
     Format success message.
 
@@ -156,56 +167,65 @@ def format_success_message(account_id: str, group_name: Optional[str] = None,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Remove a user from a JIRA group',
-        epilog='''
+        description="Remove a user from a JIRA group",
+        epilog="""
 Examples:
   %(prog)s john@example.com --group "jira-developers" --confirm
   %(prog)s --account-id 5b10ac8d82e05b22cc7d4ef5 --group "jira-developers" --confirm
   %(prog)s john@example.com --group-id abc123 --confirm
   %(prog)s john@example.com --group "mobile-team" --dry-run
-''',
-        formatter_class=argparse.RawDescriptionHelpFormatter
+""",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     # User identification
-    parser.add_argument('email', nargs='?', help='User email address')
-    parser.add_argument('--account-id', '-a', help='User account ID (alternative to email)')
+    parser.add_argument("email", nargs="?", help="User email address")
+    parser.add_argument(
+        "--account-id", "-a", help="User account ID (alternative to email)"
+    )
 
     # Group identification
-    parser.add_argument('--group', '-g', dest='group_name', help='Group name')
-    parser.add_argument('--group-id', '-i', help='Group ID (alternative to name)')
+    parser.add_argument("--group", "-g", dest="group_name", help="Group name")
+    parser.add_argument("--group-id", "-i", help="Group ID (alternative to name)")
 
     # Options
-    parser.add_argument('--confirm', '-y', action='store_true',
-                        help='Confirm removal (required)')
-    parser.add_argument('--dry-run', '-n', action='store_true',
-                        help='Preview without removing')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument(
+        "--confirm", "-y", action="store_true", help="Confirm removal (required)"
+    )
+    parser.add_argument(
+        "--dry-run", "-n", action="store_true", help="Preview without removing"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     # Validate user identification
     if not args.email and not args.account_id:
-        parser.error('Either email or --account-id is required')
+        parser.error("Either email or --account-id is required")
 
     # Validate group identification
     if not args.group_name and not args.group_id:
-        parser.error('Either --group or --group-id is required')
+        parser.error("Either --group or --group-id is required")
 
     try:
         # Dry run mode
         if args.dry_run:
-            print(format_dry_run_preview(
-                account_id=args.account_id,
-                email=args.email,
-                group_name=args.group_name,
-                group_id=args.group_id
-            ))
+            print(
+                format_dry_run_preview(
+                    account_id=args.account_id,
+                    email=args.email,
+                    group_name=args.group_name,
+                    group_id=args.group_id,
+                )
+            )
             sys.exit(0)
 
         # Require confirmation
         if not args.confirm:
-            print("Error: Removing user from group requires confirmation.", file=sys.stderr)
+            print(
+                "Error: Removing user from group requires confirmation.",
+                file=sys.stderr,
+            )
             print("Use --confirm to proceed or --dry-run to preview.", file=sys.stderr)
             sys.exit(1)
 
@@ -218,7 +238,7 @@ Examples:
                 account_id=args.account_id,
                 group_name=args.group_name,
                 group_id=args.group_id,
-                confirmed=args.confirm
+                confirmed=args.confirm,
             )
             account_id = args.account_id
         else:
@@ -227,15 +247,17 @@ Examples:
                 email=args.email,
                 group_name=args.group_name,
                 group_id=args.group_id,
-                confirmed=args.confirm
+                confirmed=args.confirm,
             )
 
         # Output
-        print(format_success_message(
-            account_id=account_id,
-            group_name=args.group_name,
-            group_id=args.group_id
-        ))
+        print(
+            format_success_message(
+                account_id=account_id,
+                group_name=args.group_name,
+                group_id=args.group_id,
+            )
+        )
 
         client.close()
 
@@ -247,5 +269,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

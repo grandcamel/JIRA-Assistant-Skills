@@ -9,19 +9,20 @@ Usage:
     python get_components.py --id 10000 --counts
 """
 
-import sys
 import argparse
 import json
-from pathlib import Path
-from typing import List, Dict, Any
+import sys
+from typing import Any
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_table,
+    get_jira_client,
+    print_error,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import format_table
-
-
-def get_components(project: str, profile: str = None) -> List[Dict[str, Any]]:
+def get_components(project: str, profile: str | None = None) -> list[dict[str, Any]]:
     """
     Get all components for a project.
 
@@ -39,7 +40,9 @@ def get_components(project: str, profile: str = None) -> List[Dict[str, Any]]:
     return result
 
 
-def get_component_by_id(component_id: str, profile: str = None) -> Dict[str, Any]:
+def get_component_by_id(
+    component_id: str, profile: str | None = None
+) -> dict[str, Any]:
     """
     Get a specific component by ID.
 
@@ -57,7 +60,9 @@ def get_component_by_id(component_id: str, profile: str = None) -> Dict[str, Any
     return result
 
 
-def filter_by_lead(components: List[Dict[str, Any]], lead_name: str) -> List[Dict[str, Any]]:
+def filter_by_lead(
+    components: list[dict[str, Any]], lead_name: str
+) -> list[dict[str, Any]]:
     """
     Filter components by lead name.
 
@@ -68,10 +73,12 @@ def filter_by_lead(components: List[Dict[str, Any]], lead_name: str) -> List[Dic
     Returns:
         Filtered list of components
     """
-    return [c for c in components if c.get('lead', {}).get('displayName') == lead_name]
+    return [c for c in components if c.get("lead", {}).get("displayName") == lead_name]
 
 
-def get_component_issue_counts(component_id: str, profile: str = None) -> Dict[str, Any]:
+def get_component_issue_counts(
+    component_id: str, profile: str | None = None
+) -> dict[str, Any]:
     """
     Get issue counts for a component.
 
@@ -89,7 +96,7 @@ def get_component_issue_counts(component_id: str, profile: str = None) -> Dict[s
     return result
 
 
-def display_components_table(components: List[Dict[str, Any]]) -> None:
+def display_components_table(components: list[dict[str, Any]]) -> None:
     """
     Display components in table format.
 
@@ -103,47 +110,53 @@ def display_components_table(components: List[Dict[str, Any]]) -> None:
     # Prepare table data
     table_data = []
     for component in components:
-        lead = component.get('lead', {})
-        table_data.append({
-            'id': component.get('id', ''),
-            'name': component.get('name', ''),
-            'description': (component.get('description', '') or '')[:40],
-            'lead': lead.get('displayName', '') if lead else ''
-        })
+        lead = component.get("lead", {})
+        table_data.append(
+            {
+                "id": component.get("id", ""),
+                "name": component.get("name", ""),
+                "description": (component.get("description", "") or "")[:40],
+                "lead": lead.get("displayName", "") if lead else "",
+            }
+        )
 
-    print(format_table(
-        table_data,
-        columns=['id', 'name', 'description', 'lead'],
-        headers=['ID', 'Name', 'Description', 'Lead']
-    ))
+    print(
+        format_table(
+            table_data,
+            columns=["id", "name", "description", "lead"],
+            headers=["ID", "Name", "Description", "Lead"],
+        )
+    )
 
 
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Get project components in JIRA',
-        epilog='''
+        description="Get project components in JIRA",
+        epilog="""
 Examples:
   %(prog)s PROJ
   %(prog)s PROJ --output json
   %(prog)s --id 10000
   %(prog)s --id 10000 --counts
-        '''
+        """,
     )
 
-    parser.add_argument('project',
-                       nargs='?',
-                       help='Project key (e.g., PROJ)')
-    parser.add_argument('--id',
-                       help='Get specific component by ID')
-    parser.add_argument('--counts', action='store_true',
-                       help='Show issue counts for the component (requires --id)')
-    parser.add_argument('--output', '-O',
-                       choices=['table', 'json'],
-                       default='table',
-                       help='Output format (default: table)')
-    parser.add_argument('--profile', '-p',
-                       help='JIRA profile to use')
+    parser.add_argument("project", nargs="?", help="Project key (e.g., PROJ)")
+    parser.add_argument("--id", help="Get specific component by ID")
+    parser.add_argument(
+        "--counts",
+        action="store_true",
+        help="Show issue counts for the component (requires --id)",
+    )
+    parser.add_argument(
+        "--output",
+        "-O",
+        choices=["table", "json"],
+        default="table",
+        help="Output format (default: table)",
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -176,23 +189,23 @@ Examples:
                 print(f"\nIssue Count: {counts['issueCount']}")
             else:
                 # Show component details
-                if args.output == 'json':
+                if args.output == "json":
                     print(json.dumps(component, indent=2))
                 else:
                     print(f"Component: {component['name']} (ID: {component['id']})")
-                    if component.get('description'):
+                    if component.get("description"):
                         print(f"Description: {component['description']}")
-                    if component.get('lead'):
-                        lead_name = component['lead'].get('displayName', '')
+                    if component.get("lead"):
+                        lead_name = component["lead"].get("displayName", "")
                         print(f"Lead: {lead_name}")
-                    if component.get('assigneeType'):
+                    if component.get("assigneeType"):
                         print(f"Assignee Type: {component['assigneeType']}")
         else:
             # Get project components
             components = get_components(args.project, args.profile)
 
             # Output
-            if args.output == 'json':
+            if args.output == "json":
                 print(json.dumps(components, indent=2))
             else:
                 print(f"Components for project {args.project}:\n")
@@ -207,5 +220,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

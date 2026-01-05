@@ -1,4 +1,5 @@
 import click
+
 from jira_assistant_skills.utils import SKILLS_ROOT_DIR, run_skill_script_subprocess
 
 
@@ -16,15 +17,22 @@ def epic():
 
 
 @epic.command(name="create")
-@click.option('--project', '-p', required=True, help='Project key')
-@click.option('--name', '-n', required=True, help='Epic name')
-@click.option('--summary', '-s', required=True, help='Epic summary')
-@click.option('--description', '-d', help='Epic description')
-@click.option('--priority', help='Priority')
-@click.option('--labels', '-l', help='Comma-separated labels')
+@click.option("--project", "-p", required=True, help="Project key")
+@click.option("--name", "-n", required=True, help="Epic name")
+@click.option("--summary", "-s", required=True, help="Epic summary")
+@click.option("--description", "-d", help="Epic description")
+@click.option("--priority", help="Priority")
+@click.option("--labels", "-l", help="Comma-separated labels")
 @click.pass_context
-def epic_create(ctx, project: str, name: str, summary: str, description: str,
-                priority: str, labels: str):
+def epic_create(
+    ctx,
+    project: str,
+    name: str,
+    summary: str,
+    description: str,
+    priority: str,
+    labels: str,
+):
     """Create a new epic."""
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "create_epic.py"
 
@@ -40,8 +48,8 @@ def epic_create(ctx, project: str, name: str, summary: str, description: str,
 
 
 @epic.command(name="get")
-@click.argument('epic_key')
-@click.option('--include-issues', '-i', is_flag=True, help='Include issues in epic')
+@click.argument("epic_key")
+@click.option("--include-issues", "-i", is_flag=True, help="Include issues in epic")
 @click.pass_context
 def epic_get(ctx, epic_key: str, include_issues: bool):
     """Get epic details."""
@@ -55,10 +63,12 @@ def epic_get(ctx, epic_key: str, include_issues: bool):
 
 
 @epic.command(name="add-issues")
-@click.option('--epic', '-e', required=True, help='Epic key (e.g., PROJ-100)')
-@click.option('--issues', '-i', help='Comma-separated issue keys (e.g., PROJ-101,PROJ-102)')
-@click.option('--jql', '-j', help='JQL query to find issues')
-@click.option('--dry-run', '-n', is_flag=True, help='Preview without making changes')
+@click.option("--epic", "-e", required=True, help="Epic key (e.g., PROJ-100)")
+@click.option(
+    "--issues", "-i", help="Comma-separated issue keys (e.g., PROJ-101,PROJ-102)"
+)
+@click.option("--jql", "-j", help="JQL query to find issues")
+@click.option("--dry-run", "-n", is_flag=True, help="Preview without making changes")
 @click.pass_context
 def epic_add_issues(ctx, epic: str, issues: str, jql: str, dry_run: bool):
     """Add issues to an epic.
@@ -95,13 +105,15 @@ def sprint():
 
 
 @sprint.command(name="create")
-@click.option('--board', '-b', 'board_id', type=int, required=True, help='Board ID')
-@click.option('--name', '-n', required=True, help='Sprint name')
-@click.option('--goal', '-g', help='Sprint goal')
-@click.option('--start-date', '-s', help='Start date (YYYY-MM-DD)')
-@click.option('--end-date', '-e', help='End date (YYYY-MM-DD)')
+@click.option("--board", "-b", "board_id", type=int, required=True, help="Board ID")
+@click.option("--name", "-n", required=True, help="Sprint name")
+@click.option("--goal", "-g", help="Sprint goal")
+@click.option("--start-date", "-s", help="Start date (YYYY-MM-DD)")
+@click.option("--end-date", "-e", help="End date (YYYY-MM-DD)")
 @click.pass_context
-def sprint_create(ctx, board_id: int, name: str, goal: str, start_date: str, end_date: str):
+def sprint_create(
+    ctx, board_id: int, name: str, goal: str, start_date: str, end_date: str
+):
     """Create a new sprint.
 
     Examples:
@@ -122,8 +134,8 @@ def sprint_create(ctx, board_id: int, name: str, goal: str, start_date: str, end
 
 
 @sprint.command(name="get")
-@click.argument('sprint_id', type=int)
-@click.option('--include-issues', '-i', is_flag=True, help='Include issues in sprint')
+@click.argument("sprint_id", type=int)
+@click.option("--include-issues", "-i", is_flag=True, help="Include issues in sprint")
 @click.pass_context
 def sprint_get(ctx, sprint_id: int, include_issues: bool):
     """Get sprint details."""
@@ -137,15 +149,16 @@ def sprint_get(ctx, sprint_id: int, include_issues: bool):
 
 
 @sprint.command(name="manage")
-@click.argument('sprint_id', type=int)
-@click.option('--start', is_flag=True, help='Start the sprint')
-@click.option('--complete', is_flag=True, help='Complete the sprint')
-@click.option('--name', '-n', help='Update sprint name')
-@click.option('--goal', '-g', help='Update sprint goal')
-@click.option('--move-to', type=int, help='Move incomplete issues to sprint ID')
+@click.argument("sprint_id", type=int)
+@click.option("--start", is_flag=True, help="Start the sprint")
+@click.option("--complete", is_flag=True, help="Complete the sprint")
+@click.option("--name", "-n", help="Update sprint name")
+@click.option("--goal", "-g", help="Update sprint goal")
+@click.option("--move-to", type=int, help="Move incomplete issues to sprint ID")
 @click.pass_context
-def sprint_manage(ctx, sprint_id: int, start: bool, complete: bool, name: str,
-                  goal: str, move_to: int):
+def sprint_manage(
+    ctx, sprint_id: int, start: bool, complete: bool, name: str, goal: str, move_to: int
+):
     """Manage sprint lifecycle (start, complete, update)."""
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "manage_sprint.py"
 
@@ -165,13 +178,17 @@ def sprint_manage(ctx, sprint_id: int, start: bool, complete: bool, name: str,
 
 
 @sprint.command(name="move-issues")
-@click.option('--sprint', '-s', type=int, help='Target sprint ID')
-@click.option('--backlog', '-b', is_flag=True, help='Move to backlog instead of sprint')
-@click.option('--issues', '-i', help='Comma-separated issue keys (e.g., PROJ-101,PROJ-102)')
-@click.option('--jql', '-j', help='JQL query to find issues')
-@click.option('--dry-run', '-n', is_flag=True, help='Preview without making changes')
+@click.option("--sprint", "-s", type=int, help="Target sprint ID")
+@click.option("--backlog", "-b", is_flag=True, help="Move to backlog instead of sprint")
+@click.option(
+    "--issues", "-i", help="Comma-separated issue keys (e.g., PROJ-101,PROJ-102)"
+)
+@click.option("--jql", "-j", help="JQL query to find issues")
+@click.option("--dry-run", "-n", is_flag=True, help="Preview without making changes")
 @click.pass_context
-def sprint_move_issues(ctx, sprint: int, backlog: bool, issues: str, jql: str, dry_run: bool):
+def sprint_move_issues(
+    ctx, sprint: int, backlog: bool, issues: str, jql: str, dry_run: bool
+):
     """Move issues to a sprint or backlog.
 
     Specify target using either --sprint or --backlog.
@@ -209,20 +226,22 @@ def sprint_move_issues(ctx, sprint: int, backlog: bool, issues: str, jql: str, d
 
 # Backlog commands
 @agile.command(name="backlog")
-@click.argument('board_id', type=int)
-@click.option('--max-results', '-m', type=int, default=50, help='Maximum results')
+@click.argument("board_id", type=int)
+@click.option("--max-results", "-m", type=int, default=50, help="Maximum results")
 @click.pass_context
 def agile_backlog(ctx, board_id: int, max_results: int):
     """Get backlog issues for a board."""
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "get_backlog.py"
-    run_skill_script_subprocess(script_path, [str(board_id), "--max-results", str(max_results)], ctx)
+    run_skill_script_subprocess(
+        script_path, [str(board_id), "--max-results", str(max_results)], ctx
+    )
 
 
 # Ranking
 @agile.command(name="rank")
-@click.argument('issue_key')
-@click.option('--before', '-b', help='Rank before this issue')
-@click.option('--after', '-a', help='Rank after this issue')
+@click.argument("issue_key")
+@click.option("--before", "-b", help="Rank before this issue")
+@click.option("--after", "-a", help="Rank after this issue")
 @click.pass_context
 def agile_rank(ctx, issue_key: str, before: str, after: str):
     """Rank an issue in the backlog."""
@@ -239,8 +258,8 @@ def agile_rank(ctx, issue_key: str, before: str, after: str):
 
 # Estimation
 @agile.command(name="estimate")
-@click.argument('issue_key')
-@click.option('--points', '-p', type=float, required=True, help='Story points value')
+@click.argument("issue_key")
+@click.option("--points", "-p", type=float, required=True, help="Story points value")
 @click.pass_context
 def agile_estimate(ctx, issue_key: str, points: float):
     """Set story points for an issue.
@@ -254,8 +273,8 @@ def agile_estimate(ctx, issue_key: str, points: float):
 
 
 @agile.command(name="estimates")
-@click.argument('jql')
-@click.option('--summary', '-s', is_flag=True, help='Show summary statistics')
+@click.argument("jql")
+@click.option("--summary", "-s", is_flag=True, help="Show summary statistics")
 @click.pass_context
 def agile_estimates(ctx, jql: str, summary: bool):
     """Get estimates for issues matching JQL."""
@@ -270,10 +289,10 @@ def agile_estimates(ctx, jql: str, summary: bool):
 
 # Subtasks
 @agile.command(name="subtask")
-@click.argument('parent_key')
-@click.option('--summary', '-s', required=True, help='Subtask summary')
-@click.option('--description', '-d', help='Subtask description')
-@click.option('--assignee', '-a', help='Assignee')
+@click.argument("parent_key")
+@click.option("--summary", "-s", required=True, help="Subtask summary")
+@click.option("--description", "-d", help="Subtask description")
+@click.option("--assignee", "-a", help="Assignee")
 @click.pass_context
 def agile_subtask(ctx, parent_key: str, summary: str, description: str, assignee: str):
     """Create a subtask under a parent issue."""

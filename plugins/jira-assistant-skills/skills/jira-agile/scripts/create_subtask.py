@@ -8,26 +8,36 @@ Usage:
     python create_subtask.py --parent PROJ-101 --summary "Task" --estimate 4h
 """
 
-import sys
 import argparse
 import json
-from pathlib import Path
+import sys
 
 # Add shared lib to path
-
 # Imports from shared library
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import print_success
-from jira_assistant_skills_lib import markdown_to_adf, text_to_adf
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    markdown_to_adf,
+    print_error,
+    print_success,
+    text_to_adf,
+    validate_issue_key,
+)
 
 
-def create_subtask(parent_key: str, summary: str, description: str = None,
-                   assignee: str = None, priority: str = None,
-                   labels: list = None, time_estimate: str = None,
-                   custom_fields: dict = None,
-                   profile: str = None, client=None) -> dict:
+def create_subtask(
+    parent_key: str,
+    summary: str,
+    description: str | None = None,
+    assignee: str | None = None,
+    priority: str | None = None,
+    labels: list | None = None,
+    time_estimate: str | None = None,
+    custom_fields: dict | None = None,
+    profile: str | None = None,
+    client=None,
+) -> dict:
     """
     Create a new Sub-task issue in JIRA linked to a parent.
 
@@ -71,20 +81,18 @@ def create_subtask(parent_key: str, summary: str, description: str = None,
         parent = client.get_issue(parent_key)
 
         # Validate parent can have subtasks (subtasks can't have subtasks)
-        if parent['fields']['issuetype'].get('subtask', False):
-            raise ValidationError(
-                f"{parent_key} is a subtask and cannot have subtasks"
-            )
+        if parent["fields"]["issuetype"].get("subtask", False):
+            raise ValidationError(f"{parent_key} is a subtask and cannot have subtasks")
 
         # Get project from parent
-        project_key = parent['fields']['project']['key']
+        project_key = parent["fields"]["project"]["key"]
 
         # Find the subtask issue type
-        issue_types = client.get('/rest/api/3/issuetype')
+        issue_types = client.get("/rest/api/3/issuetype")
         subtask_type = None
         for itype in issue_types:
-            if itype.get('subtask', False):
-                subtask_type = itype['name']
+            if itype.get("subtask", False):
+                subtask_type = itype["name"]
                 break
 
         if not subtask_type:
@@ -92,47 +100,47 @@ def create_subtask(parent_key: str, summary: str, description: str = None,
 
         # Build fields dictionary
         fields = {
-            'project': {'key': project_key},
-            'parent': {'key': parent_key},
-            'issuetype': {'name': subtask_type},
-            'summary': summary
+            "project": {"key": project_key},
+            "parent": {"key": parent_key},
+            "issuetype": {"name": subtask_type},
+            "summary": summary,
         }
 
         # Add description with ADF conversion
         if description:
-            if description.strip().startswith('{'):
+            if description.strip().startswith("{"):
                 # Already ADF JSON
-                fields['description'] = json.loads(description)
-            elif '\n' in description or any(md in description for md in ['**', '*', '#', '`', '[']):
+                fields["description"] = json.loads(description)
+            elif "\n" in description or any(
+                md in description for md in ["**", "*", "#", "`", "["]
+            ):
                 # Markdown format
-                fields['description'] = markdown_to_adf(description)
+                fields["description"] = markdown_to_adf(description)
             else:
                 # Plain text
-                fields['description'] = text_to_adf(description)
+                fields["description"] = text_to_adf(description)
 
         # Add priority
         if priority:
-            fields['priority'] = {'name': priority}
+            fields["priority"] = {"name": priority}
 
         # Add assignee
         if assignee:
-            if assignee.lower() == 'self':
+            if assignee.lower() == "self":
                 account_id = client.get_current_user_id()
-                fields['assignee'] = {'accountId': account_id}
-            elif '@' in assignee:
-                fields['assignee'] = {'emailAddress': assignee}
+                fields["assignee"] = {"accountId": account_id}
+            elif "@" in assignee:
+                fields["assignee"] = {"emailAddress": assignee}
             else:
-                fields['assignee'] = {'accountId': assignee}
+                fields["assignee"] = {"accountId": assignee}
 
         # Add labels
         if labels:
-            fields['labels'] = labels
+            fields["labels"] = labels
 
         # Add time estimate
         if time_estimate:
-            fields['timetracking'] = {
-                'originalEstimate': time_estimate
-            }
+            fields["timetracking"] = {"originalEstimate": time_estimate}
 
         # Add any additional custom fields
         if custom_fields:
@@ -149,37 +157,41 @@ def create_subtask(parent_key: str, summary: str, description: str = None,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Create a sub-task issue in JIRA',
-        epilog='Example: python create_subtask.py --parent PROJ-101 --summary "Implement login API"'
+        description="Create a sub-task issue in JIRA",
+        epilog='Example: python create_subtask.py --parent PROJ-101 --summary "Implement login API"',
     )
 
-    parser.add_argument('--parent', '-p', required=True,
-                       help='Parent issue key (e.g., PROJ-101)')
-    parser.add_argument('--summary', '-s', required=True,
-                       help='Subtask summary (title)')
-    parser.add_argument('--description', '-d',
-                       help='Subtask description (supports markdown)')
-    parser.add_argument('--priority',
-                       help='Priority (Highest, High, Medium, Low, Lowest)')
-    parser.add_argument('--assignee', '-a',
-                       help='Assignee (account ID, email, or "self")')
-    parser.add_argument('--estimate', '-e',
-                       help='Time estimate (e.g., 4h, 2d, 1w)')
-    parser.add_argument('--labels', '-l',
-                       help='Comma-separated labels')
-    parser.add_argument('--custom-fields',
-                       help='Custom fields as JSON string')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format (default: text)')
+    parser.add_argument(
+        "--parent", "-p", required=True, help="Parent issue key (e.g., PROJ-101)"
+    )
+    parser.add_argument(
+        "--summary", "-s", required=True, help="Subtask summary (title)"
+    )
+    parser.add_argument(
+        "--description", "-d", help="Subtask description (supports markdown)"
+    )
+    parser.add_argument(
+        "--priority", help="Priority (Highest, High, Medium, Low, Lowest)"
+    )
+    parser.add_argument(
+        "--assignee", "-a", help='Assignee (account ID, email, or "self")'
+    )
+    parser.add_argument("--estimate", "-e", help="Time estimate (e.g., 4h, 2d, 1w)")
+    parser.add_argument("--labels", "-l", help="Comma-separated labels")
+    parser.add_argument("--custom-fields", help="Custom fields as JSON string")
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
 
     args = parser.parse_args(argv)
 
     try:
-        labels = [l.strip() for l in args.labels.split(',')] if args.labels else None
+        labels = [l.strip() for l in args.labels.split(",")] if args.labels else None
         custom_fields = json.loads(args.custom_fields) if args.custom_fields else None
 
         result = create_subtask(
@@ -191,19 +203,19 @@ def main(argv: list[str] | None = None):
             labels=labels,
             time_estimate=args.estimate,
             custom_fields=custom_fields,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        subtask_key = result.get('key')
+        subtask_key = result.get("key")
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(result, indent=2))
         else:
             print_success(f"Created subtask: {subtask_key}")
             print(f"Parent: {args.parent}")
             if args.estimate:
                 print(f"Estimate: {args.estimate}")
-            base_url = result.get('self', '').split('/rest/api/')[0]
+            base_url = result.get("self", "").split("/rest/api/")[0]
             print(f"URL: {base_url}/browse/{subtask_key}")
 
     except JiraError as e:
@@ -217,5 +229,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

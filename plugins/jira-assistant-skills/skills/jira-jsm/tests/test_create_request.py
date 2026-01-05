@@ -5,13 +5,13 @@ Tests creating JSM service requests with request types, custom fields,
 participants, and on-behalf-of functionality.
 """
 
-import pytest
-from unittest.mock import patch, Mock
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import pytest
 
 # Add scripts to path
-scripts_path = str(Path(__file__).parent.parent / 'scripts')
+scripts_path = str(Path(__file__).parent.parent / "scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
@@ -31,80 +31,85 @@ class TestCreateRequestBasic:
             service_desk_id="1",
             request_type_id="10",
             summary="Email not working",
-            description="Cannot send emails"
+            description="Cannot send emails",
         )
 
-        assert result['issueKey'] == 'SD-101'
-        assert result['requestTypeId'] == '10'
+        assert result["issueKey"] == "SD-101"
+        assert result["requestTypeId"] == "10"
         mock_jira_client.create_request.assert_called_once()
 
-    def test_create_request_with_request_type(self, mock_jira_client, sample_request_response):
+    def test_create_request_with_request_type(
+        self, mock_jira_client, sample_request_response
+    ):
         """Test creating request with specific request type."""
         mock_jira_client.create_request.return_value = sample_request_response
 
-        result = create_request.create_service_request(
+        create_request.create_service_request(
             service_desk_id="1",
             request_type_id="10",
             summary="Test request",
-            description="Test"
+            description="Test",
         )
 
         call_args = mock_jira_client.create_request.call_args
-        assert call_args[1]['request_type_id'] == '10'
+        assert call_args[1]["request_type_id"] == "10"
 
-    def test_create_request_with_custom_fields(self, mock_jira_client, sample_request_response):
+    def test_create_request_with_custom_fields(
+        self, mock_jira_client, sample_request_response
+    ):
         """Test creating request with JSM custom fields."""
         mock_jira_client.create_request.return_value = sample_request_response
 
-        custom_fields = {
-            'priority': 'High',
-            'impact': 'Multiple Users'
-        }
+        custom_fields = {"priority": "High", "impact": "Multiple Users"}
 
-        result = create_request.create_service_request(
+        create_request.create_service_request(
             service_desk_id="1",
             request_type_id="10",
             summary="Server down",
             description="Production server not responding",
-            custom_fields=custom_fields
+            custom_fields=custom_fields,
         )
 
         call_args = mock_jira_client.create_request.call_args
-        fields = call_args[1]['fields']
-        assert fields['priority'] == 'High'
-        assert fields['impact'] == 'Multiple Users'
+        fields = call_args[1]["fields"]
+        assert fields["priority"] == "High"
+        assert fields["impact"] == "Multiple Users"
 
-    def test_create_request_with_participants(self, mock_jira_client, sample_request_response):
+    def test_create_request_with_participants(
+        self, mock_jira_client, sample_request_response
+    ):
         """Test adding participants when creating request."""
         mock_jira_client.create_request.return_value = sample_request_response
 
-        participants = ['alice@example.com', 'bob@example.com']
+        participants = ["alice@example.com", "bob@example.com"]
 
-        result = create_request.create_service_request(
+        create_request.create_service_request(
             service_desk_id="1",
             request_type_id="10",
             summary="Team access request",
             description="Need access for team",
-            participants=participants
+            participants=participants,
         )
 
         call_args = mock_jira_client.create_request.call_args
-        assert call_args[1]['participants'] == participants
+        assert call_args[1]["participants"] == participants
 
-    def test_create_request_on_behalf_of(self, mock_jira_client, sample_request_response):
+    def test_create_request_on_behalf_of(
+        self, mock_jira_client, sample_request_response
+    ):
         """Test creating request on behalf of another user."""
         mock_jira_client.create_request.return_value = sample_request_response
 
-        result = create_request.create_service_request(
+        create_request.create_service_request(
             service_desk_id="1",
             request_type_id="10",
             summary="Password reset",
             description="User needs password reset",
-            on_behalf_of="customer@example.com"
+            on_behalf_of="customer@example.com",
         )
 
         call_args = mock_jira_client.create_request.call_args
-        assert call_args[1]['on_behalf_of'] == 'customer@example.com'
+        assert call_args[1]["on_behalf_of"] == "customer@example.com"
 
     def test_create_request_validate_required_fields(self, mock_jira_client):
         """Test validation of required fields for request type."""
@@ -113,23 +118,25 @@ class TestCreateRequestBasic:
                 service_desk_id="1",
                 request_type_id="10",
                 summary="",
-                description="Test"
+                description="Test",
             )
 
-    def test_create_request_with_priority(self, mock_jira_client, sample_request_response):
+    def test_create_request_with_priority(
+        self, mock_jira_client, sample_request_response
+    ):
         """Test setting priority during creation."""
         mock_jira_client.create_request.return_value = sample_request_response
 
-        result = create_request.create_service_request(
+        create_request.create_service_request(
             service_desk_id="1",
             request_type_id="10",
             summary="Urgent issue",
             description="Production down",
-            custom_fields={'priority': 'High'}
+            custom_fields={"priority": "High"},
         )
 
         call_args = mock_jira_client.create_request.call_args
-        assert call_args[1]['fields']['priority'] == 'High'
+        assert call_args[1]["fields"]["priority"] == "High"
 
     def test_create_request_invalid_request_type(self, mock_jira_client):
         """Test error when request type doesn't exist."""
@@ -144,7 +151,7 @@ class TestCreateRequestBasic:
                 service_desk_id="1",
                 request_type_id="999",
                 summary="Test",
-                description="Test"
+                description="Test",
             )
 
 
@@ -157,14 +164,16 @@ class TestCreateRequestApiErrors:
         """Test handling of 401 unauthorized."""
         from jira_assistant_skills_lib import AuthenticationError
 
-        mock_jira_client.create_request.side_effect = AuthenticationError("Invalid token")
+        mock_jira_client.create_request.side_effect = AuthenticationError(
+            "Invalid token"
+        )
 
         with pytest.raises(AuthenticationError):
             create_request.create_service_request(
                 service_desk_id="1",
                 request_type_id="10",
                 summary="Test",
-                description="Test"
+                description="Test",
             )
 
     def test_permission_error(self, mock_jira_client):
@@ -178,7 +187,7 @@ class TestCreateRequestApiErrors:
                 service_desk_id="1",
                 request_type_id="10",
                 summary="Test",
-                description="Test"
+                description="Test",
             )
 
     def test_rate_limit_error(self, mock_jira_client):
@@ -194,7 +203,7 @@ class TestCreateRequestApiErrors:
                 service_desk_id="1",
                 request_type_id="10",
                 summary="Test",
-                description="Test"
+                description="Test",
             )
         assert exc_info.value.status_code == 429
 
@@ -211,6 +220,6 @@ class TestCreateRequestApiErrors:
                 service_desk_id="1",
                 request_type_id="10",
                 summary="Test",
-                description="Test"
+                description="Test",
             )
         assert exc_info.value.status_code == 500

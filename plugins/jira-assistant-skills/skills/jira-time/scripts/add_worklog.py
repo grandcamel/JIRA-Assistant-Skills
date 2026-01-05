@@ -13,26 +13,34 @@ Usage:
 
 import argparse
 import sys
-from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any
 
 # Add shared lib to path
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    format_datetime_for_jira,
+    get_jira_client,
+    parse_relative_date,
+    print_error,
+    text_to_adf,
+    validate_issue_key,
+    validate_time_format,
+)
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import text_to_adf
-from jira_assistant_skills_lib import validate_time_format, parse_relative_date, format_datetime_for_jira
 
-
-def add_worklog(client, issue_key: str, time_spent: str,
-                started: Optional[str] = None,
-                comment: Optional[str] = None,
-                adjust_estimate: str = 'auto',
-                new_estimate: Optional[str] = None,
-                reduce_by: Optional[str] = None,
-                visibility_type: Optional[str] = None,
-                visibility_value: Optional[str] = None) -> Dict[str, Any]:
+def add_worklog(
+    client,
+    issue_key: str,
+    time_spent: str,
+    started: str | None = None,
+    comment: str | None = None,
+    adjust_estimate: str = "auto",
+    new_estimate: str | None = None,
+    reduce_by: str | None = None,
+    visibility_type: str | None = None,
+    visibility_value: str | None = None,
+) -> dict[str, Any]:
     """
     Add a worklog to an issue.
 
@@ -61,15 +69,18 @@ def add_worklog(client, issue_key: str, time_spent: str,
 
     if not validate_time_format(time_spent):
         raise ValidationError(
-            f"Invalid time format: '{time_spent}'. "
-            f"Use format like '2h', '1d 4h', '30m'"
+            f"Invalid time format: '{time_spent}'. Use format like '2h', '1d 4h', '30m'"
         )
 
     # Validate visibility options
     if visibility_type and not visibility_value:
-        raise ValidationError("--visibility-value is required when --visibility-type is specified")
+        raise ValidationError(
+            "--visibility-value is required when --visibility-type is specified"
+        )
     if visibility_value and not visibility_type:
-        raise ValidationError("--visibility-type is required when --visibility-value is specified")
+        raise ValidationError(
+            "--visibility-type is required when --visibility-value is specified"
+        )
 
     # Convert relative dates to ISO format
     started_iso = None
@@ -95,14 +106,14 @@ def add_worklog(client, issue_key: str, time_spent: str,
         new_estimate=new_estimate,
         reduce_by=reduce_by,
         visibility_type=visibility_type,
-        visibility_value=visibility_value
+        visibility_value=visibility_value,
     )
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Add a worklog (time entry) to a JIRA issue.',
-        epilog='''
+        description="Add a worklog (time entry) to a JIRA issue.",
+        epilog="""
 Examples:
   %(prog)s PROJ-123 --time 2h
   %(prog)s PROJ-123 --time "1d 4h" --comment "Debugging auth issue"
@@ -116,33 +127,48 @@ Examples:
 Visibility options:
   role   - Restrict to users with a specific project role (e.g., Developers, Administrators)
   group  - Restrict to members of a JIRA group (e.g., jira-users, jira-administrators)
-        ''',
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument('issue_key', help='Issue key (e.g., PROJ-123)')
-    parser.add_argument('--time', '-t', required=True,
-                        help='Time spent (e.g., 2h, 1d 4h, 30m)')
-    parser.add_argument('--started', '-s',
-                        help='When work was started (ISO format, or "yesterday", "today")')
-    parser.add_argument('--comment', '-c',
-                        help='Comment about the work done')
-    parser.add_argument('--adjust-estimate', choices=['auto', 'leave', 'new', 'manual'],
-                        default='auto',
-                        help='How to adjust remaining estimate (default: auto)')
-    parser.add_argument('--new-estimate',
-                        help='New remaining estimate (when --adjust-estimate=new)')
-    parser.add_argument('--reduce-by',
-                        help='Amount to reduce estimate (when --adjust-estimate=manual)')
-    parser.add_argument('--visibility-type',
-                        choices=['role', 'group'],
-                        help='Restrict visibility to role or group')
-    parser.add_argument('--visibility-value',
-                        help='Role or group name for visibility restriction')
-    parser.add_argument('--profile', '-p',
-                        help='JIRA profile to use')
-    parser.add_argument('--output', '-o', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
+    parser.add_argument("issue_key", help="Issue key (e.g., PROJ-123)")
+    parser.add_argument(
+        "--time", "-t", required=True, help="Time spent (e.g., 2h, 1d 4h, 30m)"
+    )
+    parser.add_argument(
+        "--started",
+        "-s",
+        help='When work was started (ISO format, or "yesterday", "today")',
+    )
+    parser.add_argument("--comment", "-c", help="Comment about the work done")
+    parser.add_argument(
+        "--adjust-estimate",
+        choices=["auto", "leave", "new", "manual"],
+        default="auto",
+        help="How to adjust remaining estimate (default: auto)",
+    )
+    parser.add_argument(
+        "--new-estimate", help="New remaining estimate (when --adjust-estimate=new)"
+    )
+    parser.add_argument(
+        "--reduce-by", help="Amount to reduce estimate (when --adjust-estimate=manual)"
+    )
+    parser.add_argument(
+        "--visibility-type",
+        choices=["role", "group"],
+        help="Restrict visibility to role or group",
+    )
+    parser.add_argument(
+        "--visibility-value", help="Role or group name for visibility restriction"
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
 
     args = parser.parse_args(argv)
 
@@ -164,34 +190,37 @@ Visibility options:
             new_estimate=args.new_estimate,
             reduce_by=args.reduce_by,
             visibility_type=args.visibility_type,
-            visibility_value=args.visibility_value
+            visibility_value=args.visibility_value,
         )
 
         # Output result
-        if args.output == 'json':
+        if args.output == "json":
             import json
+
             print(json.dumps(result, indent=2))
         else:
             print(f"Worklog added to {args.issue_key}:")
             print(f"  Worklog ID: {result.get('id')}")
-            print(f"  Time logged: {result.get('timeSpent')} ({result.get('timeSpentSeconds')} seconds)")
-            if result.get('started'):
+            print(
+                f"  Time logged: {result.get('timeSpent')} ({result.get('timeSpentSeconds')} seconds)"
+            )
+            if result.get("started"):
                 print(f"  Started: {result.get('started')}")
-            if result.get('comment'):
+            if result.get("comment"):
                 # Extract text from ADF comment
-                comment_content = result.get('comment', {}).get('content', [])
+                comment_content = result.get("comment", {}).get("content", [])
                 if comment_content:
                     text_parts = []
                     for block in comment_content:
-                        for content in block.get('content', []):
-                            if content.get('type') == 'text':
-                                text_parts.append(content.get('text', ''))
+                        for content in block.get("content", []):
+                            if content.get("type") == "text":
+                                text_parts.append(content.get("text", ""))
                     if text_parts:
                         print(f"  Comment: {' '.join(text_parts)}")
-            if result.get('visibility'):
-                vis = result.get('visibility', {})
-                vis_type = vis.get('type', '')
-                vis_value = vis.get('value', '')
+            if result.get("visibility"):
+                vis = result.get("visibility", {})
+                vis_type = vis.get("type", "")
+                vis_value = vis.get("value", "")
                 print(f"  Visibility: {vis_type} = {vis_value}")
 
         client.close()
@@ -204,5 +233,5 @@ Visibility options:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

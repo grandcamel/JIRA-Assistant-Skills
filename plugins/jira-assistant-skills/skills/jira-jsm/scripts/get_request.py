@@ -9,22 +9,25 @@ Usage:
     python get_request.py SD-101 --output json
 """
 
-import sys
-import os
 import argparse
 import json
-from pathlib import Path
-from typing import Optional, Dict, Any, List
+import sys
+from typing import Any
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    NotFoundError,
+    get_jira_client,
+    print_error,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, NotFoundError
-from jira_assistant_skills_lib import print_success
-
-
-def get_service_request(issue_key: str, show_sla: bool = False,
-                       show_participants: bool = False,
-                       profile: Optional[str] = None) -> Dict[str, Any]:
+def get_service_request(
+    issue_key: str,
+    show_sla: bool = False,
+    show_participants: bool = False,
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Get service request details.
 
@@ -42,9 +45,9 @@ def get_service_request(issue_key: str, show_sla: bool = False,
     """
     expand = []
     if show_sla:
-        expand.append('sla')
+        expand.append("sla")
     if show_participants:
-        expand.append('participant')
+        expand.append("participant")
 
     with get_jira_client(profile) as client:
         return client.get_request(issue_key, expand=expand if expand else None)
@@ -61,7 +64,7 @@ def format_sla_time(millis: int) -> str:
         return f"{minutes}m"
 
 
-def format_request_text(request: Dict[str, Any], show_fields: bool = False) -> str:
+def format_request_text(request: dict[str, Any], show_fields: bool = False) -> str:
     """Format request as text output."""
     lines = []
 
@@ -70,54 +73,56 @@ def format_request_text(request: Dict[str, Any], show_fields: bool = False) -> s
     lines.append("")
 
     # Summary (always show)
-    for field in request.get('requestFieldValues', []):
-        if field.get('fieldId') == 'summary':
+    for field in request.get("requestFieldValues", []):
+        if field.get("fieldId") == "summary":
             lines.append(f"Summary: {field.get('value', 'N/A')}")
             lines.append("")
             break
 
     # Request type
-    req_type = request.get('requestType', {})
+    req_type = request.get("requestType", {})
     lines.append(f"Request Type: {req_type.get('name', 'N/A')}")
 
     # Service desk
     lines.append(f"Service Desk ID: {request.get('serviceDeskId', 'N/A')}")
 
     # Current status
-    status = request.get('currentStatus', {})
-    lines.append(f"Status: {status.get('status', 'N/A')} ({status.get('statusCategory', 'N/A')})")
+    status = request.get("currentStatus", {})
+    lines.append(
+        f"Status: {status.get('status', 'N/A')} ({status.get('statusCategory', 'N/A')})"
+    )
     lines.append("")
 
     # Field values (other than summary)
     if show_fields:
         lines.append("Fields:")
-        for field in request.get('requestFieldValues', []):
-            if field.get('fieldId') != 'summary':  # Skip summary, already shown
-                label = field.get('label', field.get('fieldId'))
-                value = field.get('value', 'N/A')
+        for field in request.get("requestFieldValues", []):
+            if field.get("fieldId") != "summary":  # Skip summary, already shown
+                label = field.get("label", field.get("fieldId"))
+                value = field.get("value", "N/A")
                 lines.append(f"  {label}: {value}")
         lines.append("")
 
     # Reporter
-    reporter = request.get('reporter', {})
+    reporter = request.get("reporter", {})
     lines.append(f"Reporter: {reporter.get('emailAddress', 'N/A')}")
 
     # Dates
-    created = request.get('createdDate', {})
+    created = request.get("createdDate", {})
     lines.append(f"Created: {created.get('friendly', 'N/A')}")
     lines.append("")
 
     # SLA information
-    if 'sla' in request:
+    if "sla" in request:
         lines.append("SLA Information:")
-        for sla_metric in request['sla'].get('values', []):
-            name = sla_metric.get('name')
-            ongoing = sla_metric.get('ongoingCycle', {})
+        for sla_metric in request["sla"].get("values", []):
+            name = sla_metric.get("name")
+            ongoing = sla_metric.get("ongoingCycle", {})
 
-            if ongoing.get('breached'):
+            if ongoing.get("breached"):
                 status_icon = "⚠ BREACHED"
             else:
-                remaining = ongoing.get('remainingTime', {}).get('millis', 0)
+                remaining = ongoing.get("remainingTime", {}).get("millis", 0)
                 if remaining > 0:
                     status_icon = f"⏱ {format_sla_time(remaining)} remaining"
                 else:
@@ -127,17 +132,17 @@ def format_request_text(request: Dict[str, Any], show_fields: bool = False) -> s
         lines.append("")
 
     # Links
-    links = request.get('_links', {})
+    links = request.get("_links", {})
     lines.append("Links:")
-    if 'web' in links:
+    if "web" in links:
         lines.append(f"  Customer Portal: {links['web']}")
-    if 'agent' in links:
+    if "agent" in links:
         lines.append(f"  Agent View: {links['agent']}")
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
-def format_request_json(request: Dict[str, Any]) -> str:
+def format_request_json(request: dict[str, Any]) -> str:
     """Format request as JSON output."""
     return json.dumps(request, indent=2)
 
@@ -145,7 +150,7 @@ def format_request_json(request: Dict[str, Any]) -> str:
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Get JSM service request details',
+        description="Get JSM service request details",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -163,21 +168,28 @@ Examples:
 
   JSON output:
     %(prog)s SD-101 --output json
-        """
+        """,
     )
 
-    parser.add_argument('request_key',
-                        help='Request key (e.g., SD-101)')
-    parser.add_argument('--show-sla', action='store_true',
-                        help='Include SLA information')
-    parser.add_argument('--show-participants', action='store_true',
-                        help='Include participant list')
-    parser.add_argument('--full', action='store_true',
-                        help='Show all details (SLA + participants + fields)')
-    parser.add_argument('--output', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use from config')
+    parser.add_argument("request_key", help="Request key (e.g., SD-101)")
+    parser.add_argument(
+        "--show-sla", action="store_true", help="Include SLA information"
+    )
+    parser.add_argument(
+        "--show-participants", action="store_true", help="Include participant list"
+    )
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        help="Show all details (SLA + participants + fields)",
+    )
+    parser.add_argument(
+        "--output",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -189,10 +201,10 @@ Examples:
             issue_key=args.request_key,
             show_sla=show_sla,
             show_participants=show_participants,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_request_json(request))
         else:
             print(format_request_text(request, show_fields=args.full))
@@ -210,5 +222,5 @@ Examples:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

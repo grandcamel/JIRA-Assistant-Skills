@@ -7,21 +7,29 @@ Usage:
     python bulk_update.py "assignee = user@example.com AND status = Open" --priority High
 """
 
-import sys
 import argparse
-import json
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    get_jira_client,
+    print_error,
+    print_info,
+    print_success,
+    print_warning,
+    validate_jql,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import validate_jql
-from jira_assistant_skills_lib import print_success, print_warning, print_info
-
-
-def bulk_update(jql: str, add_labels: list = None, remove_labels: list = None,
-               priority: str = None, max_issues: int = 100,
-               dry_run: bool = False, profile: str = None) -> None:
+def bulk_update(
+    jql: str,
+    add_labels: list | None = None,
+    remove_labels: list | None = None,
+    priority: str | None = None,
+    max_issues: int = 100,
+    dry_run: bool = False,
+    profile: str | None = None,
+) -> None:
     """
     Bulk update issues from search results.
 
@@ -37,10 +45,12 @@ def bulk_update(jql: str, add_labels: list = None, remove_labels: list = None,
     jql = validate_jql(jql)
 
     client = get_jira_client(profile)
-    results = client.search_issues(jql, fields=['key', 'summary', 'labels'], max_results=max_issues)
+    results = client.search_issues(
+        jql, fields=["key", "summary", "labels"], max_results=max_issues
+    )
 
-    issues = results.get('issues', [])
-    total = results.get('total', 0)
+    issues = results.get("issues", [])
+    total = results.get("total", 0)
 
     if not issues:
         print("No issues found to update")
@@ -48,7 +58,9 @@ def bulk_update(jql: str, add_labels: list = None, remove_labels: list = None,
         return
 
     if total > max_issues:
-        print_warning(f"Found {total} issues, limiting to first {max_issues} (use --max-issues to change)")
+        print_warning(
+            f"Found {total} issues, limiting to first {max_issues} (use --max-issues to change)"
+        )
 
     print_info(f"Will update {len(issues)} issue(s):")
     for issue in issues:
@@ -59,8 +71,8 @@ def bulk_update(jql: str, add_labels: list = None, remove_labels: list = None,
         client.close()
         return
 
-    response = input(f"\nProceed with bulk update? (yes/no): ")
-    if response.lower() not in ['yes', 'y']:
+    response = input("\nProceed with bulk update? (yes/no): ")
+    if response.lower() not in ["yes", "y"]:
         print("Bulk update cancelled")
         client.close()
         return
@@ -70,21 +82,21 @@ def bulk_update(jql: str, add_labels: list = None, remove_labels: list = None,
 
     for issue in issues:
         try:
-            issue_key = issue['key']
+            issue_key = issue["key"]
             fields = {}
 
             if add_labels or remove_labels:
-                current_labels = set(issue.get('fields', {}).get('labels', []))
+                current_labels = set(issue.get("fields", {}).get("labels", []))
 
                 if add_labels:
                     current_labels.update(add_labels)
                 if remove_labels:
                     current_labels.difference_update(remove_labels)
 
-                fields['labels'] = list(current_labels)
+                fields["labels"] = list(current_labels)
 
             if priority:
-                fields['priority'] = {'name': priority}
+                fields["priority"] = {"name": priority}
 
             if fields:
                 client.update_issue(issue_key, fields, notify_users=False)
@@ -103,33 +115,40 @@ def bulk_update(jql: str, add_labels: list = None, remove_labels: list = None,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Bulk update issues from JQL search',
-        epilog='Example: python bulk_update.py "project = PROJ" --add-labels "reviewed"'
+        description="Bulk update issues from JQL search",
+        epilog='Example: python bulk_update.py "project = PROJ" --add-labels "reviewed"',
     )
 
-    parser.add_argument('jql',
-                       help='JQL query to find issues')
-    parser.add_argument('--add-labels',
-                       help='Comma-separated labels to add')
-    parser.add_argument('--remove-labels',
-                       help='Comma-separated labels to remove')
-    parser.add_argument('--priority',
-                       help='Priority to set (Highest, High, Medium, Low, Lowest)')
-    parser.add_argument('--max-issues',
-                       type=int,
-                       default=100,
-                       help='Maximum issues to update (default: 100)')
-    parser.add_argument('--dry-run',
-                       action='store_true',
-                       help='Show what would be updated without making changes')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument("jql", help="JQL query to find issues")
+    parser.add_argument("--add-labels", help="Comma-separated labels to add")
+    parser.add_argument("--remove-labels", help="Comma-separated labels to remove")
+    parser.add_argument(
+        "--priority", help="Priority to set (Highest, High, Medium, Low, Lowest)"
+    )
+    parser.add_argument(
+        "--max-issues",
+        type=int,
+        default=100,
+        help="Maximum issues to update (default: 100)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be updated without making changes",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
-        add_labels = [l.strip() for l in args.add_labels.split(',')] if args.add_labels else None
-        remove_labels = [l.strip() for l in args.remove_labels.split(',')] if args.remove_labels else None
+        add_labels = (
+            [l.strip() for l in args.add_labels.split(",")] if args.add_labels else None
+        )
+        remove_labels = (
+            [l.strip() for l in args.remove_labels.split(",")]
+            if args.remove_labels
+            else None
+        )
 
         bulk_update(
             jql=args.jql,
@@ -138,7 +157,7 @@ def main(argv: list[str] | None = None):
             priority=args.priority,
             max_issues=args.max_issues,
             dry_run=args.dry_run,
-            profile=args.profile
+            profile=args.profile,
         )
 
     except JiraError as e:
@@ -152,5 +171,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

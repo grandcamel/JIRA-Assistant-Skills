@@ -13,31 +13,36 @@ Usage:
     from bulk_utils import get_issues_to_process, execute_bulk_operation, BulkResult
 """
 
-import sys
 import time
-from pathlib import Path
-from typing import List, Dict, Any, Optional, Callable, TypedDict
-
+from collections.abc import Callable
+from typing import Any, TypedDict
 
 # Optional tqdm support
 try:
     from tqdm import tqdm
+
     TQDM_AVAILABLE = True
 except ImportError:
     TQDM_AVAILABLE = False
 
-from jira_assistant_skills_lib import ValidationError
-from jira_assistant_skills_lib import validate_issue_key, validate_jql
-from jira_assistant_skills_lib import print_success, print_warning, print_info
+from jira_assistant_skills_lib import (
+    ValidationError,
+    print_info,
+    print_success,
+    print_warning,
+    validate_issue_key,
+    validate_jql,
+)
 
 
 class BulkResult(TypedDict, total=False):
     """Result dictionary returned by bulk operations."""
+
     success: int
     failed: int
     total: int
-    errors: Dict[str, str]
-    processed: List[str]
+    errors: dict[str, str]
+    processed: list[str]
     dry_run: bool
     would_process: int
     cancelled: bool
@@ -60,16 +65,16 @@ def confirm_bulk_operation(count: int, operation: str, threshold: int = 50) -> b
 
     print(f"\nWARNING: This operation will {operation} {count} issue(s).")
     response = input("Are you sure you want to proceed? (yes/no): ").strip().lower()
-    return response == 'yes'
+    return response == "yes"
 
 
 def get_issues_to_process(
     client,
-    issue_keys: Optional[List[str]] = None,
-    jql: Optional[str] = None,
+    issue_keys: list[str] | None = None,
+    jql: str | None = None,
     max_issues: int = 100,
-    fields: Optional[List[str]] = None
-) -> List[Dict[str, Any]]:
+    fields: list[str] | None = None,
+) -> list[dict[str, Any]]:
     """
     Retrieve issues to process from either issue keys or JQL query.
 
@@ -87,36 +92,38 @@ def get_issues_to_process(
         ValidationError: If neither issue_keys nor jql provided
     """
     if fields is None:
-        fields = ['key', 'summary']
+        fields = ["key", "summary"]
 
     if issue_keys:
         # Validate and return as minimal issue dicts
         validated_keys = [validate_issue_key(k) for k in issue_keys[:max_issues]]
-        return [{'key': key} for key in validated_keys]
+        return [{"key": key} for key in validated_keys]
     elif jql:
         # Validate JQL and search
         validated_jql = validate_jql(jql)
-        result = client.search_issues(validated_jql, fields=fields, max_results=max_issues)
-        return result.get('issues', [])
+        result = client.search_issues(
+            validated_jql, fields=fields, max_results=max_issues
+        )
+        return result.get("issues", [])
     else:
         raise ValidationError("Either --issues or --jql must be provided")
 
 
 def execute_bulk_operation(
-    issues: List[Dict[str, Any]],
-    operation_func: Callable[[Dict[str, Any], int, int], Any],
+    issues: list[dict[str, Any]],
+    operation_func: Callable[[dict[str, Any], int, int], Any],
     dry_run: bool = False,
-    dry_run_message: Optional[str] = None,
-    dry_run_item_formatter: Optional[Callable[[Dict[str, Any]], str]] = None,
+    dry_run_message: str | None = None,
+    dry_run_item_formatter: Callable[[dict[str, Any]], str] | None = None,
     delay: float = 0.1,
-    progress_callback: Optional[Callable[[int, int, str, str], None]] = None,
-    success_message_formatter: Optional[Callable[[str, Any], str]] = None,
-    failure_message_formatter: Optional[Callable[[str, Exception], str]] = None,
+    progress_callback: Callable[[int, int, str, str], None] | None = None,
+    success_message_formatter: Callable[[str, Any], str] | None = None,
+    failure_message_formatter: Callable[[str, Exception], str] | None = None,
     show_progress: bool = True,
-    progress_desc: Optional[str] = None,
+    progress_desc: str | None = None,
     confirm_threshold: int = 50,
     skip_confirmation: bool = False,
-    operation_name: Optional[str] = None
+    operation_name: str | None = None,
 ) -> BulkResult:
     """
     Execute a bulk operation on a list of issues.
@@ -150,13 +157,7 @@ def execute_bulk_operation(
 
     # Handle empty issues list
     if total == 0:
-        return BulkResult(
-            success=0,
-            failed=0,
-            total=0,
-            errors={},
-            processed=[]
-        )
+        return BulkResult(success=0, failed=0, total=0, errors={}, processed=[])
 
     # Handle dry-run mode
     if dry_run:
@@ -176,7 +177,7 @@ def execute_bulk_operation(
             would_process=total,
             total=total,
             errors={},
-            processed=[]
+            processed=[],
         )
 
     # Confirmation for large operations
@@ -188,14 +189,14 @@ def execute_bulk_operation(
                 failed=0,
                 total=total,
                 errors={},
-                processed=[]
+                processed=[],
             )
 
     # Execute the bulk operation
     success = 0
     failed = 0
-    errors: Dict[str, str] = {}
-    processed: List[str] = []
+    errors: dict[str, str] = {}
+    processed: list[str] = []
 
     # Use tqdm progress bar if available and enabled
     use_tqdm = TQDM_AVAILABLE and show_progress and not progress_callback
@@ -204,13 +205,13 @@ def execute_bulk_operation(
             enumerate(issues, 1),
             total=total,
             desc=progress_desc or "Processing",
-            unit="issue"
+            unit="issue",
         )
     else:
         issue_iterator = enumerate(issues, 1)
 
     for i, issue in issue_iterator:
-        issue_key = issue.get('key')
+        issue_key = issue.get("key")
 
         try:
             result = operation_func(issue, i, total)
@@ -220,10 +221,12 @@ def execute_bulk_operation(
             if use_tqdm:
                 issue_iterator.set_postfix(success=success, failed=failed)
             elif progress_callback:
-                progress_callback(i, total, issue_key, 'success')
+                progress_callback(i, total, issue_key, "success")
             else:
                 if success_message_formatter:
-                    print_success(f"[{i}/{total}] {success_message_formatter(issue_key, result)}")
+                    print_success(
+                        f"[{i}/{total}] {success_message_formatter(issue_key, result)}"
+                    )
                 else:
                     print_success(f"[{i}/{total}] Processed {issue_key}")
 
@@ -234,10 +237,12 @@ def execute_bulk_operation(
             if use_tqdm:
                 issue_iterator.set_postfix(success=success, failed=failed)
             elif progress_callback:
-                progress_callback(i, total, issue_key, 'failed')
+                progress_callback(i, total, issue_key, "failed")
             else:
                 if failure_message_formatter:
-                    print_warning(f"[{i}/{total}] {failure_message_formatter(issue_key, e)}")
+                    print_warning(
+                        f"[{i}/{total}] {failure_message_formatter(issue_key, e)}"
+                    )
                 else:
                     print_warning(f"[{i}/{total}] Failed {issue_key}: {e}")
 
@@ -246,20 +251,10 @@ def execute_bulk_operation(
             time.sleep(delay)
 
     return BulkResult(
-        success=success,
-        failed=failed,
-        total=total,
-        errors=errors,
-        processed=processed
+        success=success, failed=failed, total=total, errors=errors, processed=processed
     )
 
 
 def create_empty_result() -> BulkResult:
     """Create an empty result dictionary for zero-issue cases."""
-    return BulkResult(
-        success=0,
-        failed=0,
-        total=0,
-        errors={},
-        processed=[]
-    )
+    return BulkResult(success=0, failed=0, total=0, errors={}, processed=[])

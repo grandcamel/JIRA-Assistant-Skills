@@ -11,16 +11,19 @@ import argparse
 import json
 import sys
 import time
-from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
 
 # Add shared lib to path
+from jira_assistant_skills_lib import (
+    JiraError,
+    NotFoundError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, NotFoundError, ValidationError
 
-
-def get_current_scheme(client, project_key: str) -> Dict[str, Any]:
+def get_current_scheme(client, project_key: str) -> dict[str, Any]:
     """
     Get the current workflow scheme for a project.
 
@@ -32,26 +35,26 @@ def get_current_scheme(client, project_key: str) -> Dict[str, Any]:
         Dict with current scheme info
     """
     response = client.get_workflow_scheme_for_project(project_key)
-    scheme = response.get('workflowScheme', {})
+    scheme = response.get("workflowScheme", {})
     return {
-        'id': scheme.get('id'),
-        'name': scheme.get('name', 'Unknown'),
-        'description': scheme.get('description', '')
+        "id": scheme.get("id"),
+        "name": scheme.get("name", "Unknown"),
+        "description": scheme.get("description", ""),
     }
 
 
 def assign_workflow_scheme(
     client,
     project_key: str,
-    scheme_id: Optional[int] = None,
-    scheme_name: Optional[str] = None,
-    status_mappings: Optional[List[Dict[str, Any]]] = None,
+    scheme_id: int | None = None,
+    scheme_name: str | None = None,
+    status_mappings: list[dict[str, Any]] | None = None,
     dry_run: bool = False,
     confirm: bool = False,
     wait: bool = True,
     poll_interval: int = 2,
-    max_wait: int = 300
-) -> Dict[str, Any]:
+    max_wait: int = 300,
+) -> dict[str, Any]:
     """
     Assign a workflow scheme to a project.
 
@@ -87,11 +90,11 @@ def assign_workflow_scheme(
     # Resolve scheme ID from name if needed
     if scheme_name and scheme_id is None:
         response = client.get_workflow_schemes(max_results=100)
-        schemes = response.get('values', [])
+        schemes = response.get("values", [])
 
         for s in schemes:
-            if s.get('name', '').lower() == scheme_name.lower():
-                scheme_id = s.get('id')
+            if s.get("name", "").lower() == scheme_name.lower():
+                scheme_id = s.get("id")
                 break
 
         if scheme_id is None:
@@ -102,35 +105,35 @@ def assign_workflow_scheme(
         try:
             current = get_current_scheme(client, project_key)
         except JiraError:
-            current = {'id': None, 'name': 'None/Default'}
+            current = {"id": None, "name": "None/Default"}
 
         new_scheme = client.get_workflow_scheme(scheme_id)
 
         return {
-            'dry_run': True,
-            'project_key': project_key,
-            'current_scheme': current,
-            'new_scheme': {
-                'id': scheme_id,
-                'name': new_scheme.get('name', 'Unknown'),
-                'description': new_scheme.get('description', '')
-            }
+            "dry_run": True,
+            "project_key": project_key,
+            "current_scheme": current,
+            "new_scheme": {
+                "id": scheme_id,
+                "name": new_scheme.get("name", "Unknown"),
+                "description": new_scheme.get("description", ""),
+            },
         }
 
     # Perform assignment
     response = client.assign_workflow_scheme_to_project(
         project_key_or_id=project_key,
         workflow_scheme_id=str(scheme_id),
-        status_mappings=status_mappings
+        status_mappings=status_mappings,
     )
 
-    task_id = response.get('taskId')
+    task_id = response.get("taskId")
 
     result = {
-        'success': False,
-        'task_id': task_id,
-        'project_key': project_key,
-        'scheme_id': scheme_id
+        "success": False,
+        "task_id": task_id,
+        "project_key": project_key,
+        "scheme_id": scheme_id,
     }
 
     # Wait for task if requested
@@ -138,50 +141,52 @@ def assign_workflow_scheme(
         elapsed = 0
         while elapsed < max_wait:
             task_status = client.get_task_status(task_id)
-            status = task_status.get('status', '')
+            status = task_status.get("status", "")
 
-            if status == 'COMPLETE':
-                result['success'] = True
-                result['message'] = task_status.get('message', 'Completed')
+            if status == "COMPLETE":
+                result["success"] = True
+                result["message"] = task_status.get("message", "Completed")
                 break
-            elif status in ('FAILED', 'CANCELLED'):
-                result['success'] = False
-                result['message'] = task_status.get('message', 'Failed')
+            elif status in ("FAILED", "CANCELLED"):
+                result["success"] = False
+                result["message"] = task_status.get("message", "Failed")
                 break
 
             time.sleep(poll_interval)
             elapsed += poll_interval
         else:
-            result['message'] = f'Timed out after {max_wait} seconds. Check task {task_id} manually.'
+            result["message"] = (
+                f"Timed out after {max_wait} seconds. Check task {task_id} manually."
+            )
     else:
-        result['success'] = True
-        result['message'] = f'Assignment started. Task ID: {task_id}'
+        result["success"] = True
+        result["message"] = f"Assignment started. Task ID: {task_id}"
 
     return result
 
 
-def format_result(result: Dict[str, Any]) -> str:
+def format_result(result: dict[str, Any]) -> str:
     """Format assignment result as human-readable text."""
     lines = []
 
-    if result.get('dry_run'):
+    if result.get("dry_run"):
         lines.append("DRY RUN - No changes will be made")
         lines.append("=" * 40)
         lines.append(f"Project: {result['project_key']}")
         lines.append("")
         lines.append("Current Workflow Scheme:")
-        current = result.get('current_scheme', {})
+        current = result.get("current_scheme", {})
         lines.append(f"  ID:   {current.get('id', 'N/A')}")
         lines.append(f"  Name: {current.get('name', 'Unknown')}")
         lines.append("")
         lines.append("New Workflow Scheme:")
-        new = result.get('new_scheme', {})
+        new = result.get("new_scheme", {})
         lines.append(f"  ID:   {new.get('id', 'N/A')}")
         lines.append(f"  Name: {new.get('name', 'Unknown')}")
         lines.append("")
         lines.append("To apply this change, remove --dry-run and add --confirm")
     else:
-        if result.get('success'):
+        if result.get("success"):
             lines.append("SUCCESS: Workflow scheme assigned")
         else:
             lines.append("FAILED: Workflow scheme assignment failed")
@@ -190,20 +195,20 @@ def format_result(result: Dict[str, Any]) -> str:
         lines.append(f"Scheme ID: {result.get('scheme_id', 'Unknown')}")
         lines.append(f"Task ID: {result.get('task_id', 'N/A')}")
 
-        if result.get('message'):
+        if result.get("message"):
             lines.append(f"Message: {result['message']}")
 
     return "\n".join(lines)
 
 
-def format_result_json(result: Dict[str, Any]) -> str:
+def format_result_json(result: dict[str, Any]) -> str:
     """Format assignment result as JSON."""
     return json.dumps(result, indent=2, default=str)
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Assign a workflow scheme to a project',
+        description="Assign a workflow scheme to a project",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -229,59 +234,45 @@ Examples:
 
 Note: This is an experimental API endpoint.
       Requires 'Administer Jira' global permission.
-        """
+        """,
     )
 
     parser.add_argument(
-        '--project', '-p',
-        required=True,
-        dest='project_key',
-        help='Project key'
+        "--project", "-p", required=True, dest="project_key", help="Project key"
+    )
+    parser.add_argument("--scheme-id", type=int, help="Workflow scheme ID")
+    parser.add_argument(
+        "--scheme", "-s", dest="scheme_name", help="Workflow scheme name"
     )
     parser.add_argument(
-        '--scheme-id',
-        type=int,
-        help='Workflow scheme ID'
+        "--mappings", "-m", help="JSON file with status migration mappings"
     )
     parser.add_argument(
-        '--scheme', '-s',
-        dest='scheme_name',
-        help='Workflow scheme name'
+        "--show-current",
+        action="store_true",
+        help="Show current workflow scheme and exit",
     )
     parser.add_argument(
-        '--mappings', '-m',
-        help='JSON file with status migration mappings'
+        "--dry-run",
+        action="store_true",
+        help="Show what would change without making changes",
     )
     parser.add_argument(
-        '--show-current',
-        action='store_true',
-        help='Show current workflow scheme and exit'
+        "--confirm",
+        action="store_true",
+        help="Confirm the assignment (required for actual changes)",
     )
     parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Show what would change without making changes'
+        "--no-wait", action="store_true", help="Don't wait for operation to complete"
     )
     parser.add_argument(
-        '--confirm',
-        action='store_true',
-        help='Confirm the assignment (required for actual changes)'
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
     )
-    parser.add_argument(
-        '--no-wait',
-        action='store_true',
-        help="Don't wait for operation to complete"
-    )
-    parser.add_argument(
-        '--output', '-o',
-        choices=['text', 'json'],
-        default='text',
-        help='Output format (default: text)'
-    )
-    parser.add_argument(
-        '--profile',
-        help='Configuration profile to use'
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -289,9 +280,9 @@ Note: This is an experimental API endpoint.
     status_mappings = None
     if args.mappings:
         try:
-            with open(args.mappings, 'r') as f:
+            with open(args.mappings) as f:
                 status_mappings = json.load(f)
-        except (IOError, json.JSONDecodeError) as e:
+        except (OSError, json.JSONDecodeError) as e:
             print(f"Error loading mappings file: {e}", file=sys.stderr)
             sys.exit(1)
 
@@ -301,7 +292,7 @@ Note: This is an experimental API endpoint.
         # Show current and exit if requested
         if args.show_current:
             current = get_current_scheme(client, args.project_key)
-            if args.output == 'json':
+            if args.output == "json":
                 print(json.dumps(current, indent=2))
             else:
                 print(f"Current Workflow Scheme for {args.project_key}:")
@@ -318,25 +309,25 @@ Note: This is an experimental API endpoint.
             status_mappings=status_mappings,
             dry_run=args.dry_run,
             confirm=args.confirm,
-            wait=not args.no_wait
+            wait=not args.no_wait,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_result_json(result))
         else:
             print(format_result(result))
 
         # Exit with error if not successful (and not dry run)
-        if not result.get('dry_run') and not result.get('success'):
+        if not result.get("dry_run") and not result.get("success"):
             sys.exit(1)
 
     except JiraError as e:
         print_error(e)
         sys.exit(1)
     finally:
-        if 'client' in locals():
+        if "client" in locals():
             client.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

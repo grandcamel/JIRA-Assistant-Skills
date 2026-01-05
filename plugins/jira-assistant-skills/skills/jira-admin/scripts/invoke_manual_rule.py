@@ -12,27 +12,29 @@ Usage:
     python invoke_manual_rule.py RULE_ID --issue PROJ-123 --profile development
 """
 
-import sys
-import json
 import argparse
-from pathlib import Path
-from typing import Optional, Dict, Any
+import json
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_automation_client
-from jira_assistant_skills_lib import print_error, JiraError, AutomationError
+from jira_assistant_skills_lib import (
+    AutomationError,
+    JiraError,
+    get_automation_client,
+    print_error,
+)
 
 
 def invoke_manual_rule(
     client=None,
-    rule_id: str = None,
-    issue_key: Optional[str] = None,
-    context: Optional[Dict[str, Any]] = None,
-    properties: Optional[Dict[str, Any]] = None,
+    rule_id: str | None = None,
+    issue_key: str | None = None,
+    context: dict[str, Any] | None = None,
+    properties: dict[str, Any] | None = None,
     dry_run: bool = False,
-    profile: Optional[str] = None
-) -> Dict[str, Any]:
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Invoke a manual automation rule.
 
@@ -60,31 +62,29 @@ def invoke_manual_rule(
     # Build context from issue_key if not provided
     if context is None:
         if issue_key:
-            context = {'issue': {'key': issue_key}}
+            context = {"issue": {"key": issue_key}}
         else:
             raise ValueError("Either issue_key or context must be provided")
 
     if dry_run:
         return {
-            'dry_run': True,
-            'would_invoke': True,
-            'rule_id': rule_id,
-            'context': context,
-            'properties': properties
+            "dry_run": True,
+            "would_invoke": True,
+            "rule_id": rule_id,
+            "context": context,
+            "properties": properties,
         }
 
     # Invoke the rule
     return client.invoke_manual_rule(
-        rule_id=rule_id,
-        context=context,
-        properties=properties
+        rule_id=rule_id, context=context, properties=properties
     )
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Invoke a manual automation rule',
-        epilog='''
+        description="Invoke a manual automation rule",
+        epilog="""
 Examples:
     # Invoke rule on an issue
     python invoke_manual_rule.py 12345 --issue PROJ-123
@@ -104,21 +104,28 @@ Examples:
 
     # Use specific profile
     python invoke_manual_rule.py 12345 --issue PROJ-123 --profile development
-        '''
+        """,
     )
 
-    parser.add_argument('rule_id', help='Rule ID')
-    parser.add_argument('--issue', '-i', dest='issue_key',
-                        help='Issue key to run rule on')
-    parser.add_argument('--context-file', '-f',
-                        help='JSON file with context object')
-    parser.add_argument('--property', '-p', dest='properties_json',
-                        help='Properties as JSON string')
-    parser.add_argument('--dry-run', '-d', action='store_true',
-                        help='Preview without invoking')
-    parser.add_argument('--output', '-o', choices=['text', 'json'],
-                        default='text', help='Output format (default: text)')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument("rule_id", help="Rule ID")
+    parser.add_argument(
+        "--issue", "-i", dest="issue_key", help="Issue key to run rule on"
+    )
+    parser.add_argument("--context-file", "-f", help="JSON file with context object")
+    parser.add_argument(
+        "--property", "-p", dest="properties_json", help="Properties as JSON string"
+    )
+    parser.add_argument(
+        "--dry-run", "-d", action="store_true", help="Preview without invoking"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -130,7 +137,7 @@ Examples:
         # Load context from file if provided
         context = None
         if args.context_file:
-            with open(args.context_file, 'r') as f:
+            with open(args.context_file) as f:
                 context = json.load(f)
 
         # Parse properties JSON
@@ -144,25 +151,27 @@ Examples:
             context=context,
             properties=properties,
             dry_run=args.dry_run,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(result, indent=2))
         else:
             if args.dry_run:
                 print("\n[DRY RUN] Would invoke rule:")
                 print(f"  Rule ID: {result.get('rule_id')}")
                 print(f"  Context: {json.dumps(result.get('context'), indent=4)}")
-                if result.get('properties'):
-                    print(f"  Properties: {json.dumps(result.get('properties'), indent=4)}")
+                if result.get("properties"):
+                    print(
+                        f"  Properties: {json.dumps(result.get('properties'), indent=4)}"
+                    )
             else:
                 print("\nRule Invocation")
                 print("=" * 40)
                 print(f"Status: {result.get('status', 'completed')}")
-                if result.get('message'):
+                if result.get("message"):
                     print(f"Message: {result.get('message')}")
-                print(f"\nSuccess: Manual rule has been invoked.")
+                print("\nSuccess: Manual rule has been invoked.")
 
     except json.JSONDecodeError as e:
         print(f"\nError: Invalid JSON - {e}", file=sys.stderr)
@@ -181,5 +190,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

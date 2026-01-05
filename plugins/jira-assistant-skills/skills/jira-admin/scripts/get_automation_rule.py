@@ -14,24 +14,27 @@ Usage:
     python get_automation_rule.py RULE_ID --profile development
 """
 
-import sys
-import json
 import argparse
-from pathlib import Path
-from typing import Optional, Dict, Any
+import json
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_automation_client
-from jira_assistant_skills_lib import print_error, JiraError, AutomationError, AutomationNotFoundError
+from jira_assistant_skills_lib import (
+    AutomationError,
+    AutomationNotFoundError,
+    JiraError,
+    get_automation_client,
+    print_error,
+)
 
 
 def get_automation_rule(
     client=None,
-    rule_id: Optional[str] = None,
-    name: Optional[str] = None,
-    profile: Optional[str] = None
-) -> Dict[str, Any]:
+    rule_id: str | None = None,
+    name: str | None = None,
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Get detailed automation rule configuration.
 
@@ -58,31 +61,37 @@ def get_automation_rule(
     if name and not rule_id:
         # Search for rule by name
         response = client.search_rules(limit=100)
-        rules = response.get('values', [])
+        rules = response.get("values", [])
 
         # Find matching rule
-        matching_rules = [r for r in rules if r.get('name') == name]
+        matching_rules = [r for r in rules if r.get("name") == name]
 
         if not matching_rules:
             # Try partial match
-            matching_rules = [r for r in rules if name.lower() in r.get('name', '').lower()]
+            matching_rules = [
+                r for r in rules if name.lower() in r.get("name", "").lower()
+            ]
 
         if not matching_rules:
             raise AutomationNotFoundError("Automation rule", name)
 
         if len(matching_rules) > 1:
             # Multiple matches - return list of options
-            names = [r.get('name') for r in matching_rules]
+            names = [r.get("name") for r in matching_rules]
             raise ValueError(f"Multiple rules match '{name}': {names}")
 
-        rule_id = matching_rules[0].get('id')
+        rule_id = matching_rules[0].get("id")
 
     # Fetch full rule details
     return client.get_rule(rule_id)
 
 
-def format_rule_output(rule: Dict[str, Any], show_trigger: bool = False,
-                       show_components: bool = False, show_all: bool = True) -> str:
+def format_rule_output(
+    rule: dict[str, Any],
+    show_trigger: bool = False,
+    show_components: bool = False,
+    show_all: bool = True,
+) -> str:
     """Format rule for human-readable output."""
     lines = []
 
@@ -95,11 +104,11 @@ def format_rule_output(rule: Dict[str, Any], show_trigger: bool = False,
     lines.append(f"ID: {rule.get('id', 'N/A')}")
     lines.append(f"State: {rule.get('state', 'UNKNOWN')}")
 
-    if rule.get('description'):
+    if rule.get("description"):
         lines.append(f"Description: {rule.get('description')}")
 
     # Scope
-    scope_resources = rule.get('ruleScope', {}).get('resources', [])
+    scope_resources = rule.get("ruleScope", {}).get("resources", [])
     if scope_resources:
         lines.append(f"Scope: Project ({len(scope_resources)} project(s))")
         for resource in scope_resources[:5]:  # Limit display
@@ -111,7 +120,7 @@ def format_rule_output(rule: Dict[str, Any], show_trigger: bool = False,
     lines.append(f"Created: {rule.get('created', 'N/A')}")
     lines.append(f"Updated: {rule.get('updated', 'N/A')}")
 
-    if rule.get('authorAccountId'):
+    if rule.get("authorAccountId"):
         lines.append(f"Author: {rule.get('authorAccountId')}")
 
     # Trigger details
@@ -121,10 +130,10 @@ def format_rule_output(rule: Dict[str, Any], show_trigger: bool = False,
         lines.append("Trigger")
         lines.append("-" * 40)
 
-        trigger = rule.get('trigger', {})
+        trigger = rule.get("trigger", {})
         lines.append(f"Type: {trigger.get('type', 'Unknown')}")
 
-        config = trigger.get('configuration', {})
+        config = trigger.get("configuration", {})
         if config:
             lines.append("Configuration:")
             for key, value in config.items():
@@ -132,7 +141,7 @@ def format_rule_output(rule: Dict[str, Any], show_trigger: bool = False,
 
     # Components (actions/conditions)
     if show_components or show_all:
-        components = rule.get('components', [])
+        components = rule.get("components", [])
         if components:
             lines.append("")
             lines.append("-" * 40)
@@ -141,13 +150,15 @@ def format_rule_output(rule: Dict[str, Any], show_trigger: bool = False,
 
             for i, comp in enumerate(components, 1):
                 lines.append(f"\n{i}. {comp.get('type', 'Unknown')}")
-                if comp.get('value'):
+                if comp.get("value"):
                     lines.append(f"   Value: {comp.get('value')}")
-                if comp.get('children'):
-                    lines.append(f"   Children: {len(comp.get('children'))} nested component(s)")
+                if comp.get("children"):
+                    lines.append(
+                        f"   Children: {len(comp.get('children'))} nested component(s)"
+                    )
 
     # Connections
-    connections = rule.get('connections', [])
+    connections = rule.get("connections", [])
     if connections:
         lines.append("")
         lines.append("-" * 40)
@@ -163,8 +174,8 @@ def format_rule_output(rule: Dict[str, Any], show_trigger: bool = False,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Get detailed automation rule configuration',
-        epilog='''
+        description="Get detailed automation rule configuration",
+        epilog="""
 Examples:
     # Get rule by ID
     python get_automation_rule.py "ari:cloud:jira::site/12345..."
@@ -183,18 +194,25 @@ Examples:
 
     # Use specific profile
     python get_automation_rule.py RULE_ID --profile development
-        '''
+        """,
     )
 
-    parser.add_argument('rule_id', nargs='?', help='Rule ID (UUID/ARI format)')
-    parser.add_argument('--name', '-n', help='Rule name to search for')
-    parser.add_argument('--show-trigger', action='store_true',
-                        help='Show only trigger details')
-    parser.add_argument('--show-components', action='store_true',
-                        help='Show only components')
-    parser.add_argument('--output', '-o', choices=['text', 'json'],
-                        default='text', help='Output format (default: text)')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument("rule_id", nargs="?", help="Rule ID (UUID/ARI format)")
+    parser.add_argument("--name", "-n", help="Rule name to search for")
+    parser.add_argument(
+        "--show-trigger", action="store_true", help="Show only trigger details"
+    )
+    parser.add_argument(
+        "--show-components", action="store_true", help="Show only components"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -203,12 +221,10 @@ Examples:
 
     try:
         rule = get_automation_rule(
-            rule_id=args.rule_id,
-            name=args.name,
-            profile=args.profile
+            rule_id=args.rule_id, name=args.name, profile=args.profile
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(rule, indent=2))
         else:
             show_all = not (args.show_trigger or args.show_components)
@@ -216,7 +232,7 @@ Examples:
                 rule,
                 show_trigger=args.show_trigger,
                 show_components=args.show_components,
-                show_all=show_all
+                show_all=show_all,
             )
             print(output)
 
@@ -231,5 +247,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

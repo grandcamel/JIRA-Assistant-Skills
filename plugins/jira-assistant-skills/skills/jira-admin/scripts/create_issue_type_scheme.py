@@ -9,23 +9,25 @@ Requires 'Administer Jira' global permission.
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, ValidationError, print_error
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
 
 def create_issue_type_scheme(
     name: str,
-    issue_type_ids: List[str],
-    description: Optional[str] = None,
-    default_issue_type_id: Optional[str] = None,
+    issue_type_ids: list[str],
+    description: str | None = None,
+    default_issue_type_id: str | None = None,
     client=None,
-    profile: Optional[str] = None
-) -> Dict[str, Any]:
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Create a new issue type scheme.
 
@@ -61,7 +63,7 @@ def create_issue_type_scheme(
             name=name,
             issue_type_ids=issue_type_ids,
             description=description,
-            default_issue_type_id=default_issue_type_id
+            default_issue_type_id=default_issue_type_id,
         )
         return result
     finally:
@@ -69,9 +71,9 @@ def create_issue_type_scheme(
             client.close()
 
 
-def format_created_scheme(result: Dict[str, Any], output_format: str = 'detail') -> str:
+def format_created_scheme(result: dict[str, Any], output_format: str = "detail") -> str:
     """Format created scheme for display."""
-    if output_format == 'json':
+    if output_format == "json":
         return json.dumps(result, indent=2)
 
     lines = []
@@ -79,13 +81,13 @@ def format_created_scheme(result: Dict[str, Any], output_format: str = 'detail')
     lines.append("=" * 40)
     lines.append(f"Scheme ID: {result.get('issueTypeSchemeId', 'Unknown')}")
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Create a new issue type scheme in JIRA',
+        description="Create a new issue type scheme in JIRA",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -110,38 +112,25 @@ Note:
   Requires 'Administer Jira' global permission.
   At least one issue type ID is required.
   The default issue type must be included in the issue type list.
-"""
+""",
     )
 
+    parser.add_argument("--name", required=True, help="Scheme name")
     parser.add_argument(
-        '--name',
+        "--issue-type-ids",
+        nargs="+",
         required=True,
-        help='Scheme name'
+        help="Issue type IDs to include in the scheme",
     )
+    parser.add_argument("--description", help="Scheme description")
+    parser.add_argument("--default-issue-type-id", help="Default issue type ID")
     parser.add_argument(
-        '--issue-type-ids',
-        nargs='+',
-        required=True,
-        help='Issue type IDs to include in the scheme'
+        "--format",
+        choices=["detail", "json"],
+        default="detail",
+        help="Output format (default: detail)",
     )
-    parser.add_argument(
-        '--description',
-        help='Scheme description'
-    )
-    parser.add_argument(
-        '--default-issue-type-id',
-        help='Default issue type ID'
-    )
-    parser.add_argument(
-        '--format',
-        choices=['detail', 'json'],
-        default='detail',
-        help='Output format (default: detail)'
-    )
-    parser.add_argument(
-        '--profile',
-        help='Configuration profile to use'
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -151,7 +140,7 @@ Note:
             issue_type_ids=args.issue_type_ids,
             description=args.description,
             default_issue_type_id=args.default_issue_type_id,
-            profile=args.profile
+            profile=args.profile,
         )
 
         output = format_created_scheme(result, args.format)
@@ -162,5 +151,5 @@ Note:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

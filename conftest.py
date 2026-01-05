@@ -8,16 +8,16 @@ This file is placed at the project root to be automatically discovered
 by pytest and shared across all test directories.
 """
 
-import json
-import pytest
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock, Mock
 
+import pytest
 
 # =============================================================================
 # TEMPORARY DIRECTORY FIXTURES
 # =============================================================================
+
 
 @pytest.fixture
 def temp_path():
@@ -42,6 +42,7 @@ def temp_dir(temp_path):
 # COMMON MOCK FIXTURES
 # =============================================================================
 
+
 @pytest.fixture
 def base_mock_jira_client():
     """Base mock JiraClient with minimal setup.
@@ -63,6 +64,7 @@ def base_mock_jira_client():
 # PROJECT STRUCTURE FIXTURES
 # =============================================================================
 
+
 @pytest.fixture
 def claude_project_structure(temp_path):
     """Create a standard .claude project structure."""
@@ -75,7 +77,7 @@ def claude_project_structure(temp_path):
     shared_lib.mkdir(parents=True)
 
     settings = claude_dir / "settings.json"
-    settings.write_text('{}')
+    settings.write_text("{}")
 
     return {
         "root": project,
@@ -89,7 +91,7 @@ def claude_project_structure(temp_path):
 @pytest.fixture
 def sample_skill_md():
     """Return sample SKILL.md content."""
-    return '''---
+    return """---
 name: sample-skill
 description: A sample skill for testing.
 ---
@@ -101,12 +103,13 @@ description: A sample skill for testing.
 ```bash
 echo "Hello"
 ```
-'''
+"""
 
 
 # =============================================================================
 # SAMPLE DATA FIXTURES (shared across skills)
 # =============================================================================
+
 
 @pytest.fixture
 def sample_jira_project():

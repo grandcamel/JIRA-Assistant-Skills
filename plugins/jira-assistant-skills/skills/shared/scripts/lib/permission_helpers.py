@@ -4,32 +4,35 @@ Helper utilities for permission scheme operations.
 Provides functions for parsing, formatting, and validating permission grants.
 """
 
-import re
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Any
 
 from jira_assistant_skills_lib import ValidationError
 
-
 # Valid holder types for permission grants
 VALID_HOLDER_TYPES = [
-    'anyone',
-    'group',
-    'projectRole',
-    'user',
-    'projectLead',
-    'reporter',
-    'currentAssignee',
-    'applicationRole'
+    "anyone",
+    "group",
+    "projectRole",
+    "user",
+    "projectLead",
+    "reporter",
+    "currentAssignee",
+    "applicationRole",
 ]
 
 # Holder types that require a parameter
-HOLDER_TYPES_WITH_PARAMETER = ['group', 'projectRole', 'user', 'applicationRole']
+HOLDER_TYPES_WITH_PARAMETER = ["group", "projectRole", "user", "applicationRole"]
 
 # Holder types that don't require a parameter
-HOLDER_TYPES_WITHOUT_PARAMETER = ['anyone', 'projectLead', 'reporter', 'currentAssignee']
+HOLDER_TYPES_WITHOUT_PARAMETER = [
+    "anyone",
+    "projectLead",
+    "reporter",
+    "currentAssignee",
+]
 
 
-def parse_grant_string(grant_string: str) -> Tuple[str, str, Optional[str]]:
+def parse_grant_string(grant_string: str) -> tuple[str, str, str | None]:
     """
     Parse a grant string in the format PERMISSION:HOLDER_TYPE[:HOLDER_PARAMETER].
 
@@ -56,7 +59,7 @@ def parse_grant_string(grant_string: str) -> Tuple[str, str, Optional[str]]:
     if not grant_string:
         raise ValidationError("Grant string cannot be empty")
 
-    parts = grant_string.split(':')
+    parts = grant_string.split(":")
 
     if len(parts) < 2:
         raise ValidationError(
@@ -66,7 +69,7 @@ def parse_grant_string(grant_string: str) -> Tuple[str, str, Optional[str]]:
 
     permission = parts[0].upper()
     holder_type = parts[1]
-    holder_parameter = ':'.join(parts[2:]) if len(parts) > 2 else None
+    holder_parameter = ":".join(parts[2:]) if len(parts) > 2 else None
 
     # Validate holder type
     if holder_type not in VALID_HOLDER_TYPES:
@@ -91,7 +94,7 @@ def parse_grant_string(grant_string: str) -> Tuple[str, str, Optional[str]]:
     return permission, holder_type, holder_parameter
 
 
-def format_grant(grant: Dict[str, Any]) -> str:
+def format_grant(grant: dict[str, Any]) -> str:
     """
     Format a permission grant for display.
 
@@ -101,9 +104,9 @@ def format_grant(grant: Dict[str, Any]) -> str:
     Returns:
         Human-readable grant string (e.g., 'group: jira-developers')
     """
-    holder = grant.get('holder', {})
-    holder_type = holder.get('type', 'unknown')
-    parameter = holder.get('parameter')
+    holder = grant.get("holder", {})
+    holder_type = holder.get("type", "unknown")
+    parameter = holder.get("parameter")
 
     if holder_type in HOLDER_TYPES_WITHOUT_PARAMETER:
         return holder_type
@@ -113,7 +116,7 @@ def format_grant(grant: Dict[str, Any]) -> str:
         return holder_type
 
 
-def format_grant_for_export(grant: Dict[str, Any]) -> str:
+def format_grant_for_export(grant: dict[str, Any]) -> str:
     """
     Format a permission grant as a grant string for export/template.
 
@@ -123,10 +126,10 @@ def format_grant_for_export(grant: Dict[str, Any]) -> str:
     Returns:
         Grant string (e.g., 'BROWSE_PROJECTS:group:jira-developers')
     """
-    permission = grant.get('permission', 'UNKNOWN')
-    holder = grant.get('holder', {})
-    holder_type = holder.get('type', 'anyone')
-    parameter = holder.get('parameter')
+    permission = grant.get("permission", "UNKNOWN")
+    holder = grant.get("holder", {})
+    holder_type = holder.get("type", "anyone")
+    parameter = holder.get("parameter")
 
     if parameter:
         return f"{permission}:{holder_type}:{parameter}"
@@ -134,8 +137,9 @@ def format_grant_for_export(grant: Dict[str, Any]) -> str:
         return f"{permission}:{holder_type}"
 
 
-def build_grant_payload(permission: str, holder_type: str,
-                        holder_parameter: Optional[str] = None) -> Dict[str, Any]:
+def build_grant_payload(
+    permission: str, holder_type: str, holder_parameter: str | None = None
+) -> dict[str, Any]:
     """
     Build a permission grant payload for the JIRA API.
 
@@ -147,17 +151,14 @@ def build_grant_payload(permission: str, holder_type: str,
     Returns:
         Dict suitable for JIRA API permission grant creation
     """
-    holder = {'type': holder_type}
+    holder = {"type": holder_type}
     if holder_parameter:
-        holder['parameter'] = holder_parameter
+        holder["parameter"] = holder_parameter
 
-    return {
-        'permission': permission,
-        'holder': holder
-    }
+    return {"permission": permission, "holder": holder}
 
 
-def validate_permission(permission: str, available_permissions: Dict[str, Any]) -> bool:
+def validate_permission(permission: str, available_permissions: dict[str, Any]) -> bool:
     """
     Validate that a permission key exists in the JIRA instance.
 
@@ -175,8 +176,11 @@ def validate_permission(permission: str, available_permissions: Dict[str, Any]) 
 
     if permission_upper not in available_permissions:
         # Get suggestions
-        suggestions = [k for k in available_permissions.keys()
-                      if permission_upper in k or k in permission_upper]
+        suggestions = [
+            k
+            for k in available_permissions
+            if permission_upper in k or k in permission_upper
+        ]
         msg = f"Invalid permission key: '{permission}'"
         if suggestions:
             msg += f". Did you mean one of: {', '.join(suggestions[:5])}"
@@ -206,8 +210,9 @@ def validate_holder_type(holder_type: str) -> bool:
     return True
 
 
-def find_scheme_by_name(schemes: List[Dict[str, Any]], name: str,
-                        fuzzy: bool = False) -> Optional[Dict[str, Any]]:
+def find_scheme_by_name(
+    schemes: list[dict[str, Any]], name: str, fuzzy: bool = False
+) -> dict[str, Any] | None:
     """
     Find a permission scheme by name.
 
@@ -224,7 +229,7 @@ def find_scheme_by_name(schemes: List[Dict[str, Any]], name: str,
     """
     # Try exact match first
     for scheme in schemes:
-        if scheme.get('name', '').lower() == name.lower():
+        if scheme.get("name", "").lower() == name.lower():
             return scheme
 
     if not fuzzy:
@@ -234,7 +239,7 @@ def find_scheme_by_name(schemes: List[Dict[str, Any]], name: str,
     matches = []
     name_lower = name.lower()
     for scheme in schemes:
-        scheme_name = scheme.get('name', '').lower()
+        scheme_name = scheme.get("name", "").lower()
         if name_lower in scheme_name:
             matches.append(scheme)
 
@@ -243,14 +248,16 @@ def find_scheme_by_name(schemes: List[Dict[str, Any]], name: str,
     elif len(matches) == 1:
         return matches[0]
     else:
-        match_names = [m.get('name') for m in matches]
+        match_names = [m.get("name") for m in matches]
         raise ValidationError(
             f"Ambiguous scheme name '{name}' matches multiple schemes: "
             f"{', '.join(match_names)}. Please be more specific."
         )
 
 
-def group_grants_by_permission(grants: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+def group_grants_by_permission(
+    grants: list[dict[str, Any]],
+) -> dict[str, list[dict[str, Any]]]:
     """
     Group permission grants by permission key.
 
@@ -262,15 +269,19 @@ def group_grants_by_permission(grants: List[Dict[str, Any]]) -> Dict[str, List[D
     """
     grouped = {}
     for grant in grants:
-        permission = grant.get('permission', 'UNKNOWN')
+        permission = grant.get("permission", "UNKNOWN")
         if permission not in grouped:
             grouped[permission] = []
         grouped[permission].append(grant)
     return grouped
 
 
-def find_grant_by_spec(grants: List[Dict[str, Any]], permission: str,
-                       holder_type: str, holder_parameter: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def find_grant_by_spec(
+    grants: list[dict[str, Any]],
+    permission: str,
+    holder_type: str,
+    holder_parameter: str | None = None,
+) -> dict[str, Any] | None:
     """
     Find a specific grant by permission and holder specification.
 
@@ -286,14 +297,14 @@ def find_grant_by_spec(grants: List[Dict[str, Any]], permission: str,
     permission_upper = permission.upper()
 
     for grant in grants:
-        if grant.get('permission', '').upper() != permission_upper:
+        if grant.get("permission", "").upper() != permission_upper:
             continue
 
-        holder = grant.get('holder', {})
-        if holder.get('type') != holder_type:
+        holder = grant.get("holder", {})
+        if holder.get("type") != holder_type:
             continue
 
-        grant_param = holder.get('parameter')
+        grant_param = holder.get("parameter")
         if holder_parameter:
             if grant_param and grant_param.lower() == holder_parameter.lower():
                 return grant
@@ -304,7 +315,7 @@ def find_grant_by_spec(grants: List[Dict[str, Any]], permission: str,
     return None
 
 
-def get_holder_display(holder: Dict[str, Any]) -> str:
+def get_holder_display(holder: dict[str, Any]) -> str:
     """
     Get a human-readable display string for a holder.
 
@@ -314,30 +325,30 @@ def get_holder_display(holder: Dict[str, Any]) -> str:
     Returns:
         Display string (e.g., 'group: jira-developers', 'anyone')
     """
-    holder_type = holder.get('type', 'unknown')
-    parameter = holder.get('parameter')
+    holder_type = holder.get("type", "unknown")
+    parameter = holder.get("parameter")
 
-    if holder_type == 'anyone':
-        return 'anyone'
-    elif holder_type == 'projectLead':
-        return 'project lead'
-    elif holder_type == 'reporter':
-        return 'reporter'
-    elif holder_type == 'currentAssignee':
-        return 'current assignee'
-    elif holder_type == 'group' and parameter:
+    if holder_type == "anyone":
+        return "anyone"
+    elif holder_type == "projectLead":
+        return "project lead"
+    elif holder_type == "reporter":
+        return "reporter"
+    elif holder_type == "currentAssignee":
+        return "current assignee"
+    elif holder_type == "group" and parameter:
         return f"group: {parameter}"
-    elif holder_type == 'projectRole' and parameter:
+    elif holder_type == "projectRole" and parameter:
         return f"role: {parameter}"
-    elif holder_type == 'user' and parameter:
+    elif holder_type == "user" and parameter:
         return f"user: {parameter}"
-    elif holder_type == 'applicationRole' and parameter:
+    elif holder_type == "applicationRole" and parameter:
         return f"app role: {parameter}"
     else:
         return holder_type
 
 
-def format_scheme_summary(scheme: Dict[str, Any]) -> str:
+def format_scheme_summary(scheme: dict[str, Any]) -> str:
     """
     Format a permission scheme for summary display.
 
@@ -347,10 +358,10 @@ def format_scheme_summary(scheme: Dict[str, Any]) -> str:
     Returns:
         Summary string
     """
-    name = scheme.get('name', 'Unknown')
-    scheme_id = scheme.get('id', '?')
-    description = scheme.get('description', '')
-    permissions = scheme.get('permissions', [])
+    name = scheme.get("name", "Unknown")
+    scheme_id = scheme.get("id", "?")
+    description = scheme.get("description", "")
+    permissions = scheme.get("permissions", [])
 
     summary = f"{name} (ID: {scheme_id})"
     if description:

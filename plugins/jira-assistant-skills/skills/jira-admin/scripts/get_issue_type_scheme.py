@@ -9,21 +9,23 @@ Requires 'Administer Jira' global permission.
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, NotFoundError, print_error
+from jira_assistant_skills_lib import (
+    JiraError,
+    NotFoundError,
+    get_jira_client,
+    print_error,
+)
 
 
 def get_issue_type_scheme(
     scheme_id: str,
     client=None,
-    profile: Optional[str] = None,
-    include_items: bool = False
-) -> Dict[str, Any]:
+    profile: str | None = None,
+    include_items: bool = False,
+) -> dict[str, Any]:
     """
     Get issue type scheme details by ID.
 
@@ -46,21 +48,20 @@ def get_issue_type_scheme(
     try:
         # Get scheme by filtering
         result = client.get_issue_type_schemes(scheme_ids=[scheme_id])
-        schemes = result.get('values', [])
+        schemes = result.get("values", [])
 
         if not schemes:
-            raise NotFoundError('Issue type scheme', scheme_id)
+            raise NotFoundError("Issue type scheme", scheme_id)
 
         scheme = schemes[0]
 
         # Get issue type mappings if requested
         if include_items:
-            items_result = client.get_issue_type_scheme_items(
-                scheme_ids=[scheme_id]
-            )
-            scheme['items'] = [
-                item for item in items_result.get('values', [])
-                if item.get('issueTypeSchemeId') == scheme_id
+            items_result = client.get_issue_type_scheme_items(scheme_ids=[scheme_id])
+            scheme["items"] = [
+                item
+                for item in items_result.get("values", [])
+                if item.get("issueTypeSchemeId") == scheme_id
             ]
 
         return scheme
@@ -69,9 +70,9 @@ def get_issue_type_scheme(
             client.close()
 
 
-def format_scheme(scheme: Dict[str, Any], output_format: str = 'detail') -> str:
+def format_scheme(scheme: dict[str, Any], output_format: str = "detail") -> str:
     """Format scheme for display."""
-    if output_format == 'json':
+    if output_format == "json":
         return json.dumps(scheme, indent=2)
 
     lines = []
@@ -84,20 +85,20 @@ def format_scheme(scheme: Dict[str, Any], output_format: str = 'detail') -> str:
     lines.append(f"Is Default:      {'Yes' if scheme.get('isDefault') else 'No'}")
 
     # Issue type mappings
-    if 'items' in scheme and scheme['items']:
+    if scheme.get("items"):
         lines.append("")
         lines.append("Issue Types in Scheme:")
         lines.append("-" * 30)
-        for item in scheme['items']:
+        for item in scheme["items"]:
             lines.append(f"  - Type ID: {item.get('issueTypeId', '')}")
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Get issue type scheme details from JIRA',
+        description="Get issue type scheme details from JIRA",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -112,28 +113,20 @@ Examples:
 
   # Use specific profile
   python get_issue_type_scheme.py 10000 --profile production
-"""
+""",
     )
 
+    parser.add_argument("scheme_id", help="Issue type scheme ID to retrieve")
     parser.add_argument(
-        'scheme_id',
-        help='Issue type scheme ID to retrieve'
+        "--include-items", action="store_true", help="Include issue type mappings"
     )
     parser.add_argument(
-        '--include-items',
-        action='store_true',
-        help='Include issue type mappings'
+        "--format",
+        choices=["detail", "json"],
+        default="detail",
+        help="Output format (default: detail)",
     )
-    parser.add_argument(
-        '--format',
-        choices=['detail', 'json'],
-        default='detail',
-        help='Output format (default: detail)'
-    )
-    parser.add_argument(
-        '--profile',
-        help='Configuration profile to use'
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -141,7 +134,7 @@ Examples:
         scheme = get_issue_type_scheme(
             scheme_id=args.scheme_id,
             profile=args.profile,
-            include_items=args.include_items
+            include_items=args.include_items,
         )
 
         output = format_scheme(scheme, args.format)
@@ -152,5 +145,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

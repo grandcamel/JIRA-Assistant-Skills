@@ -11,12 +11,14 @@ Usage:
 """
 
 import argparse
-import sys
 import json
+import sys
 from pathlib import Path
 
 # Add shared lib to path
-shared_lib_path = str(Path(__file__).parent.parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(
+    Path(__file__).parent.parent.parent.parent / "shared" / "scripts" / "lib"
+)
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
@@ -41,14 +43,14 @@ def format_text(article: dict) -> str:
     """Format KB article as human-readable text."""
     output = [f"Knowledge Base Article: {article['title']}\n"]
 
-    if 'excerpt' in article:
-        excerpt = article['excerpt'].replace('<em>', '').replace('</em>', '')
+    if "excerpt" in article:
+        excerpt = article["excerpt"].replace("<em>", "").replace("</em>", "")
         output.append(f"Excerpt:\n{excerpt}\n")
 
-    if '_links' in article and 'self' in article['_links']:
+    if "_links" in article and "self" in article["_links"]:
         output.append(f"URL: {article['_links']['self']}")
 
-    if 'source' in article:
+    if "source" in article:
         output.append(f"Source: {article['source'].get('type', 'unknown')}")
 
     return "\n".join(output)
@@ -63,26 +65,29 @@ def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Get Knowledge Base article details",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__
+        epilog=__doc__,
     )
-    parser.add_argument('--article-id', required=True,
-                       help='KB article ID')
-    parser.add_argument('--output', choices=['text', 'json'], default='text',
-                       help='Output format (default: text)')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument("--article-id", required=True, help="KB article ID")
+    parser.add_argument(
+        "--output",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         article = get_kb_article(args.article_id)
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_json(article))
         else:
             print(format_text(article))
 
     except Exception as e:
-        print(f"Error getting KB article: {str(e)}", file=sys.stderr)
+        print(f"Error getting KB article: {e!s}", file=sys.stderr)
         sys.exit(1)
 
 

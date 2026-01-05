@@ -7,23 +7,21 @@ Requires 'Administer Jira' global permission.
 """
 
 import argparse
-import json
 import sys
-from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, print_error
-from jira_assistant_skills_lib import format_table
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_table,
+    get_jira_client,
+    print_error,
+)
 
 
 def get_alternatives_for_type(
-    issue_type_id: str,
-    client=None,
-    profile: Optional[str] = None
-) -> List[Dict[str, Any]]:
+    issue_type_id: str, client=None, profile: str | None = None
+) -> list[dict[str, Any]]:
     """
     Get alternative issue types for migration.
 
@@ -50,10 +48,10 @@ def get_alternatives_for_type(
 
 def delete_issue_type(
     issue_type_id: str,
-    alternative_id: Optional[str] = None,
+    alternative_id: str | None = None,
     client=None,
-    profile: Optional[str] = None,
-    dry_run: bool = False
+    profile: str | None = None,
+    dry_run: bool = False,
 ) -> bool:
     """
     Delete an issue type.
@@ -81,8 +79,7 @@ def delete_issue_type(
 
     try:
         client.delete_issue_type(
-            issue_type_id,
-            alternative_issue_type_id=alternative_id
+            issue_type_id, alternative_issue_type_id=alternative_id
         )
         return True
     finally:
@@ -90,13 +87,13 @@ def delete_issue_type(
             client.close()
 
 
-def format_alternatives(alternatives: List[Dict[str, Any]]) -> str:
+def format_alternatives(alternatives: list[dict[str, Any]]) -> str:
     """Format alternatives for display."""
     if not alternatives:
         return "No alternative issue types available."
 
-    headers = ['ID', 'Name']
-    rows = [[alt.get('id', ''), alt.get('name', '')] for alt in alternatives]
+    headers = ["ID", "Name"]
+    rows = [[alt.get("id", ""), alt.get("name", "")] for alt in alternatives]
 
     return format_table(headers, rows)
 
@@ -104,7 +101,7 @@ def format_alternatives(alternatives: List[Dict[str, Any]]) -> str:
 def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Delete an issue type from JIRA',
+        description="Delete an issue type from JIRA",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -130,36 +127,25 @@ Note:
   Requires 'Administer Jira' global permission.
   If issues exist with this type, you must specify --alternative-id.
   Use --show-alternatives to see valid alternative types.
-"""
+""",
     )
 
+    parser.add_argument("issue_type_id", help="Issue type ID to delete")
     parser.add_argument(
-        'issue_type_id',
-        help='Issue type ID to delete'
+        "--alternative-id", help="Alternative issue type ID for existing issues"
     )
     parser.add_argument(
-        '--alternative-id',
-        help='Alternative issue type ID for existing issues'
+        "--show-alternatives",
+        action="store_true",
+        help="Show alternative issue types and exit",
     )
     parser.add_argument(
-        '--show-alternatives',
-        action='store_true',
-        help='Show alternative issue types and exit'
+        "--dry-run",
+        action="store_true",
+        help="Simulate deletion without making changes",
     )
-    parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Simulate deletion without making changes'
-    )
-    parser.add_argument(
-        '--force',
-        action='store_true',
-        help='Skip confirmation prompt'
-    )
-    parser.add_argument(
-        '--profile',
-        help='Configuration profile to use'
-    )
+    parser.add_argument("--force", action="store_true", help="Skip confirmation prompt")
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -167,8 +153,7 @@ Note:
         # Show alternatives only
         if args.show_alternatives:
             alternatives = get_alternatives_for_type(
-                issue_type_id=args.issue_type_id,
-                profile=args.profile
+                issue_type_id=args.issue_type_id, profile=args.profile
             )
             print(f"Alternative issue types for ID {args.issue_type_id}:")
             print(format_alternatives(alternatives))
@@ -180,7 +165,7 @@ Note:
                 f"Are you sure you want to delete issue type {args.issue_type_id}? "
                 "This cannot be undone. [y/N]: "
             )
-            if confirm.lower() != 'y':
+            if confirm.lower() != "y":
                 print("Deletion cancelled.")
                 return
 
@@ -188,12 +173,14 @@ Note:
         if args.dry_run:
             print(f"[DRY RUN] Would delete issue type {args.issue_type_id}")
             if args.alternative_id:
-                print(f"[DRY RUN] Issues would be migrated to type {args.alternative_id}")
+                print(
+                    f"[DRY RUN] Issues would be migrated to type {args.alternative_id}"
+                )
         else:
             delete_issue_type(
                 issue_type_id=args.issue_type_id,
                 alternative_id=args.alternative_id,
-                profile=args.profile
+                profile=args.profile,
             )
             print(f"Issue type {args.issue_type_id} deleted successfully.")
             if args.alternative_id:
@@ -204,5 +191,5 @@ Note:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

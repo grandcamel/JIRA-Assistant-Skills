@@ -9,20 +9,20 @@ Requires 'Administer Jira' global permission.
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, NotFoundError, print_error
+from jira_assistant_skills_lib import (
+    JiraError,
+    NotFoundError,
+    get_jira_client,
+    print_error,
+)
 
 
 def get_project_issue_type_scheme(
-    project_id: str,
-    client=None,
-    profile: Optional[str] = None
-) -> Dict[str, Any]:
+    project_id: str, client=None, profile: str | None = None
+) -> dict[str, Any]:
     """
     Get issue type scheme assigned to a project.
 
@@ -42,13 +42,11 @@ def get_project_issue_type_scheme(
         client = get_jira_client(profile=profile)
 
     try:
-        result = client.get_issue_type_scheme_for_projects(
-            project_ids=[project_id]
-        )
+        result = client.get_issue_type_scheme_for_projects(project_ids=[project_id])
 
-        values = result.get('values', [])
+        values = result.get("values", [])
         if not values:
-            raise NotFoundError('Issue type scheme for project', project_id)
+            raise NotFoundError("Issue type scheme for project", project_id)
 
         return values[0]
     finally:
@@ -56,13 +54,15 @@ def get_project_issue_type_scheme(
             client.close()
 
 
-def format_project_scheme(assignment: Dict[str, Any], output_format: str = 'detail') -> str:
+def format_project_scheme(
+    assignment: dict[str, Any], output_format: str = "detail"
+) -> str:
     """Format project scheme assignment for display."""
-    if output_format == 'json':
+    if output_format == "json":
         return json.dumps(assignment, indent=2)
 
-    scheme = assignment.get('issueTypeScheme', {})
-    project_ids = assignment.get('projectIds', [])
+    scheme = assignment.get("issueTypeScheme", {})
+    project_ids = assignment.get("projectIds", [])
 
     lines = []
     lines.append("Project Issue Type Scheme")
@@ -74,13 +74,13 @@ def format_project_scheme(assignment: Dict[str, Any], output_format: str = 'deta
     lines.append(f"Is Default:      {'Yes' if scheme.get('isDefault') else 'No'}")
     lines.append(f"Project IDs:     {', '.join(project_ids)}")
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Get issue type scheme for a project',
+        description="Get issue type scheme for a project",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -92,30 +92,23 @@ Examples:
 
   # Use specific profile
   python get_project_issue_type_scheme.py 10000 --profile production
-"""
+""",
     )
 
+    parser.add_argument("project_id", help="Project ID to query")
     parser.add_argument(
-        'project_id',
-        help='Project ID to query'
+        "--format",
+        choices=["detail", "json"],
+        default="detail",
+        help="Output format (default: detail)",
     )
-    parser.add_argument(
-        '--format',
-        choices=['detail', 'json'],
-        default='detail',
-        help='Output format (default: detail)'
-    )
-    parser.add_argument(
-        '--profile',
-        help='Configuration profile to use'
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         assignment = get_project_issue_type_scheme(
-            project_id=args.project_id,
-            profile=args.profile
+            project_id=args.project_id, profile=args.profile
         )
 
         output = format_project_scheme(assignment, args.format)
@@ -126,5 +119,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

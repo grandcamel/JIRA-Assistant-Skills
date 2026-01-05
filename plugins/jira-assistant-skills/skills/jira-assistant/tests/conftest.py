@@ -2,10 +2,10 @@
 
 import os
 import sys
+import time
 from pathlib import Path
 
 import pytest
-import time
 
 # Add tests directory to path for otel_metrics import
 TESTS_DIR = Path(__file__).parent
@@ -15,16 +15,16 @@ if str(TESTS_DIR) not in sys.path:
 # OpenTelemetry integration (optional)
 try:
     from otel_metrics import (
+        OTEL_AVAILABLE,
+        end_suite_span,
+        end_worker_span,
         init_telemetry,
         record_test_result,
         record_test_session_summary,
-        start_suite_span,
-        end_suite_span,
         set_suite_context_from_traceparent,
-        start_worker_span,
-        end_worker_span,
         shutdown as otel_shutdown,
-        OTEL_AVAILABLE
+        start_suite_span,
+        start_worker_span,
     )
 except ImportError:
     OTEL_AVAILABLE = False
@@ -48,27 +48,25 @@ def pytest_addoption(parser):
         "--otel",
         action="store_true",
         default=False,
-        help="Enable OpenTelemetry metrics export"
+        help="Enable OpenTelemetry metrics export",
     )
     parser.addoption(
         "--otlp-endpoint",
         action="store",
         default="http://localhost:4318",
-        help="OTLP HTTP endpoint (default: http://localhost:4318)"
+        help="OTLP HTTP endpoint (default: http://localhost:4318)",
     )
     parser.addoption(
         "--model",
         action="store",
         default=None,
-        help="Claude model to use (e.g., 'haiku' for fast iteration, 'sonnet' for production)"
+        help="Claude model to use (e.g., 'haiku' for fast iteration, 'sonnet' for production)",
     )
 
 
 def pytest_configure(config):
     """Register custom markers and initialize telemetry."""
-    config.addinivalue_line(
-        "markers", "direct: Direct routing tests (high certainty)"
-    )
+    config.addinivalue_line("markers", "direct: Direct routing tests (high certainty)")
     config.addinivalue_line(
         "markers", "disambiguation: Disambiguation tests (ask for clarification)"
     )
@@ -78,19 +76,14 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "context: Context-dependent tests (require session state)"
     )
-    config.addinivalue_line(
-        "markers", "workflow: Multi-skill workflow tests"
-    )
-    config.addinivalue_line(
-        "markers", "edge: Edge case tests"
-    )
-    config.addinivalue_line(
-        "markers", "slow: Slow tests (each test calls Claude API)"
-    )
+    config.addinivalue_line("markers", "workflow: Multi-skill workflow tests")
+    config.addinivalue_line("markers", "edge: Edge case tests")
+    config.addinivalue_line("markers", "slow: Slow tests (each test calls Claude API)")
 
     # Initialize OpenTelemetry if requested
     if config.getoption("--otel") and OTEL_AVAILABLE:
         import os
+
         os.environ["OTLP_HTTP_ENDPOINT"] = config.getoption("--otlp-endpoint")
         if init_telemetry():
             config._otel_enabled = True
@@ -100,14 +93,16 @@ def pytest_configure(config):
     else:
         config._otel_enabled = False
         if config.getoption("--otel") and not OTEL_AVAILABLE:
-            print("Warning: OpenTelemetry not available. Install with: pip install -r requirements-otel.txt")
+            print(
+                "Warning: OpenTelemetry not available. Install with: pip install -r requirements-otel.txt"
+            )
 
 
 def pytest_sessionstart(session):
     """Start suite and worker spans at session start."""
     config = session.config
 
-    if not getattr(config, '_otel_enabled', False):
+    if not getattr(config, "_otel_enabled", False):
         return
 
     # Check if we're an xdist worker
@@ -152,7 +147,7 @@ def pytest_sessionfinish(session, exitstatus):
     """End worker and suite spans at session finish."""
     config = session.config
 
-    if not getattr(config, '_otel_enabled', False):
+    if not getattr(config, "_otel_enabled", False):
         return
 
     # Get counts from terminal reporter if available
@@ -163,7 +158,7 @@ def pytest_sessionfinish(session, exitstatus):
         skipped = len(reporter.stats.get("skipped", []))
     else:
         # Fall back to cost_tracker counts
-        cost_tracker = getattr(config, '_cost_tracker', None)
+        cost_tracker = getattr(config, "_cost_tracker", None)
         if cost_tracker:
             passed = cost_tracker.get("passed", 0)
             failed = cost_tracker.get("failed", 0)
@@ -186,7 +181,7 @@ def pytest_sessionfinish(session, exitstatus):
 
     if end_suite_span:
         # Get cost from cost_tracker if available
-        cost_tracker = getattr(config, '_cost_tracker', None)
+        cost_tracker = getattr(config, "_cost_tracker", None)
         total_cost = cost_tracker.get("total_cost_usd", 0.0) if cost_tracker else 0.0
 
         end_suite_span(
@@ -199,7 +194,7 @@ def pytest_sessionfinish(session, exitstatus):
 
 def pytest_unconfigure(config):
     """Shutdown telemetry on exit."""
-    if getattr(config, '_otel_enabled', False) and otel_shutdown:
+    if getattr(config, "_otel_enabled", False) and otel_shutdown:
         otel_shutdown()
 
 
@@ -213,7 +208,7 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(scope="session")
 def otel_enabled(request):
     """Check if OpenTelemetry is enabled for this session."""
-    return getattr(request.config, '_otel_enabled', False)
+    return getattr(request.config, "_otel_enabled", False)
 
 
 @pytest.fixture(scope="session")
@@ -248,7 +243,7 @@ def cost_tracker(request):
         "passed": 0,
         "failed": 0,
         "skipped": 0,
-        "start_time": time.time()
+        "start_time": time.time(),
     }
 
     # Store in config for pytest_sessionfinish access
@@ -261,14 +256,14 @@ def cost_tracker(request):
     print(f"Total API time: {tracker['total_duration_ms'] / 1000:.1f}s")
 
     # Record session summary to OpenTelemetry (legacy - suite span now handles this)
-    if getattr(request.config, '_otel_enabled', False) and record_test_session_summary:
+    if getattr(request.config, "_otel_enabled", False) and record_test_session_summary:
         elapsed_ms = int((time.time() - tracker["start_time"]) * 1000)
         record_test_session_summary(
             passed=tracker["passed"],
             failed=tracker["failed"],
             skipped=tracker["skipped"],
             total_duration_ms=elapsed_ms,
-            total_cost_usd=tracker["total_cost_usd"]
+            total_cost_usd=tracker["total_cost_usd"],
         )
 
 
@@ -328,13 +323,17 @@ def record_otel(request, otel_enabled, cost_tracker):
         if not passed and not classified_error_type:
             if expected_skill and actual_skill and expected_skill != actual_skill:
                 classified_error_type = "misroute"
-                classified_error_message = f"Expected {expected_skill}, got {actual_skill}"
+                classified_error_message = (
+                    f"Expected {expected_skill}, got {actual_skill}"
+                )
             elif not actual_skill or actual_skill == "none":
                 classified_error_type = "no_skill_detected"
                 classified_error_message = "No skill was detected in response"
             elif asked_clarification and category != "disambiguation":
                 classified_error_type = "unexpected_clarification"
-                classified_error_message = "Asked for clarification when direct routing expected"
+                classified_error_message = (
+                    "Asked for clarification when direct routing expected"
+                )
             else:
                 classified_error_type = "assertion_failed"
                 classified_error_message = "Test assertion failed"

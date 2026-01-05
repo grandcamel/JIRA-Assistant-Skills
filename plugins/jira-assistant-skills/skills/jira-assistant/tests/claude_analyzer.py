@@ -2,14 +2,12 @@
 """Claude CLI interaction for analyzing test failures and generating fixes."""
 
 import json
+import logging
 import re
 import subprocess
-import logging
 from dataclasses import dataclass
-from pathlib import Path
 
 from skill_editor import SkillEditor
-
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TestCase:
     """Information about a test case."""
+
     test_id: str
     input_text: str
     expected_skill: str
@@ -28,6 +27,7 @@ class TestCase:
 @dataclass
 class FixProposal:
     """A proposed fix from Claude."""
+
     analysis: str
     fix_target: str  # "expected", "actual", or "both"
     changes: list[dict]
@@ -66,8 +66,10 @@ class ClaudeAnalyzer:
         cmd = [
             "claude",
             "--print",
-            "--model", self.model,
-            "--permission-mode", "dontAsk",
+            "--model",
+            self.model,
+            "--permission-mode",
+            "dontAsk",
             prompt,
         ]
 
@@ -150,7 +152,10 @@ class ClaudeAnalyzer:
         expected_context = self._get_skill_context(test_case.expected_skill)
 
         actual_context = ""
-        if test_case.actual_skill and test_case.actual_skill != test_case.expected_skill:
+        if (
+            test_case.actual_skill
+            and test_case.actual_skill != test_case.expected_skill
+        ):
             actual_context = self._get_skill_context(test_case.actual_skill)
 
         prompt = f'''You are a skills routing test engineer. Analyze this failing routing test and propose a fix.
@@ -201,7 +206,7 @@ Output ONLY valid JSON (no other text):
             logger.error(f"Failed to parse Claude response: {e}")
             # Return a default proposal to retry
             return FixProposal(
-                analysis=f"Failed to parse response: {str(e)}",
+                analysis=f"Failed to parse response: {e!s}",
                 fix_target="expected",
                 changes=[],
                 raw_response=response,
@@ -295,7 +300,7 @@ Output ONLY valid JSON (no other text):
         except ValueError as e:
             logger.error(f"Failed to parse conflict resolution response: {e}")
             return FixProposal(
-                analysis=f"Failed to parse response: {str(e)}",
+                analysis=f"Failed to parse response: {e!s}",
                 fix_target="both",
                 changes=[],
                 raw_response=response,
@@ -325,12 +330,15 @@ Output ONLY valid JSON (no other text):
         expected_context = self._get_skill_context(test_case.expected_skill)
 
         actual_context = ""
-        if test_case.actual_skill and test_case.actual_skill != test_case.expected_skill:
+        if (
+            test_case.actual_skill
+            and test_case.actual_skill != test_case.expected_skill
+        ):
             actual_context = self._get_skill_context(test_case.actual_skill)
 
         # Summarize previous attempts
         attempts_summary = "\n".join(
-            f"- Attempt {i+1}: {p.analysis} - Changes: {json.dumps(p.changes)}"
+            f"- Attempt {i + 1}: {p.analysis} - Changes: {json.dumps(p.changes)}"
             for i, p in enumerate(previous_attempts)
         )
 
@@ -383,7 +391,7 @@ Output ONLY valid JSON (no other text):
         except ValueError as e:
             logger.error(f"Failed to parse alternative fix response: {e}")
             return FixProposal(
-                analysis=f"Failed to parse response: {str(e)}",
+                analysis=f"Failed to parse response: {e!s}",
                 fix_target="expected",
                 changes=[],
                 raw_response=response,

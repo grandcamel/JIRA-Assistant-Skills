@@ -5,22 +5,22 @@ Get detailed information about a specific screen scheme.
 Shows scheme details and screen mappings.
 """
 
-import sys
 import argparse
-import json
-from pathlib import Path
-from typing import Dict, Any, Optional
+import sys
+from typing import Any
 
 # Add shared lib to path
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_json,
+    get_jira_client,
+    print_error,
+)
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import format_json
 
-
-def get_screen_scheme(scheme_id: int,
-                      client=None,
-                      show_screen_details: bool = False) -> Dict[str, Any]:
+def get_screen_scheme(
+    scheme_id: int, client=None, show_screen_details: bool = False
+) -> dict[str, Any]:
     """
     Get detailed information about a specific screen scheme.
 
@@ -34,33 +34,33 @@ def get_screen_scheme(scheme_id: int,
     """
     if client is None:
         from jira_assistant_skills_lib import get_jira_client
+
         client = get_jira_client()
 
     scheme = client.get_screen_scheme(scheme_id)
 
-    if show_screen_details and scheme.get('screens'):
+    if show_screen_details and scheme.get("screens"):
         # Resolve screen IDs to names
         screens_info = {}
-        for operation, screen_id in scheme.get('screens', {}).items():
+        for operation, screen_id in scheme.get("screens", {}).items():
             if screen_id:
                 try:
                     screen = client.get_screen(screen_id)
                     screens_info[operation] = {
-                        'id': screen_id,
-                        'name': screen.get('name', f'Screen {screen_id}')
+                        "id": screen_id,
+                        "name": screen.get("name", f"Screen {screen_id}"),
                     }
                 except Exception:
                     screens_info[operation] = {
-                        'id': screen_id,
-                        'name': f'Screen {screen_id}'
+                        "id": screen_id,
+                        "name": f"Screen {screen_id}",
                     }
-        scheme['screens_details'] = screens_info
+        scheme["screens_details"] = screens_info
 
     return scheme
 
 
-def format_scheme_output(scheme: Dict[str, Any],
-                         output_format: str = 'text') -> str:
+def format_scheme_output(scheme: dict[str, Any], output_format: str = "text") -> str:
     """
     Format screen scheme details for output.
 
@@ -71,38 +71,40 @@ def format_scheme_output(scheme: Dict[str, Any],
     Returns:
         Formatted output string
     """
-    if output_format == 'json':
+    if output_format == "json":
         return format_json(scheme)
 
     lines = []
     lines.append(f"Screen Scheme: {scheme.get('name', 'Unknown')}")
     lines.append(f"ID: {scheme.get('id', 'N/A')}")
 
-    description = scheme.get('description')
+    description = scheme.get("description")
     if description:
         lines.append(f"Description: {description}")
 
-    screens = scheme.get('screens', {})
-    screens_details = scheme.get('screens_details', {})
+    screens = scheme.get("screens", {})
+    screens_details = scheme.get("screens_details", {})
 
     if screens:
         lines.append("\nScreen Mappings:")
-        for operation in ['default', 'create', 'edit', 'view']:
+        for operation in ["default", "create", "edit", "view"]:
             screen_id = screens.get(operation)
             if screen_id:
                 if screens_details and operation in screens_details:
-                    name = screens_details[operation].get('name', '')
-                    lines.append(f"  {operation.capitalize()}: {name} (ID: {screen_id})")
+                    name = screens_details[operation].get("name", "")
+                    lines.append(
+                        f"  {operation.capitalize()}: {name} (ID: {screen_id})"
+                    )
                 else:
                     lines.append(f"  {operation.capitalize()}: Screen {screen_id}")
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Get detailed information about a JIRA screen scheme',
-        epilog='''
+        description="Get detailed information about a JIRA screen scheme",
+        epilog="""
 Examples:
     # Get basic scheme info
     python get_screen_scheme.py 1
@@ -112,16 +114,25 @@ Examples:
 
     # JSON output
     python get_screen_scheme.py 1 --output json
-'''
+""",
     )
 
-    parser.add_argument('scheme_id', type=int,
-                        help='Screen scheme ID')
-    parser.add_argument('--details', '-d', dest='show_screen_details', action='store_true',
-                        help='Resolve screen IDs to names')
-    parser.add_argument('--output', '-o', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--profile', '-p', help='JIRA profile to use')
+    parser.add_argument("scheme_id", type=int, help="Screen scheme ID")
+    parser.add_argument(
+        "--details",
+        "-d",
+        dest="show_screen_details",
+        action="store_true",
+        help="Resolve screen IDs to names",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -131,7 +142,7 @@ Examples:
         scheme = get_screen_scheme(
             scheme_id=args.scheme_id,
             client=client,
-            show_screen_details=args.show_screen_details
+            show_screen_details=args.show_screen_details,
         )
 
         output = format_scheme_output(scheme, args.output)
@@ -142,5 +153,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

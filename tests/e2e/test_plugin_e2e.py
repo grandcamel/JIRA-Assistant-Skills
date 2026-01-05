@@ -11,10 +11,8 @@ Run with: pytest tests/e2e/ -v --e2e-verbose
 """
 
 import pytest
-from pathlib import Path
 
 from .runner import TestStatus
-
 
 pytestmark = [pytest.mark.e2e, pytest.mark.slow]
 
@@ -58,7 +56,10 @@ class TestPluginInstallation:
         output = result["output"].lower()
 
         # Check for at least one skill
-        found = any(s.lower().replace("-", "") in output.replace("-", "") for s in EXPECTED_SKILLS)
+        found = any(
+            s.lower().replace("-", "") in output.replace("-", "")
+            for s in EXPECTED_SKILLS
+        )
         assert found or result["success"], "No skills found in output"
 
     def test_skill_count(self, claude_runner, installed_plugin, e2e_enabled):
@@ -66,32 +67,44 @@ class TestPluginInstallation:
         if not e2e_enabled:
             pytest.skip("E2E disabled")
 
-        result = claude_runner.send_prompt("List all available JIRA Assistant skills. How many are there?")
+        result = claude_runner.send_prompt(
+            "List all available JIRA Assistant skills. How many are there?"
+        )
         output = result["output"].lower()
 
         # Should mention multiple skills
         skill_mentions = sum(1 for s in EXPECTED_SKILLS if s.lower() in output)
-        assert skill_mentions >= 3, f"Expected at least 3 skills mentioned, found {skill_mentions}"
+        assert skill_mentions >= 3, (
+            f"Expected at least 3 skills mentioned, found {skill_mentions}"
+        )
 
 
 class TestSkillDiscovery:
     """Tests for individual skill discovery."""
 
-    @pytest.mark.parametrize("skill_name,trigger_words", [
-        ("jira-issue", ["create issue", "get issue", "update issue", "delete issue"]),
-        ("jira-search", ["jql", "search", "find issues", "query"]),
-        ("jira-agile", ["sprint", "epic", "story point", "backlog"]),
-        ("jira-lifecycle", ["transition", "workflow", "status change"]),
-        ("jira-collaborate", ["comment", "attachment", "watcher"]),
-        ("jira-relationships", ["link", "blocks", "dependency", "clone"]),
-        ("jira-time", ["worklog", "time tracking", "estimate"]),
-        ("jira-jsm", ["service desk", "request", "sla", "queue"]),
-        ("jira-bulk", ["bulk", "batch", "multiple issues"]),
-        ("jira-dev", ["git", "branch", "commit", "pull request"]),
-        ("jira-fields", ["custom field", "field id"]),
-        ("jira-ops", ["cache", "performance"]),
-    ])
-    def test_skill_trigger(self, claude_runner, installed_plugin, e2e_enabled, skill_name, trigger_words):
+    @pytest.mark.parametrize(
+        "skill_name,trigger_words",
+        [
+            (
+                "jira-issue",
+                ["create issue", "get issue", "update issue", "delete issue"],
+            ),
+            ("jira-search", ["jql", "search", "find issues", "query"]),
+            ("jira-agile", ["sprint", "epic", "story point", "backlog"]),
+            ("jira-lifecycle", ["transition", "workflow", "status change"]),
+            ("jira-collaborate", ["comment", "attachment", "watcher"]),
+            ("jira-relationships", ["link", "blocks", "dependency", "clone"]),
+            ("jira-time", ["worklog", "time tracking", "estimate"]),
+            ("jira-jsm", ["service desk", "request", "sla", "queue"]),
+            ("jira-bulk", ["bulk", "batch", "multiple issues"]),
+            ("jira-dev", ["git", "branch", "commit", "pull request"]),
+            ("jira-fields", ["custom field", "field id"]),
+            ("jira-ops", ["cache", "performance"]),
+        ],
+    )
+    def test_skill_trigger(
+        self, claude_runner, installed_plugin, e2e_enabled, skill_name, trigger_words
+    ):
         """Test that skill triggers respond to appropriate prompts."""
         if not e2e_enabled:
             pytest.skip("E2E disabled")
@@ -102,14 +115,17 @@ class TestSkillDiscovery:
 
         # Check that response mentions the skill or its functionality
         output = result["output"].lower()
-        assert any(word.lower() in output for word in trigger_words), \
+        assert any(word.lower() in output for word in trigger_words), (
             f"Expected {skill_name} trigger words in response"
+        )
 
 
 class TestCoreOperations:
     """Tests for core JIRA operations."""
 
-    def test_issue_creation_guidance(self, claude_runner, installed_plugin, e2e_enabled):
+    def test_issue_creation_guidance(
+        self, claude_runner, installed_plugin, e2e_enabled
+    ):
         """Test issue creation guidance."""
         if not e2e_enabled:
             pytest.skip("E2E disabled")
@@ -162,7 +178,9 @@ class TestErrorHandling:
         # Should not crash
         assert not result.get("crashed", False)
 
-    def test_missing_credentials_guidance(self, claude_runner, installed_plugin, e2e_enabled):
+    def test_missing_credentials_guidance(
+        self, claude_runner, installed_plugin, e2e_enabled
+    ):
         """Test guidance for missing credentials."""
         if not e2e_enabled:
             pytest.skip("E2E disabled")
@@ -185,7 +203,7 @@ class TestYAMLSuites:
             pytest.skip("E2E disabled")
 
         results = e2e_runner.run_all()
-        success = e2e_runner.print_summary(results)
+        e2e_runner.print_summary(results)
 
         failures = [
             f"{s.suite_name}::{t.test_id}"
@@ -199,7 +217,9 @@ class TestYAMLSuites:
 class TestIntegration:
     """Cross-skill integration tests."""
 
-    def test_search_to_bulk_workflow(self, claude_runner, installed_plugin, e2e_enabled):
+    def test_search_to_bulk_workflow(
+        self, claude_runner, installed_plugin, e2e_enabled
+    ):
         """Test workflow from search to bulk operations."""
         if not e2e_enabled:
             pytest.skip("E2E disabled")

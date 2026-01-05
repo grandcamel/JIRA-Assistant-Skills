@@ -8,19 +8,13 @@ Requires 'Administer Jira' global permission.
 
 import argparse
 import sys
-from pathlib import Path
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, print_error
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
 def delete_issue_type_scheme(
-    scheme_id: str,
-    client=None,
-    profile: str = None,
-    dry_run: bool = False
+    scheme_id: str, client=None, profile: str | None = None, dry_run: bool = False
 ) -> bool:
     """
     Delete an issue type scheme.
@@ -54,7 +48,7 @@ def delete_issue_type_scheme(
 def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Delete an issue type scheme from JIRA',
+        description="Delete an issue type scheme from JIRA",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -74,27 +68,17 @@ Note:
   Requires 'Administer Jira' global permission.
   Cannot delete the default issue type scheme.
   Cannot delete schemes assigned to projects.
-"""
+""",
     )
 
+    parser.add_argument("scheme_id", help="Issue type scheme ID to delete")
     parser.add_argument(
-        'scheme_id',
-        help='Issue type scheme ID to delete'
+        "--dry-run",
+        action="store_true",
+        help="Simulate deletion without making changes",
     )
-    parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Simulate deletion without making changes'
-    )
-    parser.add_argument(
-        '--force',
-        action='store_true',
-        help='Skip confirmation prompt'
-    )
-    parser.add_argument(
-        '--profile',
-        help='Configuration profile to use'
-    )
+    parser.add_argument("--force", action="store_true", help="Skip confirmation prompt")
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -105,7 +89,7 @@ Note:
                 f"Are you sure you want to delete issue type scheme {args.scheme_id}? "
                 "This cannot be undone. [y/N]: "
             )
-            if confirm.lower() != 'y':
+            if confirm.lower() != "y":
                 print("Deletion cancelled.")
                 return
 
@@ -113,10 +97,7 @@ Note:
         if args.dry_run:
             print(f"[DRY RUN] Would delete issue type scheme {args.scheme_id}")
         else:
-            delete_issue_type_scheme(
-                scheme_id=args.scheme_id,
-                profile=args.profile
-            )
+            delete_issue_type_scheme(scheme_id=args.scheme_id, profile=args.profile)
             print(f"Issue type scheme {args.scheme_id} deleted successfully.")
 
     except JiraError as e:
@@ -124,5 +105,5 @@ Note:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

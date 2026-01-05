@@ -5,23 +5,25 @@ Tests for listing JIRA custom fields.
 """
 
 import sys
-import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Path setup
 _this_dir = Path(__file__).parent
 _tests_dir = _this_dir.parent
 _jira_fields_dir = _tests_dir.parent
-_scripts_dir = _jira_fields_dir / 'scripts'
-_shared_lib_dir = _jira_fields_dir.parent / 'shared' / 'scripts' / 'lib'
+_scripts_dir = _jira_fields_dir / "scripts"
+_shared_lib_dir = _jira_fields_dir.parent / "shared" / "scripts" / "lib"
 
 for path in [str(_shared_lib_dir), str(_scripts_dir)]:
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from list_fields import list_fields, AGILE_PATTERNS
-from jira_assistant_skills_lib import JiraError, AuthenticationError
+from list_fields import AGILE_PATTERNS, list_fields
+
+from jira_assistant_skills_lib import AuthenticationError, JiraError
 
 
 @pytest.mark.fields
@@ -39,9 +41,11 @@ class TestListFieldsBasic:
         assert isinstance(result, list)
         # Should only return custom fields (5 of 7)
         assert len(result) == 5
-        mock_jira_client.get.assert_called_once_with('/rest/api/3/field')
+        mock_jira_client.get.assert_called_once_with("/rest/api/3/field")
 
-    def test_list_includes_system_fields(self, mock_jira_client, sample_fields_response):
+    def test_list_includes_system_fields(
+        self, mock_jira_client, sample_fields_response
+    ):
         """Test listing all fields including system fields."""
         mock_jira_client.get.return_value = sample_fields_response
 
@@ -50,7 +54,7 @@ class TestListFieldsBasic:
         assert result is not None
         # Should return all 7 fields
         assert len(result) == 7
-        system_fields = [f for f in result if not f['id'].startswith('customfield_')]
+        system_fields = [f for f in result if not f["id"].startswith("customfield_")]
         assert len(system_fields) == 2
 
     def test_list_fields_structure(self, mock_jira_client, sample_fields_response):
@@ -60,12 +64,12 @@ class TestListFieldsBasic:
         result = list_fields(client=mock_jira_client)
 
         for field in result:
-            assert 'id' in field
-            assert 'name' in field
-            assert 'type' in field
-            assert 'custom' in field
-            assert 'searchable' in field
-            assert 'navigable' in field
+            assert "id" in field
+            assert "name" in field
+            assert "type" in field
+            assert "custom" in field
+            assert "searchable" in field
+            assert "navigable" in field
 
     def test_list_fields_sorted_by_name(self, mock_jira_client, sample_fields_response):
         """Test that fields are sorted alphabetically by name."""
@@ -73,7 +77,7 @@ class TestListFieldsBasic:
 
         result = list_fields(client=mock_jira_client)
 
-        names = [f['name'] for f in result]
+        names = [f["name"] for f in result]
         assert names == sorted(names, key=str.lower)
 
 
@@ -86,26 +90,26 @@ class TestListFieldsFiltering:
         """Test filtering fields by name pattern."""
         mock_jira_client.get.return_value = sample_fields_response
 
-        result = list_fields(filter_pattern='epic', client=mock_jira_client)
+        result = list_fields(filter_pattern="epic", client=mock_jira_client)
 
         assert len(result) == 2  # Epic Link and Epic Name
         for field in result:
-            assert 'epic' in field['name'].lower()
+            assert "epic" in field["name"].lower()
 
     def test_filter_case_insensitive(self, mock_jira_client, sample_fields_response):
         """Test that filtering is case-insensitive."""
         mock_jira_client.get.return_value = sample_fields_response
 
-        result = list_fields(filter_pattern='SPRINT', client=mock_jira_client)
+        result = list_fields(filter_pattern="SPRINT", client=mock_jira_client)
 
         assert len(result) == 1
-        assert result[0]['name'] == 'Sprint'
+        assert result[0]["name"] == "Sprint"
 
     def test_filter_no_matches(self, mock_jira_client, sample_fields_response):
         """Test filtering with no matches returns empty list."""
         mock_jira_client.get.return_value = sample_fields_response
 
-        result = list_fields(filter_pattern='nonexistent', client=mock_jira_client)
+        result = list_fields(filter_pattern="nonexistent", client=mock_jira_client)
 
         assert result == []
 
@@ -118,17 +122,19 @@ class TestListFieldsFiltering:
         # Sprint, Story Points, Epic Link, Epic Name, Rank
         assert len(result) == 5
         for field in result:
-            name_lower = field['name'].lower()
+            name_lower = field["name"].lower()
             assert any(pattern in name_lower for pattern in AGILE_PATTERNS)
 
     def test_combined_filters(self, mock_jira_client, sample_fields_response):
         """Test combining filter pattern with agile_only."""
         mock_jira_client.get.return_value = sample_fields_response
 
-        result = list_fields(filter_pattern='sprint', agile_only=True, client=mock_jira_client)
+        result = list_fields(
+            filter_pattern="sprint", agile_only=True, client=mock_jira_client
+        )
 
         assert len(result) == 1
-        assert result[0]['name'] == 'Sprint'
+        assert result[0]["name"] == "Sprint"
 
 
 @pytest.mark.fields
@@ -147,8 +153,14 @@ class TestListFieldsEmptyResults:
     def test_no_custom_fields(self, mock_jira_client):
         """Test when no custom fields exist."""
         mock_jira_client.get.return_value = [
-            {'id': 'summary', 'name': 'Summary', 'custom': False,
-             'searchable': True, 'navigable': True, 'schema': {'type': 'string'}}
+            {
+                "id": "summary",
+                "name": "Summary",
+                "custom": False,
+                "searchable": True,
+                "navigable": True,
+                "schema": {"type": "string"},
+            }
         ]
 
         result = list_fields(custom_only=True, client=mock_jira_client)
@@ -170,7 +182,9 @@ class TestListFieldsErrorHandling:
 
     def test_permission_denied_error(self, mock_jira_client):
         """Test handling of 403 permission denied."""
-        mock_jira_client.get.side_effect = JiraError("Permission denied", status_code=403)
+        mock_jira_client.get.side_effect = JiraError(
+            "Permission denied", status_code=403
+        )
 
         with pytest.raises(JiraError) as exc_info:
             list_fields(client=mock_jira_client)
@@ -186,7 +200,9 @@ class TestListFieldsErrorHandling:
 
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
-        mock_jira_client.get.side_effect = JiraError("Rate limit exceeded", status_code=429)
+        mock_jira_client.get.side_effect = JiraError(
+            "Rate limit exceeded", status_code=429
+        )
 
         with pytest.raises(JiraError) as exc_info:
             list_fields(client=mock_jira_client)
@@ -211,7 +227,7 @@ class TestListFieldsClientManagement:
         mock_client = MagicMock()
         mock_client.get.return_value = sample_fields_response
 
-        with patch('list_fields.get_jira_client', return_value=mock_client):
+        with patch("list_fields.get_jira_client", return_value=mock_client):
             list_fields()
 
         mock_client.close.assert_called_once()
@@ -221,13 +237,15 @@ class TestListFieldsClientManagement:
         mock_client = MagicMock()
         mock_client.get.side_effect = JiraError("Test error")
 
-        with patch('list_fields.get_jira_client', return_value=mock_client):
+        with patch("list_fields.get_jira_client", return_value=mock_client):
             with pytest.raises(JiraError):
                 list_fields()
 
         mock_client.close.assert_called_once()
 
-    def test_does_not_close_provided_client(self, mock_jira_client, sample_fields_response):
+    def test_does_not_close_provided_client(
+        self, mock_jira_client, sample_fields_response
+    ):
         """Test that provided client is not closed."""
         mock_jira_client.get.return_value = sample_fields_response
 

@@ -5,8 +5,10 @@ Tests for Asset management (Insight/Assets) against a real JIRA instance.
 Requires JSM Premium license or standalone Assets license.
 """
 
-import pytest
+import contextlib
 import uuid
+
+import pytest
 
 
 @pytest.mark.jsm
@@ -19,11 +21,13 @@ class TestAssetSchemas:
         try:
             result = jira_client.get_object_schemas()
 
-            assert 'values' in result or 'objectSchemas' in str(result)
-            assert isinstance(result.get('values', result.get('objectSchemas', [])), list)
+            assert "values" in result or "objectSchemas" in str(result)
+            assert isinstance(
+                result.get("values", result.get("objectSchemas", [])), list
+            )
 
         except Exception as e:
-            if '404' in str(e) or '403' in str(e):
+            if "404" in str(e) or "403" in str(e):
                 pytest.skip("Assets/Insight not available (requires JSM Premium)")
             raise
 
@@ -31,19 +35,19 @@ class TestAssetSchemas:
         """Test getting a specific object schema."""
         try:
             schemas = jira_client.get_object_schemas()
-            schema_list = schemas.get('values', schemas.get('objectSchemas', []))
+            schema_list = schemas.get("values", schemas.get("objectSchemas", []))
 
             if not schema_list:
                 pytest.skip("No object schemas available")
 
-            schema_id = schema_list[0].get('id')
+            schema_id = schema_list[0].get("id")
             schema = jira_client.get_object_schema(schema_id)
 
-            assert 'id' in schema
-            assert schema['id'] == schema_id
+            assert "id" in schema
+            assert schema["id"] == schema_id
 
         except Exception as e:
-            if '404' in str(e) or '403' in str(e):
+            if "404" in str(e) or "403" in str(e):
                 pytest.skip("Assets not available")
             raise
 
@@ -57,18 +61,18 @@ class TestObjectTypes:
         """Test listing object types in a schema."""
         try:
             schemas = jira_client.get_object_schemas()
-            schema_list = schemas.get('values', schemas.get('objectSchemas', []))
+            schema_list = schemas.get("values", schemas.get("objectSchemas", []))
 
             if not schema_list:
                 pytest.skip("No object schemas available")
 
-            schema_id = schema_list[0].get('id')
+            schema_id = schema_list[0].get("id")
             result = jira_client.get_object_types(schema_id)
 
-            assert isinstance(result, list) or 'values' in result
+            assert isinstance(result, list) or "values" in result
 
         except Exception as e:
-            if '404' in str(e) or '403' in str(e):
+            if "404" in str(e) or "403" in str(e):
                 pytest.skip("Assets not available")
             raise
 
@@ -76,25 +80,25 @@ class TestObjectTypes:
         """Test that object types have required fields."""
         try:
             schemas = jira_client.get_object_schemas()
-            schema_list = schemas.get('values', schemas.get('objectSchemas', []))
+            schema_list = schemas.get("values", schemas.get("objectSchemas", []))
 
             if not schema_list:
                 pytest.skip("No schemas available")
 
-            schema_id = schema_list[0].get('id')
+            schema_id = schema_list[0].get("id")
             types = jira_client.get_object_types(schema_id)
-            type_list = types if isinstance(types, list) else types.get('values', [])
+            type_list = types if isinstance(types, list) else types.get("values", [])
 
             if not type_list:
                 pytest.skip("No object types available")
 
             obj_type = type_list[0]
-            required_fields = ['id', 'name']
+            required_fields = ["id", "name"]
             for field in required_fields:
                 assert field in obj_type, f"Missing required field: {field}"
 
         except Exception as e:
-            if '404' in str(e) or '403' in str(e):
+            if "404" in str(e) or "403" in str(e):
                 pytest.skip("Assets not available")
             raise
 
@@ -109,14 +113,14 @@ class TestAssetCreate:
         """Get an object type for testing."""
         try:
             schemas = jira_client.get_object_schemas()
-            schema_list = schemas.get('values', schemas.get('objectSchemas', []))
+            schema_list = schemas.get("values", schemas.get("objectSchemas", []))
 
             if not schema_list:
                 pytest.skip("No schemas available")
 
-            schema_id = schema_list[0].get('id')
+            schema_id = schema_list[0].get("id")
             types = jira_client.get_object_types(schema_id)
-            type_list = types if isinstance(types, list) else types.get('values', [])
+            type_list = types if isinstance(types, list) else types.get("values", [])
 
             if not type_list:
                 pytest.skip("No object types available")
@@ -130,14 +134,18 @@ class TestAssetCreate:
         """Test creating a new asset."""
         try:
             # Get required attributes for the object type
-            type_id = test_object_type['id']
+            type_id = test_object_type["id"]
             attributes = jira_client.get_object_type_attributes(type_id)
 
             # Find the name attribute (usually required)
-            attr_list = attributes if isinstance(attributes, list) else attributes.get('values', [])
+            attr_list = (
+                attributes
+                if isinstance(attributes, list)
+                else attributes.get("values", [])
+            )
             name_attr = None
             for attr in attr_list:
-                if attr.get('name', '').lower() == 'name':
+                if attr.get("name", "").lower() == "name":
                     name_attr = attr
                     break
 
@@ -145,25 +153,20 @@ class TestAssetCreate:
                 pytest.skip("Cannot find name attribute")
 
             # Create asset with name
-            asset_name = f'Test Asset {uuid.uuid4().hex[:8]}'
-            asset = jira_client.create_asset(
-                type_id,
-                {name_attr['id']: asset_name}
-            )
+            asset_name = f"Test Asset {uuid.uuid4().hex[:8]}"
+            asset = jira_client.create_asset(type_id, {name_attr["id"]: asset_name})
 
             try:
-                assert 'id' in asset or 'objectKey' in asset
+                assert "id" in asset or "objectKey" in asset
             finally:
                 # Cleanup
-                asset_id = asset.get('id', asset.get('objectKey'))
+                asset_id = asset.get("id", asset.get("objectKey"))
                 if asset_id:
-                    try:
+                    with contextlib.suppress(Exception):
                         jira_client.delete_asset(asset_id)
-                    except Exception:
-                        pass
 
         except Exception as e:
-            if '404' in str(e) or '403' in str(e):
+            if "404" in str(e) or "403" in str(e):
                 pytest.skip("Assets not available")
             raise
 
@@ -177,12 +180,12 @@ class TestAssetRead:
         """Test searching for assets."""
         try:
             # IQL search
-            result = jira_client.search_assets('objectType = *')
+            result = jira_client.search_assets("objectType = *")
 
-            assert 'values' in result or 'objectEntries' in str(result)
+            assert "values" in result or "objectEntries" in str(result)
 
         except Exception as e:
-            if '404' in str(e) or '403' in str(e):
+            if "404" in str(e) or "403" in str(e):
                 pytest.skip("Assets not available")
             raise
 
@@ -190,19 +193,19 @@ class TestAssetRead:
         """Test getting a specific asset."""
         try:
             # Search for an asset first
-            result = jira_client.search_assets('objectType = *')
-            assets = result.get('values', result.get('objectEntries', []))
+            result = jira_client.search_assets("objectType = *")
+            assets = result.get("values", result.get("objectEntries", []))
 
             if not assets:
                 pytest.skip("No assets available")
 
-            asset_key = assets[0].get('objectKey', assets[0].get('id'))
+            asset_key = assets[0].get("objectKey", assets[0].get("id"))
             asset = jira_client.get_asset(asset_key)
 
-            assert 'id' in asset or 'objectKey' in asset
+            assert "id" in asset or "objectKey" in asset
 
         except Exception as e:
-            if '404' in str(e) or '403' in str(e):
+            if "404" in str(e) or "403" in str(e):
                 pytest.skip("Assets not available")
             raise
 
@@ -210,25 +213,25 @@ class TestAssetRead:
         """Test listing assets by object type."""
         try:
             schemas = jira_client.get_object_schemas()
-            schema_list = schemas.get('values', schemas.get('objectSchemas', []))
+            schema_list = schemas.get("values", schemas.get("objectSchemas", []))
 
             if not schema_list:
                 pytest.skip("No schemas")
 
-            schema_id = schema_list[0].get('id')
+            schema_id = schema_list[0].get("id")
             types = jira_client.get_object_types(schema_id)
-            type_list = types if isinstance(types, list) else types.get('values', [])
+            type_list = types if isinstance(types, list) else types.get("values", [])
 
             if not type_list:
                 pytest.skip("No types")
 
-            type_name = type_list[0].get('name')
+            type_name = type_list[0].get("name")
             result = jira_client.search_assets(f'objectType = "{type_name}"')
 
-            assert 'values' in result or 'objectEntries' in str(result)
+            assert "values" in result or "objectEntries" in str(result)
 
         except Exception as e:
-            if '404' in str(e) or '403' in str(e):
+            if "404" in str(e) or "403" in str(e):
                 pytest.skip("Assets not available")
             raise
 
@@ -243,25 +246,29 @@ class TestAssetUpdate:
         """Create a test asset for update tests."""
         try:
             schemas = jira_client.get_object_schemas()
-            schema_list = schemas.get('values', schemas.get('objectSchemas', []))
+            schema_list = schemas.get("values", schemas.get("objectSchemas", []))
 
             if not schema_list:
                 pytest.skip("No schemas")
 
-            schema_id = schema_list[0].get('id')
+            schema_id = schema_list[0].get("id")
             types = jira_client.get_object_types(schema_id)
-            type_list = types if isinstance(types, list) else types.get('values', [])
+            type_list = types if isinstance(types, list) else types.get("values", [])
 
             if not type_list:
                 pytest.skip("No types")
 
-            type_id = type_list[0]['id']
+            type_id = type_list[0]["id"]
             attributes = jira_client.get_object_type_attributes(type_id)
-            attr_list = attributes if isinstance(attributes, list) else attributes.get('values', [])
+            attr_list = (
+                attributes
+                if isinstance(attributes, list)
+                else attributes.get("values", [])
+            )
 
             name_attr = None
             for attr in attr_list:
-                if attr.get('name', '').lower() == 'name':
+                if attr.get("name", "").lower() == "name":
                     name_attr = attr
                     break
 
@@ -269,19 +276,16 @@ class TestAssetUpdate:
                 pytest.skip("No name attribute")
 
             asset = jira_client.create_asset(
-                type_id,
-                {name_attr['id']: f'Update Test Asset {uuid.uuid4().hex[:8]}'}
+                type_id, {name_attr["id"]: f"Update Test Asset {uuid.uuid4().hex[:8]}"}
             )
 
             yield asset
 
             # Cleanup
-            asset_id = asset.get('id', asset.get('objectKey'))
+            asset_id = asset.get("id", asset.get("objectKey"))
             if asset_id:
-                try:
+                with contextlib.suppress(Exception):
                     jira_client.delete_asset(asset_id)
-                except Exception:
-                    pass
 
         except Exception as e:
             pytest.skip(f"Cannot create test asset: {e}")
@@ -289,16 +293,16 @@ class TestAssetUpdate:
     def test_update_asset_attribute(self, jira_client, test_asset):
         """Test updating an asset attribute."""
         try:
-            asset_id = test_asset.get('id', test_asset.get('objectKey'))
+            asset_id = test_asset.get("id", test_asset.get("objectKey"))
 
             # Get current attributes
-            asset = jira_client.get_asset(asset_id)
+            jira_client.get_asset(asset_id)
 
             # Find a text attribute to update
             # This is simplified - real implementation needs to find editable attributes
-            new_name = f'Updated Asset {uuid.uuid4().hex[:8]}'
+            new_name = f"Updated Asset {uuid.uuid4().hex[:8]}"
 
-            jira_client.update_asset(asset_id, {'Name': new_name})
+            jira_client.update_asset(asset_id, {"Name": new_name})
 
             # Verify update
             updated = jira_client.get_asset(asset_id)
@@ -306,7 +310,7 @@ class TestAssetUpdate:
             assert updated is not None
 
         except Exception as e:
-            if '404' in str(e) or '403' in str(e):
+            if "404" in str(e) or "403" in str(e):
                 pytest.skip("Asset update not available")
             raise
 
@@ -320,42 +324,41 @@ class TestAssetLinks:
         """Test linking an asset to a request."""
         try:
             # Find an asset to link
-            result = jira_client.search_assets('objectType = *')
-            assets = result.get('values', result.get('objectEntries', []))
+            result = jira_client.search_assets("objectType = *")
+            assets = result.get("values", result.get("objectEntries", []))
 
             if not assets:
                 pytest.skip("No assets to link")
 
-            asset_key = assets[0].get('objectKey', assets[0].get('id'))
+            asset_key = assets[0].get("objectKey", assets[0].get("id"))
 
-            jira_client.link_asset_to_issue(
-                test_request['issueKey'],
-                asset_key
-            )
+            jira_client.link_asset_to_issue(test_request["issueKey"], asset_key)
 
             # Verify link
-            linked = jira_client.get_issue_assets(test_request['issueKey'])
-            asset_keys = [a.get('objectKey', a.get('id')) for a in linked.get('values', [])]
+            linked = jira_client.get_issue_assets(test_request["issueKey"])
+            asset_keys = [
+                a.get("objectKey", a.get("id")) for a in linked.get("values", [])
+            ]
             assert asset_key in asset_keys
 
         except Exception as e:
-            if '404' in str(e) or '403' in str(e):
+            if "404" in str(e) or "403" in str(e):
                 pytest.skip("Asset linking not available")
-            if 'not implemented' in str(e).lower():
+            if "not implemented" in str(e).lower():
                 pytest.skip("Asset linking not implemented")
             raise
 
     def test_get_assets_for_request(self, jira_client, test_request):
         """Test getting assets linked to a request."""
         try:
-            result = jira_client.get_issue_assets(test_request['issueKey'])
+            result = jira_client.get_issue_assets(test_request["issueKey"])
 
-            assert 'values' in result or isinstance(result, list)
+            assert "values" in result or isinstance(result, list)
 
         except Exception as e:
-            if '404' in str(e) or '403' in str(e):
+            if "404" in str(e) or "403" in str(e):
                 pytest.skip("Asset linking not available")
-            if 'not implemented' in str(e).lower():
+            if "not implemented" in str(e).lower():
                 pytest.skip("Asset linking not implemented")
             raise
 
@@ -363,14 +366,14 @@ class TestAssetLinks:
         """Test finding assets affected by an incident/request."""
         try:
             # This is a higher-level function that might search related assets
-            result = jira_client.find_affected_assets(test_request['issueKey'])
+            result = jira_client.find_affected_assets(test_request["issueKey"])
 
             # Should return assets or empty list
             assert isinstance(result, (dict, list))
 
         except Exception as e:
-            if '404' in str(e) or '403' in str(e):
+            if "404" in str(e) or "403" in str(e):
                 pytest.skip("Affected assets not available")
-            if 'not implemented' in str(e).lower() or 'AttributeError' in str(e):
+            if "not implemented" in str(e).lower() or "AttributeError" in str(e):
                 pytest.skip("Affected assets not implemented")
             raise

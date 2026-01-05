@@ -3,15 +3,16 @@
 
 import json
 import uuid
+from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
-from dataclasses import dataclass, field, asdict
 from enum import Enum
+from pathlib import Path
 from typing import Any
 
 
 class TestStatus(str, Enum):
     """Status of a test in the remediation process."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     FIXED = "fixed"
@@ -22,6 +23,7 @@ class TestStatus(str, Enum):
 @dataclass
 class TestState:
     """State for a single test."""
+
     status: TestStatus = TestStatus.PENDING
     attempts: int = 0
     conflict_attempts: int = 0
@@ -59,6 +61,7 @@ class TestState:
 @dataclass
 class RemediationState:
     """Overall state of the remediation process."""
+
     run_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     started_at: str = field(default_factory=lambda: datetime.now().isoformat())
     iteration: int = 1
@@ -125,7 +128,7 @@ class StateTracker:
     def load(self) -> RemediationState:
         """Load state from file, or create new state if file doesn't exist."""
         if self.state_file.exists():
-            with open(self.state_file, "r") as f:
+            with open(self.state_file) as f:
                 data = json.load(f)
             self.state = RemediationState.from_dict(data)
         else:
@@ -244,7 +247,8 @@ class StateTracker:
             for test_id in self.state.current_failures
             if self.state.tests.get(test_id, TestState()).status
             in (TestStatus.PENDING, TestStatus.IN_PROGRESS, TestStatus.FAILED)
-            and self.state.tests.get(test_id, TestState()).attempts < self.state.max_attempts
+            and self.state.tests.get(test_id, TestState()).attempts
+            < self.state.max_attempts
         ]
 
     def get_unfixable_tests(self) -> list[str]:

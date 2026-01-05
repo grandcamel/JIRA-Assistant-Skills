@@ -12,26 +12,28 @@ Usage:
     python list_manual_rules.py --profile development
 """
 
-import sys
-import json
 import argparse
-from pathlib import Path
-from typing import Optional, List, Dict, Any
+import json
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_automation_client
-from jira_assistant_skills_lib import print_error, JiraError, AutomationError
-from jira_assistant_skills_lib import format_table
+from jira_assistant_skills_lib import (
+    AutomationError,
+    JiraError,
+    format_table,
+    get_automation_client,
+    print_error,
+)
 
 
 def list_manual_rules(
     client=None,
-    context_type: str = 'issue',
+    context_type: str = "issue",
     limit: int = 50,
     fetch_all: bool = False,
-    profile: Optional[str] = None
-) -> List[Dict[str, Any]]:
+    profile: str | None = None,
+) -> list[dict[str, Any]]:
     """
     List manually-triggered automation rules.
 
@@ -53,43 +55,43 @@ def list_manual_rules(
 
     while True:
         response = client.get_manual_rules(
-            context_type=context_type,
-            limit=limit,
-            cursor=cursor
+            context_type=context_type, limit=limit, cursor=cursor
         )
 
-        rules = response.get('values', [])
+        rules = response.get("values", [])
         all_rules.extend(rules)
 
         # Check for pagination
-        if not fetch_all or not response.get('hasMore', False):
+        if not fetch_all or not response.get("hasMore", False):
             break
 
         # Get next cursor
-        links = response.get('links', {})
-        next_link = links.get('next', '')
-        if '?cursor=' in next_link:
-            cursor = next_link.split('?cursor=')[-1]
+        links = response.get("links", {})
+        next_link = links.get("next", "")
+        if "?cursor=" in next_link:
+            cursor = next_link.split("?cursor=")[-1]
         else:
             break
 
     return all_rules
 
 
-def format_rule_summary(rule: Dict[str, Any]) -> Dict[str, str]:
+def format_rule_summary(rule: dict[str, Any]) -> dict[str, str]:
     """Format a manual rule for display."""
     return {
-        'ID': str(rule.get('id', '')),
-        'Name': rule.get('name', 'Unnamed'),
-        'Description': (rule.get('description', '')[:50] + '...') if len(rule.get('description', '')) > 50 else rule.get('description', ''),
-        'Context': rule.get('contextType', 'N/A')
+        "ID": str(rule.get("id", "")),
+        "Name": rule.get("name", "Unnamed"),
+        "Description": (rule.get("description", "")[:50] + "...")
+        if len(rule.get("description", "")) > 50
+        else rule.get("description", ""),
+        "Context": rule.get("contextType", "N/A"),
     }
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='List manually-triggered automation rules',
-        epilog='''
+        description="List manually-triggered automation rules",
+        epilog="""
 Examples:
     # List all manual rules
     python list_manual_rules.py
@@ -106,18 +108,34 @@ Examples:
 
     # Use specific profile
     python list_manual_rules.py --profile development
-        '''
+        """,
     )
 
-    parser.add_argument('--context', '-c', default='issue',
-                        help='Context type (default: issue)')
-    parser.add_argument('--limit', '-l', type=int, default=50,
-                        help='Maximum results per page (default: 50)')
-    parser.add_argument('--all', '-a', action='store_true', dest='fetch_all',
-                        help='Fetch all pages of results')
-    parser.add_argument('--output', '-o', choices=['table', 'json', 'csv'],
-                        default='table', help='Output format (default: table)')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument(
+        "--context", "-c", default="issue", help="Context type (default: issue)"
+    )
+    parser.add_argument(
+        "--limit",
+        "-l",
+        type=int,
+        default=50,
+        help="Maximum results per page (default: 50)",
+    )
+    parser.add_argument(
+        "--all",
+        "-a",
+        action="store_true",
+        dest="fetch_all",
+        help="Fetch all pages of results",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["table", "json", "csv"],
+        default="table",
+        help="Output format (default: table)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -126,22 +144,22 @@ Examples:
             context_type=args.context,
             limit=args.limit,
             fetch_all=args.fetch_all,
-            profile=args.profile
+            profile=args.profile,
         )
 
         if not rules:
             print(f"No manual rules found for context '{args.context}'.")
             return
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(rules, indent=2))
-        elif args.output == 'csv':
-            headers = ['ID', 'Name', 'Description', 'Context']
-            print(','.join(headers))
+        elif args.output == "csv":
+            headers = ["ID", "Name", "Description", "Context"]
+            print(",".join(headers))
             for rule in rules:
                 formatted = format_rule_summary(rule)
                 row = [f'"{formatted[h]}"' for h in headers]
-                print(','.join(row))
+                print(",".join(row))
         else:
             print(f"\nManual Rules ({len(rules)} found, context: {args.context})")
             print("=" * 80)
@@ -159,5 +177,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -4,12 +4,13 @@ Tests for create_asset.py script.
 Tests asset creation functionality.
 """
 
-import pytest
-from unittest.mock import patch, Mock
-from pathlib import Path
 import sys
+from pathlib import Path
+from unittest.mock import patch
 
-scripts_path = str(Path(__file__).parent.parent / 'scripts')
+import pytest
+
+scripts_path = str(Path(__file__).parent.parent / "scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
@@ -28,10 +29,10 @@ class TestCreateAsset:
 
         attributes = {"IP Address": "192.168.1.105", "Status": "Active"}
 
-        with patch('create_asset.get_jira_client', return_value=mock_jira_client):
+        with patch("create_asset.get_jira_client", return_value=mock_jira_client):
             result = create_asset.create_asset(5, attributes)
 
-        assert result['id'] == "10001"
+        assert result["id"] == "10001"
         mock_jira_client.create_asset.assert_called_once_with(5, attributes)
 
     def test_create_asset_dry_run(self, mock_jira_client):
@@ -40,7 +41,7 @@ class TestCreateAsset:
 
         attributes = {"IP Address": "192.168.1.105"}
 
-        with patch('create_asset.get_jira_client', return_value=mock_jira_client):
+        with patch("create_asset.get_jira_client", return_value=mock_jira_client):
             result = create_asset.create_asset(5, attributes, dry_run=True)
 
         assert result is None
@@ -50,7 +51,7 @@ class TestCreateAsset:
         """Test error when Assets license not available."""
         mock_jira_client.has_assets_license.return_value = False
 
-        with patch('create_asset.get_jira_client', return_value=mock_jira_client):
+        with patch("create_asset.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(SystemExit):
                 create_asset.create_asset(5, {"IP Address": "192.168.1.105"})
 
@@ -62,7 +63,7 @@ class TestCreateAsset:
         assert result == {
             "IP Address": "192.168.1.105",
             "Status": "Active",
-            "Location": "DC-1"
+            "Location": "DC-1",
         }
 
     def test_parse_attributes_invalid(self):
@@ -73,9 +74,10 @@ class TestCreateAsset:
     def test_create_asset_error(self, mock_jira_client):
         """Test error when creation fails."""
         from jira_assistant_skills_lib import JiraError
+
         mock_jira_client.has_assets_license.return_value = True
         mock_jira_client.create_asset.side_effect = JiraError("Creation failed")
 
-        with patch('create_asset.get_jira_client', return_value=mock_jira_client):
+        with patch("create_asset.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(JiraError, match="Creation failed"):
                 create_asset.create_asset(5, {"IP Address": "192.168.1.105"})

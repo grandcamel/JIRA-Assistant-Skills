@@ -12,11 +12,9 @@ Features:
 - Invalidation support
 """
 
-import json
 import time
 from datetime import timedelta
-from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Any
 
 from cache import JiraCache, get_cache
 
@@ -43,7 +41,7 @@ class AutocompleteCache:
     TTL_AUTOCOMPLETE = timedelta(days=1)
     TTL_SUGGESTIONS = timedelta(hours=1)
 
-    def __init__(self, cache: Optional[JiraCache] = None):
+    def __init__(self, cache: JiraCache | None = None):
         """
         Initialize autocomplete cache.
 
@@ -51,10 +49,12 @@ class AutocompleteCache:
             cache: Optional JiraCache instance (creates one if not provided)
         """
         self._cache = cache or get_cache()
-        self._memory_cache: Dict[str, Any] = {}
-        self._memory_cache_time: Dict[str, float] = {}
+        self._memory_cache: dict[str, Any] = {}
+        self._memory_cache_time: dict[str, float] = {}
 
-    def get_autocomplete_data(self, client=None, force_refresh: bool = False) -> Optional[Dict[str, Any]]:
+    def get_autocomplete_data(
+        self, client=None, force_refresh: bool = False
+    ) -> dict[str, Any] | None:
         """
         Get cached JQL autocomplete data.
 
@@ -87,7 +87,7 @@ class AutocompleteCache:
 
         return None
 
-    def set_autocomplete_data(self, data: Dict[str, Any]) -> None:
+    def set_autocomplete_data(self, data: dict[str, Any]) -> None:
         """
         Cache JQL autocomplete data.
 
@@ -99,7 +99,7 @@ class AutocompleteCache:
             self.KEY_AUTOCOMPLETE_DATA,
             data,
             category="field",
-            ttl=self.TTL_AUTOCOMPLETE
+            ttl=self.TTL_AUTOCOMPLETE,
         )
 
         # Update memory cache
@@ -107,34 +107,36 @@ class AutocompleteCache:
         self._memory_cache_time[self.KEY_AUTOCOMPLETE_DATA] = time.time()
 
         # Also cache individual components for faster access
-        fields = data.get('visibleFieldNames', [])
+        fields = data.get("visibleFieldNames", [])
         if fields:
             self._cache.set(
                 self.KEY_FIELDS_LIST,
                 fields,
                 category="field",
-                ttl=self.TTL_AUTOCOMPLETE
+                ttl=self.TTL_AUTOCOMPLETE,
             )
 
-        functions = data.get('visibleFunctionNames', [])
+        functions = data.get("visibleFunctionNames", [])
         if functions:
             self._cache.set(
                 self.KEY_FUNCTIONS_LIST,
                 functions,
                 category="field",
-                ttl=self.TTL_AUTOCOMPLETE
+                ttl=self.TTL_AUTOCOMPLETE,
             )
 
-        reserved = data.get('jqlReservedWords', [])
+        reserved = data.get("jqlReservedWords", [])
         if reserved:
             self._cache.set(
                 self.KEY_RESERVED_WORDS,
                 reserved,
                 category="field",
-                ttl=self.TTL_AUTOCOMPLETE
+                ttl=self.TTL_AUTOCOMPLETE,
             )
 
-    def get_fields(self, client=None, force_refresh: bool = False) -> List[Dict[str, Any]]:
+    def get_fields(
+        self, client=None, force_refresh: bool = False
+    ) -> list[dict[str, Any]]:
         """
         Get cached field definitions.
 
@@ -152,9 +154,11 @@ class AutocompleteCache:
 
         # Need full autocomplete data
         data = self.get_autocomplete_data(client, force_refresh)
-        return data.get('visibleFieldNames', []) if data else []
+        return data.get("visibleFieldNames", []) if data else []
 
-    def get_functions(self, client=None, force_refresh: bool = False) -> List[Dict[str, Any]]:
+    def get_functions(
+        self, client=None, force_refresh: bool = False
+    ) -> list[dict[str, Any]]:
         """
         Get cached JQL function definitions.
 
@@ -171,9 +175,9 @@ class AutocompleteCache:
                 return cached
 
         data = self.get_autocomplete_data(client, force_refresh)
-        return data.get('visibleFunctionNames', []) if data else []
+        return data.get("visibleFunctionNames", []) if data else []
 
-    def get_reserved_words(self, client=None, force_refresh: bool = False) -> List[str]:
+    def get_reserved_words(self, client=None, force_refresh: bool = False) -> list[str]:
         """
         Get cached JQL reserved words.
 
@@ -190,15 +194,15 @@ class AutocompleteCache:
                 return cached
 
         data = self.get_autocomplete_data(client, force_refresh)
-        return data.get('jqlReservedWords', []) if data else []
+        return data.get("jqlReservedWords", []) if data else []
 
     def get_suggestions(
         self,
         field_name: str,
-        prefix: str = '',
+        prefix: str = "",
         client=None,
-        force_refresh: bool = False
-    ) -> List[Dict[str, Any]]:
+        force_refresh: bool = False,
+    ) -> list[dict[str, Any]]:
         """
         Get cached value suggestions for a field.
 
@@ -222,21 +226,18 @@ class AutocompleteCache:
         # Fetch from API if client provided
         if client:
             result = client.get_jql_suggestions(field_name, prefix)
-            suggestions = result.get('results', [])
+            suggestions = result.get("results", [])
 
             # Cache the results
             self._cache.set(
-                cache_key,
-                suggestions,
-                category="search",
-                ttl=self.TTL_SUGGESTIONS
+                cache_key, suggestions, category="search", ttl=self.TTL_SUGGESTIONS
             )
 
             return suggestions
 
         return []
 
-    def warm_cache(self, client) -> Dict[str, int]:
+    def warm_cache(self, client) -> dict[str, int]:
         """
         Pre-warm the autocomplete cache.
 
@@ -246,27 +247,27 @@ class AutocompleteCache:
         Returns:
             Dict with counts of cached items
         """
-        stats = {'fields': 0, 'functions': 0, 'reserved_words': 0}
+        stats = {"fields": 0, "functions": 0, "reserved_words": 0}
 
         try:
             data = client.get_jql_autocomplete()
             self.set_autocomplete_data(data)
 
-            stats['fields'] = len(data.get('visibleFieldNames', []))
-            stats['functions'] = len(data.get('visibleFunctionNames', []))
-            stats['reserved_words'] = len(data.get('jqlReservedWords', []))
+            stats["fields"] = len(data.get("visibleFieldNames", []))
+            stats["functions"] = len(data.get("visibleFunctionNames", []))
+            stats["reserved_words"] = len(data.get("jqlReservedWords", []))
 
             # Also warm common field suggestions
-            common_fields = ['project', 'status', 'issuetype', 'priority']
+            common_fields = ["project", "status", "issuetype", "priority"]
             for field in common_fields:
                 try:
-                    suggestions = client.get_jql_suggestions(field, '')
+                    suggestions = client.get_jql_suggestions(field, "")
                     cache_key = f"{self.KEY_SUGGESTION_PREFIX}{field}:"
                     self._cache.set(
                         cache_key,
-                        suggestions.get('results', []),
+                        suggestions.get("results", []),
                         category="search",
-                        ttl=self.TTL_SUGGESTIONS
+                        ttl=self.TTL_SUGGESTIONS,
                     )
                 except Exception:
                     pass  # Ignore errors for optional warming
@@ -276,7 +277,7 @@ class AutocompleteCache:
 
         return stats
 
-    def invalidate(self, field_name: Optional[str] = None) -> int:
+    def invalidate(self, field_name: str | None = None) -> int:
         """
         Invalidate cached autocomplete data.
 
@@ -296,10 +297,16 @@ class AutocompleteCache:
             )
         else:
             # Invalidate all autocomplete data
-            count += self._cache.invalidate(key=self.KEY_AUTOCOMPLETE_DATA, category="field")
+            count += self._cache.invalidate(
+                key=self.KEY_AUTOCOMPLETE_DATA, category="field"
+            )
             count += self._cache.invalidate(key=self.KEY_FIELDS_LIST, category="field")
-            count += self._cache.invalidate(key=self.KEY_FUNCTIONS_LIST, category="field")
-            count += self._cache.invalidate(key=self.KEY_RESERVED_WORDS, category="field")
+            count += self._cache.invalidate(
+                key=self.KEY_FUNCTIONS_LIST, category="field"
+            )
+            count += self._cache.invalidate(
+                key=self.KEY_RESERVED_WORDS, category="field"
+            )
             count += self._cache.invalidate(pattern=f"{self.KEY_SUGGESTION_PREFIX}*")
 
             # Clear memory cache
@@ -308,7 +315,7 @@ class AutocompleteCache:
 
         return count
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get cache statistics.
 
@@ -318,22 +325,26 @@ class AutocompleteCache:
         cache_stats = self._cache.get_stats()
 
         # Check what's currently cached
-        has_autocomplete = self._cache.get(self.KEY_AUTOCOMPLETE_DATA, category="field") is not None
+        has_autocomplete = (
+            self._cache.get(self.KEY_AUTOCOMPLETE_DATA, category="field") is not None
+        )
         has_fields = self._cache.get(self.KEY_FIELDS_LIST, category="field") is not None
-        has_functions = self._cache.get(self.KEY_FUNCTIONS_LIST, category="field") is not None
+        has_functions = (
+            self._cache.get(self.KEY_FUNCTIONS_LIST, category="field") is not None
+        )
 
         return {
-            'autocomplete_cached': has_autocomplete,
-            'fields_cached': has_fields,
-            'functions_cached': has_functions,
-            'memory_cache_size': len(self._memory_cache),
-            'total_cache_entries': cache_stats.entry_count,
-            'cache_hit_rate': f"{cache_stats.hit_rate * 100:.1f}%"
+            "autocomplete_cached": has_autocomplete,
+            "fields_cached": has_fields,
+            "functions_cached": has_functions,
+            "memory_cache_size": len(self._memory_cache),
+            "total_cache_entries": cache_stats.entry_count,
+            "cache_hit_rate": f"{cache_stats.hit_rate * 100:.1f}%",
         }
 
 
 # Singleton instance for shared access
-_autocomplete_cache: Optional[AutocompleteCache] = None
+_autocomplete_cache: AutocompleteCache | None = None
 
 
 def get_autocomplete_cache() -> AutocompleteCache:

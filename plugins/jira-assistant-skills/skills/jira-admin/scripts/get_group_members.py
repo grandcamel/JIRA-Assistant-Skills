@@ -10,23 +10,24 @@ Supports:
 """
 
 import argparse
-import sys
-import json
 import csv
-from pathlib import Path
+import json
+import sys
 from io import StringIO
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-def get_members(client, group_name: Optional[str] = None,
-                group_id: Optional[str] = None,
-                include_inactive: bool = False,
-                start_at: int = 0, max_results: int = 50) -> List[Dict[str, Any]]:
+def get_members(
+    client,
+    group_name: str | None = None,
+    group_id: str | None = None,
+    include_inactive: bool = False,
+    start_at: int = 0,
+    max_results: int = 50,
+) -> list[dict[str, Any]]:
     """
     Get members of a group.
 
@@ -46,9 +47,9 @@ def get_members(client, group_name: Optional[str] = None,
         group_id=group_id,
         include_inactive=include_inactive,
         start_at=start_at,
-        max_results=max_results
+        max_results=max_results,
     )
-    return result.get('values', [])
+    return result.get("values", [])
 
 
 def format_user_field(value: Any) -> str:
@@ -61,12 +62,12 @@ def format_user_field(value: Any) -> str:
     Returns:
         Formatted string value
     """
-    if value is None or value == '':
-        return '[hidden]'
+    if value is None or value == "":
+        return "[hidden]"
     return str(value)
 
 
-def format_members_table(members: List[Dict[str, Any]]) -> str:
+def format_members_table(members: list[dict[str, Any]]) -> str:
     """
     Format group members as a table.
 
@@ -81,21 +82,21 @@ def format_members_table(members: List[Dict[str, Any]]) -> str:
     except ImportError:
         return format_members_simple(members)
 
-    headers = ['Account ID', 'Display Name', 'Email', 'Status']
+    headers = ["Account ID", "Display Name", "Email", "Status"]
     rows = []
     for member in members:
         row = [
-            member.get('accountId', 'N/A'),
-            member.get('displayName', 'N/A'),
-            format_user_field(member.get('emailAddress')),
-            'Active' if member.get('active', True) else 'Inactive'
+            member.get("accountId", "N/A"),
+            member.get("displayName", "N/A"),
+            format_user_field(member.get("emailAddress")),
+            "Active" if member.get("active", True) else "Inactive",
         ]
         rows.append(row)
 
-    return tabulate(rows, headers=headers, tablefmt='simple')
+    return tabulate(rows, headers=headers, tablefmt="simple")
 
 
-def format_members_simple(members: List[Dict[str, Any]]) -> str:
+def format_members_simple(members: list[dict[str, Any]]) -> str:
     """
     Simple fallback formatting when tabulate is not available.
 
@@ -112,10 +113,10 @@ def format_members_simple(members: List[Dict[str, Any]]) -> str:
         line += f"{format_user_field(member.get('emailAddress')):<30} "
         line += f"{'Active' if member.get('active', True) else 'Inactive'}"
         lines.append(line)
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
-def format_members_json(members: List[Dict[str, Any]]) -> str:
+def format_members_json(members: list[dict[str, Any]]) -> str:
     """
     Format members as JSON.
 
@@ -128,7 +129,7 @@ def format_members_json(members: List[Dict[str, Any]]) -> str:
     return json.dumps(members, indent=2)
 
 
-def format_members_csv(members: List[Dict[str, Any]]) -> str:
+def format_members_csv(members: list[dict[str, Any]]) -> str:
     """
     Format members as CSV.
 
@@ -139,16 +140,16 @@ def format_members_csv(members: List[Dict[str, Any]]) -> str:
         CSV string
     """
     output = StringIO()
-    fieldnames = ['accountId', 'displayName', 'emailAddress', 'active']
-    writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction='ignore')
+    fieldnames = ["accountId", "displayName", "emailAddress", "active"]
+    writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction="ignore")
     writer.writeheader()
 
     for member in members:
         row = {
-            'accountId': member.get('accountId', ''),
-            'displayName': member.get('displayName', ''),
-            'emailAddress': member.get('emailAddress', ''),
-            'active': 'true' if member.get('active', True) else 'false'
+            "accountId": member.get("accountId", ""),
+            "displayName": member.get("displayName", ""),
+            "emailAddress": member.get("emailAddress", ""),
+            "active": "true" if member.get("active", True) else "false",
         }
         writer.writerow(row)
 
@@ -157,35 +158,49 @@ def format_members_csv(members: List[Dict[str, Any]]) -> str:
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Get members of a JIRA group',
-        epilog='''
+        description="Get members of a JIRA group",
+        epilog="""
 Examples:
   %(prog)s "jira-developers"            # Get members by group name
   %(prog)s --group-id abc123            # Get members by group ID
   %(prog)s "jira-developers" --include-inactive
   %(prog)s "jira-developers" --output json
   %(prog)s "jira-developers" --output csv > members.csv
-''',
-        formatter_class=argparse.RawDescriptionHelpFormatter
+""",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument('group_name', nargs='?', help='Group name')
-    parser.add_argument('--group-id', '-i', help='Group ID (alternative to name)')
-    parser.add_argument('--include-inactive', '-a', action='store_true',
-                        help='Include inactive users')
-    parser.add_argument('--start', type=int, default=0,
-                        help='Starting index for pagination (default: 0)')
-    parser.add_argument('--max-results', type=int, default=50,
-                        help='Maximum results to return (default: 50)')
-    parser.add_argument('--output', '-o', choices=['table', 'json', 'csv'],
-                        default='table', help='Output format (default: table)')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument("group_name", nargs="?", help="Group name")
+    parser.add_argument("--group-id", "-i", help="Group ID (alternative to name)")
+    parser.add_argument(
+        "--include-inactive", "-a", action="store_true", help="Include inactive users"
+    )
+    parser.add_argument(
+        "--start",
+        type=int,
+        default=0,
+        help="Starting index for pagination (default: 0)",
+    )
+    parser.add_argument(
+        "--max-results",
+        type=int,
+        default=50,
+        help="Maximum results to return (default: 50)",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["table", "json", "csv"],
+        default="table",
+        help="Output format (default: table)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     # Require either group name or group ID
     if not args.group_name and not args.group_id:
-        parser.error('Either group_name or --group-id is required')
+        parser.error("Either group_name or --group-id is required")
 
     try:
         client = get_jira_client(args.profile)
@@ -197,7 +212,7 @@ Examples:
             group_id=args.group_id,
             include_inactive=args.include_inactive,
             start_at=args.start,
-            max_results=args.max_results
+            max_results=args.max_results,
         )
 
         # Get group info for display
@@ -210,9 +225,9 @@ Examples:
 
         print(f'Found {len(members)} member(s) in group "{group_identifier}"\n')
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_members_json(members))
-        elif args.output == 'csv':
+        elif args.output == "csv":
             print(format_members_csv(members))
         else:
             print(format_members_table(members))
@@ -227,5 +242,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

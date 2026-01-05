@@ -8,19 +8,18 @@ Usage:
     python get_service_desk.py 1 --show-request-types
 """
 
-import sys
-import os
 import argparse
-import json
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_json,
+    get_jira_client,
+    print_error,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import format_json
-
-
-def get_service_desk(service_desk_id: str, profile: str = None) -> dict:
+def get_service_desk(service_desk_id: str, profile: str | None = None) -> dict:
     """
     Get JSM service desk details by ID.
 
@@ -38,7 +37,9 @@ def get_service_desk(service_desk_id: str, profile: str = None) -> dict:
     return service_desk
 
 
-def format_service_desk_text(service_desk: dict, show_request_types: bool = False, client = None) -> None:
+def format_service_desk_text(
+    service_desk: dict, show_request_types: bool = False, client=None
+) -> None:
     """
     Format service desk as human-readable text.
 
@@ -56,8 +57,8 @@ def format_service_desk_text(service_desk: dict, show_request_types: bool = Fals
 
     if show_request_types and client:
         try:
-            request_types = client.get_request_types(service_desk.get('id'))
-            count = len(request_types.get('values', []))
+            request_types = client.get_request_types(service_desk.get("id"))
+            count = len(request_types.get("values", []))
             print()
             print(f"Request Types: {count} available")
             print(f"Use: python list_request_types.py {service_desk.get('id')}")
@@ -80,33 +81,34 @@ def format_service_desk_json(service_desk: dict) -> str:
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Get JSM service desk details by ID',
-        epilog='Example: python get_service_desk.py 1'
+        description="Get JSM service desk details by ID",
+        epilog="Example: python get_service_desk.py 1",
     )
 
-    parser.add_argument('service_desk_id',
-                       help='Service desk ID')
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format (default: text)')
-    parser.add_argument('--show-request-types', '-r',
-                       action='store_true',
-                       help='Show request type count')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument("service_desk_id", help="Service desk ID")
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument(
+        "--show-request-types",
+        "-r",
+        action="store_true",
+        help="Show request type count",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
         # Fetch service desk
-        service_desk = get_service_desk(
-            args.service_desk_id,
-            profile=args.profile
-        )
+        service_desk = get_service_desk(args.service_desk_id, profile=args.profile)
 
         # Output results
-        if args.output == 'json':
+        if args.output == "json":
             print(format_service_desk_json(service_desk))
         else:
             client = None
@@ -124,5 +126,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

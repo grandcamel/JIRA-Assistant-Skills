@@ -5,16 +5,17 @@ Tests verify that relationship operations are thread-safe and handle
 concurrent access correctly.
 """
 
-import pytest
 import sys
 import threading
 import time
-from pathlib import Path
-from unittest.mock import patch, Mock, MagicMock
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
 
 # Add scripts path
-scripts_path = str(Path(__file__).parent.parent / 'scripts')
+scripts_path = str(Path(__file__).parent.parent / "scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
@@ -45,9 +46,11 @@ class TestConcurrentLinkCreation:
 
         def create_link_thread(inward_key, outward_key):
             try:
-                with patch.object(link_issue, 'get_jira_client', return_value=mock_jira_client):
+                with patch.object(
+                    link_issue, "get_jira_client", return_value=mock_jira_client
+                ):
                     # Create simple link operation
-                    mock_jira_client.create_link('Blocks', inward_key, outward_key)
+                    mock_jira_client.create_link("Blocks", inward_key, outward_key)
                     results.append((inward_key, outward_key))
             except Exception as e:
                 errors.append(str(e))
@@ -55,8 +58,7 @@ class TestConcurrentLinkCreation:
         threads = []
         for i in range(10):
             t = threading.Thread(
-                target=create_link_thread,
-                args=(f'PROJ-{i}', 'PROJ-100')
+                target=create_link_thread, args=(f"PROJ-{i}", "PROJ-100")
             )
             threads.append(t)
             t.start()
@@ -74,24 +76,22 @@ class TestConcurrentLinkCreation:
 
         mock_jira_client.create_link.return_value = None
 
-        with patch.object(bulk_link, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(bulk_link, "get_jira_client", return_value=mock_jira_client):
             # Simulate concurrent bulk operations
             results = []
 
             def run_bulk_link(issues, target):
                 result = bulk_link.bulk_link(
-                    issues=issues,
-                    target=target,
-                    link_type='Blocks'
+                    issues=issues, target=target, link_type="Blocks"
                 )
                 return result
 
             with ThreadPoolExecutor(max_workers=3) as executor:
                 futures = []
                 for i in range(3):
-                    issues = [f'PROJ-{i*10 + j}' for j in range(5)]
+                    issues = [f"PROJ-{i * 10 + j}" for j in range(5)]
                     # Use valid issue key format: PROJ-100, PROJ-101, PROJ-102
-                    future = executor.submit(run_bulk_link, issues, f'PROJ-{100+i}')
+                    future = executor.submit(run_bulk_link, issues, f"PROJ-{100 + i}")
                     futures.append(future)
 
                 for future in as_completed(futures):
@@ -101,11 +101,12 @@ class TestConcurrentLinkCreation:
             # All bulk operations should complete successfully
             assert len(results) == 3
             for result in results:
-                assert result['failed'] == 0
+                assert result["failed"] == 0
 
     def test_concurrent_error_handling(self, mock_jira_client):
         """Test concurrent operations with intermittent errors."""
         import bulk_link
+
         from jira_assistant_skills_lib import JiraError
 
         call_count = [0]
@@ -122,17 +123,15 @@ class TestConcurrentLinkCreation:
 
         mock_jira_client.create_link = mock_create_link_with_errors
 
-        with patch.object(bulk_link, 'get_jira_client', return_value=mock_jira_client):
-            issues = [f'PROJ-{i}' for i in range(9)]
+        with patch.object(bulk_link, "get_jira_client", return_value=mock_jira_client):
+            issues = [f"PROJ-{i}" for i in range(9)]
             result = bulk_link.bulk_link(
-                issues=issues,
-                target='PROJ-100',
-                link_type='Blocks'
+                issues=issues, target="PROJ-100", link_type="Blocks"
             )
 
         # Should have 3 failures (calls 3, 6, 9)
-        assert result['failed'] == 3
-        assert result['created'] == 6
+        assert result["failed"] == 3
+        assert result["created"] == 6
 
 
 @pytest.mark.relationships
@@ -149,9 +148,9 @@ class TestConcurrentGetLinks:
             time.sleep(0.01)
             return [
                 {
-                    'id': f'link-{issue_key}',
-                    'type': {'name': 'Blocks'},
-                    'outwardIssue': {'key': 'PROJ-100'}
+                    "id": f"link-{issue_key}",
+                    "type": {"name": "Blocks"},
+                    "outwardIssue": {"key": "PROJ-100"},
                 }
             ]
 
@@ -162,7 +161,9 @@ class TestConcurrentGetLinks:
 
         def get_links_thread(issue_key):
             try:
-                with patch.object(get_links, 'get_jira_client', return_value=mock_jira_client):
+                with patch.object(
+                    get_links, "get_jira_client", return_value=mock_jira_client
+                ):
                     links = mock_jira_client.get_issue_links(issue_key)
                     results.append((issue_key, links))
             except Exception as e:
@@ -170,7 +171,7 @@ class TestConcurrentGetLinks:
 
         threads = []
         for i in range(10):
-            t = threading.Thread(target=get_links_thread, args=(f'PROJ-{i}',))
+            t = threading.Thread(target=get_links_thread, args=(f"PROJ-{i}",))
             threads.append(t)
             t.start()
 
@@ -179,7 +180,7 @@ class TestConcurrentGetLinks:
 
         assert len(errors) == 0
         assert len(results) == 10
-        for issue_key, links in results:
+        for _issue_key, links in results:
             assert len(links) == 1
 
 
@@ -191,6 +192,7 @@ class TestRaceConditionPrevention:
     def test_duplicate_link_prevention(self, mock_jira_client):
         """Test that duplicate links are handled correctly under concurrent access."""
         import bulk_link
+
         from jira_assistant_skills_lib import JiraError
 
         created_links = set()
@@ -207,22 +209,19 @@ class TestRaceConditionPrevention:
 
         mock_jira_client.create_link = mock_create_link_check_duplicate
 
-        with patch.object(bulk_link, 'get_jira_client', return_value=mock_jira_client):
+        with patch.object(bulk_link, "get_jira_client", return_value=mock_jira_client):
             # Try to create the same links from multiple calls
-            issues = ['PROJ-1', 'PROJ-2', 'PROJ-1']  # PROJ-1 is duplicate
+            issues = ["PROJ-1", "PROJ-2", "PROJ-1"]  # PROJ-1 is duplicate
             result = bulk_link.bulk_link(
-                issues=issues,
-                target='PROJ-100',
-                link_type='Blocks'
+                issues=issues, target="PROJ-100", link_type="Blocks"
             )
 
         # One should fail due to duplicate
-        assert result['created'] == 2
-        assert result['failed'] == 1
+        assert result["created"] == 2
+        assert result["failed"] == 1
 
     def test_concurrent_unlink_operations(self, mock_jira_client):
         """Test concurrent unlink operations don't cause race conditions."""
-        import unlink_issue
 
         unlinked = set()
         lock = threading.Lock()
@@ -251,7 +250,7 @@ class TestRaceConditionPrevention:
         # Create threads trying to unlink different links
         threads = []
         for i in range(10):
-            t = threading.Thread(target=unlink_thread, args=(f'link-{i}',))
+            t = threading.Thread(target=unlink_thread, args=(f"link-{i}",))
             threads.append(t)
             t.start()
 
@@ -274,17 +273,19 @@ class TestConcurrentDependencyChain:
 
         def mock_get_issue(key, **kwargs):
             return {
-                'key': key,
-                'fields': {
-                    'summary': f'Issue {key}',
-                    'status': {'name': 'To Do'},
-                    'issuelinks': [
+                "key": key,
+                "fields": {
+                    "summary": f"Issue {key}",
+                    "status": {"name": "To Do"},
+                    "issuelinks": [
                         {
-                            'type': {'name': 'Blocks', 'inward': 'is blocked by'},
-                            'inwardIssue': {'key': 'PROJ-BLOCKER'}
+                            "type": {"name": "Blocks", "inward": "is blocked by"},
+                            "inwardIssue": {"key": "PROJ-BLOCKER"},
                         }
-                    ] if key != 'PROJ-BLOCKER' else []
-                }
+                    ]
+                    if key != "PROJ-BLOCKER"
+                    else [],
+                },
             }
 
         mock_jira_client.get_issue = mock_get_issue
@@ -294,7 +295,9 @@ class TestConcurrentDependencyChain:
 
         def get_blockers_thread(issue_key):
             try:
-                with patch.object(get_blockers, 'get_jira_client', return_value=mock_jira_client):
+                with patch.object(
+                    get_blockers, "get_jira_client", return_value=mock_jira_client
+                ):
                     issue = mock_jira_client.get_issue(issue_key)
                     results.append((issue_key, issue))
             except Exception as e:
@@ -302,7 +305,7 @@ class TestConcurrentDependencyChain:
 
         threads = []
         for i in range(10):
-            t = threading.Thread(target=get_blockers_thread, args=(f'PROJ-{i}',))
+            t = threading.Thread(target=get_blockers_thread, args=(f"PROJ-{i}",))
             threads.append(t)
             t.start()
 

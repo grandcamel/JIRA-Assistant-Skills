@@ -12,22 +12,22 @@ Supports:
 
 import argparse
 import sys
-from pathlib import Path
-from typing import Optional
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
 # Protected system groups that should not be deleted
 SYSTEM_GROUPS = [
-    'jira-administrators',
-    'jira-users',
-    'jira-software-users',
-    'site-admins',
-    'atlassian-addons-admin'
+    "jira-administrators",
+    "jira-users",
+    "jira-software-users",
+    "site-admins",
+    "atlassian-addons-admin",
 ]
 
 
@@ -48,8 +48,9 @@ def check_system_group_protection(group_name: str) -> None:
         )
 
 
-def format_dry_run_preview(group_name: str, group_id: Optional[str] = None,
-                           swap_group: Optional[str] = None) -> str:
+def format_dry_run_preview(
+    group_name: str, group_id: str | None = None, swap_group: str | None = None
+) -> str:
     """
     Format dry-run preview message.
 
@@ -73,15 +74,18 @@ def format_dry_run_preview(group_name: str, group_id: Optional[str] = None,
     lines.append("")
     lines.append("This is a dry run. No group will be deleted.")
     lines.append("Remove --dry-run and add --confirm to delete the group.")
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
-def delete_group(client, group_name: Optional[str] = None,
-                 group_id: Optional[str] = None,
-                 swap_group: Optional[str] = None,
-                 swap_group_id: Optional[str] = None,
-                 confirmed: bool = False,
-                 dry_run: bool = False) -> None:
+def delete_group(
+    client,
+    group_name: str | None = None,
+    group_id: str | None = None,
+    swap_group: str | None = None,
+    swap_group_id: str | None = None,
+    confirmed: bool = False,
+    dry_run: bool = False,
+) -> None:
     """
     Delete a group.
 
@@ -117,40 +121,44 @@ def delete_group(client, group_name: Optional[str] = None,
         group_name=group_name,
         group_id=group_id,
         swap_group=swap_group,
-        swap_group_id=swap_group_id
+        swap_group_id=swap_group_id,
     )
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Delete a JIRA group',
-        epilog='''
+        description="Delete a JIRA group",
+        epilog="""
 Examples:
   %(prog)s "old-team" --confirm           # Delete with confirmation
   %(prog)s "old-team" --dry-run           # Preview only
   %(prog)s --group-id abc123 --confirm    # Delete by group ID
   %(prog)s "old-team" --swap "new-team" --confirm  # Reassign issues
-''',
-        formatter_class=argparse.RawDescriptionHelpFormatter
+""",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument('group_name', nargs='?', help='Group name to delete')
-    parser.add_argument('--group-id', '-i', help='Group ID to delete (alternative to name)')
-    parser.add_argument('--swap', metavar='GROUP',
-                        help='Group to reassign issues to')
-    parser.add_argument('--swap-id', metavar='GROUP_ID',
-                        help='Group ID to reassign issues to')
-    parser.add_argument('--confirm', '-y', action='store_true',
-                        help='Confirm deletion (required)')
-    parser.add_argument('--dry-run', '-n', action='store_true',
-                        help='Preview without deleting')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument("group_name", nargs="?", help="Group name to delete")
+    parser.add_argument(
+        "--group-id", "-i", help="Group ID to delete (alternative to name)"
+    )
+    parser.add_argument("--swap", metavar="GROUP", help="Group to reassign issues to")
+    parser.add_argument(
+        "--swap-id", metavar="GROUP_ID", help="Group ID to reassign issues to"
+    )
+    parser.add_argument(
+        "--confirm", "-y", action="store_true", help="Confirm deletion (required)"
+    )
+    parser.add_argument(
+        "--dry-run", "-n", action="store_true", help="Preview without deleting"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     # Require either group name or group ID
     if not args.group_name and not args.group_id:
-        parser.error('Either group_name or --group-id is required')
+        parser.error("Either group_name or --group-id is required")
 
     try:
         # Check system group protection first
@@ -159,11 +167,13 @@ Examples:
 
         # Dry run mode
         if args.dry_run:
-            print(format_dry_run_preview(
-                group_name=args.group_name,
-                group_id=args.group_id,
-                swap_group=args.swap
-            ))
+            print(
+                format_dry_run_preview(
+                    group_name=args.group_name,
+                    group_id=args.group_id,
+                    swap_group=args.swap,
+                )
+            )
             sys.exit(0)
 
         # Require confirmation
@@ -182,7 +192,7 @@ Examples:
             swap_group=args.swap,
             swap_group_id=args.swap_id,
             confirmed=args.confirm,
-            dry_run=args.dry_run
+            dry_run=args.dry_run,
         )
 
         group_identifier = args.group_name or args.group_id
@@ -201,5 +211,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

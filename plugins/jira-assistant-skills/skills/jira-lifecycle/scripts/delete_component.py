@@ -9,19 +9,23 @@ Usage:
     python delete_component.py --id 10000 --dry-run
 """
 
-import sys
 import argparse
-from pathlib import Path
-from typing import Optional, Dict, Any
+import sys
+from typing import Any
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    get_jira_client,
+    print_error,
+    print_success,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import print_success
-
-
-def delete_component(component_id: str, move_issues_to: str = None,
-                    profile: str = None) -> None:
+def delete_component(
+    component_id: str,
+    move_issues_to: str | None = None,
+    profile: str | None = None,
+) -> None:
     """
     Delete a component.
 
@@ -34,14 +38,17 @@ def delete_component(component_id: str, move_issues_to: str = None,
 
     kwargs = {}
     if move_issues_to:
-        kwargs['moveIssuesTo'] = move_issues_to
+        kwargs["moveIssuesTo"] = move_issues_to
 
     client.delete_component(component_id, **kwargs)
     client.close()
 
 
-def delete_component_with_confirmation(component_id: str, move_issues_to: str = None,
-                                       profile: str = None) -> bool:
+def delete_component_with_confirmation(
+    component_id: str,
+    move_issues_to: str | None = None,
+    profile: str | None = None,
+) -> bool:
     """
     Delete a component with confirmation prompt.
 
@@ -58,8 +65,8 @@ def delete_component_with_confirmation(component_id: str, move_issues_to: str = 
     component = client.get_component(component_id)
 
     # Show component preview
-    name = component.get('name', 'Unknown')
-    description = component.get('description', '')
+    name = component.get("name", "Unknown")
+    description = component.get("description", "")
 
     print(f"Delete component {component_id}?")
     print(f"\n  Name: {name}")
@@ -71,10 +78,10 @@ def delete_component_with_confirmation(component_id: str, move_issues_to: str = 
 
     confirmation = input("Type 'yes' to confirm: ")
 
-    if confirmation.lower() == 'yes':
+    if confirmation.lower() == "yes":
         kwargs = {}
         if move_issues_to:
-            kwargs['moveIssuesTo'] = move_issues_to
+            kwargs["moveIssuesTo"] = move_issues_to
 
         client.delete_component(component_id, **kwargs)
         client.close()
@@ -84,7 +91,9 @@ def delete_component_with_confirmation(component_id: str, move_issues_to: str = 
         return False
 
 
-def delete_component_dry_run(component_id: str, profile: str = None) -> Dict[str, Any]:
+def delete_component_dry_run(
+    component_id: str, profile: str | None = None
+) -> dict[str, Any]:
     """
     Show what component would be deleted without deleting.
 
@@ -105,27 +114,29 @@ def delete_component_dry_run(component_id: str, profile: str = None) -> Dict[str
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Delete a project component in JIRA',
-        epilog='''
+        description="Delete a project component in JIRA",
+        epilog="""
 Examples:
   %(prog)s --id 10000                    # Delete with confirmation
   %(prog)s --id 10000 --yes              # Skip confirmation
   %(prog)s --id 10000 --move-to 10001    # Move issues before deletion
   %(prog)s --id 10000 --dry-run          # Show what would be deleted
-        '''
+        """,
     )
 
-    parser.add_argument('--id',
-                       required=True,
-                       help='Component ID to delete')
-    parser.add_argument('--move-to',
-                       help='Component ID to move issues to before deletion')
-    parser.add_argument('--yes', '-y', action='store_true',
-                       help='Skip confirmation prompt')
-    parser.add_argument('--dry-run', action='store_true',
-                       help='Show what would be deleted without deleting')
-    parser.add_argument('--profile', '-p',
-                       help='JIRA profile to use')
+    parser.add_argument("--id", required=True, help="Component ID to delete")
+    parser.add_argument(
+        "--move-to", help="Component ID to move issues to before deletion"
+    )
+    parser.add_argument(
+        "--yes", "-y", action="store_true", help="Skip confirmation prompt"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be deleted without deleting",
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -136,7 +147,7 @@ Examples:
 
             print(f"[DRY RUN] Would delete component {args.id}:\n")
             print(f"  Name: {component['name']}")
-            if component.get('description'):
+            if component.get("description"):
                 print(f"  Description: {component['description']}")
             if args.move_to:
                 print(f"  Move issues to: {args.move_to}")
@@ -150,9 +161,7 @@ Examples:
         else:
             # Delete with confirmation
             deleted = delete_component_with_confirmation(
-                args.id,
-                args.move_to,
-                args.profile
+                args.id, args.move_to, args.profile
             )
 
             if deleted:
@@ -168,5 +177,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -8,15 +8,15 @@ Usage:
     python remove_customer.py SD-1 --account-id id1 --dry-run
 """
 
-import sys
-import os
 import argparse
-from pathlib import Path
+import sys
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import print_success
+from jira_assistant_skills_lib import (
+    JiraError,
+    get_jira_client,
+    print_error,
+    print_success,
+)
 
 
 def parse_account_ids(account_id_string: str) -> list:
@@ -29,11 +29,12 @@ def parse_account_ids(account_id_string: str) -> list:
     Returns:
         List of account IDs
     """
-    return [id.strip() for id in account_id_string.split(',') if id.strip()]
+    return [id.strip() for id in account_id_string.split(",") if id.strip()]
 
 
-def remove_customer_from_service_desk(service_desk_id: str, account_ids: list,
-                                       profile: str = None) -> None:
+def remove_customer_from_service_desk(
+    service_desk_id: str, account_ids: list, profile: str | None = None
+) -> None:
     """
     Remove customers from a service desk.
 
@@ -49,7 +50,7 @@ def remove_customer_from_service_desk(service_desk_id: str, account_ids: list,
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Remove customers from a JSM service desk',
+        description="Remove customers from a JSM service desk",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -61,19 +62,22 @@ Examples:
 
   Dry-run:
     %(prog)s SD-1 --account-id id1 --dry-run
-        """
+        """,
     )
 
-    parser.add_argument('service_desk_id',
-                        help='Service desk ID or key (e.g., SD-1)')
-    parser.add_argument('--account-id', required=True,
-                        help='Customer account ID(s) (comma-separated)')
-    parser.add_argument('--yes', '-y', action='store_true',
-                        help='Skip confirmation prompt')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Show what would be removed without removing')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use from config')
+    parser.add_argument("service_desk_id", help="Service desk ID or key (e.g., SD-1)")
+    parser.add_argument(
+        "--account-id", required=True, help="Customer account ID(s) (comma-separated)"
+    )
+    parser.add_argument(
+        "--yes", "-y", action="store_true", help="Skip confirmation prompt"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be removed without removing",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -86,7 +90,9 @@ Examples:
 
         if args.dry_run:
             print("DRY RUN MODE - No changes will be made\n")
-            print(f"Would remove {len(account_ids)} customer(s) from service desk {args.service_desk_id}:")
+            print(
+                f"Would remove {len(account_ids)} customer(s) from service desk {args.service_desk_id}:"
+            )
             for account_id in account_ids:
                 print(f"  - {account_id}")
             return 0
@@ -98,10 +104,12 @@ Examples:
         remove_customer_from_service_desk(
             service_desk_id=args.service_desk_id,
             account_ids=account_ids,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        print_success(f"Successfully removed {len(account_ids)} customer(s) from service desk {args.service_desk_id}")
+        print_success(
+            f"Successfully removed {len(account_ids)} customer(s) from service desk {args.service_desk_id}"
+        )
 
         return 0
 
@@ -113,5 +121,5 @@ Examples:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

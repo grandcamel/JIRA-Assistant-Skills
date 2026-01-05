@@ -15,14 +15,17 @@ import sys
 from pathlib import Path
 
 # Add shared lib to path
-shared_lib_path = str(Path(__file__).parent.parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(
+    Path(__file__).parent.parent.parent.parent / "shared" / "scripts" / "lib"
+)
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
+
 
 from jira_assistant_skills_lib import get_jira_client
 
 
-def link_asset(asset_id: int, issue_key: str, comment: str = None):
+def link_asset(asset_id: int, issue_key: str, comment: str | None = None):
     """
     Link an asset to a service request.
 
@@ -37,7 +40,10 @@ def link_asset(asset_id: int, issue_key: str, comment: str = None):
     with get_jira_client() as client:
         # Check license first
         if not client.has_assets_license():
-            print("ERROR: Assets/Insight not available. Requires JSM Premium license.", file=sys.stderr)
+            print(
+                "ERROR: Assets/Insight not available. Requires JSM Premium license.",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
         # Link asset to request (adds internal comment)
@@ -52,14 +58,14 @@ def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Link asset to service request",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__
+        epilog=__doc__,
     )
-    parser.add_argument('--request', required=True,
-                       help='Request issue key (e.g., REQ-123)')
-    parser.add_argument('--asset-id', type=int, required=True,
-                       help='Asset object ID')
-    parser.add_argument('--comment', help='Optional comment about the link')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument(
+        "--request", required=True, help="Request issue key (e.g., REQ-123)"
+    )
+    parser.add_argument("--asset-id", type=int, required=True, help="Asset object ID")
+    parser.add_argument("--comment", help="Optional comment about the link")
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -71,7 +77,7 @@ def main(argv: list[str] | None = None):
     except SystemExit:
         raise
     except Exception as e:
-        print(f"Error linking asset: {str(e)}", file=sys.stderr)
+        print(f"Error linking asset: {e!s}", file=sys.stderr)
         sys.exit(1)
 
 

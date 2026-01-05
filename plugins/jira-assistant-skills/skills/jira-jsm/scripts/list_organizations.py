@@ -8,19 +8,16 @@ Usage:
     python list_organizations.py --start 0 --limit 25
 """
 
-import sys
-import os
 import argparse
 import json
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-
-
-def list_organizations_func(start: int = 0, limit: int = 50,
-                             profile: str = None) -> dict:
+def list_organizations_func(
+    start: int = 0, limit: int = 50, profile: str | None = None
+) -> dict:
     """
     List all organizations.
 
@@ -39,7 +36,7 @@ def list_organizations_func(start: int = 0, limit: int = 50,
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='List JSM organizations',
+        description="List JSM organizations",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -51,38 +48,43 @@ Examples:
 
   Pagination:
     %(prog)s --start 0 --limit 25
-        """
+        """,
     )
 
-    parser.add_argument('--start', type=int, default=0,
-                        help='Starting index for pagination (default: 0)')
-    parser.add_argument('--limit', type=int, default=50,
-                        help='Maximum results per page (default: 50)')
-    parser.add_argument('--output', choices=['text', 'json', 'csv'], default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--count', action='store_true',
-                        help='Show only count')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use from config')
+    parser.add_argument(
+        "--start",
+        type=int,
+        default=0,
+        help="Starting index for pagination (default: 0)",
+    )
+    parser.add_argument(
+        "--limit", type=int, default=50, help="Maximum results per page (default: 50)"
+    )
+    parser.add_argument(
+        "--output",
+        choices=["text", "json", "csv"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--count", action="store_true", help="Show only count")
+    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
     try:
         data = list_organizations_func(
-            start=args.start,
-            limit=args.limit,
-            profile=args.profile
+            start=args.start, limit=args.limit, profile=args.profile
         )
 
-        organizations = data.get('values', [])
+        organizations = data.get("values", [])
 
         if args.count:
             print(len(organizations))
             return 0
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(organizations, indent=2))
-        elif args.output == 'csv':
+        elif args.output == "csv":
             print("ID,Name")
             for org in organizations:
                 print(f"{org.get('id')},{org.get('name')}")
@@ -109,5 +111,5 @@ Examples:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

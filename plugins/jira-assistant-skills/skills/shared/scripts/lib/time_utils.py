@@ -7,7 +7,6 @@ and convert between seconds and human-readable formats.
 
 import re
 from datetime import datetime, timedelta
-from typing import Optional
 
 # JIRA default time units (configurable in JIRA, these are common defaults)
 SECONDS_PER_MINUTE = 60
@@ -47,24 +46,25 @@ def parse_time_string(time_str: str) -> int:
         raise ValueError("Time string cannot be empty")
 
     patterns = {
-        'w': SECONDS_PER_WEEK,
-        'd': SECONDS_PER_DAY,
-        'h': SECONDS_PER_HOUR,
-        'm': SECONDS_PER_MINUTE
+        "w": SECONDS_PER_WEEK,
+        "d": SECONDS_PER_DAY,
+        "h": SECONDS_PER_HOUR,
+        "m": SECONDS_PER_MINUTE,
     }
 
     total_seconds = 0
     time_str_lower = time_str.lower().strip()
 
-    for match in re.finditer(r'(\d+(?:\.\d+)?)\s*([wdhm])', time_str_lower):
+    for match in re.finditer(r"(\d+(?:\.\d+)?)\s*([wdhm])", time_str_lower):
         value_str, unit = match.groups()
         value = float(value_str)
         if unit in patterns:
             total_seconds += int(value * patterns[unit])
 
     if total_seconds == 0:
-        raise ValueError(f"Invalid time format: '{time_str}'. "
-                        f"Use format like '2h', '1d 4h', '30m'")
+        raise ValueError(
+            f"Invalid time format: '{time_str}'. Use format like '2h', '1d 4h', '30m'"
+        )
 
     return total_seconds
 
@@ -89,10 +89,10 @@ def format_seconds(seconds: int, compact: bool = False) -> str:
         '0m'
     """
     if seconds == 0:
-        return '0m'
+        return "0m"
 
     if seconds < 0:
-        return '-' + format_seconds(abs(seconds), compact)
+        return "-" + format_seconds(abs(seconds), compact)
 
     parts = []
     remaining = seconds
@@ -109,16 +109,16 @@ def format_seconds(seconds: int, compact: bool = False) -> str:
     minutes = remaining // SECONDS_PER_MINUTE
 
     if weeks:
-        parts.append(f'{weeks}w')
+        parts.append(f"{weeks}w")
     if days:
-        parts.append(f'{days}d')
+        parts.append(f"{days}d")
     if hours:
-        parts.append(f'{hours}h')
+        parts.append(f"{hours}h")
     if minutes:
-        parts.append(f'{minutes}m')
+        parts.append(f"{minutes}m")
 
-    separator = '' if compact else ' '
-    return separator.join(parts) if parts else '0m'
+    separator = "" if compact else " "
+    return separator.join(parts) if parts else "0m"
 
 
 def format_seconds_long(seconds: int) -> str:
@@ -138,10 +138,10 @@ def format_seconds_long(seconds: int) -> str:
         '1 day 4 hours'
     """
     if seconds == 0:
-        return '0 minutes'
+        return "0 minutes"
 
     if seconds < 0:
-        return '-' + format_seconds_long(abs(seconds))
+        return "-" + format_seconds_long(abs(seconds))
 
     parts = []
     remaining = seconds
@@ -158,18 +158,18 @@ def format_seconds_long(seconds: int) -> str:
     minutes = remaining // SECONDS_PER_MINUTE
 
     if weeks:
-        parts.append(f'{weeks} {"week" if weeks == 1 else "weeks"}')
+        parts.append(f"{weeks} {'week' if weeks == 1 else 'weeks'}")
     if days:
-        parts.append(f'{days} {"day" if days == 1 else "days"}')
+        parts.append(f"{days} {'day' if days == 1 else 'days'}")
     if hours:
-        parts.append(f'{hours} {"hour" if hours == 1 else "hours"}')
+        parts.append(f"{hours} {'hour' if hours == 1 else 'hours'}")
     if minutes:
-        parts.append(f'{minutes} {"minute" if minutes == 1 else "minutes"}')
+        parts.append(f"{minutes} {'minute' if minutes == 1 else 'minutes'}")
 
-    return ' '.join(parts) if parts else '0 minutes'
+    return " ".join(parts) if parts else "0 minutes"
 
 
-def parse_relative_date(date_str: str, base_date: Optional[datetime] = None) -> datetime:
+def parse_relative_date(date_str: str, base_date: datetime | None = None) -> datetime:
     """
     Parse relative or absolute date strings.
 
@@ -196,13 +196,13 @@ def parse_relative_date(date_str: str, base_date: Optional[datetime] = None) -> 
     today = base_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
     relative_dates = {
-        'today': today,
-        'yesterday': today - timedelta(days=1),
-        'tomorrow': today + timedelta(days=1),
-        'last-week': today - timedelta(weeks=1),
-        'this-week': today - timedelta(days=today.weekday()),
-        'last-month': (today.replace(day=1) - timedelta(days=1)).replace(day=1),
-        'this-month': today.replace(day=1),
+        "today": today,
+        "yesterday": today - timedelta(days=1),
+        "tomorrow": today + timedelta(days=1),
+        "last-week": today - timedelta(weeks=1),
+        "this-week": today - timedelta(days=today.weekday()),
+        "last-month": (today.replace(day=1) - timedelta(days=1)).replace(day=1),
+        "this-month": today.replace(day=1),
     }
 
     date_str_lower = date_str.lower().strip()
@@ -212,14 +212,14 @@ def parse_relative_date(date_str: str, base_date: Optional[datetime] = None) -> 
 
     # Try various date formats
     formats = [
-        '%Y-%m-%d',
-        '%Y-%m-%dT%H:%M:%S.%f%z',
-        '%Y-%m-%dT%H:%M:%S%z',
-        '%Y-%m-%dT%H:%M:%S',
-        '%Y-%m-%d %H:%M:%S',
-        '%Y-%m-%d %H:%M',
-        '%d/%m/%Y',
-        '%m/%d/%Y',
+        "%Y-%m-%d",
+        "%Y-%m-%dT%H:%M:%S.%f%z",
+        "%Y-%m-%dT%H:%M:%S%z",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H:%M",
+        "%d/%m/%Y",
+        "%m/%d/%Y",
     ]
 
     for fmt in formats:
@@ -228,8 +228,10 @@ def parse_relative_date(date_str: str, base_date: Optional[datetime] = None) -> 
         except ValueError:
             continue
 
-    raise ValueError(f"Unrecognized date format: '{date_str}'. "
-                    f"Use 'yesterday', '2025-01-15', or ISO format.")
+    raise ValueError(
+        f"Unrecognized date format: '{date_str}'. "
+        f"Use 'yesterday', '2025-01-15', or ISO format."
+    )
 
 
 def format_datetime_for_jira(dt: datetime) -> str:
@@ -251,9 +253,9 @@ def format_datetime_for_jira(dt: datetime) -> str:
     # JIRA expects milliseconds and timezone
     if dt.tzinfo is None:
         # Assume UTC if no timezone
-        return dt.strftime('%Y-%m-%dT%H:%M:%S.000+0000')
+        return dt.strftime("%Y-%m-%dT%H:%M:%S.000+0000")
     else:
-        return dt.strftime('%Y-%m-%dT%H:%M:%S.000%z')
+        return dt.strftime("%Y-%m-%dT%H:%M:%S.000%z")
 
 
 def validate_time_format(time_str: str) -> bool:
@@ -281,7 +283,9 @@ def validate_time_format(time_str: str) -> bool:
         return False
 
 
-def calculate_progress(time_spent_seconds: int, original_estimate_seconds: int) -> float:
+def calculate_progress(
+    time_spent_seconds: int, original_estimate_seconds: int
+) -> float:
     """
     Calculate progress percentage.
 
@@ -324,10 +328,10 @@ def format_progress_bar(progress: float, width: int = 20) -> str:
     """
     filled = int(min(progress, 100) / 100 * width)
     empty = width - filled
-    return '█' * filled + '░' * empty
+    return "█" * filled + "░" * empty
 
 
-def parse_date_to_iso(date_str: str, base_date: Optional[datetime] = None) -> str:
+def parse_date_to_iso(date_str: str, base_date: datetime | None = None) -> str:
     """
     Parse various date formats to ISO 8601 format for JIRA API.
 
@@ -361,30 +365,30 @@ def parse_date_to_iso(date_str: str, base_date: Optional[datetime] = None) -> st
     date_str = date_str.strip()
 
     # Already in full ISO format with 'T'
-    if 'T' in date_str:
+    if "T" in date_str:
         # Normalize timezone format
-        if date_str.endswith('Z'):
+        if date_str.endswith("Z"):
             return date_str
-        if '+' in date_str or date_str[-6:].startswith('-'):
+        if "+" in date_str or date_str[-6:].startswith("-"):
             # Has timezone, convert to Z format
             try:
-                dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-                return dt.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+                dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+                return dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
             except ValueError:
                 pass
         return date_str
 
     # Try simple date format YYYY-MM-DD first
     try:
-        dt = datetime.strptime(date_str, '%Y-%m-%d')
-        return dt.strftime('%Y-%m-%dT00:00:00.000Z')
+        dt = datetime.strptime(date_str, "%Y-%m-%d")
+        return dt.strftime("%Y-%m-%dT00:00:00.000Z")
     except ValueError:
         pass
 
     # Try relative date parsing
     try:
         dt = parse_relative_date(date_str, base_date)
-        return dt.strftime('%Y-%m-%dT00:00:00.000Z')
+        return dt.strftime("%Y-%m-%dT00:00:00.000Z")
     except ValueError:
         pass
 
@@ -394,7 +398,9 @@ def parse_date_to_iso(date_str: str, base_date: Optional[datetime] = None) -> st
     )
 
 
-def convert_to_jira_datetime_string(date_str: str, base_date: Optional[datetime] = None) -> str:
+def convert_to_jira_datetime_string(
+    date_str: str, base_date: datetime | None = None
+) -> str:
     """
     Convert a date string to JIRA datetime format with timezone offset.
 
@@ -429,8 +435,8 @@ def convert_to_jira_datetime_string(date_str: str, base_date: Optional[datetime]
     iso_date = parse_date_to_iso(date_str, base_date)
 
     # Convert 'Z' suffix to '+0000'
-    if iso_date.endswith('Z'):
-        return iso_date[:-1] + '+0000'
+    if iso_date.endswith("Z"):
+        return iso_date[:-1] + "+0000"
 
     # Already has timezone offset
     return iso_date

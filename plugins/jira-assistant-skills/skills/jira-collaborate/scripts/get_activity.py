@@ -10,22 +10,23 @@ Usage:
     python get_activity.py PROJ-123 --field-type custom
 """
 
-import sys
 import argparse
 import json
-from pathlib import Path
-from typing import Dict, Any, List
-from datetime import datetime
+import sys
+from typing import Any
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_table,
+    get_jira_client,
+    print_error,
+    validate_issue_key,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import format_table
-
-
-def get_activity(issue_key: str, limit: int = 100, offset: int = 0,
-                 profile: str = None) -> Dict[str, Any]:
+def get_activity(
+    issue_key: str, limit: int = 100, offset: int = 0, profile: str | None = None
+) -> dict[str, Any]:
     """
     Get activity/changelog for an issue.
 
@@ -47,9 +48,11 @@ def get_activity(issue_key: str, limit: int = 100, offset: int = 0,
     return result
 
 
-def parse_changelog(changelog_data: Dict[str, Any],
-                   field_filter: List[str] = None,
-                   field_type_filter: List[str] = None) -> List[Dict[str, Any]]:
+def parse_changelog(
+    changelog_data: dict[str, Any],
+    field_filter: list[str] | None = None,
+    field_type_filter: list[str] | None = None,
+) -> list[dict[str, Any]]:
     """
     Parse changelog into simplified format with optional filtering.
 
@@ -63,15 +66,15 @@ def parse_changelog(changelog_data: Dict[str, Any],
     """
     parsed = []
 
-    for entry in changelog_data.get('values', []):
-        author = entry.get('author', {}).get('displayName', 'Unknown')
-        created = entry.get('created', '')
+    for entry in changelog_data.get("values", []):
+        author = entry.get("author", {}).get("displayName", "Unknown")
+        created = entry.get("created", "")
 
-        for item in entry.get('items', []):
-            field = item.get('field', '')
-            field_type = item.get('fieldtype', '')
-            from_string = item.get('fromString') or ''
-            to_string = item.get('toString') or ''
+        for item in entry.get("items", []):
+            field = item.get("field", "")
+            field_type = item.get("fieldtype", "")
+            from_string = item.get("fromString") or ""
+            to_string = item.get("toString") or ""
 
             # Apply field name filter
             if field_filter:
@@ -86,20 +89,22 @@ def parse_changelog(changelog_data: Dict[str, Any],
             # Determine change type based on field
             change_type = field
 
-            parsed.append({
-                'type': change_type,
-                'field': field,
-                'field_type': field_type,
-                'from': from_string,
-                'to': to_string,
-                'author': author,
-                'created': created
-            })
+            parsed.append(
+                {
+                    "type": change_type,
+                    "field": field,
+                    "field_type": field_type,
+                    "from": from_string,
+                    "to": to_string,
+                    "author": author,
+                    "created": created,
+                }
+            )
 
     return parsed
 
 
-def display_activity_table(changes: List[Dict[str, Any]]) -> None:
+def display_activity_table(changes: list[dict[str, Any]]) -> None:
     """
     Display activity in table format.
 
@@ -113,26 +118,30 @@ def display_activity_table(changes: List[Dict[str, Any]]) -> None:
     # Prepare table data - add formatted date to each change
     table_data = []
     for change in changes:
-        table_data.append({
-            'date': change.get('created', '')[:16],
-            'author': change.get('author', ''),
-            'field': change.get('field', ''),
-            'from': change.get('from', '') or '(none)',
-            'to': change.get('to', '') or '(none)'
-        })
+        table_data.append(
+            {
+                "date": change.get("created", "")[:16],
+                "author": change.get("author", ""),
+                "field": change.get("field", ""),
+                "from": change.get("from", "") or "(none)",
+                "to": change.get("to", "") or "(none)",
+            }
+        )
 
-    print(format_table(
-        table_data,
-        columns=['date', 'author', 'field', 'from', 'to'],
-        headers=['Date', 'Author', 'Field', 'From', 'To']
-    ))
+    print(
+        format_table(
+            table_data,
+            columns=["date", "author", "field", "from", "to"],
+            headers=["Date", "Author", "Field", "From", "To"],
+        )
+    )
 
 
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Get activity/changelog for a JIRA issue',
-        epilog='''
+        description="Get activity/changelog for a JIRA issue",
+        epilog="""
 Examples:
   %(prog)s PROJ-123
   %(prog)s PROJ-123 --limit 10
@@ -145,55 +154,63 @@ Examples:
 Field types:
   jira    - Built-in JIRA fields (status, assignee, priority, etc.)
   custom  - Custom fields (story points, etc.)
-        '''
+        """,
     )
 
-    parser.add_argument('issue_key',
-                       help='Issue key (e.g., PROJ-123)')
-    parser.add_argument('--limit', '-l',
-                       type=int,
-                       default=100,
-                       help='Maximum number of changelog entries (default: 100)')
-    parser.add_argument('--offset', '-o',
-                       type=int,
-                       default=0,
-                       help='Starting position for pagination (default: 0)')
-    parser.add_argument('--field', '-f',
-                       action='append',
-                       dest='fields',
-                       help='Filter by field name (can be repeated)')
-    parser.add_argument('--field-type', '-t',
-                       action='append',
-                       dest='field_types',
-                       choices=['jira', 'custom'],
-                       help='Filter by field type: jira (built-in) or custom')
-    parser.add_argument('--output', '-O',
-                       choices=['table', 'json'],
-                       default='table',
-                       help='Output format (default: table)')
-    parser.add_argument('--profile', '-p',
-                       help='JIRA profile to use')
+    parser.add_argument("issue_key", help="Issue key (e.g., PROJ-123)")
+    parser.add_argument(
+        "--limit",
+        "-l",
+        type=int,
+        default=100,
+        help="Maximum number of changelog entries (default: 100)",
+    )
+    parser.add_argument(
+        "--offset",
+        "-o",
+        type=int,
+        default=0,
+        help="Starting position for pagination (default: 0)",
+    )
+    parser.add_argument(
+        "--field",
+        "-f",
+        action="append",
+        dest="fields",
+        help="Filter by field name (can be repeated)",
+    )
+    parser.add_argument(
+        "--field-type",
+        "-t",
+        action="append",
+        dest="field_types",
+        choices=["jira", "custom"],
+        help="Filter by field type: jira (built-in) or custom",
+    )
+    parser.add_argument(
+        "--output",
+        "-O",
+        choices=["table", "json"],
+        default="table",
+        help="Output format (default: table)",
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         # Get activity
         changelog = get_activity(
-            args.issue_key,
-            limit=args.limit,
-            offset=args.offset,
-            profile=args.profile
+            args.issue_key, limit=args.limit, offset=args.offset, profile=args.profile
         )
 
         # Parse changelog with filters
         changes = parse_changelog(
-            changelog,
-            field_filter=args.fields,
-            field_type_filter=args.field_types
+            changelog, field_filter=args.fields, field_type_filter=args.field_types
         )
 
         # Output
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(changes, indent=2))
         else:
             # Build filter description
@@ -207,14 +224,18 @@ Field types:
             display_activity_table(changes)
 
             # Show pagination info
-            total = changelog.get('total', 0)
+            total = changelog.get("total", 0)
             raw_count = len(parse_changelog(changelog))  # Unfiltered count
             showing = len(changes)
 
             if args.fields or args.field_types:
-                print(f"\nShowing {showing} filtered changes (from {raw_count} in range).")
+                print(
+                    f"\nShowing {showing} filtered changes (from {raw_count} in range)."
+                )
             if total > args.limit:
-                print(f"Use --offset {args.offset + args.limit} to see more (total: {total}).")
+                print(
+                    f"Use --offset {args.offset + args.limit} to see more (total: {total})."
+                )
 
     except JiraError as e:
         print_error(e)
@@ -224,5 +245,5 @@ Field types:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

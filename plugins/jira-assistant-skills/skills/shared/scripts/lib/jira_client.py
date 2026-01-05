@@ -5,8 +5,8 @@ Provides a robust HTTP client for interacting with the JIRA REST API v3,
 including automatic retries, exponential backoff, and unified error handling.
 """
 
-import time
-from typing import Dict, Any, Optional
+from typing import Any
+
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
@@ -25,9 +25,15 @@ class JiraClient:
     - Unified error handling
     """
 
-    def __init__(self, base_url: str, email: str, api_token: str,
-                 timeout: int = 30, max_retries: int = 3,
-                 retry_backoff: float = 2.0):
+    def __init__(
+        self,
+        base_url: str,
+        email: str,
+        api_token: str,
+        timeout: int = 30,
+        max_retries: int = 3,
+        retry_backoff: float = 2.0,
+    ):
         """
         Initialize JIRA client.
 
@@ -39,7 +45,7 @@ class JiraClient:
             max_retries: Maximum number of retry attempts
             retry_backoff: Backoff factor for retries (exponential)
         """
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.email = email
         self.api_token = api_token
         self.timeout = timeout
@@ -59,17 +65,27 @@ class JiraClient:
 
         session.auth = (self.email, self.api_token)
 
-        session.headers.update({
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        })
+        session.headers.update(
+            {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            }
+        )
 
         retry_strategy = Retry(
             total=self.max_retries,
             backoff_factor=self.retry_backoff,
             status_forcelist=[429, 500, 502, 503, 504],
-            allowed_methods=["HEAD", "GET", "PUT", "DELETE", "OPTIONS", "TRACE", "POST"],
-            raise_on_status=False
+            allowed_methods=[
+                "HEAD",
+                "GET",
+                "PUT",
+                "DELETE",
+                "OPTIONS",
+                "TRACE",
+                "POST",
+            ],
+            raise_on_status=False,
         )
 
         adapter = HTTPAdapter(max_retries=retry_strategy)
@@ -78,9 +94,13 @@ class JiraClient:
 
         return session
 
-    def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None,
-            operation: str = "fetch data",
-            headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    def get(
+        self,
+        endpoint: str,
+        params: dict[str, Any] | None = None,
+        operation: str = "fetch data",
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         """
         Perform GET request.
 
@@ -97,14 +117,19 @@ class JiraClient:
             JiraError or subclass on failure
         """
         url = f"{self.base_url}{endpoint}"
-        response = self.session.get(url, params=params, timeout=self.timeout,
-                                    headers=headers)
+        response = self.session.get(
+            url, params=params, timeout=self.timeout, headers=headers
+        )
         handle_jira_error(response, operation)
         return response.json()
 
-    def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None,
-             operation: str = "create resource",
-             headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    def post(
+        self,
+        endpoint: str,
+        data: dict[str, Any] | None = None,
+        operation: str = "create resource",
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         """
         Perform POST request.
 
@@ -125,11 +150,13 @@ class JiraClient:
         # If data is already a string, send it as raw body
         # (e.g., for watcher API which expects just "accountId")
         if isinstance(data, str):
-            response = self.session.post(url, data=data, timeout=self.timeout,
-                                         headers=headers)
+            response = self.session.post(
+                url, data=data, timeout=self.timeout, headers=headers
+            )
         else:
-            response = self.session.post(url, json=data, timeout=self.timeout,
-                                         headers=headers)
+            response = self.session.post(
+                url, json=data, timeout=self.timeout, headers=headers
+            )
 
         handle_jira_error(response, operation)
 
@@ -141,8 +168,12 @@ class JiraClient:
         except ValueError:
             return {}
 
-    def put(self, endpoint: str, data: Optional[Dict[str, Any]] = None,
-            operation: str = "update resource") -> Dict[str, Any]:
+    def put(
+        self,
+        endpoint: str,
+        data: dict[str, Any] | None = None,
+        operation: str = "update resource",
+    ) -> dict[str, Any]:
         """
         Perform PUT request.
 
@@ -169,7 +200,9 @@ class JiraClient:
         except ValueError:
             return {}
 
-    def delete(self, endpoint: str, operation: str = "delete resource") -> Dict[str, Any]:
+    def delete(
+        self, endpoint: str, operation: str = "delete resource"
+    ) -> dict[str, Any]:
         """
         Perform DELETE request.
 
@@ -195,8 +228,13 @@ class JiraClient:
         except ValueError:
             return {}
 
-    def upload_file(self, endpoint: str, file_path: str, file_name: Optional[str] = None,
-                    operation: str = "upload file") -> Dict[str, Any]:
+    def upload_file(
+        self,
+        endpoint: str,
+        file_path: str,
+        file_name: str | None = None,
+        operation: str = "upload file",
+    ) -> dict[str, Any]:
         """
         Upload a file (multipart/form-data).
 
@@ -224,24 +262,25 @@ class JiraClient:
         # automatically set the proper multipart/form-data Content-Type.
         # We make a direct request instead of using the session to avoid
         # the default Content-Type header interfering.
-        with open(file_path, 'rb') as f:
-            files = {'file': (file_name, f)}
+        with open(file_path, "rb") as f:
+            files = {"file": (file_name, f)}
             response = requests.post(
                 url,
                 files=files,
                 auth=(self.email, self.api_token),
                 headers={
-                    'X-Atlassian-Token': 'no-check',
-                    'Accept': 'application/json',
+                    "X-Atlassian-Token": "no-check",
+                    "Accept": "application/json",
                 },
-                timeout=self.timeout
+                timeout=self.timeout,
             )
 
         handle_jira_error(response, operation)
         return response.json()
 
-    def download_file(self, url: str, output_path: str,
-                      operation: str = "download file") -> None:
+    def download_file(
+        self, url: str, output_path: str, operation: str = "download file"
+    ) -> None:
         """
         Download a file from URL.
 
@@ -256,14 +295,19 @@ class JiraClient:
         response = self.session.get(url, stream=True, timeout=self.timeout)
         handle_jira_error(response, operation)
 
-        with open(output_path, 'wb') as f:
+        with open(output_path, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
                     f.write(chunk)
 
-    def search_issues(self, jql: str, fields: Optional[list] = None,
-                      max_results: int = 50, next_page_token: Optional[str] = None,
-                      start_at: Optional[int] = None) -> Dict[str, Any]:
+    def search_issues(
+        self,
+        jql: str,
+        fields: list | None = None,
+        max_results: int = 50,
+        next_page_token: str | None = None,
+        start_at: int | None = None,
+    ) -> dict[str, Any]:
         """
         Search for issues using JQL.
 
@@ -284,23 +328,25 @@ class JiraClient:
             JiraError or subclass on failure
         """
         params = {
-            'jql': jql,
-            'maxResults': max_results,
+            "jql": jql,
+            "maxResults": max_results,
         }
 
         # Use nextPageToken for pagination (preferred per CHANGE-2046)
         if next_page_token:
-            params['nextPageToken'] = next_page_token
+            params["nextPageToken"] = next_page_token
         elif start_at is not None and start_at > 0:
             # Deprecated: startAt still works but should migrate to nextPageToken
-            params['startAt'] = start_at
+            params["startAt"] = start_at
 
         if fields:
-            params['fields'] = ','.join(fields)
+            params["fields"] = ",".join(fields)
 
-        return self.get('/rest/api/3/search/jql', params=params, operation="search issues")
+        return self.get(
+            "/rest/api/3/search/jql", params=params, operation="search issues"
+        )
 
-    def get_issue(self, issue_key: str, fields: Optional[list] = None) -> Dict[str, Any]:
+    def get_issue(self, issue_key: str, fields: list | None = None) -> dict[str, Any]:
         """
         Get a specific issue.
 
@@ -316,12 +362,15 @@ class JiraClient:
         """
         params = {}
         if fields:
-            params['fields'] = ','.join(fields)
+            params["fields"] = ",".join(fields)
 
-        return self.get(f'/rest/api/3/issue/{issue_key}', params=params,
-                       operation=f"get issue {issue_key}")
+        return self.get(
+            f"/rest/api/3/issue/{issue_key}",
+            params=params,
+            operation=f"get issue {issue_key}",
+        )
 
-    def create_issue(self, fields: Dict[str, Any]) -> Dict[str, Any]:
+    def create_issue(self, fields: dict[str, Any]) -> dict[str, Any]:
         """
         Create a new issue.
 
@@ -334,11 +383,12 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {'fields': fields}
-        return self.post('/rest/api/3/issue', data=data, operation="create issue")
+        data = {"fields": fields}
+        return self.post("/rest/api/3/issue", data=data, operation="create issue")
 
-    def update_issue(self, issue_key: str, fields: Dict[str, Any],
-                     notify_users: bool = True) -> None:
+    def update_issue(
+        self, issue_key: str, fields: dict[str, Any], notify_users: bool = True
+    ) -> None:
         """
         Update an existing issue.
 
@@ -350,10 +400,10 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {'fields': fields}
-        params = {'notifyUsers': 'true' if notify_users else 'false'}
+        data = {"fields": fields}
+        params = {"notifyUsers": "true" if notify_users else "false"}
 
-        endpoint = f'/rest/api/3/issue/{issue_key}'
+        endpoint = f"/rest/api/3/issue/{issue_key}"
         url = f"{self.base_url}{endpoint}"
         response = self.session.put(url, json=data, params=params, timeout=self.timeout)
         handle_jira_error(response, f"update issue {issue_key}")
@@ -371,9 +421,9 @@ class JiraClient:
         """
         params = {}
         if delete_subtasks:
-            params['deleteSubtasks'] = 'true'
+            params["deleteSubtasks"] = "true"
 
-        endpoint = f'/rest/api/3/issue/{issue_key}'
+        endpoint = f"/rest/api/3/issue/{issue_key}"
         url = f"{self.base_url}{endpoint}"
         response = self.session.delete(url, params=params, timeout=self.timeout)
         handle_jira_error(response, f"delete issue {issue_key}")
@@ -391,12 +441,18 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        result = self.get(f'/rest/api/3/issue/{issue_key}/transitions',
-                         operation=f"get transitions for {issue_key}")
-        return result.get('transitions', [])
+        result = self.get(
+            f"/rest/api/3/issue/{issue_key}/transitions",
+            operation=f"get transitions for {issue_key}",
+        )
+        return result.get("transitions", [])
 
-    def transition_issue(self, issue_key: str, transition_id: str,
-                        fields: Optional[Dict[str, Any]] = None) -> None:
+    def transition_issue(
+        self,
+        issue_key: str,
+        transition_id: str,
+        fields: dict[str, Any] | None = None,
+    ) -> None:
         """
         Transition an issue to a new status.
 
@@ -408,15 +464,16 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {
-            'transition': {'id': transition_id}
-        }
+        data = {"transition": {"id": transition_id}}
 
         if fields:
-            data['fields'] = fields
+            data["fields"] = fields
 
-        self.post(f'/rest/api/3/issue/{issue_key}/transitions', data=data,
-                 operation=f"transition issue {issue_key}")
+        self.post(
+            f"/rest/api/3/issue/{issue_key}/transitions",
+            data=data,
+            operation=f"transition issue {issue_key}",
+        )
 
     def get_current_user_id(self) -> str:
         """
@@ -428,10 +485,10 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        current_user = self.get('/rest/api/3/myself', operation='get current user')
-        return current_user.get('accountId')
+        current_user = self.get("/rest/api/3/myself", operation="get current user")
+        return current_user.get("accountId")
 
-    def assign_issue(self, issue_key: str, account_id: Optional[str] = None) -> None:
+    def assign_issue(self, issue_key: str, account_id: str | None = None) -> None:
         """
         Assign an issue to a user.
 
@@ -451,10 +508,13 @@ class JiraClient:
         else:
             data = {"accountId": account_id}
 
-        self.put(f'/rest/api/3/issue/{issue_key}/assignee', data=data,
-                operation=f"assign issue {issue_key}")
+        self.put(
+            f"/rest/api/3/issue/{issue_key}/assignee",
+            data=data,
+            operation=f"assign issue {issue_key}",
+        )
 
-    def add_comment(self, issue_key: str, body: Dict[str, Any]) -> Dict[str, Any]:
+    def add_comment(self, issue_key: str, body: dict[str, Any]) -> dict[str, Any]:
         """
         Add a comment to an issue.
 
@@ -468,9 +528,12 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {'body': body}
-        return self.post(f'/rest/api/3/issue/{issue_key}/comment', data=data,
-                        operation=f"add comment to {issue_key}")
+        data = {"body": body}
+        return self.post(
+            f"/rest/api/3/issue/{issue_key}/comment",
+            data=data,
+            operation=f"add comment to {issue_key}",
+        )
 
     def close(self):
         """Close the HTTP session."""
@@ -487,7 +550,7 @@ class JiraClient:
 
     # ========== Agile API Methods (/rest/agile/1.0/) ==========
 
-    def get_sprint(self, sprint_id: int) -> Dict[str, Any]:
+    def get_sprint(self, sprint_id: int) -> dict[str, Any]:
         """
         Get sprint details.
 
@@ -500,11 +563,17 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/agile/1.0/sprint/{sprint_id}',
-                       operation=f"get sprint {sprint_id}")
+        return self.get(
+            f"/rest/agile/1.0/sprint/{sprint_id}", operation=f"get sprint {sprint_id}"
+        )
 
-    def get_sprint_issues(self, sprint_id: int, fields: Optional[list] = None,
-                          max_results: int = 50, start_at: int = 0) -> Dict[str, Any]:
+    def get_sprint_issues(
+        self,
+        sprint_id: int,
+        fields: list | None = None,
+        max_results: int = 50,
+        start_at: int = 0,
+    ) -> dict[str, Any]:
         """
         Get issues in a sprint.
 
@@ -521,19 +590,26 @@ class JiraClient:
             JiraError or subclass on failure
         """
         params = {
-            'maxResults': max_results,
-            'startAt': start_at,
+            "maxResults": max_results,
+            "startAt": start_at,
         }
         if fields:
-            params['fields'] = ','.join(fields)
+            params["fields"] = ",".join(fields)
 
-        return self.get(f'/rest/agile/1.0/sprint/{sprint_id}/issue',
-                       params=params,
-                       operation=f"get issues for sprint {sprint_id}")
+        return self.get(
+            f"/rest/agile/1.0/sprint/{sprint_id}/issue",
+            params=params,
+            operation=f"get issues for sprint {sprint_id}",
+        )
 
-    def create_sprint(self, board_id: int, name: str, goal: Optional[str] = None,
-                      start_date: Optional[str] = None,
-                      end_date: Optional[str] = None) -> Dict[str, Any]:
+    def create_sprint(
+        self,
+        board_id: int,
+        name: str,
+        goal: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
         """
         Create a new sprint.
 
@@ -551,20 +627,19 @@ class JiraClient:
             JiraError or subclass on failure
         """
         data = {
-            'originBoardId': board_id,
-            'name': name,
+            "originBoardId": board_id,
+            "name": name,
         }
         if goal:
-            data['goal'] = goal
+            data["goal"] = goal
         if start_date:
-            data['startDate'] = start_date
+            data["startDate"] = start_date
         if end_date:
-            data['endDate'] = end_date
+            data["endDate"] = end_date
 
-        return self.post('/rest/agile/1.0/sprint', data=data,
-                        operation="create sprint")
+        return self.post("/rest/agile/1.0/sprint", data=data, operation="create sprint")
 
-    def update_sprint(self, sprint_id: int, **kwargs) -> Dict[str, Any]:
+    def update_sprint(self, sprint_id: int, **kwargs) -> dict[str, Any]:
         """
         Update a sprint.
 
@@ -580,22 +655,25 @@ class JiraClient:
         """
         data = {}
         field_mapping = {
-            'name': 'name',
-            'goal': 'goal',
-            'state': 'state',
-            'start_date': 'startDate',
-            'end_date': 'endDate',
+            "name": "name",
+            "goal": "goal",
+            "state": "state",
+            "start_date": "startDate",
+            "end_date": "endDate",
         }
         for key, api_key in field_mapping.items():
             if key in kwargs and kwargs[key] is not None:
                 data[api_key] = kwargs[key]
 
-        return self.post(f'/rest/agile/1.0/sprint/{sprint_id}',
-                        data=data,
-                        operation=f"update sprint {sprint_id}")
+        return self.post(
+            f"/rest/agile/1.0/sprint/{sprint_id}",
+            data=data,
+            operation=f"update sprint {sprint_id}",
+        )
 
-    def move_issues_to_sprint(self, sprint_id: int, issue_keys: list,
-                               rank: Optional[str] = None) -> None:
+    def move_issues_to_sprint(
+        self, sprint_id: int, issue_keys: list, rank: str | None = None
+    ) -> None:
         """
         Move issues to a sprint.
 
@@ -607,19 +685,26 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {'issues': issue_keys}
-        if rank == 'top':
-            data['rankBeforeIssue'] = None  # Will be first
-        elif rank == 'bottom':
-            data['rankAfterIssue'] = None  # Will be last
+        data = {"issues": issue_keys}
+        if rank == "top":
+            data["rankBeforeIssue"] = None  # Will be first
+        elif rank == "bottom":
+            data["rankAfterIssue"] = None  # Will be last
 
-        self.post(f'/rest/agile/1.0/sprint/{sprint_id}/issue',
-                 data=data,
-                 operation=f"move issues to sprint {sprint_id}")
+        self.post(
+            f"/rest/agile/1.0/sprint/{sprint_id}/issue",
+            data=data,
+            operation=f"move issues to sprint {sprint_id}",
+        )
 
-    def get_board_backlog(self, board_id: int, jql: Optional[str] = None,
-                          fields: Optional[list] = None,
-                          max_results: int = 50, start_at: int = 0) -> Dict[str, Any]:
+    def get_board_backlog(
+        self,
+        board_id: int,
+        jql: str | None = None,
+        fields: list | None = None,
+        max_results: int = 50,
+        start_at: int = 0,
+    ) -> dict[str, Any]:
         """
         Get backlog issues for a board.
 
@@ -637,20 +722,26 @@ class JiraClient:
             JiraError or subclass on failure
         """
         params = {
-            'maxResults': max_results,
-            'startAt': start_at,
+            "maxResults": max_results,
+            "startAt": start_at,
         }
         if jql:
-            params['jql'] = jql
+            params["jql"] = jql
         if fields:
-            params['fields'] = ','.join(fields)
+            params["fields"] = ",".join(fields)
 
-        return self.get(f'/rest/agile/1.0/board/{board_id}/backlog',
-                       params=params,
-                       operation=f"get backlog for board {board_id}")
+        return self.get(
+            f"/rest/agile/1.0/board/{board_id}/backlog",
+            params=params,
+            operation=f"get backlog for board {board_id}",
+        )
 
-    def rank_issues(self, issue_keys: list, rank_before: Optional[str] = None,
-                    rank_after: Optional[str] = None) -> None:
+    def rank_issues(
+        self,
+        issue_keys: list,
+        rank_before: str | None = None,
+        rank_after: str | None = None,
+    ) -> None:
         """
         Rank issues in the backlog.
 
@@ -662,16 +753,15 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {'issues': issue_keys}
+        data = {"issues": issue_keys}
         if rank_before:
-            data['rankBeforeIssue'] = rank_before
+            data["rankBeforeIssue"] = rank_before
         if rank_after:
-            data['rankAfterIssue'] = rank_after
+            data["rankAfterIssue"] = rank_after
 
-        self.put('/rest/agile/1.0/issue/rank', data=data,
-                operation="rank issues")
+        self.put("/rest/agile/1.0/issue/rank", data=data, operation="rank issues")
 
-    def get_board(self, board_id: int) -> Dict[str, Any]:
+    def get_board(self, board_id: int) -> dict[str, Any]:
         """
         Get board details.
 
@@ -684,12 +774,17 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/agile/1.0/board/{board_id}',
-                       operation=f"get board {board_id}")
+        return self.get(
+            f"/rest/agile/1.0/board/{board_id}", operation=f"get board {board_id}"
+        )
 
-    def get_all_boards(self, project_key: Optional[str] = None,
-                       board_type: Optional[str] = None,
-                       max_results: int = 50, start_at: int = 0) -> Dict[str, Any]:
+    def get_all_boards(
+        self,
+        project_key: str | None = None,
+        board_type: str | None = None,
+        max_results: int = 50,
+        start_at: int = 0,
+    ) -> dict[str, Any]:
         """
         Get all boards.
 
@@ -706,20 +801,23 @@ class JiraClient:
             JiraError or subclass on failure
         """
         params = {
-            'maxResults': max_results,
-            'startAt': start_at,
+            "maxResults": max_results,
+            "startAt": start_at,
         }
         if project_key:
-            params['projectKeyOrId'] = project_key
+            params["projectKeyOrId"] = project_key
         if board_type:
-            params['type'] = board_type
+            params["type"] = board_type
 
-        return self.get('/rest/agile/1.0/board',
-                       params=params,
-                       operation="get boards")
+        return self.get("/rest/agile/1.0/board", params=params, operation="get boards")
 
-    def get_board_sprints(self, board_id: int, state: Optional[str] = None,
-                          max_results: int = 50, start_at: int = 0) -> Dict[str, Any]:
+    def get_board_sprints(
+        self,
+        board_id: int,
+        state: str | None = None,
+        max_results: int = 50,
+        start_at: int = 0,
+    ) -> dict[str, Any]:
         """
         Get sprints for a board.
 
@@ -736,15 +834,17 @@ class JiraClient:
             JiraError or subclass on failure
         """
         params = {
-            'maxResults': max_results,
-            'startAt': start_at,
+            "maxResults": max_results,
+            "startAt": start_at,
         }
         if state:
-            params['state'] = state
+            params["state"] = state
 
-        return self.get(f'/rest/agile/1.0/board/{board_id}/sprint',
-                       params=params,
-                       operation=f"get sprints for board {board_id}")
+        return self.get(
+            f"/rest/agile/1.0/board/{board_id}/sprint",
+            params=params,
+            operation=f"get sprints for board {board_id}",
+        )
 
     # ========== Issue Link API Methods (/rest/api/3/issueLink) ==========
 
@@ -758,11 +858,10 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        result = self.get('/rest/api/3/issueLinkType',
-                         operation="get issue link types")
-        return result.get('issueLinkTypes', [])
+        result = self.get("/rest/api/3/issueLinkType", operation="get issue link types")
+        return result.get("issueLinkTypes", [])
 
-    def get_link(self, link_id: str) -> Dict[str, Any]:
+    def get_link(self, link_id: str) -> dict[str, Any]:
         """
         Get a specific issue link by ID.
 
@@ -775,11 +874,17 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/issueLink/{link_id}',
-                       operation=f"get issue link {link_id}")
+        return self.get(
+            f"/rest/api/3/issueLink/{link_id}", operation=f"get issue link {link_id}"
+        )
 
-    def create_link(self, link_type: str, inward_key: str, outward_key: str,
-                    comment: Optional[Dict[str, Any]] = None) -> None:
+    def create_link(
+        self,
+        link_type: str,
+        inward_key: str,
+        outward_key: str,
+        comment: dict[str, Any] | None = None,
+    ) -> None:
         """
         Create a link between two issues.
 
@@ -793,15 +898,18 @@ class JiraClient:
             JiraError or subclass on failure
         """
         data = {
-            'type': {'name': link_type},
-            'inwardIssue': {'key': inward_key},
-            'outwardIssue': {'key': outward_key}
+            "type": {"name": link_type},
+            "inwardIssue": {"key": inward_key},
+            "outwardIssue": {"key": outward_key},
         }
         if comment:
-            data['comment'] = {'body': comment}
+            data["comment"] = {"body": comment}
 
-        self.post('/rest/api/3/issueLink', data=data,
-                 operation=f"create link between {inward_key} and {outward_key}")
+        self.post(
+            "/rest/api/3/issueLink",
+            data=data,
+            operation=f"create link between {inward_key} and {outward_key}",
+        )
 
     def delete_link(self, link_id: str) -> None:
         """
@@ -813,8 +921,9 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        self.delete(f'/rest/api/3/issueLink/{link_id}',
-                   operation=f"delete issue link {link_id}")
+        self.delete(
+            f"/rest/api/3/issueLink/{link_id}", operation=f"delete issue link {link_id}"
+        )
 
     def get_issue_links(self, issue_key: str) -> list:
         """
@@ -829,18 +938,24 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        issue = self.get(f'/rest/api/3/issue/{issue_key}',
-                        params={'fields': 'issuelinks'},
-                        operation=f"get links for {issue_key}")
-        return issue.get('fields', {}).get('issuelinks', [])
+        issue = self.get(
+            f"/rest/api/3/issue/{issue_key}",
+            params={"fields": "issuelinks"},
+            operation=f"get links for {issue_key}",
+        )
+        return issue.get("fields", {}).get("issuelinks", [])
 
     # ========== Project Management API Methods (/rest/api/3/project) ==========
 
-    def create_project(self, key: str, name: str,
-                       project_type_key: str = 'software',
-                       template_key: str = 'com.pyxis.greenhopper.jira:gh-simplified-agility-scrum',
-                       lead_account_id: Optional[str] = None,
-                       description: Optional[str] = None) -> Dict[str, Any]:
+    def create_project(
+        self,
+        key: str,
+        name: str,
+        project_type_key: str = "software",
+        template_key: str = "com.pyxis.greenhopper.jira:gh-simplified-agility-scrum",
+        lead_account_id: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
         """
         Create a new project.
 
@@ -864,26 +979,28 @@ class JiraClient:
             Basic: 'com.pyxis.greenhopper.jira:gh-simplified-basic'
         """
         data = {
-            'key': key.upper(),
-            'name': name,
-            'projectTypeKey': project_type_key,
-            'projectTemplateKey': template_key,
+            "key": key.upper(),
+            "name": name,
+            "projectTypeKey": project_type_key,
+            "projectTemplateKey": template_key,
         }
 
         if lead_account_id:
-            data['leadAccountId'] = lead_account_id
+            data["leadAccountId"] = lead_account_id
         else:
             # Default to current user as project lead
-            data['leadAccountId'] = self.get_current_user_id()
+            data["leadAccountId"] = self.get_current_user_id()
 
         if description:
-            data['description'] = description
+            data["description"] = description
 
-        return self.post('/rest/api/3/project', data=data,
-                        operation=f"create project {key}")
+        return self.post(
+            "/rest/api/3/project", data=data, operation=f"create project {key}"
+        )
 
-    def get_project(self, project_key: str,
-                    expand: Optional[list] = None) -> Dict[str, Any]:
+    def get_project(
+        self, project_key: str, expand: list | None = None
+    ) -> dict[str, Any]:
         """
         Get project details.
 
@@ -899,11 +1016,13 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = ','.join(expand)
+            params["expand"] = ",".join(expand)
 
-        return self.get(f'/rest/api/3/project/{project_key}',
-                       params=params if params else None,
-                       operation=f"get project {project_key}")
+        return self.get(
+            f"/rest/api/3/project/{project_key}",
+            params=params if params else None,
+            operation=f"get project {project_key}",
+        )
 
     def delete_project(self, project_key: str, enable_undo: bool = True) -> None:
         """
@@ -920,8 +1039,8 @@ class JiraClient:
             Deleting a project also deletes all issues, boards, and sprints.
             Requires JIRA administrator permissions.
         """
-        params = {'enableUndo': 'true' if enable_undo else 'false'}
-        endpoint = f'/rest/api/3/project/{project_key}'
+        params = {"enableUndo": "true" if enable_undo else "false"}
+        endpoint = f"/rest/api/3/project/{project_key}"
         url = f"{self.base_url}{endpoint}"
         response = self.session.delete(url, params=params, timeout=self.timeout)
         handle_jira_error(response, f"delete project {project_key}")
@@ -939,8 +1058,10 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/project/{project_key}/statuses',
-                       operation=f"get statuses for project {project_key}")
+        return self.get(
+            f"/rest/api/3/project/{project_key}/statuses",
+            operation=f"get statuses for project {project_key}",
+        )
 
     # ========== Sprint Deletion ==========
 
@@ -958,8 +1079,10 @@ class JiraClient:
             Only future (not started) sprints can be deleted.
             Active or closed sprints cannot be deleted via API.
         """
-        self.delete(f'/rest/agile/1.0/sprint/{sprint_id}',
-                   operation=f"delete sprint {sprint_id}")
+        self.delete(
+            f"/rest/agile/1.0/sprint/{sprint_id}",
+            operation=f"delete sprint {sprint_id}",
+        )
 
     # ========== Board Deletion ==========
 
@@ -977,13 +1100,19 @@ class JiraClient:
             Deleting a project typically deletes associated boards automatically.
             Use this for explicit board cleanup if needed.
         """
-        self.delete(f'/rest/agile/1.0/board/{board_id}',
-                   operation=f"delete board {board_id}")
+        self.delete(
+            f"/rest/agile/1.0/board/{board_id}", operation=f"delete board {board_id}"
+        )
 
     # ========== Comment Operations ==========
 
-    def get_comments(self, issue_key: str, max_results: int = 50,
-                     start_at: int = 0, order_by: str = '-created') -> Dict[str, Any]:
+    def get_comments(
+        self,
+        issue_key: str,
+        max_results: int = 50,
+        start_at: int = 0,
+        order_by: str = "-created",
+    ) -> dict[str, Any]:
         """
         Get comments on an issue.
 
@@ -999,16 +1128,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {
-            'maxResults': max_results,
-            'startAt': start_at,
-            'orderBy': order_by
-        }
-        return self.get(f'/rest/api/3/issue/{issue_key}/comment',
-                       params=params,
-                       operation=f"get comments for {issue_key}")
+        params = {"maxResults": max_results, "startAt": start_at, "orderBy": order_by}
+        return self.get(
+            f"/rest/api/3/issue/{issue_key}/comment",
+            params=params,
+            operation=f"get comments for {issue_key}",
+        )
 
-    def get_comment(self, issue_key: str, comment_id: str) -> Dict[str, Any]:
+    def get_comment(self, issue_key: str, comment_id: str) -> dict[str, Any]:
         """
         Get a specific comment.
 
@@ -1022,11 +1149,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/issue/{issue_key}/comment/{comment_id}',
-                       operation=f"get comment {comment_id}")
+        return self.get(
+            f"/rest/api/3/issue/{issue_key}/comment/{comment_id}",
+            operation=f"get comment {comment_id}",
+        )
 
-    def update_comment(self, issue_key: str, comment_id: str,
-                       body: Dict[str, Any]) -> Dict[str, Any]:
+    def update_comment(
+        self, issue_key: str, comment_id: str, body: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Update a comment on an issue.
 
@@ -1041,10 +1171,12 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {'body': body}
-        return self.put(f'/rest/api/3/issue/{issue_key}/comment/{comment_id}',
-                       data=data,
-                       operation=f"update comment {comment_id}")
+        data = {"body": body}
+        return self.put(
+            f"/rest/api/3/issue/{issue_key}/comment/{comment_id}",
+            data=data,
+            operation=f"update comment {comment_id}",
+        )
 
     def delete_comment(self, issue_key: str, comment_id: str) -> None:
         """
@@ -1057,8 +1189,10 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        self.delete(f'/rest/api/3/issue/{issue_key}/comment/{comment_id}',
-                   operation=f"delete comment {comment_id}")
+        self.delete(
+            f"/rest/api/3/issue/{issue_key}/comment/{comment_id}",
+            operation=f"delete comment {comment_id}",
+        )
 
     # ========== Attachment Operations ==========
 
@@ -1075,10 +1209,12 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        issue = self.get(f'/rest/api/3/issue/{issue_key}',
-                        params={'fields': 'attachment'},
-                        operation=f"get attachments for {issue_key}")
-        return issue.get('fields', {}).get('attachment', [])
+        issue = self.get(
+            f"/rest/api/3/issue/{issue_key}",
+            params={"fields": "attachment"},
+            operation=f"get attachments for {issue_key}",
+        )
+        return issue.get("fields", {}).get("attachment", [])
 
     def delete_attachment(self, attachment_id: str) -> None:
         """
@@ -1090,13 +1226,16 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        self.delete(f'/rest/api/3/attachment/{attachment_id}',
-                   operation=f"delete attachment {attachment_id}")
+        self.delete(
+            f"/rest/api/3/attachment/{attachment_id}",
+            operation=f"delete attachment {attachment_id}",
+        )
 
     # ========== User Search ==========
 
-    def search_users(self, query: str, max_results: int = 50,
-                     start_at: int = 0) -> list:
+    def search_users(
+        self, query: str, max_results: int = 50, start_at: int = 0
+    ) -> list:
         """
         Search for users by email or display name.
 
@@ -1111,25 +1250,25 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {
-            'query': query,
-            'maxResults': max_results,
-            'startAt': start_at
-        }
-        return self.get('/rest/api/3/user/search',
-                       params=params,
-                       operation="search users")
+        params = {"query": query, "maxResults": max_results, "startAt": start_at}
+        return self.get(
+            "/rest/api/3/user/search", params=params, operation="search users"
+        )
 
     # ========== Time Tracking / Worklog API Methods ==========
 
-    def add_worklog(self, issue_key: str, time_spent: str,
-                    started: Optional[str] = None,
-                    comment: Optional[Dict[str, Any]] = None,
-                    adjust_estimate: str = 'auto',
-                    new_estimate: Optional[str] = None,
-                    reduce_by: Optional[str] = None,
-                    visibility_type: Optional[str] = None,
-                    visibility_value: Optional[str] = None) -> Dict[str, Any]:
+    def add_worklog(
+        self,
+        issue_key: str,
+        time_spent: str,
+        started: str | None = None,
+        comment: dict[str, Any] | None = None,
+        adjust_estimate: str = "auto",
+        new_estimate: str | None = None,
+        reduce_by: str | None = None,
+        visibility_type: str | None = None,
+        visibility_value: str | None = None,
+    ) -> dict[str, Any]:
         """
         Add a worklog to an issue.
 
@@ -1151,35 +1290,35 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        payload = {
-            'timeSpent': time_spent
-        }
+        payload = {"timeSpent": time_spent}
         if started:
-            payload['started'] = started
+            payload["started"] = started
         if comment:
-            payload['comment'] = comment
+            payload["comment"] = comment
         if visibility_type and visibility_value:
-            payload['visibility'] = {
-                'type': visibility_type,
-                'value': visibility_value,
-                'identifier': visibility_value
+            payload["visibility"] = {
+                "type": visibility_type,
+                "value": visibility_value,
+                "identifier": visibility_value,
             }
 
-        params = {'adjustEstimate': adjust_estimate}
-        if new_estimate and adjust_estimate == 'new':
-            params['newEstimate'] = new_estimate
-        if reduce_by and adjust_estimate == 'manual':
-            params['reduceBy'] = reduce_by
+        params = {"adjustEstimate": adjust_estimate}
+        if new_estimate and adjust_estimate == "new":
+            params["newEstimate"] = new_estimate
+        if reduce_by and adjust_estimate == "manual":
+            params["reduceBy"] = reduce_by
 
-        endpoint = f'/rest/api/3/issue/{issue_key}/worklog'
+        endpoint = f"/rest/api/3/issue/{issue_key}/worklog"
         url = f"{self.base_url}{endpoint}"
-        response = self.session.post(url, json=payload, params=params,
-                                     timeout=self.timeout)
+        response = self.session.post(
+            url, json=payload, params=params, timeout=self.timeout
+        )
         handle_jira_error(response, f"add worklog to {issue_key}")
         return response.json()
 
-    def get_worklogs(self, issue_key: str, start_at: int = 0,
-                     max_results: int = 5000) -> Dict[str, Any]:
+    def get_worklogs(
+        self, issue_key: str, start_at: int = 0, max_results: int = 5000
+    ) -> dict[str, Any]:
         """
         Get all worklogs for an issue.
 
@@ -1194,15 +1333,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {
-            'startAt': start_at,
-            'maxResults': max_results
-        }
-        return self.get(f'/rest/api/3/issue/{issue_key}/worklog',
-                       params=params,
-                       operation=f"get worklogs for {issue_key}")
+        params = {"startAt": start_at, "maxResults": max_results}
+        return self.get(
+            f"/rest/api/3/issue/{issue_key}/worklog",
+            params=params,
+            operation=f"get worklogs for {issue_key}",
+        )
 
-    def get_worklog(self, issue_key: str, worklog_id: str) -> Dict[str, Any]:
+    def get_worklog(self, issue_key: str, worklog_id: str) -> dict[str, Any]:
         """
         Get a specific worklog.
 
@@ -1216,17 +1354,23 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/issue/{issue_key}/worklog/{worklog_id}',
-                       operation=f"get worklog {worklog_id}")
+        return self.get(
+            f"/rest/api/3/issue/{issue_key}/worklog/{worklog_id}",
+            operation=f"get worklog {worklog_id}",
+        )
 
-    def update_worklog(self, issue_key: str, worklog_id: str,
-                       time_spent: Optional[str] = None,
-                       started: Optional[str] = None,
-                       comment: Optional[Dict[str, Any]] = None,
-                       adjust_estimate: str = 'auto',
-                       new_estimate: Optional[str] = None,
-                       visibility_type: Optional[str] = None,
-                       visibility_value: Optional[str] = None) -> Dict[str, Any]:
+    def update_worklog(
+        self,
+        issue_key: str,
+        worklog_id: str,
+        time_spent: str | None = None,
+        started: str | None = None,
+        comment: dict[str, Any] | None = None,
+        adjust_estimate: str = "auto",
+        new_estimate: str | None = None,
+        visibility_type: str | None = None,
+        visibility_value: str | None = None,
+    ) -> dict[str, Any]:
         """
         Update an existing worklog.
 
@@ -1249,33 +1393,38 @@ class JiraClient:
         """
         payload = {}
         if time_spent:
-            payload['timeSpent'] = time_spent
+            payload["timeSpent"] = time_spent
         if started:
-            payload['started'] = started
+            payload["started"] = started
         if comment:
-            payload['comment'] = comment
+            payload["comment"] = comment
         if visibility_type and visibility_value:
-            payload['visibility'] = {
-                'type': visibility_type,
-                'value': visibility_value,
-                'identifier': visibility_value
+            payload["visibility"] = {
+                "type": visibility_type,
+                "value": visibility_value,
+                "identifier": visibility_value,
             }
 
-        params = {'adjustEstimate': adjust_estimate}
-        if new_estimate and adjust_estimate == 'new':
-            params['newEstimate'] = new_estimate
+        params = {"adjustEstimate": adjust_estimate}
+        if new_estimate and adjust_estimate == "new":
+            params["newEstimate"] = new_estimate
 
-        endpoint = f'/rest/api/3/issue/{issue_key}/worklog/{worklog_id}'
+        endpoint = f"/rest/api/3/issue/{issue_key}/worklog/{worklog_id}"
         url = f"{self.base_url}{endpoint}"
-        response = self.session.put(url, json=payload, params=params,
-                                    timeout=self.timeout)
+        response = self.session.put(
+            url, json=payload, params=params, timeout=self.timeout
+        )
         handle_jira_error(response, f"update worklog {worklog_id}")
         return response.json()
 
-    def delete_worklog(self, issue_key: str, worklog_id: str,
-                       adjust_estimate: str = 'auto',
-                       new_estimate: Optional[str] = None,
-                       increase_by: Optional[str] = None) -> None:
+    def delete_worklog(
+        self,
+        issue_key: str,
+        worklog_id: str,
+        adjust_estimate: str = "auto",
+        new_estimate: str | None = None,
+        increase_by: str | None = None,
+    ) -> None:
         """
         Delete a worklog.
 
@@ -1290,18 +1439,18 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'adjustEstimate': adjust_estimate}
-        if new_estimate and adjust_estimate == 'new':
-            params['newEstimate'] = new_estimate
-        if increase_by and adjust_estimate == 'manual':
-            params['increaseBy'] = increase_by
+        params = {"adjustEstimate": adjust_estimate}
+        if new_estimate and adjust_estimate == "new":
+            params["newEstimate"] = new_estimate
+        if increase_by and adjust_estimate == "manual":
+            params["increaseBy"] = increase_by
 
-        endpoint = f'/rest/api/3/issue/{issue_key}/worklog/{worklog_id}'
+        endpoint = f"/rest/api/3/issue/{issue_key}/worklog/{worklog_id}"
         url = f"{self.base_url}{endpoint}"
         response = self.session.delete(url, params=params, timeout=self.timeout)
         handle_jira_error(response, f"delete worklog {worklog_id}")
 
-    def get_time_tracking(self, issue_key: str) -> Dict[str, Any]:
+    def get_time_tracking(self, issue_key: str) -> dict[str, Any]:
         """
         Get time tracking info for an issue.
 
@@ -1315,14 +1464,19 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        issue = self.get(f'/rest/api/3/issue/{issue_key}',
-                        params={'fields': 'timetracking'},
-                        operation=f"get time tracking for {issue_key}")
-        return issue.get('fields', {}).get('timetracking', {})
+        issue = self.get(
+            f"/rest/api/3/issue/{issue_key}",
+            params={"fields": "timetracking"},
+            operation=f"get time tracking for {issue_key}",
+        )
+        return issue.get("fields", {}).get("timetracking", {})
 
-    def set_time_tracking(self, issue_key: str,
-                          original_estimate: Optional[str] = None,
-                          remaining_estimate: Optional[str] = None) -> None:
+    def set_time_tracking(
+        self,
+        issue_key: str,
+        original_estimate: str | None = None,
+        remaining_estimate: str | None = None,
+    ) -> None:
         """
         Set time tracking estimates on an issue.
 
@@ -1339,20 +1493,24 @@ class JiraClient:
         """
         timetracking = {}
         if original_estimate is not None:
-            timetracking['originalEstimate'] = original_estimate
+            timetracking["originalEstimate"] = original_estimate
         if remaining_estimate is not None:
-            timetracking['remainingEstimate'] = remaining_estimate
+            timetracking["remainingEstimate"] = remaining_estimate
 
         if not timetracking:
             return
 
-        self.put(f'/rest/api/3/issue/{issue_key}',
-                data={'fields': {'timetracking': timetracking}},
-                operation=f"set time tracking for {issue_key}")
+        self.put(
+            f"/rest/api/3/issue/{issue_key}",
+            data={"fields": {"timetracking": timetracking}},
+            operation=f"set time tracking for {issue_key}",
+        )
 
     # ========== JQL API Methods (/rest/api/3/jql/) ==========
 
-    def get_jql_autocomplete(self, include_collapsed_fields: bool = False) -> Dict[str, Any]:
+    def get_jql_autocomplete(
+        self, include_collapsed_fields: bool = False
+    ) -> dict[str, Any]:
         """
         Get JQL reference data (fields, functions, reserved words).
 
@@ -1367,12 +1525,16 @@ class JiraClient:
         """
         params = {}
         if include_collapsed_fields:
-            params['includeCollapsedFields'] = 'true'
-        return self.get('/rest/api/3/jql/autocompletedata',
-                       params=params if params else None,
-                       operation="get JQL autocomplete data")
+            params["includeCollapsedFields"] = "true"
+        return self.get(
+            "/rest/api/3/jql/autocompletedata",
+            params=params if params else None,
+            operation="get JQL autocomplete data",
+        )
 
-    def get_jql_suggestions(self, field_name: str, field_value: str = '') -> Dict[str, Any]:
+    def get_jql_suggestions(
+        self, field_name: str, field_value: str = ""
+    ) -> dict[str, Any]:
         """
         Get autocomplete suggestions for a JQL field value.
 
@@ -1386,14 +1548,16 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'fieldName': field_name}
+        params = {"fieldName": field_name}
         if field_value:
-            params['fieldValue'] = field_value
-        return self.get('/rest/api/3/jql/autocompletedata/suggestions',
-                       params=params,
-                       operation=f"get JQL suggestions for {field_name}")
+            params["fieldValue"] = field_value
+        return self.get(
+            "/rest/api/3/jql/autocompletedata/suggestions",
+            params=params,
+            operation=f"get JQL suggestions for {field_name}",
+        )
 
-    def parse_jql(self, queries: list, validation: str = 'strict') -> Dict[str, Any]:
+    def parse_jql(self, queries: list, validation: str = "strict") -> dict[str, Any]:
         """
         Parse and validate JQL queries.
 
@@ -1407,16 +1571,22 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'validation': validation}
-        return self.post('/rest/api/3/jql/parse',
-                        data={'queries': queries},
-                        operation="parse JQL queries")
+        return self.post(
+            "/rest/api/3/jql/parse",
+            data={"queries": queries},
+            operation="parse JQL queries",
+        )
 
     # ========== Filter API Methods (/rest/api/3/filter/) ==========
 
-    def create_filter(self, name: str, jql: str, description: str = None,
-                      favourite: bool = False,
-                      share_permissions: list = None) -> Dict[str, Any]:
+    def create_filter(
+        self,
+        name: str,
+        jql: str,
+        description: str | None = None,
+        favourite: bool = False,
+        share_permissions: list | None = None,
+    ) -> dict[str, Any]:
         """
         Create a new filter.
 
@@ -1433,19 +1603,16 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        payload = {
-            'name': name,
-            'jql': jql,
-            'favourite': favourite
-        }
+        payload = {"name": name, "jql": jql, "favourite": favourite}
         if description:
-            payload['description'] = description
+            payload["description"] = description
         if share_permissions:
-            payload['sharePermissions'] = share_permissions
-        return self.post('/rest/api/3/filter', data=payload,
-                        operation=f"create filter '{name}'")
+            payload["sharePermissions"] = share_permissions
+        return self.post(
+            "/rest/api/3/filter", data=payload, operation=f"create filter '{name}'"
+        )
 
-    def get_filter(self, filter_id: str, expand: str = None) -> Dict[str, Any]:
+    def get_filter(self, filter_id: str, expand: str | None = None) -> dict[str, Any]:
         """
         Get a filter by ID.
 
@@ -1461,13 +1628,21 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = expand
-        return self.get(f'/rest/api/3/filter/{filter_id}',
-                       params=params if params else None,
-                       operation=f"get filter {filter_id}")
+            params["expand"] = expand
+        return self.get(
+            f"/rest/api/3/filter/{filter_id}",
+            params=params if params else None,
+            operation=f"get filter {filter_id}",
+        )
 
-    def update_filter(self, filter_id: str, name: str = None, jql: str = None,
-                      description: str = None, favourite: bool = None) -> Dict[str, Any]:
+    def update_filter(
+        self,
+        filter_id: str,
+        name: str | None = None,
+        jql: str | None = None,
+        description: str | None = None,
+        favourite: bool | None = None,
+    ) -> dict[str, Any]:
         """
         Update a filter.
 
@@ -1486,15 +1661,18 @@ class JiraClient:
         """
         payload = {}
         if name is not None:
-            payload['name'] = name
+            payload["name"] = name
         if jql is not None:
-            payload['jql'] = jql
+            payload["jql"] = jql
         if description is not None:
-            payload['description'] = description
+            payload["description"] = description
         if favourite is not None:
-            payload['favourite'] = favourite
-        return self.put(f'/rest/api/3/filter/{filter_id}', data=payload,
-                       operation=f"update filter {filter_id}")
+            payload["favourite"] = favourite
+        return self.put(
+            f"/rest/api/3/filter/{filter_id}",
+            data=payload,
+            operation=f"update filter {filter_id}",
+        )
 
     def delete_filter(self, filter_id: str) -> None:
         """
@@ -1506,10 +1684,11 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        self.delete(f'/rest/api/3/filter/{filter_id}',
-                   operation=f"delete filter {filter_id}")
+        self.delete(
+            f"/rest/api/3/filter/{filter_id}", operation=f"delete filter {filter_id}"
+        )
 
-    def get_my_filters(self, expand: str = None) -> list:
+    def get_my_filters(self, expand: str | None = None) -> list:
         """
         Get current user's filters.
 
@@ -1524,13 +1703,15 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = expand
-        result = self.get('/rest/api/3/filter/my',
-                         params=params if params else None,
-                         operation="get my filters")
+            params["expand"] = expand
+        result = self.get(
+            "/rest/api/3/filter/my",
+            params=params if params else None,
+            operation="get my filters",
+        )
         return result if isinstance(result, list) else []
 
-    def get_favourite_filters(self, expand: str = None) -> list:
+    def get_favourite_filters(self, expand: str | None = None) -> list:
         """
         Get current user's favourite filters.
 
@@ -1545,15 +1726,23 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = expand
-        result = self.get('/rest/api/3/filter/favourite',
-                         params=params if params else None,
-                         operation="get favourite filters")
+            params["expand"] = expand
+        result = self.get(
+            "/rest/api/3/filter/favourite",
+            params=params if params else None,
+            operation="get favourite filters",
+        )
         return result if isinstance(result, list) else []
 
-    def search_filters(self, filter_name: str = None, account_id: str = None,
-                       project_key: str = None, expand: str = None,
-                       start_at: int = 0, max_results: int = 50) -> Dict[str, Any]:
+    def search_filters(
+        self,
+        filter_name: str | None = None,
+        account_id: str | None = None,
+        project_key: str | None = None,
+        expand: str | None = None,
+        start_at: int = 0,
+        max_results: int = 50,
+    ) -> dict[str, Any]:
         """
         Search for filters.
 
@@ -1571,19 +1760,20 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'startAt': start_at, 'maxResults': max_results}
+        params = {"startAt": start_at, "maxResults": max_results}
         if filter_name:
-            params['filterName'] = filter_name
+            params["filterName"] = filter_name
         if account_id:
-            params['accountId'] = account_id
+            params["accountId"] = account_id
         if project_key:
-            params['projectKeyOrId'] = project_key
+            params["projectKeyOrId"] = project_key
         if expand:
-            params['expand'] = expand
-        return self.get('/rest/api/3/filter/search', params=params,
-                       operation="search filters")
+            params["expand"] = expand
+        return self.get(
+            "/rest/api/3/filter/search", params=params, operation="search filters"
+        )
 
-    def add_filter_favourite(self, filter_id: str) -> Dict[str, Any]:
+    def add_filter_favourite(self, filter_id: str) -> dict[str, Any]:
         """
         Add filter to favourites.
 
@@ -1596,8 +1786,10 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.put(f'/rest/api/3/filter/{filter_id}/favourite',
-                       operation=f"add filter {filter_id} to favourites")
+        return self.put(
+            f"/rest/api/3/filter/{filter_id}/favourite",
+            operation=f"add filter {filter_id} to favourites",
+        )
 
     def remove_filter_favourite(self, filter_id: str) -> None:
         """
@@ -1609,8 +1801,10 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        self.delete(f'/rest/api/3/filter/{filter_id}/favourite',
-                   operation=f"remove filter {filter_id} from favourites")
+        self.delete(
+            f"/rest/api/3/filter/{filter_id}/favourite",
+            operation=f"remove filter {filter_id} from favourites",
+        )
 
     def get_filter_permissions(self, filter_id: str) -> list:
         """
@@ -1625,10 +1819,12 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/filter/{filter_id}/permission',
-                       operation=f"get permissions for filter {filter_id}")
+        return self.get(
+            f"/rest/api/3/filter/{filter_id}/permission",
+            operation=f"get permissions for filter {filter_id}",
+        )
 
-    def add_filter_permission(self, filter_id: str, permission: dict) -> Dict[str, Any]:
+    def add_filter_permission(self, filter_id: str, permission: dict) -> dict[str, Any]:
         """
         Add share permission to filter.
 
@@ -1647,9 +1843,11 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.post(f'/rest/api/3/filter/{filter_id}/permission',
-                        data=permission,
-                        operation=f"add permission to filter {filter_id}")
+        return self.post(
+            f"/rest/api/3/filter/{filter_id}/permission",
+            data=permission,
+            operation=f"add permission to filter {filter_id}",
+        )
 
     def delete_filter_permission(self, filter_id: str, permission_id: str) -> None:
         """
@@ -1662,14 +1860,20 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        self.delete(f'/rest/api/3/filter/{filter_id}/permission/{permission_id}',
-                   operation=f"delete permission {permission_id} from filter {filter_id}")
+        self.delete(
+            f"/rest/api/3/filter/{filter_id}/permission/{permission_id}",
+            operation=f"delete permission {permission_id} from filter {filter_id}",
+        )
 
     # ========== Comment Visibility ==========
 
-    def add_comment_with_visibility(self, issue_key: str, body: Dict[str, Any],
-                                    visibility_type: str = None,
-                                    visibility_value: str = None) -> Dict[str, Any]:
+    def add_comment_with_visibility(
+        self,
+        issue_key: str,
+        body: dict[str, Any],
+        visibility_type: str | None = None,
+        visibility_value: str | None = None,
+    ) -> dict[str, Any]:
         """
         Add a comment with visibility restrictions.
 
@@ -1685,20 +1889,24 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {'body': body}
+        data = {"body": body}
         if visibility_type and visibility_value:
-            data['visibility'] = {
-                'type': visibility_type,
-                'value': visibility_value,
-                'identifier': visibility_value
+            data["visibility"] = {
+                "type": visibility_type,
+                "value": visibility_value,
+                "identifier": visibility_value,
             }
-        return self.post(f'/rest/api/3/issue/{issue_key}/comment',
-                        data=data, operation=f"add comment to {issue_key}")
+        return self.post(
+            f"/rest/api/3/issue/{issue_key}/comment",
+            data=data,
+            operation=f"add comment to {issue_key}",
+        )
 
     # ========== Changelog ==========
 
-    def get_changelog(self, issue_key: str, start_at: int = 0,
-                      max_results: int = 100) -> Dict[str, Any]:
+    def get_changelog(
+        self, issue_key: str, start_at: int = 0, max_results: int = 100
+    ) -> dict[str, Any]:
         """
         Get issue changelog (activity history).
 
@@ -1713,17 +1921,24 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'startAt': start_at, 'maxResults': max_results}
-        return self.get(f'/rest/api/3/issue/{issue_key}/changelog',
-                       params=params,
-                       operation=f"get changelog for {issue_key}")
+        params = {"startAt": start_at, "maxResults": max_results}
+        return self.get(
+            f"/rest/api/3/issue/{issue_key}/changelog",
+            params=params,
+            operation=f"get changelog for {issue_key}",
+        )
 
     # ========== Notifications ==========
 
-    def notify_issue(self, issue_key: str, subject: str = None,
-                     text_body: str = None, html_body: str = None,
-                     to: Dict[str, Any] = None,
-                     restrict: Dict[str, Any] = None) -> None:
+    def notify_issue(
+        self,
+        issue_key: str,
+        subject: str | None = None,
+        text_body: str | None = None,
+        html_body: str | None = None,
+        to: dict[str, Any] | None = None,
+        restrict: dict[str, Any] | None = None,
+    ) -> None:
         """
         Send notification about an issue.
 
@@ -1740,29 +1955,35 @@ class JiraClient:
         """
         data = {}
         if subject:
-            data['subject'] = subject
+            data["subject"] = subject
         if text_body:
-            data['textBody'] = text_body
+            data["textBody"] = text_body
         if html_body:
-            data['htmlBody'] = html_body
+            data["htmlBody"] = html_body
         if to:
-            data['to'] = to
+            data["to"] = to
         if restrict:
-            data['restrict'] = restrict
+            data["restrict"] = restrict
 
-        self.post(f'/rest/api/3/issue/{issue_key}/notify',
-                 data=data, operation=f"notify about {issue_key}")
+        self.post(
+            f"/rest/api/3/issue/{issue_key}/notify",
+            data=data,
+            operation=f"notify about {issue_key}",
+        )
 
     # ========== Version Management ==========
 
-    def create_version(self, name: str,
-                       project: str = None,
-                       project_id: int = None,
-                       description: str = None,
-                       start_date: str = None,
-                       release_date: str = None,
-                       released: bool = False,
-                       archived: bool = False) -> Dict[str, Any]:
+    def create_version(
+        self,
+        name: str,
+        project: str | None = None,
+        project_id: int | None = None,
+        description: str | None = None,
+        start_date: str | None = None,
+        release_date: str | None = None,
+        released: bool = False,
+        archived: bool = False,
+    ) -> dict[str, Any]:
         """
         Create a new project version.
 
@@ -1786,26 +2007,23 @@ class JiraClient:
         if not project and not project_id:
             raise ValueError("Either 'project' or 'project_id' must be provided")
 
-        data = {
-            'name': name,
-            'released': released,
-            'archived': archived
-        }
+        data = {"name": name, "released": released, "archived": archived}
         if project:
-            data['project'] = project
+            data["project"] = project
         else:
-            data['projectId'] = project_id
+            data["projectId"] = project_id
         if description:
-            data['description'] = description
+            data["description"] = description
         if start_date:
-            data['startDate'] = start_date
+            data["startDate"] = start_date
         if release_date:
-            data['releaseDate'] = release_date
+            data["releaseDate"] = release_date
 
-        return self.post('/rest/api/3/version', data=data,
-                        operation=f"create version '{name}'")
+        return self.post(
+            "/rest/api/3/version", data=data, operation=f"create version '{name}'"
+        )
 
-    def get_version(self, version_id: str, expand: str = None) -> Dict[str, Any]:
+    def get_version(self, version_id: str, expand: str | None = None) -> dict[str, Any]:
         """
         Get a version by ID.
 
@@ -1821,12 +2039,14 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = expand
-        return self.get(f'/rest/api/3/version/{version_id}',
-                       params=params if params else None,
-                       operation=f"get version {version_id}")
+            params["expand"] = expand
+        return self.get(
+            f"/rest/api/3/version/{version_id}",
+            params=params if params else None,
+            operation=f"get version {version_id}",
+        )
 
-    def update_version(self, version_id: str, **kwargs) -> Dict[str, Any]:
+    def update_version(self, version_id: str, **kwargs) -> dict[str, Any]:
         """
         Update a version.
 
@@ -1843,24 +2063,29 @@ class JiraClient:
         """
         data = {}
         field_mapping = {
-            'name': 'name',
-            'description': 'description',
-            'released': 'released',
-            'archived': 'archived',
-            'start_date': 'startDate',
-            'release_date': 'releaseDate'
+            "name": "name",
+            "description": "description",
+            "released": "released",
+            "archived": "archived",
+            "start_date": "startDate",
+            "release_date": "releaseDate",
         }
         for key, api_key in field_mapping.items():
             if key in kwargs and kwargs[key] is not None:
                 data[api_key] = kwargs[key]
 
-        return self.put(f'/rest/api/3/version/{version_id}',
-                       data=data,
-                       operation=f"update version {version_id}")
+        return self.put(
+            f"/rest/api/3/version/{version_id}",
+            data=data,
+            operation=f"update version {version_id}",
+        )
 
-    def delete_version(self, version_id: str,
-                       move_fixed_to: str = None,
-                       move_affected_to: str = None) -> None:
+    def delete_version(
+        self,
+        version_id: str,
+        move_fixed_to: str | None = None,
+        move_affected_to: str | None = None,
+    ) -> None:
         """
         Delete a version.
 
@@ -1874,18 +2099,18 @@ class JiraClient:
         """
         params = {}
         if move_fixed_to:
-            params['moveFixIssuesTo'] = move_fixed_to
+            params["moveFixIssuesTo"] = move_fixed_to
         if move_affected_to:
-            params['moveAffectedIssuesTo'] = move_affected_to
+            params["moveAffectedIssuesTo"] = move_affected_to
 
-        endpoint = f'/rest/api/3/version/{version_id}'
+        endpoint = f"/rest/api/3/version/{version_id}"
         url = f"{self.base_url}{endpoint}"
-        response = self.session.delete(url, params=params if params else None,
-                                      timeout=self.timeout)
+        response = self.session.delete(
+            url, params=params if params else None, timeout=self.timeout
+        )
         handle_jira_error(response, f"delete version {version_id}")
 
-    def get_project_versions(self, project_key: str,
-                             expand: str = None) -> list:
+    def get_project_versions(self, project_key: str, expand: str | None = None) -> list:
         """
         Get all versions for a project.
 
@@ -1901,12 +2126,14 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = expand
-        return self.get(f'/rest/api/3/project/{project_key}/versions',
-                       params=params if params else None,
-                       operation=f"get versions for project {project_key}")
+            params["expand"] = expand
+        return self.get(
+            f"/rest/api/3/project/{project_key}/versions",
+            params=params if params else None,
+            operation=f"get versions for project {project_key}",
+        )
 
-    def get_version_issue_counts(self, version_id: str) -> Dict[str, Any]:
+    def get_version_issue_counts(self, version_id: str) -> dict[str, Any]:
         """
         Get issue counts for a version.
 
@@ -1919,10 +2146,12 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/version/{version_id}/relatedIssueCounts',
-                       operation=f"get issue counts for version {version_id}")
+        return self.get(
+            f"/rest/api/3/version/{version_id}/relatedIssueCounts",
+            operation=f"get issue counts for version {version_id}",
+        )
 
-    def get_version_unresolved_count(self, version_id: str) -> Dict[str, Any]:
+    def get_version_unresolved_count(self, version_id: str) -> dict[str, Any]:
         """
         Get unresolved issue count for a version.
 
@@ -1935,15 +2164,21 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/version/{version_id}/unresolvedIssueCount',
-                       operation=f"get unresolved count for version {version_id}")
+        return self.get(
+            f"/rest/api/3/version/{version_id}/unresolvedIssueCount",
+            operation=f"get unresolved count for version {version_id}",
+        )
 
     # ========== Component Management ==========
 
-    def create_component(self, project: str, name: str,
-                         description: str = None,
-                         lead_account_id: str = None,
-                         assignee_type: str = 'PROJECT_DEFAULT') -> Dict[str, Any]:
+    def create_component(
+        self,
+        project: str,
+        name: str,
+        description: str | None = None,
+        lead_account_id: str | None = None,
+        assignee_type: str = "PROJECT_DEFAULT",
+    ) -> dict[str, Any]:
         """
         Create a new component.
 
@@ -1960,20 +2195,17 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {
-            'project': project,
-            'name': name,
-            'assigneeType': assignee_type
-        }
+        data = {"project": project, "name": name, "assigneeType": assignee_type}
         if description:
-            data['description'] = description
+            data["description"] = description
         if lead_account_id:
-            data['leadAccountId'] = lead_account_id
+            data["leadAccountId"] = lead_account_id
 
-        return self.post('/rest/api/3/component', data=data,
-                        operation=f"create component '{name}'")
+        return self.post(
+            "/rest/api/3/component", data=data, operation=f"create component '{name}'"
+        )
 
-    def get_component(self, component_id: str) -> Dict[str, Any]:
+    def get_component(self, component_id: str) -> dict[str, Any]:
         """
         Get a component by ID.
 
@@ -1986,10 +2218,12 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/component/{component_id}',
-                       operation=f"get component {component_id}")
+        return self.get(
+            f"/rest/api/3/component/{component_id}",
+            operation=f"get component {component_id}",
+        )
 
-    def update_component(self, component_id: str, **kwargs) -> Dict[str, Any]:
+    def update_component(self, component_id: str, **kwargs) -> dict[str, Any]:
         """
         Update a component.
 
@@ -2005,21 +2239,24 @@ class JiraClient:
         """
         data = {}
         field_mapping = {
-            'name': 'name',
-            'description': 'description',
-            'lead_account_id': 'leadAccountId',
-            'assignee_type': 'assigneeType'
+            "name": "name",
+            "description": "description",
+            "lead_account_id": "leadAccountId",
+            "assignee_type": "assigneeType",
         }
         for key, api_key in field_mapping.items():
             if key in kwargs and kwargs[key] is not None:
                 data[api_key] = kwargs[key]
 
-        return self.put(f'/rest/api/3/component/{component_id}',
-                       data=data,
-                       operation=f"update component {component_id}")
+        return self.put(
+            f"/rest/api/3/component/{component_id}",
+            data=data,
+            operation=f"update component {component_id}",
+        )
 
-    def delete_component(self, component_id: str,
-                         move_issues_to: str = None) -> None:
+    def delete_component(
+        self, component_id: str, move_issues_to: str | None = None
+    ) -> None:
         """
         Delete a component.
 
@@ -2032,12 +2269,13 @@ class JiraClient:
         """
         params = {}
         if move_issues_to:
-            params['moveIssuesTo'] = move_issues_to
+            params["moveIssuesTo"] = move_issues_to
 
-        endpoint = f'/rest/api/3/component/{component_id}'
+        endpoint = f"/rest/api/3/component/{component_id}"
         url = f"{self.base_url}{endpoint}"
-        response = self.session.delete(url, params=params if params else None,
-                                      timeout=self.timeout)
+        response = self.session.delete(
+            url, params=params if params else None, timeout=self.timeout
+        )
         handle_jira_error(response, f"delete component {component_id}")
 
     def get_project_components(self, project_key: str) -> list:
@@ -2053,10 +2291,12 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/project/{project_key}/components',
-                       operation=f"get components for project {project_key}")
+        return self.get(
+            f"/rest/api/3/project/{project_key}/components",
+            operation=f"get components for project {project_key}",
+        )
 
-    def get_component_issue_counts(self, component_id: str) -> Dict[str, Any]:
+    def get_component_issue_counts(self, component_id: str) -> dict[str, Any]:
         """
         Get issue counts for a component.
 
@@ -2069,14 +2309,20 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/component/{component_id}/relatedIssueCounts',
-                       operation=f"get issue counts for component {component_id}")
+        return self.get(
+            f"/rest/api/3/component/{component_id}/relatedIssueCounts",
+            operation=f"get issue counts for component {component_id}",
+        )
 
     # ========== Issue Cloning ==========
 
-    def clone_issue(self, issue_key: str, summary: Optional[str] = None,
-                    clone_subtasks: bool = False,
-                    clone_links: bool = False) -> Dict[str, Any]:
+    def clone_issue(
+        self,
+        issue_key: str,
+        summary: str | None = None,
+        clone_subtasks: bool = False,
+        clone_links: bool = False,
+    ) -> dict[str, Any]:
         """
         Clone an issue by copying its fields to a new issue.
 
@@ -2098,37 +2344,37 @@ class JiraClient:
         """
         # Get original issue details
         original = self.get_issue(issue_key)
-        original_fields = original.get('fields', {})
+        original_fields = original.get("fields", {})
 
         # Build clone fields
         clone_fields = {
-            'project': {'key': original_fields['project']['key']},
-            'issuetype': {'name': original_fields['issuetype']['name']},
-            'summary': summary or original_fields.get('summary', 'Clone'),
+            "project": {"key": original_fields["project"]["key"]},
+            "issuetype": {"name": original_fields["issuetype"]["name"]},
+            "summary": summary or original_fields.get("summary", "Clone"),
         }
 
         # Copy description if present
-        if original_fields.get('description'):
-            clone_fields['description'] = original_fields['description']
+        if original_fields.get("description"):
+            clone_fields["description"] = original_fields["description"]
 
         # Copy priority if present
-        if original_fields.get('priority'):
-            clone_fields['priority'] = {'name': original_fields['priority']['name']}
+        if original_fields.get("priority"):
+            clone_fields["priority"] = {"name": original_fields["priority"]["name"]}
 
         # Copy labels if present
-        if original_fields.get('labels'):
-            clone_fields['labels'] = original_fields['labels']
+        if original_fields.get("labels"):
+            clone_fields["labels"] = original_fields["labels"]
 
         # Copy components if present
-        if original_fields.get('components'):
-            clone_fields['components'] = [
-                {'name': c['name']} for c in original_fields['components']
+        if original_fields.get("components"):
+            clone_fields["components"] = [
+                {"name": c["name"]} for c in original_fields["components"]
             ]
 
         # Copy fix versions if present
-        if original_fields.get('fixVersions'):
-            clone_fields['fixVersions'] = [
-                {'name': v['name']} for v in original_fields['fixVersions']
+        if original_fields.get("fixVersions"):
+            clone_fields["fixVersions"] = [
+                {"name": v["name"]} for v in original_fields["fixVersions"]
             ]
 
         # Create the clone
@@ -2137,9 +2383,9 @@ class JiraClient:
         # Create Cloners link (clone -> original)
         try:
             self.create_link(
-                link_type='Cloners',
-                inward_key=issue_key,    # is cloned by
-                outward_key=clone['key']  # clones
+                link_type="Cloners",
+                inward_key=issue_key,  # is cloned by
+                outward_key=clone["key"],  # clones
             )
         except Exception:
             # Some JIRA instances may not have Cloners link type
@@ -2147,39 +2393,41 @@ class JiraClient:
 
         # Clone subtasks if requested
         if clone_subtasks:
-            subtasks = original_fields.get('subtasks', [])
+            subtasks = original_fields.get("subtasks", [])
             for subtask_ref in subtasks:
-                subtask = self.get_issue(subtask_ref['key'])
-                subtask_fields = subtask.get('fields', {})
+                subtask = self.get_issue(subtask_ref["key"])
+                subtask_fields = subtask.get("fields", {})
 
-                self.create_issue({
-                    'project': {'key': original_fields['project']['key']},
-                    'parent': {'key': clone['key']},
-                    'issuetype': {'name': 'Subtask'},
-                    'summary': subtask_fields.get('summary', 'Cloned subtask'),
-                    'description': subtask_fields.get('description'),
-                })
+                self.create_issue(
+                    {
+                        "project": {"key": original_fields["project"]["key"]},
+                        "parent": {"key": clone["key"]},
+                        "issuetype": {"name": "Subtask"},
+                        "summary": subtask_fields.get("summary", "Cloned subtask"),
+                        "description": subtask_fields.get("description"),
+                    }
+                )
 
         # Clone links if requested (except Cloners links)
         if clone_links:
-            links = original_fields.get('issuelinks', [])
+            links = original_fields.get("issuelinks", [])
             for link in links:
-                link_type = link['type']['name']
-                if link_type == 'Cloners':
+                link_type = link["type"]["name"]
+                if link_type == "Cloners":
                     continue  # Skip cloner links
 
                 try:
-                    if 'inwardIssue' in link:
+                    if "inwardIssue" in link:
                         self.create_link(
                             link_type=link_type,
-                            inward_key=link['inwardIssue']['key'],
-                            outward_key=clone['key']
+                            inward_key=link["inwardIssue"]["key"],
+                            outward_key=clone["key"],
                         )
-                    elif 'outwardIssue' in link:
+                    elif "outwardIssue" in link:
                         self.create_link(
                             link_type=link_type,
-                            inward_key=clone['key'],
-                            outward_key=link['outwardIssue']['key']
+                            inward_key=clone["key"],
+                            outward_key=link["outwardIssue"]["key"],
                         )
                 except Exception:
                     pass  # Some links may fail due to permissions
@@ -2188,7 +2436,7 @@ class JiraClient:
 
     # ========== JSM Service Desk Core (/rest/servicedeskapi/servicedesk) ==========
 
-    def get_service_desks(self, start: int = 0, limit: int = 50) -> Dict[str, Any]:
+    def get_service_desks(self, start: int = 0, limit: int = 50) -> dict[str, Any]:
         """
         Get all JSM service desks with pagination.
 
@@ -2202,11 +2450,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'start': start, 'limit': limit}
-        return self.get('/rest/servicedeskapi/servicedesk', params=params,
-                       operation="get service desks")
+        params = {"start": start, "limit": limit}
+        return self.get(
+            "/rest/servicedeskapi/servicedesk",
+            params=params,
+            operation="get service desks",
+        )
 
-    def get_service_desk(self, service_desk_id: str) -> Dict[str, Any]:
+    def get_service_desk(self, service_desk_id: str) -> dict[str, Any]:
         """
         Get a specific service desk by ID.
 
@@ -2219,11 +2470,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/servicedeskapi/servicedesk/{service_desk_id}',
-                       operation=f"get service desk {service_desk_id}")
+        return self.get(
+            f"/rest/servicedeskapi/servicedesk/{service_desk_id}",
+            operation=f"get service desk {service_desk_id}",
+        )
 
-    def get_request_types(self, service_desk_id: str,
-                          start: int = 0, limit: int = 50) -> Dict[str, Any]:
+    def get_request_types(
+        self, service_desk_id: str, start: int = 0, limit: int = 50
+    ) -> dict[str, Any]:
         """
         Get request types for a service desk.
 
@@ -2238,15 +2492,16 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'start': start, 'limit': limit}
+        params = {"start": start, "limit": limit}
         return self.get(
-            f'/rest/servicedeskapi/servicedesk/{service_desk_id}/requesttype',
+            f"/rest/servicedeskapi/servicedesk/{service_desk_id}/requesttype",
             params=params,
-            operation=f"get request types for service desk {service_desk_id}"
+            operation=f"get request types for service desk {service_desk_id}",
         )
 
-    def get_request_type(self, service_desk_id: str,
-                         request_type_id: str) -> Dict[str, Any]:
+    def get_request_type(
+        self, service_desk_id: str, request_type_id: str
+    ) -> dict[str, Any]:
         """
         Get a specific request type.
 
@@ -2261,12 +2516,13 @@ class JiraClient:
             JiraError or subclass on failure
         """
         return self.get(
-            f'/rest/servicedeskapi/servicedesk/{service_desk_id}/requesttype/{request_type_id}',
-            operation=f"get request type {request_type_id}"
+            f"/rest/servicedeskapi/servicedesk/{service_desk_id}/requesttype/{request_type_id}",
+            operation=f"get request type {request_type_id}",
         )
 
-    def get_request_type_fields(self, service_desk_id: str,
-                                request_type_id: str) -> Dict[str, Any]:
+    def get_request_type_fields(
+        self, service_desk_id: str, request_type_id: str
+    ) -> dict[str, Any]:
         """
         Get fields for a request type.
 
@@ -2282,12 +2538,16 @@ class JiraClient:
             JiraError or subclass on failure
         """
         return self.get(
-            f'/rest/servicedeskapi/servicedesk/{service_desk_id}/requesttype/{request_type_id}/field',
-            operation=f"get fields for request type {request_type_id}"
+            f"/rest/servicedeskapi/servicedesk/{service_desk_id}/requesttype/{request_type_id}/field",
+            operation=f"get fields for request type {request_type_id}",
         )
 
-    def create_service_desk(self, name: str, key: str,
-                            project_template_key: str = 'com.atlassian.servicedesk:simplified-it-service-desk') -> Dict[str, Any]:
+    def create_service_desk(
+        self,
+        name: str,
+        key: str,
+        project_template_key: str = "com.atlassian.servicedesk:simplified-it-service-desk",
+    ) -> dict[str, Any]:
         """
         Create a new service desk (requires JSM administrator permissions).
 
@@ -2308,14 +2568,17 @@ class JiraClient:
             External Service Desk: 'com.atlassian.servicedesk:simplified-external-service-desk'
         """
         data = {
-            'name': name,
-            'key': key.upper(),
-            'projectTemplateKey': project_template_key
+            "name": name,
+            "key": key.upper(),
+            "projectTemplateKey": project_template_key,
         }
-        return self.post('/rest/servicedeskapi/servicedesk', data=data,
-                        operation=f"create service desk {key}")
+        return self.post(
+            "/rest/servicedeskapi/servicedesk",
+            data=data,
+            operation=f"create service desk {key}",
+        )
 
-    def lookup_service_desk_by_project_key(self, project_key: str) -> Dict[str, Any]:
+    def lookup_service_desk_by_project_key(self, project_key: str) -> dict[str, Any]:
         """
         Lookup service desk ID by project key.
 
@@ -2329,17 +2592,22 @@ class JiraClient:
             JiraError: If no service desk found for project key
         """
         service_desks = self.get_service_desks()
-        for sd in service_desks.get('values', []):
-            if sd.get('projectKey') == project_key:
+        for sd in service_desks.get("values", []):
+            if sd.get("projectKey") == project_key:
                 return sd
 
         from jira_assistant_skills_lib import JiraError
+
         raise JiraError(f"No service desk found for project key: {project_key}")
 
     # ========== JSM Customer Management (/rest/servicedeskapi/customer) ==========
 
-    def create_customer(self, email: str, display_name: Optional[str] = None,
-                        service_desk_id: Optional[str] = None) -> Dict[str, Any]:
+    def create_customer(
+        self,
+        email: str,
+        display_name: str | None = None,
+        service_desk_id: str | None = None,
+    ) -> dict[str, Any]:
         """
         Create a customer account for JSM.
 
@@ -2354,24 +2622,34 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        payload = {'email': email}
+        payload = {"email": email}
         if display_name:
-            payload['displayName'] = display_name
+            payload["displayName"] = display_name
 
-        customer = self.post('/rest/servicedeskapi/customer', data=payload,
-                            operation=f"create customer {email}")
+        customer = self.post(
+            "/rest/servicedeskapi/customer",
+            data=payload,
+            operation=f"create customer {email}",
+        )
 
         # Add customer to service desk if specified
-        if service_desk_id and customer.get('accountId'):
+        if service_desk_id and customer.get("accountId"):
             try:
-                self.add_customers_to_service_desk(service_desk_id, [customer['accountId']])
+                self.add_customers_to_service_desk(
+                    service_desk_id, [customer["accountId"]]
+                )
             except Exception:
                 pass  # Customer creation succeeded, service desk addition is optional
 
         return customer
 
-    def get_service_desk_customers(self, service_desk_id: str, query: Optional[str] = None,
-                                    start: int = 0, limit: int = 50) -> Dict[str, Any]:
+    def get_service_desk_customers(
+        self,
+        service_desk_id: str,
+        query: str | None = None,
+        start: int = 0,
+        limit: int = 50,
+    ) -> dict[str, Any]:
         """
         List customers for a service desk.
 
@@ -2387,17 +2665,20 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'start': start, 'limit': limit}
+        params = {"start": start, "limit": limit}
         if query:
-            params['query'] = query
+            params["query"] = query
         # Customer endpoints require experimental API header
-        return self.get(f'/rest/servicedeskapi/servicedesk/{service_desk_id}/customer',
-                       params=params,
-                       operation=f"get customers for service desk {service_desk_id}",
-                       headers={'X-ExperimentalApi': 'opt-in'})
+        return self.get(
+            f"/rest/servicedeskapi/servicedesk/{service_desk_id}/customer",
+            params=params,
+            operation=f"get customers for service desk {service_desk_id}",
+            headers={"X-ExperimentalApi": "opt-in"},
+        )
 
-    def add_customers_to_service_desk(self, service_desk_id: str,
-                                      account_ids: list) -> None:
+    def add_customers_to_service_desk(
+        self, service_desk_id: str, account_ids: list
+    ) -> None:
         """
         Add customers to a service desk.
 
@@ -2408,15 +2689,18 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        payload = {'accountIds': account_ids}
+        payload = {"accountIds": account_ids}
         # Customer endpoints require experimental API header
-        self.post(f'/rest/servicedeskapi/servicedesk/{service_desk_id}/customer',
-                 data=payload,
-                 operation=f"add customers to service desk {service_desk_id}",
-                 headers={'X-ExperimentalApi': 'opt-in'})
+        self.post(
+            f"/rest/servicedeskapi/servicedesk/{service_desk_id}/customer",
+            data=payload,
+            operation=f"add customers to service desk {service_desk_id}",
+            headers={"X-ExperimentalApi": "opt-in"},
+        )
 
-    def remove_customers_from_service_desk(self, service_desk_id: str,
-                                           account_ids: list) -> None:
+    def remove_customers_from_service_desk(
+        self, service_desk_id: str, account_ids: list
+    ) -> None:
         """
         Remove customers from a service desk.
 
@@ -2427,23 +2711,33 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        payload = {'accountIds': account_ids}
-        endpoint = f'/rest/servicedeskapi/servicedesk/{service_desk_id}/customer'
+        payload = {"accountIds": account_ids}
+        endpoint = f"/rest/servicedeskapi/servicedesk/{service_desk_id}/customer"
         url = f"{self.base_url}{endpoint}"
         # Customer endpoints require experimental API header
-        response = self.session.delete(url, json=payload, timeout=self.timeout,
-                                       headers={'X-ExperimentalApi': 'opt-in'})
-        handle_jira_error(response, f"remove customers from service desk {service_desk_id}")
+        response = self.session.delete(
+            url,
+            json=payload,
+            timeout=self.timeout,
+            headers={"X-ExperimentalApi": "opt-in"},
+        )
+        handle_jira_error(
+            response, f"remove customers from service desk {service_desk_id}"
+        )
 
     # ========== JSM Request Management (/rest/servicedeskapi/request) ==========
 
-    def create_request(self, service_desk_id: str, request_type_id: str,
-                       fields: Optional[Dict[str, Any]] = None,
-                       summary: Optional[str] = None,
-                       description: Optional[str] = None,
-                       priority: Optional[str] = None,
-                       participants: Optional[list] = None,
-                       on_behalf_of: Optional[str] = None) -> Dict[str, Any]:
+    def create_request(
+        self,
+        service_desk_id: str,
+        request_type_id: str,
+        fields: dict[str, Any] | None = None,
+        summary: str | None = None,
+        description: str | None = None,
+        priority: str | None = None,
+        participants: list | None = None,
+        on_behalf_of: str | None = None,
+    ) -> dict[str, Any]:
         """
         Create a service request via JSM API.
 
@@ -2469,28 +2763,31 @@ class JiraClient:
 
         # Add individual parameters to fields if provided
         if summary:
-            fields['summary'] = summary
+            fields["summary"] = summary
         if description:
-            fields['description'] = description
+            fields["description"] = description
         if priority:
-            fields['priority'] = {'name': priority}
+            fields["priority"] = {"name": priority}
 
         payload = {
-            'serviceDeskId': service_desk_id,
-            'requestTypeId': request_type_id,
-            'requestFieldValues': fields
+            "serviceDeskId": service_desk_id,
+            "requestTypeId": request_type_id,
+            "requestFieldValues": fields,
         }
 
         if participants:
-            payload['requestParticipants'] = participants
+            payload["requestParticipants"] = participants
 
         if on_behalf_of:
-            payload['raiseOnBehalfOf'] = on_behalf_of
+            payload["raiseOnBehalfOf"] = on_behalf_of
 
-        return self.post('/rest/servicedeskapi/request', data=payload,
-                        operation="create service request")
+        return self.post(
+            "/rest/servicedeskapi/request",
+            data=payload,
+            operation="create service request",
+        )
 
-    def get_request(self, issue_key: str, expand: Optional[list] = None) -> Dict[str, Any]:
+    def get_request(self, issue_key: str, expand: list | None = None) -> dict[str, Any]:
         """
         Get request details via JSM API.
 
@@ -2506,13 +2803,15 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = ','.join(expand)
+            params["expand"] = ",".join(expand)
 
-        return self.get(f'/rest/servicedeskapi/request/{issue_key}',
-                       params=params if params else None,
-                       operation=f"get request {issue_key}")
+        return self.get(
+            f"/rest/servicedeskapi/request/{issue_key}",
+            params=params if params else None,
+            operation=f"get request {issue_key}",
+        )
 
-    def get_request_status(self, issue_key: str) -> Dict[str, Any]:
+    def get_request_status(self, issue_key: str) -> dict[str, Any]:
         """
         Get request status history.
 
@@ -2525,8 +2824,10 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/servicedeskapi/request/{issue_key}/status',
-                       operation=f"get status history for {issue_key}")
+        return self.get(
+            f"/rest/servicedeskapi/request/{issue_key}/status",
+            operation=f"get status history for {issue_key}",
+        )
 
     def get_request_transitions(self, issue_key: str) -> list:
         """
@@ -2541,12 +2842,19 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        result = self.get(f'/rest/servicedeskapi/request/{issue_key}/transition',
-                         operation=f"get transitions for {issue_key}")
-        return result.get('values', [])
+        result = self.get(
+            f"/rest/servicedeskapi/request/{issue_key}/transition",
+            operation=f"get transitions for {issue_key}",
+        )
+        return result.get("values", [])
 
-    def transition_request(self, issue_key: str, transition_id: str,
-                          comment: Optional[str] = None, public: bool = True) -> None:
+    def transition_request(
+        self,
+        issue_key: str,
+        transition_id: str,
+        comment: str | None = None,
+        public: bool = True,
+    ) -> None:
         """
         Transition a service request.
 
@@ -2559,20 +2867,20 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        payload = {'id': transition_id}
+        payload = {"id": transition_id}
 
         if comment:
-            payload['additionalComment'] = {
-                'body': comment,
-                'public': public
-            }
+            payload["additionalComment"] = {"body": comment, "public": public}
 
-        self.post(f'/rest/servicedeskapi/request/{issue_key}/transition',
-                 data=payload,
-                 operation=f"transition request {issue_key}")
+        self.post(
+            f"/rest/servicedeskapi/request/{issue_key}/transition",
+            data=payload,
+            operation=f"transition request {issue_key}",
+        )
 
-    def get_request_slas(self, issue_key: str, start: int = 0,
-                         limit: int = 50) -> Dict[str, Any]:
+    def get_request_slas(
+        self, issue_key: str, start: int = 0, limit: int = 50
+    ) -> dict[str, Any]:
         """
         Get all SLAs for a service request.
 
@@ -2587,12 +2895,16 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'start': start, 'limit': limit}
-        return self.get(f'/rest/servicedeskapi/request/{issue_key}/sla',
-                       params=params,
-                       operation=f"get SLAs for {issue_key}")
+        params = {"start": start, "limit": limit}
+        return self.get(
+            f"/rest/servicedeskapi/request/{issue_key}/sla",
+            params=params,
+            operation=f"get SLAs for {issue_key}",
+        )
 
-    def get_request_sla(self, issue_key: str, sla_metric_id: str = None) -> Dict[str, Any]:
+    def get_request_sla(
+        self, issue_key: str, sla_metric_id: str | None = None
+    ) -> dict[str, Any]:
         """
         Get SLA metrics for a request.
 
@@ -2607,18 +2919,23 @@ class JiraClient:
             JiraError or subclass on failure
         """
         if sla_metric_id:
-            return self.get(f'/rest/servicedeskapi/request/{issue_key}/sla/{sla_metric_id}',
-                           operation=f"get SLA {sla_metric_id} for {issue_key}")
+            return self.get(
+                f"/rest/servicedeskapi/request/{issue_key}/sla/{sla_metric_id}",
+                operation=f"get SLA {sla_metric_id} for {issue_key}",
+            )
         else:
             # Return all SLAs for the request
             return self.get_request_slas(issue_key)
 
     # ========== JSM Queue Management (/rest/servicedeskapi/servicedesk/{id}/queue) ==========
 
-    def get_service_desk_queues(self, service_desk_id: int,
-                                include_count: bool = False,
-                                start: int = 0,
-                                limit: int = 50) -> Dict[str, Any]:
+    def get_service_desk_queues(
+        self,
+        service_desk_id: int,
+        include_count: bool = False,
+        start: int = 0,
+        limit: int = 50,
+    ) -> dict[str, Any]:
         """
         Get all queues for a service desk.
 
@@ -2635,16 +2952,19 @@ class JiraClient:
             JiraError or subclass on failure
         """
         params = {
-            'start': start,
-            'limit': limit,
-            'includeCount': str(include_count).lower()
+            "start": start,
+            "limit": limit,
+            "includeCount": str(include_count).lower(),
         }
-        return self.get(f'/rest/servicedeskapi/servicedesk/{service_desk_id}/queue',
-                       params=params,
-                       operation=f"get queues for service desk {service_desk_id}")
+        return self.get(
+            f"/rest/servicedeskapi/servicedesk/{service_desk_id}/queue",
+            params=params,
+            operation=f"get queues for service desk {service_desk_id}",
+        )
 
-    def get_queue(self, service_desk_id: int, queue_id: int,
-                  include_count: bool = False) -> Dict[str, Any]:
+    def get_queue(
+        self, service_desk_id: int, queue_id: int, include_count: bool = False
+    ) -> dict[str, Any]:
         """
         Get a specific queue by ID.
 
@@ -2659,13 +2979,16 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'includeCount': str(include_count).lower()}
-        return self.get(f'/rest/servicedeskapi/servicedesk/{service_desk_id}/queue/{queue_id}',
-                       params=params,
-                       operation=f"get queue {queue_id}")
+        params = {"includeCount": str(include_count).lower()}
+        return self.get(
+            f"/rest/servicedeskapi/servicedesk/{service_desk_id}/queue/{queue_id}",
+            params=params,
+            operation=f"get queue {queue_id}",
+        )
 
-    def get_queue_issues(self, service_desk_id: int, queue_id: int,
-                         start: int = 0, limit: int = 50) -> Dict[str, Any]:
+    def get_queue_issues(
+        self, service_desk_id: int, queue_id: int, start: int = 0, limit: int = 50
+    ) -> dict[str, Any]:
         """
         Get issues in a queue.
 
@@ -2681,14 +3004,16 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'start': start, 'limit': limit}
-        return self.get(f'/rest/servicedeskapi/servicedesk/{service_desk_id}/queue/{queue_id}/issue',
-                       params=params,
-                       operation=f"get issues in queue {queue_id}")
+        params = {"start": start, "limit": limit}
+        return self.get(
+            f"/rest/servicedeskapi/servicedesk/{service_desk_id}/queue/{queue_id}/issue",
+            params=params,
+            operation=f"get issues in queue {queue_id}",
+        )
 
     # ========== JSM Organization Management (/rest/servicedeskapi/organization) ==========
 
-    def get_organizations(self, start: int = 0, limit: int = 50) -> Dict[str, Any]:
+    def get_organizations(self, start: int = 0, limit: int = 50) -> dict[str, Any]:
         """
         List all organizations.
 
@@ -2702,12 +3027,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'start': start, 'limit': limit}
-        return self.get('/rest/servicedeskapi/organization',
-                       params=params,
-                       operation="get organizations")
+        params = {"start": start, "limit": limit}
+        return self.get(
+            "/rest/servicedeskapi/organization",
+            params=params,
+            operation="get organizations",
+        )
 
-    def create_organization(self, name: str) -> Dict[str, Any]:
+    def create_organization(self, name: str) -> dict[str, Any]:
         """
         Create an organization.
 
@@ -2720,12 +3047,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        payload = {'name': name}
-        return self.post('/rest/servicedeskapi/organization',
-                        data=payload,
-                        operation=f"create organization {name}")
+        payload = {"name": name}
+        return self.post(
+            "/rest/servicedeskapi/organization",
+            data=payload,
+            operation=f"create organization {name}",
+        )
 
-    def get_organization(self, organization_id: int) -> Dict[str, Any]:
+    def get_organization(self, organization_id: int) -> dict[str, Any]:
         """
         Get organization details.
 
@@ -2738,8 +3067,10 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/servicedeskapi/organization/{organization_id}',
-                       operation=f"get organization {organization_id}")
+        return self.get(
+            f"/rest/servicedeskapi/organization/{organization_id}",
+            operation=f"get organization {organization_id}",
+        )
 
     def delete_organization(self, organization_id: int) -> None:
         """
@@ -2751,10 +3082,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        self.delete(f'/rest/servicedeskapi/organization/{organization_id}',
-                   operation=f"delete organization {organization_id}")
+        self.delete(
+            f"/rest/servicedeskapi/organization/{organization_id}",
+            operation=f"delete organization {organization_id}",
+        )
 
-    def add_users_to_organization(self, organization_id: int, account_ids: list) -> None:
+    def add_users_to_organization(
+        self, organization_id: int, account_ids: list
+    ) -> None:
         """
         Add users to an organization.
 
@@ -2765,12 +3100,16 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        payload = {'accountIds': account_ids}
-        self.post(f'/rest/servicedeskapi/organization/{organization_id}/user',
-                 data=payload,
-                 operation=f"add users to organization {organization_id}")
+        payload = {"accountIds": account_ids}
+        self.post(
+            f"/rest/servicedeskapi/organization/{organization_id}/user",
+            data=payload,
+            operation=f"add users to organization {organization_id}",
+        )
 
-    def remove_users_from_organization(self, organization_id: int, account_ids: list) -> None:
+    def remove_users_from_organization(
+        self, organization_id: int, account_ids: list
+    ) -> None:
         """
         Remove users from an organization.
 
@@ -2781,15 +3120,17 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        payload = {'accountIds': account_ids}
-        endpoint = f'/rest/servicedeskapi/organization/{organization_id}/user'
+        payload = {"accountIds": account_ids}
+        endpoint = f"/rest/servicedeskapi/organization/{organization_id}/user"
         url = f"{self.base_url}{endpoint}"
         response = self.session.delete(url, json=payload, timeout=self.timeout)
         handle_jira_error(response, f"remove users from organization {organization_id}")
 
     # ========== JSM Request Participants (/rest/servicedeskapi/request/{key}/participant) ==========
 
-    def get_request_participants(self, issue_key: str, start: int = 0, limit: int = 50) -> Dict[str, Any]:
+    def get_request_participants(
+        self, issue_key: str, start: int = 0, limit: int = 50
+    ) -> dict[str, Any]:
         """
         Get participants for a request.
 
@@ -2804,13 +3145,19 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'start': start, 'limit': limit}
-        return self.get(f'/rest/servicedeskapi/request/{issue_key}/participant',
-                       params=params,
-                       operation=f"get participants for request {issue_key}")
+        params = {"start": start, "limit": limit}
+        return self.get(
+            f"/rest/servicedeskapi/request/{issue_key}/participant",
+            params=params,
+            operation=f"get participants for request {issue_key}",
+        )
 
-    def add_request_participants(self, issue_key: str, account_ids: Optional[list] = None,
-                                  usernames: Optional[list] = None) -> Dict[str, Any]:
+    def add_request_participants(
+        self,
+        issue_key: str,
+        account_ids: list | None = None,
+        usernames: list | None = None,
+    ) -> dict[str, Any]:
         """
         Add participants to a request.
 
@@ -2825,16 +3172,19 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        payload = {
-            'accountIds': account_ids or [],
-            'usernames': usernames or []
-        }
-        return self.post(f'/rest/servicedeskapi/request/{issue_key}/participant',
-                        data=payload,
-                        operation=f"add participants to request {issue_key}")
+        payload = {"accountIds": account_ids or [], "usernames": usernames or []}
+        return self.post(
+            f"/rest/servicedeskapi/request/{issue_key}/participant",
+            data=payload,
+            operation=f"add participants to request {issue_key}",
+        )
 
-    def remove_request_participants(self, issue_key: str, account_ids: Optional[list] = None,
-                                     usernames: Optional[list] = None) -> Dict[str, Any]:
+    def remove_request_participants(
+        self,
+        issue_key: str,
+        account_ids: list | None = None,
+        usernames: list | None = None,
+    ) -> dict[str, Any]:
         """
         Remove participants from a request.
 
@@ -2849,11 +3199,8 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        payload = {
-            'accountIds': account_ids or [],
-            'usernames': usernames or []
-        }
-        endpoint = f'/rest/servicedeskapi/request/{issue_key}/participant'
+        payload = {"accountIds": account_ids or [], "usernames": usernames or []}
+        endpoint = f"/rest/servicedeskapi/request/{issue_key}/participant"
         url = f"{self.base_url}{endpoint}"
         response = self.session.delete(url, json=payload, timeout=self.timeout)
         handle_jira_error(response, f"remove participants from request {issue_key}")
@@ -2861,7 +3208,9 @@ class JiraClient:
 
     # ========== JSM Comments & Approvals (Phase 5) ==========
 
-    def add_request_comment(self, issue_key: str, body: str, public: bool = True) -> Dict[str, Any]:
+    def add_request_comment(
+        self, issue_key: str, body: str, public: bool = True
+    ) -> dict[str, Any]:
         """
         Add a comment to a JSM request with public/internal visibility.
 
@@ -2880,16 +3229,21 @@ class JiraClient:
             Uses JSM API (/rest/servicedeskapi/) which differs from standard JIRA API.
             Public comments are visible in the customer portal.
         """
-        data = {
-            'body': body,
-            'public': public
-        }
-        return self.post(f'/rest/servicedeskapi/request/{issue_key}/comment',
-                        data=data, operation=f"add JSM comment to {issue_key}")
+        data = {"body": body, "public": public}
+        return self.post(
+            f"/rest/servicedeskapi/request/{issue_key}/comment",
+            data=data,
+            operation=f"add JSM comment to {issue_key}",
+        )
 
-    def get_request_comments(self, issue_key: str, public: bool = None,
-                             internal: bool = None,
-                             start: int = 0, limit: int = 100) -> Dict[str, Any]:
+    def get_request_comments(
+        self,
+        issue_key: str,
+        public: bool | None = None,
+        internal: bool | None = None,
+        start: int = 0,
+        limit: int = 100,
+    ) -> dict[str, Any]:
         """
         Get comments for a JSM request with visibility information.
 
@@ -2906,7 +3260,7 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'start': start, 'limit': limit}
+        params = {"start": start, "limit": limit}
 
         # Handle both 'public' and 'internal' parameters
         # 'internal' is the inverse of 'public'
@@ -2914,14 +3268,17 @@ class JiraClient:
             public = not internal
 
         if public is not None:
-            params['public'] = str(public).lower()
+            params["public"] = str(public).lower()
 
-        return self.get(f'/rest/servicedeskapi/request/{issue_key}/comment',
-                       params=params,
-                       operation=f"get JSM comments for {issue_key}")
+        return self.get(
+            f"/rest/servicedeskapi/request/{issue_key}/comment",
+            params=params,
+            operation=f"get JSM comments for {issue_key}",
+        )
 
-    def get_request_comment(self, issue_key: str, comment_id: str,
-                            expand: str = None) -> Dict[str, Any]:
+    def get_request_comment(
+        self, issue_key: str, comment_id: str, expand: str | None = None
+    ) -> dict[str, Any]:
         """
         Get a specific JSM comment by ID.
 
@@ -2938,14 +3295,17 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = expand
+            params["expand"] = expand
 
-        return self.get(f'/rest/servicedeskapi/request/{issue_key}/comment/{comment_id}',
-                       params=params if params else None,
-                       operation=f"get JSM comment {comment_id}")
+        return self.get(
+            f"/rest/servicedeskapi/request/{issue_key}/comment/{comment_id}",
+            params=params if params else None,
+            operation=f"get JSM comment {comment_id}",
+        )
 
-    def get_request_approvals(self, issue_key: str, start: int = 0,
-                              limit: int = 100) -> Dict[str, Any]:
+    def get_request_approvals(
+        self, issue_key: str, start: int = 0, limit: int = 100
+    ) -> dict[str, Any]:
         """
         Get approvals for a JSM request.
 
@@ -2960,12 +3320,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'start': start, 'limit': limit}
-        return self.get(f'/rest/servicedeskapi/request/{issue_key}/approval',
-                       params=params,
-                       operation=f"get approvals for {issue_key}")
+        params = {"start": start, "limit": limit}
+        return self.get(
+            f"/rest/servicedeskapi/request/{issue_key}/approval",
+            params=params,
+            operation=f"get approvals for {issue_key}",
+        )
 
-    def get_request_approval(self, issue_key: str, approval_id: str) -> Dict[str, Any]:
+    def get_request_approval(self, issue_key: str, approval_id: str) -> dict[str, Any]:
         """
         Get a specific approval by ID.
 
@@ -2979,10 +3341,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/servicedeskapi/request/{issue_key}/approval/{approval_id}',
-                       operation=f"get approval {approval_id}")
+        return self.get(
+            f"/rest/servicedeskapi/request/{issue_key}/approval/{approval_id}",
+            operation=f"get approval {approval_id}",
+        )
 
-    def answer_approval(self, issue_key: str, approval_id: str, decision: str) -> Dict[str, Any]:
+    def answer_approval(
+        self, issue_key: str, approval_id: str, decision: str
+    ) -> dict[str, Any]:
         """
         Answer an approval request (approve or decline).
 
@@ -2997,12 +3363,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {'decision': decision}
-        return self.post(f'/rest/servicedeskapi/request/{issue_key}/approval/{approval_id}',
-                        data=data,
-                        operation=f"{decision} approval {approval_id} for {issue_key}")
+        data = {"decision": decision}
+        return self.post(
+            f"/rest/servicedeskapi/request/{issue_key}/approval/{approval_id}",
+            data=data,
+            operation=f"{decision} approval {approval_id} for {issue_key}",
+        )
 
-    def get_pending_approvals(self, service_desk_id: int = None) -> list:
+    def get_pending_approvals(self, service_desk_id: int | None = None) -> list:
         """
         Get pending approvals for current user (agent view).
 
@@ -3024,12 +3392,12 @@ class JiraClient:
         """
         # Build JQL to find requests with pending approvals
         # Note: This requires approval tracking in the workflow
-        jql_parts = ['status != Resolved']
+        jql_parts = ["status != Resolved"]
 
         if service_desk_id:
-            jql_parts.append(f'project = SD-{service_desk_id}')
+            jql_parts.append(f"project = SD-{service_desk_id}")
 
-        jql = ' AND '.join(jql_parts)
+        jql = " AND ".join(jql_parts)
 
         # Search for requests
         search_result = self.search_issues(jql, max_results=100)
@@ -3037,23 +3405,27 @@ class JiraClient:
         pending_approvals = []
 
         # For each request, check for pending approvals
-        for issue in search_result.get('issues', []):
-            issue_key = issue['key']
+        for issue in search_result.get("issues", []):
+            issue_key = issue["key"]
             try:
                 approvals_resp = self.get_request_approvals(issue_key)
-                approvals = approvals_resp.get('values', [])
+                approvals = approvals_resp.get("values", [])
 
                 for approval in approvals:
-                    if approval.get('finalDecision') == 'pending':
+                    if approval.get("finalDecision") == "pending":
                         # Check if current user can answer this approval
-                        if approval.get('canAnswerApproval', False):
-                            pending_approvals.append({
-                                'requestKey': issue_key,
-                                'approvalId': approval.get('id'),
-                                'approvalName': approval.get('name'),
-                                'created': approval.get('createdDate'),
-                                'summary': issue.get('fields', {}).get('summary', '')
-                            })
+                        if approval.get("canAnswerApproval", False):
+                            pending_approvals.append(
+                                {
+                                    "requestKey": issue_key,
+                                    "approvalId": approval.get("id"),
+                                    "approvalName": approval.get("name"),
+                                    "created": approval.get("createdDate"),
+                                    "summary": issue.get("fields", {}).get(
+                                        "summary", ""
+                                    ),
+                                }
+                            )
             except Exception:
                 # Skip requests where we can't get approvals (e.g., permissions)
                 continue
@@ -3064,9 +3436,14 @@ class JiraClient:
     # Knowledge Base Methods
     # ==========================================
 
-    def search_kb_articles(self, service_desk_id: int, query: str,
-                           highlight: bool = True, start: int = 0,
-                           limit: int = 50) -> list:
+    def search_kb_articles(
+        self,
+        service_desk_id: int,
+        query: str,
+        highlight: bool = True,
+        start: int = 0,
+        limit: int = 50,
+    ) -> list:
         """
         Search KB articles for a service desk.
 
@@ -3084,13 +3461,18 @@ class JiraClient:
             JiraError or subclass on failure
         """
         result = self.get(
-            f'/rest/servicedeskapi/servicedesk/{service_desk_id}/knowledgebase/article',
-            params={'query': query, 'highlight': highlight, 'start': start, 'limit': limit},
-            operation=f"search KB articles for service desk {service_desk_id}"
+            f"/rest/servicedeskapi/servicedesk/{service_desk_id}/knowledgebase/article",
+            params={
+                "query": query,
+                "highlight": highlight,
+                "start": start,
+                "limit": limit,
+            },
+            operation=f"search KB articles for service desk {service_desk_id}",
         )
-        return result.get('values', [])
+        return result.get("values", [])
 
-    def get_kb_article(self, article_id: str) -> Dict[str, Any]:
+    def get_kb_article(self, article_id: str) -> dict[str, Any]:
         """
         Get KB article details by ID.
 
@@ -3104,8 +3486,8 @@ class JiraClient:
             JiraError or subclass on failure
         """
         return self.get(
-            f'/rest/servicedeskapi/knowledgebase/article/{article_id}',
-            operation=f"get KB article {article_id}"
+            f"/rest/servicedeskapi/knowledgebase/article/{article_id}",
+            operation=f"get KB article {article_id}",
         )
 
     def suggest_kb_for_request(self, issue_key: str, max_results: int = 5) -> list:
@@ -3126,19 +3508,26 @@ class JiraClient:
         request = self.get_request(issue_key)
 
         # Extract service desk ID from request
-        service_desk_id = request.get('serviceDeskId')
+        service_desk_id = request.get("serviceDeskId")
         if not service_desk_id:
             raise ValueError(f"Could not determine service desk ID for {issue_key}")
 
         # Build search query from summary and description
-        summary = request.get('currentStatus', {}).get('statusValue', {}).get('summary', '')
-        description = request.get('currentStatus', {}).get('statusValue', {}).get('description', '')
+        summary = (
+            request.get("currentStatus", {}).get("statusValue", {}).get("summary", "")
+        )
+        description = (
+            request.get("currentStatus", {})
+            .get("statusValue", {})
+            .get("description", "")
+        )
 
         # Simple keyword extraction - extract words longer than 3 chars
         import re
+
         text = f"{summary} {description}".lower()
-        words = re.findall(r'\b[a-z]{4,}\b', text)
-        query = ' '.join(set(words[:5]))  # Use top 5 unique words
+        words = re.findall(r"\b[a-z]{4,}\b", text)
+        query = " ".join(set(words[:5]))  # Use top 5 unique words
 
         if not query:
             return []
@@ -3159,13 +3548,17 @@ class JiraClient:
         """
         try:
             # Try to list schemas - if it works, we have Assets
-            self.get('/rest/insight/1.0/objectschema/list')
+            self.get("/rest/insight/1.0/objectschema/list")
             return True
         except Exception:
             return False
 
-    def list_assets(self, object_type: str = None, iql: str = None,
-                   max_results: int = 100) -> list:
+    def list_assets(
+        self,
+        object_type: str | None = None,
+        iql: str | None = None,
+        max_results: int = 100,
+    ) -> list:
         """
         List assets with optional IQL filtering.
 
@@ -3190,30 +3583,32 @@ class JiraClient:
         if iql:
             query_parts.append(iql)
 
-        iql_query = ' AND '.join(query_parts) if query_parts else None
+        iql_query = " AND ".join(query_parts) if query_parts else None
 
         # Get first schema (most common use case)
-        schemas = self.get('/rest/insight/1.0/objectschema/list').get('objectschemas', [])
+        schemas = self.get("/rest/insight/1.0/objectschema/list").get(
+            "objectschemas", []
+        )
         if not schemas:
             return []
 
-        schema_id = schemas[0]['id']
+        schema_id = schemas[0]["id"]
 
         # Search assets
         result = self.get(
-            '/rest/insight/1.0/iql/objects',
+            "/rest/insight/1.0/iql/objects",
             params={
-                'objectSchemaId': schema_id,
-                'iql': iql_query,
-                'page': 1,
-                'resultsPerPage': min(max_results, 100),
-                'includeAttributes': True
+                "objectSchemaId": schema_id,
+                "iql": iql_query,
+                "page": 1,
+                "resultsPerPage": min(max_results, 100),
+                "includeAttributes": True,
             },
-            operation="search assets with IQL"
+            operation="search assets with IQL",
         )
-        return result.get('objectEntries', [])
+        return result.get("objectEntries", [])
 
-    def get_asset(self, asset_id: int) -> Dict[str, Any]:
+    def get_asset(self, asset_id: int) -> dict[str, Any]:
         """
         Get asset details by object ID.
 
@@ -3227,11 +3622,12 @@ class JiraClient:
             JiraError or subclass on failure
         """
         return self.get(
-            f'/rest/insight/1.0/object/{asset_id}',
-            operation=f"get asset {asset_id}"
+            f"/rest/insight/1.0/object/{asset_id}", operation=f"get asset {asset_id}"
         )
 
-    def create_asset(self, object_type_id: int, attributes: Dict[str, Any]) -> Dict[str, Any]:
+    def create_asset(
+        self, object_type_id: int, attributes: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Create a new asset/CMDB object.
 
@@ -3248,23 +3644,20 @@ class JiraClient:
         # Convert attribute dict to API format
         attr_list = []
         for attr_name, value in attributes.items():
-            attr_list.append({
-                'objectTypeAttributeName': attr_name,
-                'objectAttributeValues': [{'value': str(value)}]
-            })
+            attr_list.append(
+                {
+                    "objectTypeAttributeName": attr_name,
+                    "objectAttributeValues": [{"value": str(value)}],
+                }
+            )
 
-        payload = {
-            'objectTypeId': object_type_id,
-            'attributes': attr_list
-        }
+        payload = {"objectTypeId": object_type_id, "attributes": attr_list}
 
         return self.post(
-            '/rest/insight/1.0/object/create',
-            data=payload,
-            operation="create asset"
+            "/rest/insight/1.0/object/create", data=payload, operation="create asset"
         )
 
-    def update_asset(self, asset_id: int, attributes: Dict[str, Any]) -> Dict[str, Any]:
+    def update_asset(self, asset_id: int, attributes: dict[str, Any]) -> dict[str, Any]:
         """
         Update an existing asset.
 
@@ -3281,20 +3674,19 @@ class JiraClient:
         # Convert attribute dict to API format
         attr_list = []
         for attr_name, value in attributes.items():
-            attr_list.append({
-                'objectTypeAttributeName': attr_name,
-                'objectAttributeValues': [{'value': str(value)}]
-            })
+            attr_list.append(
+                {
+                    "objectTypeAttributeName": attr_name,
+                    "objectAttributeValues": [{"value": str(value)}],
+                }
+            )
 
-        payload = {
-            'objectId': asset_id,
-            'attributes': attr_list
-        }
+        payload = {"objectId": asset_id, "attributes": attr_list}
 
         return self.put(
-            f'/rest/insight/1.0/object/{asset_id}',
+            f"/rest/insight/1.0/object/{asset_id}",
             data=payload,
-            operation=f"update asset {asset_id}"
+            operation=f"update asset {asset_id}",
         )
 
     def link_asset_to_request(self, asset_id: int, issue_key: str) -> None:
@@ -3313,13 +3705,13 @@ class JiraClient:
         """
         # Get asset details to get its object key
         asset = self.get_asset(asset_id)
-        asset_key = asset.get('objectKey', f'ASSET-{asset_id}')
+        asset_key = asset.get("objectKey", f"ASSET-{asset_id}")
 
         # Add internal comment about the linked asset
         self.add_request_comment(
             issue_key,
             f"Linked asset: {asset.get('label', asset_key)} (ID: {asset_id})",
-            public=False
+            public=False,
         )
 
     def find_assets_by_criteria(self, iql: str) -> list:
@@ -3341,23 +3733,9 @@ class JiraClient:
     # Additional JSM Methods
     # ==========================================
 
-    def get_current_user(self) -> Dict[str, Any]:
-        """
-        Get the currently authenticated user's full details.
-
-        Returns:
-            User object with accountId, displayName, emailAddress, etc.
-
-        Raises:
-            JiraError or subclass on failure
-        """
-        return self.get(
-            '/rest/api/3/myself',
-            operation="get current user"
-        )
-
-    def get_service_desk_organizations(self, service_desk_id: str,
-                                       start: int = 0, limit: int = 50) -> Dict[str, Any]:
+    def get_service_desk_organizations(
+        self, service_desk_id: str, start: int = 0, limit: int = 50
+    ) -> dict[str, Any]:
         """
         Get organizations associated with a service desk.
 
@@ -3373,13 +3751,14 @@ class JiraClient:
             JiraError or subclass on failure
         """
         return self.get(
-            f'/rest/servicedeskapi/servicedesk/{service_desk_id}/organization',
-            params={'start': start, 'limit': limit},
-            operation=f"get organizations for service desk {service_desk_id}"
+            f"/rest/servicedeskapi/servicedesk/{service_desk_id}/organization",
+            params={"start": start, "limit": limit},
+            operation=f"get organizations for service desk {service_desk_id}",
         )
 
-    def add_organization_to_service_desk(self, service_desk_id: str,
-                                         organization_id: int) -> None:
+    def add_organization_to_service_desk(
+        self, service_desk_id: str, organization_id: int
+    ) -> None:
         """
         Add an organization to a service desk.
 
@@ -3391,13 +3770,14 @@ class JiraClient:
             JiraError or subclass on failure
         """
         self.post(
-            f'/rest/servicedeskapi/servicedesk/{service_desk_id}/organization',
-            data={'organizationId': organization_id},
-            operation=f"add organization {organization_id} to service desk {service_desk_id}"
+            f"/rest/servicedeskapi/servicedesk/{service_desk_id}/organization",
+            data={"organizationId": organization_id},
+            operation=f"add organization {organization_id} to service desk {service_desk_id}",
         )
 
-    def remove_organization_from_service_desk(self, service_desk_id: str,
-                                              organization_id: int) -> None:
+    def remove_organization_from_service_desk(
+        self, service_desk_id: str, organization_id: int
+    ) -> None:
         """
         Remove an organization from a service desk.
 
@@ -3409,14 +3789,19 @@ class JiraClient:
             JiraError or subclass on failure
         """
         # JSM API requires organization ID in request body, not path
-        endpoint = f'/rest/servicedeskapi/servicedesk/{service_desk_id}/organization'
+        endpoint = f"/rest/servicedeskapi/servicedesk/{service_desk_id}/organization"
         url = f"{self.base_url}{endpoint}"
-        response = self.session.delete(url, json={'organizationId': organization_id},
-                                       timeout=self.timeout)
-        handle_jira_error(response, f"remove organization {organization_id} from service desk {service_desk_id}")
+        response = self.session.delete(
+            url, json={"organizationId": organization_id}, timeout=self.timeout
+        )
+        handle_jira_error(
+            response,
+            f"remove organization {organization_id} from service desk {service_desk_id}",
+        )
 
-    def get_organization_users(self, organization_id: int,
-                               start: int = 0, limit: int = 50) -> Dict[str, Any]:
+    def get_organization_users(
+        self, organization_id: int, start: int = 0, limit: int = 50
+    ) -> dict[str, Any]:
         """
         Get users in an organization.
 
@@ -3432,12 +3817,12 @@ class JiraClient:
             JiraError or subclass on failure
         """
         return self.get(
-            f'/rest/servicedeskapi/organization/{organization_id}/user',
-            params={'start': start, 'limit': limit},
-            operation=f"get users for organization {organization_id}"
+            f"/rest/servicedeskapi/organization/{organization_id}/user",
+            params={"start": start, "limit": limit},
+            operation=f"get users for organization {organization_id}",
         )
 
-    def update_organization(self, organization_id: int, name: str) -> Dict[str, Any]:
+    def update_organization(self, organization_id: int, name: str) -> dict[str, Any]:
         """
         Update an organization's name.
 
@@ -3459,20 +3844,21 @@ class JiraClient:
         # Try POST with property endpoint as fallback
         try:
             return self.put(
-                f'/rest/servicedeskapi/organization/{organization_id}',
-                data={'name': name},
-                operation=f"update organization {organization_id}"
+                f"/rest/servicedeskapi/organization/{organization_id}",
+                data={"name": name},
+                operation=f"update organization {organization_id}",
             )
         except Exception:
             # Try alternative endpoint with POST
             return self.post(
-                f'/rest/servicedeskapi/organization/{organization_id}/property/name',
-                data={'value': name},
-                operation=f"update organization {organization_id} name"
+                f"/rest/servicedeskapi/organization/{organization_id}/property/name",
+                data={"value": name},
+                operation=f"update organization {organization_id} name",
             )
 
-    def get_service_desk_agents(self, service_desk_id: str,
-                                start: int = 0, limit: int = 50) -> Dict[str, Any]:
+    def get_service_desk_agents(
+        self, service_desk_id: str, start: int = 0, limit: int = 50
+    ) -> dict[str, Any]:
         """
         Get agents assigned to a service desk.
 
@@ -3489,28 +3875,28 @@ class JiraClient:
         """
         # Note: This may require admin permissions
         service_desk = self.get_service_desk(service_desk_id)
-        project_key = service_desk.get('projectKey')
+        project_key = service_desk.get("projectKey")
 
         # Get project actors with agent role
         actors = self.get(
-            f'/rest/api/3/project/{project_key}/role',
-            operation=f"get roles for project {project_key}"
+            f"/rest/api/3/project/{project_key}/role",
+            operation=f"get roles for project {project_key}",
         )
 
         # Find Service Desk Team role
         for role_name, role_url in actors.items():
-            if 'agent' in role_name.lower() or 'team' in role_name.lower():
-                role_data = self.get(role_url.replace(self.base_url, ''))
+            if "agent" in role_name.lower() or "team" in role_name.lower():
+                role_data = self.get(role_url.replace(self.base_url, ""))
                 return {
-                    'values': role_data.get('actors', []),
-                    'start': start,
-                    'limit': limit,
-                    'size': len(role_data.get('actors', []))
+                    "values": role_data.get("actors", []),
+                    "start": start,
+                    "limit": limit,
+                    "size": len(role_data.get("actors", [])),
                 }
 
-        return {'values': [], 'start': start, 'limit': limit, 'size': 0}
+        return {"values": [], "start": start, "limit": limit, "size": 0}
 
-    def get_my_approvals(self, service_desk_id: int = None) -> Dict[str, Any]:
+    def get_my_approvals(self, service_desk_id: int | None = None) -> dict[str, Any]:
         """
         Get pending approvals for the current user.
 
@@ -3524,17 +3910,30 @@ class JiraClient:
             JiraError or subclass on failure
         """
         approvals = self.get_pending_approvals(service_desk_id)
-        return {'values': approvals, 'size': len(approvals)}
+        return {"values": approvals, "size": len(approvals)}
 
     # Alias methods for consistent naming
-    def get_queues(self, service_desk_id: int, include_count: bool = False,
-                   start: int = 0, limit: int = 50) -> Dict[str, Any]:
+    def get_queues(
+        self,
+        service_desk_id: int,
+        include_count: bool = False,
+        start: int = 0,
+        limit: int = 50,
+    ) -> dict[str, Any]:
         """Alias for get_service_desk_queues."""
-        return self.get_service_desk_queues(service_desk_id, include_count, start, limit)
+        return self.get_service_desk_queues(
+            service_desk_id, include_count, start, limit
+        )
 
-    def search_knowledge_base(self, service_desk_id: int, query: str,
-                              highlight: bool = True, start: int = 0,
-                              limit: int = 25, space_key: str = None) -> Dict[str, Any]:
+    def search_knowledge_base(
+        self,
+        service_desk_id: int,
+        query: str,
+        highlight: bool = True,
+        start: int = 0,
+        limit: int = 25,
+        space_key: str | None = None,
+    ) -> dict[str, Any]:
         """
         Search the knowledge base for articles.
 
@@ -3552,15 +3951,20 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        articles = self.search_kb_articles(service_desk_id, query, highlight, start, limit)
-        return {'values': articles}
+        articles = self.search_kb_articles(
+            service_desk_id, query, highlight, start, limit
+        )
+        return {"values": articles}
 
-    def get_knowledge_base_article(self, service_desk_id: str, article_id: str) -> Dict[str, Any]:
+    def get_knowledge_base_article(
+        self, service_desk_id: str, article_id: str
+    ) -> dict[str, Any]:
         """Alias for get_kb_article."""
         return self.get_kb_article(article_id)
 
-    def get_knowledge_base_suggestions(self, service_desk_id: str,
-                                       issue_key: str) -> Dict[str, Any]:
+    def get_knowledge_base_suggestions(
+        self, service_desk_id: str, issue_key: str
+    ) -> dict[str, Any]:
         """
         Get KB article suggestions for a request.
 
@@ -3575,9 +3979,9 @@ class JiraClient:
             JiraError or subclass on failure
         """
         suggestions = self.suggest_kb_for_request(issue_key)
-        return {'values': suggestions}
+        return {"values": suggestions}
 
-    def get_knowledge_base_spaces(self, service_desk_id: str) -> Dict[str, Any]:
+    def get_knowledge_base_spaces(self, service_desk_id: str) -> dict[str, Any]:
         """
         Get knowledge base spaces/categories for a service desk.
 
@@ -3592,8 +3996,8 @@ class JiraClient:
         """
         # KB spaces are Confluence spaces linked to the service desk
         return self.get(
-            f'/rest/servicedeskapi/servicedesk/{service_desk_id}/knowledgebase/category',
-            operation=f"get KB spaces for service desk {service_desk_id}"
+            f"/rest/servicedeskapi/servicedesk/{service_desk_id}/knowledgebase/category",
+            operation=f"get KB spaces for service desk {service_desk_id}",
         )
 
     def link_knowledge_base_article(self, issue_key: str, article_id: str) -> None:
@@ -3608,9 +4012,7 @@ class JiraClient:
             JiraError or subclass on failure
         """
         self.add_request_comment(
-            issue_key,
-            f"Linked KB article: {article_id}",
-            public=True
+            issue_key, f"Linked KB article: {article_id}", public=True
         )
 
     def attach_article_as_solution(self, issue_key: str, article_id: str) -> None:
@@ -3625,16 +4027,14 @@ class JiraClient:
             JiraError or subclass on failure
         """
         self.add_request_comment(
-            issue_key,
-            f"Solution: KB article {article_id}",
-            public=True
+            issue_key, f"Solution: KB article {article_id}", public=True
         )
 
     # ==========================================
     # Additional Assets/Insight Methods
     # ==========================================
 
-    def get_object_schemas(self) -> Dict[str, Any]:
+    def get_object_schemas(self) -> dict[str, Any]:
         """
         Get all object schemas (Assets/Insight).
 
@@ -3645,15 +4045,14 @@ class JiraClient:
             JiraError or subclass on failure
         """
         result = self.get(
-            '/rest/insight/1.0/objectschema/list',
-            operation="list object schemas"
+            "/rest/insight/1.0/objectschema/list", operation="list object schemas"
         )
         # Normalize response format
-        if 'objectschemas' in result:
-            return {'values': result['objectschemas']}
+        if "objectschemas" in result:
+            return {"values": result["objectschemas"]}
         return result
 
-    def get_object_schema(self, schema_id: int) -> Dict[str, Any]:
+    def get_object_schema(self, schema_id: int) -> dict[str, Any]:
         """
         Get a specific object schema.
 
@@ -3667,11 +4066,11 @@ class JiraClient:
             JiraError or subclass on failure
         """
         return self.get(
-            f'/rest/insight/1.0/objectschema/{schema_id}',
-            operation=f"get object schema {schema_id}"
+            f"/rest/insight/1.0/objectschema/{schema_id}",
+            operation=f"get object schema {schema_id}",
         )
 
-    def get_object_types(self, schema_id: int) -> Dict[str, Any]:
+    def get_object_types(self, schema_id: int) -> dict[str, Any]:
         """
         Get object types in a schema.
 
@@ -3685,14 +4084,14 @@ class JiraClient:
             JiraError or subclass on failure
         """
         result = self.get(
-            f'/rest/insight/1.0/objectschema/{schema_id}/objecttypes/flat',
-            operation=f"get object types for schema {schema_id}"
+            f"/rest/insight/1.0/objectschema/{schema_id}/objecttypes/flat",
+            operation=f"get object types for schema {schema_id}",
         )
         if isinstance(result, list):
-            return {'values': result}
+            return {"values": result}
         return result
 
-    def get_object_type_attributes(self, object_type_id: int) -> Dict[str, Any]:
+    def get_object_type_attributes(self, object_type_id: int) -> dict[str, Any]:
         """
         Get attributes for an object type.
 
@@ -3706,15 +4105,16 @@ class JiraClient:
             JiraError or subclass on failure
         """
         result = self.get(
-            f'/rest/insight/1.0/objecttype/{object_type_id}/attributes',
-            operation=f"get attributes for object type {object_type_id}"
+            f"/rest/insight/1.0/objecttype/{object_type_id}/attributes",
+            operation=f"get attributes for object type {object_type_id}",
         )
         if isinstance(result, list):
-            return {'values': result}
+            return {"values": result}
         return result
 
-    def search_assets(self, iql: str, schema_id: int = None,
-                      max_results: int = 100) -> Dict[str, Any]:
+    def search_assets(
+        self, iql: str, schema_id: int | None = None, max_results: int = 100
+    ) -> dict[str, Any]:
         """
         Search assets using IQL.
 
@@ -3730,30 +4130,28 @@ class JiraClient:
             JiraError or subclass on failure
         """
         params = {
-            'iql': iql,
-            'page': 1,
-            'resultsPerPage': min(max_results, 100),
-            'includeAttributes': True
+            "iql": iql,
+            "page": 1,
+            "resultsPerPage": min(max_results, 100),
+            "includeAttributes": True,
         }
 
         if schema_id:
-            params['objectSchemaId'] = schema_id
+            params["objectSchemaId"] = schema_id
         else:
             # Get first schema if not specified
             schemas = self.get_object_schemas()
-            schema_list = schemas.get('values', [])
+            schema_list = schemas.get("values", [])
             if schema_list:
-                params['objectSchemaId'] = schema_list[0]['id']
+                params["objectSchemaId"] = schema_list[0]["id"]
 
         result = self.get(
-            '/rest/insight/1.0/iql/objects',
-            params=params,
-            operation="search assets"
+            "/rest/insight/1.0/iql/objects", params=params, operation="search assets"
         )
 
         # Normalize response
-        if 'objectEntries' in result:
-            return {'values': result['objectEntries']}
+        if "objectEntries" in result:
+            return {"values": result["objectEntries"]}
         return result
 
     def delete_asset(self, asset_id: int) -> None:
@@ -3767,11 +4165,10 @@ class JiraClient:
             JiraError or subclass on failure
         """
         self.delete(
-            f'/rest/insight/1.0/object/{asset_id}',
-            operation=f"delete asset {asset_id}"
+            f"/rest/insight/1.0/object/{asset_id}", operation=f"delete asset {asset_id}"
         )
 
-    def get_issue_assets(self, issue_key: str) -> Dict[str, Any]:
+    def get_issue_assets(self, issue_key: str) -> dict[str, Any]:
         """
         Get assets linked to an issue.
 
@@ -3789,13 +4186,13 @@ class JiraClient:
         assets = []
 
         # Look for asset custom fields
-        for field_id, field_value in issue.get('fields', {}).items():
+        for _field_id, field_value in issue.get("fields", {}).items():
             if field_value and isinstance(field_value, list):
                 for item in field_value:
-                    if isinstance(item, dict) and 'objectKey' in item:
+                    if isinstance(item, dict) and "objectKey" in item:
                         assets.append(item)
 
-        return {'values': assets}
+        return {"values": assets}
 
     def link_asset_to_issue(self, issue_key: str, asset_key: str) -> None:
         """
@@ -3809,13 +4206,9 @@ class JiraClient:
             JiraError or subclass on failure
         """
         # Add comment with asset reference
-        self.add_request_comment(
-            issue_key,
-            f"Linked asset: {asset_key}",
-            public=False
-        )
+        self.add_request_comment(issue_key, f"Linked asset: {asset_key}", public=False)
 
-    def find_affected_assets(self, issue_key: str) -> Dict[str, Any]:
+    def find_affected_assets(self, issue_key: str) -> dict[str, Any]:
         """
         Find assets potentially affected by an incident/request.
 
@@ -3833,7 +4226,7 @@ class JiraClient:
 
     # ========== Workflow Management API Methods (/rest/api/3/workflow) ==========
 
-    def get_workflows(self, start_at: int = 0, max_results: int = 50) -> Dict[str, Any]:
+    def get_workflows(self, start_at: int = 0, max_results: int = 50) -> dict[str, Any]:
         """
         Get all workflows with basic information.
 
@@ -3850,21 +4243,21 @@ class JiraClient:
         Note:
             Requires 'Administer Jira' global permission.
         """
-        params = {
-            'startAt': start_at,
-            'maxResults': min(max_results, 1000)
-        }
-        return self.get('/rest/api/3/workflow',
-                       params=params,
-                       operation="list workflows")
+        params = {"startAt": start_at, "maxResults": min(max_results, 1000)}
+        return self.get(
+            "/rest/api/3/workflow", params=params, operation="list workflows"
+        )
 
-    def search_workflows(self, workflow_name: Optional[str] = None,
-                         is_active: Optional[bool] = None,
-                         query_string: Optional[str] = None,
-                         order_by: Optional[str] = None,
-                         expand: Optional[str] = None,
-                         start_at: int = 0,
-                         max_results: int = 50) -> Dict[str, Any]:
+    def search_workflows(
+        self,
+        workflow_name: str | None = None,
+        is_active: bool | None = None,
+        query_string: str | None = None,
+        order_by: str | None = None,
+        expand: str | None = None,
+        start_at: int = 0,
+        max_results: int = 50,
+    ) -> dict[str, Any]:
         """
         Search workflows with filters and optional transition expansion.
 
@@ -3888,27 +4281,25 @@ class JiraClient:
         Note:
             Requires 'Administer Jira' global permission.
         """
-        params = {
-            'startAt': start_at,
-            'maxResults': max_results
-        }
+        params = {"startAt": start_at, "maxResults": max_results}
         if workflow_name:
-            params['workflowName'] = workflow_name
+            params["workflowName"] = workflow_name
         if is_active is not None:
-            params['isActive'] = 'true' if is_active else 'false'
+            params["isActive"] = "true" if is_active else "false"
         if query_string:
-            params['queryString'] = query_string
+            params["queryString"] = query_string
         if order_by:
-            params['orderBy'] = order_by
+            params["orderBy"] = order_by
         if expand:
-            params['expand'] = expand
+            params["expand"] = expand
 
-        return self.get('/rest/api/3/workflow/search',
-                       params=params,
-                       operation="search workflows")
+        return self.get(
+            "/rest/api/3/workflow/search", params=params, operation="search workflows"
+        )
 
-    def get_workflow_bulk(self, workflow_ids: list,
-                          expand: Optional[str] = None) -> Dict[str, Any]:
+    def get_workflow_bulk(
+        self, workflow_ids: list, expand: str | None = None
+    ) -> dict[str, Any]:
         """
         Bulk get workflow details by IDs.
 
@@ -3928,22 +4319,21 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = expand
+            params["expand"] = expand
 
-        payload = {
-            'workflowIds': workflow_ids
-        }
+        payload = {"workflowIds": workflow_ids}
 
-        endpoint = '/rest/api/3/workflows'
+        endpoint = "/rest/api/3/workflows"
         url = f"{self.base_url}{endpoint}"
-        response = self.session.post(url, json=payload, params=params if params else None,
-                                    timeout=self.timeout)
+        response = self.session.post(
+            url, json=payload, params=params if params else None, timeout=self.timeout
+        )
         handle_jira_error(response, "bulk get workflows")
         return response.json()
 
-    def get_workflow_schemes_for_workflow(self, workflow_id: str,
-                                          start_at: int = 0,
-                                          max_results: int = 50) -> Dict[str, Any]:
+    def get_workflow_schemes_for_workflow(
+        self, workflow_id: str, start_at: int = 0, max_results: int = 50
+    ) -> dict[str, Any]:
         """
         Get workflow schemes that use a specific workflow.
 
@@ -3961,18 +4351,18 @@ class JiraClient:
         Note:
             Requires 'Administer Jira' global permission.
         """
-        params = {
-            'startAt': start_at,
-            'maxResults': max_results
-        }
-        return self.get(f'/rest/api/3/workflow/{workflow_id}/workflowSchemes',
-                       params=params,
-                       operation=f"get schemes for workflow {workflow_id}")
+        params = {"startAt": start_at, "maxResults": max_results}
+        return self.get(
+            f"/rest/api/3/workflow/{workflow_id}/workflowSchemes",
+            params=params,
+            operation=f"get schemes for workflow {workflow_id}",
+        )
 
     # ========== Workflow Scheme API Methods (/rest/api/3/workflowscheme) ==========
 
-    def get_workflow_schemes(self, start_at: int = 0,
-                             max_results: int = 50) -> Dict[str, Any]:
+    def get_workflow_schemes(
+        self, start_at: int = 0, max_results: int = 50
+    ) -> dict[str, Any]:
         """
         Get all workflow schemes with pagination.
 
@@ -3989,16 +4379,16 @@ class JiraClient:
         Note:
             Requires 'Administer Jira' global permission.
         """
-        params = {
-            'startAt': start_at,
-            'maxResults': max_results
-        }
-        return self.get('/rest/api/3/workflowscheme',
-                       params=params,
-                       operation="list workflow schemes")
+        params = {"startAt": start_at, "maxResults": max_results}
+        return self.get(
+            "/rest/api/3/workflowscheme",
+            params=params,
+            operation="list workflow schemes",
+        )
 
-    def get_workflow_scheme(self, scheme_id: int,
-                            return_draft_if_exists: bool = False) -> Dict[str, Any]:
+    def get_workflow_scheme(
+        self, scheme_id: int, return_draft_if_exists: bool = False
+    ) -> dict[str, Any]:
         """
         Get a workflow scheme by ID.
 
@@ -4017,13 +4407,15 @@ class JiraClient:
         """
         params = {}
         if return_draft_if_exists:
-            params['returnDraftIfExists'] = 'true'
+            params["returnDraftIfExists"] = "true"
 
-        return self.get(f'/rest/api/3/workflowscheme/{scheme_id}',
-                       params=params if params else None,
-                       operation=f"get workflow scheme {scheme_id}")
+        return self.get(
+            f"/rest/api/3/workflowscheme/{scheme_id}",
+            params=params if params else None,
+            operation=f"get workflow scheme {scheme_id}",
+        )
 
-    def get_workflow_scheme_for_project(self, project_key_or_id: str) -> Dict[str, Any]:
+    def get_workflow_scheme_for_project(self, project_key_or_id: str) -> dict[str, Any]:
         """
         Get the workflow scheme assigned to a project.
 
@@ -4036,14 +4428,19 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'projectId': project_key_or_id}
-        return self.get('/rest/api/3/workflowscheme/project',
-                       params=params,
-                       operation=f"get workflow scheme for project {project_key_or_id}")
+        params = {"projectId": project_key_or_id}
+        return self.get(
+            "/rest/api/3/workflowscheme/project",
+            params=params,
+            operation=f"get workflow scheme for project {project_key_or_id}",
+        )
 
-    def assign_workflow_scheme_to_project(self, project_key_or_id: str,
-                                          workflow_scheme_id: str,
-                                          status_mappings: Optional[list] = None) -> Dict[str, Any]:
+    def assign_workflow_scheme_to_project(
+        self,
+        project_key_or_id: str,
+        workflow_scheme_id: str,
+        status_mappings: list | None = None,
+    ) -> dict[str, Any]:
         """
         Assign a workflow scheme to a project.
 
@@ -4068,31 +4465,17 @@ class JiraClient:
             Requires 'Administer Jira' global permission.
         """
         payload = {
-            'projectId': project_key_or_id,
-            'workflowSchemeId': workflow_scheme_id
+            "projectId": project_key_or_id,
+            "workflowSchemeId": workflow_scheme_id,
         }
         if status_mappings:
-            payload['issueTypeMappings'] = status_mappings
+            payload["issueTypeMappings"] = status_mappings
 
-        return self.post('/rest/api/3/workflowscheme/project/switch',
-                        data=payload,
-                        operation=f"assign workflow scheme to project {project_key_or_id}")
-
-    def get_task_status(self, task_id: str) -> Dict[str, Any]:
-        """
-        Get the status of an async task.
-
-        Args:
-            task_id: Task ID from async operation
-
-        Returns:
-            Task status object with progress and result
-
-        Raises:
-            JiraError or subclass on failure
-        """
-        return self.get(f'/rest/api/3/task/{task_id}',
-                       operation=f"get task status {task_id}")
+        return self.post(
+            "/rest/api/3/workflowscheme/project/switch",
+            data=payload,
+            operation=f"assign workflow scheme to project {project_key_or_id}",
+        )
 
     # ========== Status API Methods (/rest/api/3/status) ==========
 
@@ -4110,10 +4493,9 @@ class JiraClient:
         Note:
             Only returns statuses that are in active workflows.
         """
-        return self.get('/rest/api/3/status',
-                       operation="get all statuses")
+        return self.get("/rest/api/3/status", operation="get all statuses")
 
-    def get_status(self, status_id_or_name: str) -> Dict[str, Any]:
+    def get_status(self, status_id_or_name: str) -> dict[str, Any]:
         """
         Get a specific status by ID or name.
 
@@ -4126,14 +4508,19 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/status/{status_id_or_name}',
-                       operation=f"get status {status_id_or_name}")
+        return self.get(
+            f"/rest/api/3/status/{status_id_or_name}",
+            operation=f"get status {status_id_or_name}",
+        )
 
-    def search_statuses(self, project_id: Optional[str] = None,
-                        search_string: Optional[str] = None,
-                        status_category: Optional[str] = None,
-                        start_at: int = 0,
-                        max_results: int = 200) -> Dict[str, Any]:
+    def search_statuses(
+        self,
+        project_id: str | None = None,
+        search_string: str | None = None,
+        status_category: str | None = None,
+        start_at: int = 0,
+        max_results: int = 200,
+    ) -> dict[str, Any]:
         """
         Search statuses with filters.
 
@@ -4150,24 +4537,23 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {
-            'startAt': start_at,
-            'maxResults': max_results
-        }
+        params = {"startAt": start_at, "maxResults": max_results}
         if project_id:
-            params['projectId'] = project_id
+            params["projectId"] = project_id
         if search_string:
-            params['searchString'] = search_string
+            params["searchString"] = search_string
         if status_category:
-            params['statusCategory'] = status_category
+            params["statusCategory"] = status_category
 
-        return self.get('/rest/api/3/statuses/search',
-                       params=params,
-                       operation="search statuses")
+        return self.get(
+            "/rest/api/3/statuses/search", params=params, operation="search statuses"
+        )
+
     # ========== Notification Scheme API Methods (/rest/api/3/notificationscheme) ==========
 
-    def get_notification_schemes(self, start_at: int = 0, max_results: int = 50,
-                                  expand: Optional[str] = None) -> Dict[str, Any]:
+    def get_notification_schemes(
+        self, start_at: int = 0, max_results: int = 50, expand: str | None = None
+    ) -> dict[str, Any]:
         """
         Get all notification schemes with pagination.
 
@@ -4182,14 +4568,18 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'startAt': start_at, 'maxResults': max_results}
+        params = {"startAt": start_at, "maxResults": max_results}
         if expand:
-            params['expand'] = expand
-        return self.get('/rest/api/3/notificationscheme', params=params,
-                        operation="get notification schemes")
+            params["expand"] = expand
+        return self.get(
+            "/rest/api/3/notificationscheme",
+            params=params,
+            operation="get notification schemes",
+        )
 
-    def get_notification_scheme(self, scheme_id: str,
-                                 expand: Optional[str] = None) -> Dict[str, Any]:
+    def get_notification_scheme(
+        self, scheme_id: str, expand: str | None = None
+    ) -> dict[str, Any]:
         """
         Get a specific notification scheme by ID.
 
@@ -4205,15 +4595,20 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = expand
-        return self.get(f'/rest/api/3/notificationscheme/{scheme_id}',
-                        params=params if params else None,
-                        operation=f"get notification scheme {scheme_id}")
+            params["expand"] = expand
+        return self.get(
+            f"/rest/api/3/notificationscheme/{scheme_id}",
+            params=params if params else None,
+            operation=f"get notification scheme {scheme_id}",
+        )
 
-    def get_notification_scheme_projects(self, start_at: int = 0,
-                                          max_results: int = 50,
-                                          notification_scheme_id: Optional[list] = None,
-                                          project_id: Optional[list] = None) -> Dict[str, Any]:
+    def get_notification_scheme_projects(
+        self,
+        start_at: int = 0,
+        max_results: int = 50,
+        notification_scheme_id: list | None = None,
+        project_id: list | None = None,
+    ) -> dict[str, Any]:
         """
         Get project-to-notification scheme mappings.
 
@@ -4229,15 +4624,18 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'startAt': start_at, 'maxResults': max_results}
+        params = {"startAt": start_at, "maxResults": max_results}
         if notification_scheme_id:
-            params['notificationSchemeId'] = notification_scheme_id
+            params["notificationSchemeId"] = notification_scheme_id
         if project_id:
-            params['projectId'] = project_id
-        return self.get('/rest/api/3/notificationscheme/project', params=params,
-                        operation="get notification scheme project mappings")
+            params["projectId"] = project_id
+        return self.get(
+            "/rest/api/3/notificationscheme/project",
+            params=params,
+            operation="get notification scheme project mappings",
+        )
 
-    def create_notification_scheme(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_notification_scheme(self, data: dict[str, Any]) -> dict[str, Any]:
         """
         Create a new notification scheme.
 
@@ -4266,11 +4664,15 @@ class JiraClient:
                 ]
             }
         """
-        return self.post('/rest/api/3/notificationscheme', data=data,
-                         operation="create notification scheme")
+        return self.post(
+            "/rest/api/3/notificationscheme",
+            data=data,
+            operation="create notification scheme",
+        )
 
-    def update_notification_scheme(self, scheme_id: str,
-                                    data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_notification_scheme(
+        self, scheme_id: str, data: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Update notification scheme metadata (name, description).
 
@@ -4284,11 +4686,15 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.put(f'/rest/api/3/notificationscheme/{scheme_id}', data=data,
-                        operation=f"update notification scheme {scheme_id}")
+        return self.put(
+            f"/rest/api/3/notificationscheme/{scheme_id}",
+            data=data,
+            operation=f"update notification scheme {scheme_id}",
+        )
 
-    def add_notification_to_scheme(self, scheme_id: str,
-                                    event_data: Dict[str, Any]) -> Dict[str, Any]:
+    def add_notification_to_scheme(
+        self, scheme_id: str, event_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Add notifications to a notification scheme.
 
@@ -4315,9 +4721,9 @@ class JiraClient:
             }
         """
         return self.put(
-            f'/rest/api/3/notificationscheme/{scheme_id}/notification',
+            f"/rest/api/3/notificationscheme/{scheme_id}/notification",
             data=event_data,
-            operation=f"add notifications to scheme {scheme_id}"
+            operation=f"add notifications to scheme {scheme_id}",
         )
 
     def delete_notification_scheme(self, scheme_id: str) -> None:
@@ -4333,11 +4739,14 @@ class JiraClient:
         Note:
             Cannot delete schemes that are in use by projects.
         """
-        self.delete(f'/rest/api/3/notificationscheme/{scheme_id}',
-                    operation=f"delete notification scheme {scheme_id}")
+        self.delete(
+            f"/rest/api/3/notificationscheme/{scheme_id}",
+            operation=f"delete notification scheme {scheme_id}",
+        )
 
-    def delete_notification_from_scheme(self, scheme_id: str,
-                                         notification_id: str) -> None:
+    def delete_notification_from_scheme(
+        self, scheme_id: str, notification_id: str
+    ) -> None:
         """
         Remove a notification from a notification scheme.
 
@@ -4349,11 +4758,11 @@ class JiraClient:
             JiraError or subclass on failure
         """
         self.delete(
-            f'/rest/api/3/notificationscheme/{scheme_id}/notification/{notification_id}',
-            operation=f"remove notification {notification_id} from scheme {scheme_id}"
+            f"/rest/api/3/notificationscheme/{scheme_id}/notification/{notification_id}",
+            operation=f"remove notification {notification_id} from scheme {scheme_id}",
         )
 
-    def lookup_notification_scheme_by_name(self, name: str) -> Optional[Dict[str, Any]]:
+    def lookup_notification_scheme_by_name(self, name: str) -> dict[str, Any] | None:
         """
         Lookup notification scheme by name.
 
@@ -4370,14 +4779,15 @@ class JiraClient:
         start_at = 0
         max_results = 50
         while True:
-            result = self.get_notification_schemes(start_at=start_at,
-                                                    max_results=max_results)
-            schemes = result.get('values', [])
+            result = self.get_notification_schemes(
+                start_at=start_at, max_results=max_results
+            )
+            schemes = result.get("values", [])
             for scheme in schemes:
-                if scheme.get('name') == name:
+                if scheme.get("name") == name:
                     return scheme
             # Check if there are more pages
-            total = result.get('total', 0)
+            total = result.get("total", 0)
             if start_at + len(schemes) >= total:
                 break
             start_at += max_results
@@ -4385,9 +4795,12 @@ class JiraClient:
 
     # ========== User Management API Methods (/rest/api/3/user) ==========
 
-    def get_user(self, account_id: Optional[str] = None,
-                 email: Optional[str] = None,
-                 expand: Optional[list] = None) -> Dict[str, Any]:
+    def get_user(
+        self,
+        account_id: str | None = None,
+        email: str | None = None,
+        expand: list | None = None,
+    ) -> dict[str, Any]:
         """
         Get user details by accountId or email.
 
@@ -4405,21 +4818,21 @@ class JiraClient:
         """
         if not account_id and not email:
             from jira_assistant_skills_lib import ValidationError
+
             raise ValidationError("Either account_id or email must be provided")
 
         params = {}
         if account_id:
-            params['accountId'] = account_id
+            params["accountId"] = account_id
         if email:
             # Search by email - this may fail if email is hidden
-            params['username'] = email  # Legacy parameter, still works for email lookup
+            params["username"] = email  # Legacy parameter, still works for email lookup
         if expand:
-            params['expand'] = ','.join(expand)
+            params["expand"] = ",".join(expand)
 
-        return self.get('/rest/api/3/user', params=params,
-                       operation="get user")
+        return self.get("/rest/api/3/user", params=params, operation="get user")
 
-    def get_current_user(self, expand: Optional[list] = None) -> Dict[str, Any]:
+    def get_current_user(self, expand: list | None = None) -> dict[str, Any]:
         """
         Get the current authenticated user.
 
@@ -4434,11 +4847,13 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = ','.join(expand)
+            params["expand"] = ",".join(expand)
 
-        return self.get('/rest/api/3/myself',
-                       params=params if params else None,
-                       operation="get current user")
+        return self.get(
+            "/rest/api/3/myself",
+            params=params if params else None,
+            operation="get current user",
+        )
 
     def get_user_groups(self, account_id: str) -> list:
         """
@@ -4453,13 +4868,15 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'accountId': account_id}
-        result = self.get('/rest/api/3/user/groups', params=params,
-                         operation="get user groups")
+        params = {"accountId": account_id}
+        result = self.get(
+            "/rest/api/3/user/groups", params=params, operation="get user groups"
+        )
         return result if isinstance(result, list) else []
 
-    def find_assignable_users(self, query: str, project_key: str,
-                              start_at: int = 0, max_results: int = 50) -> list:
+    def find_assignable_users(
+        self, query: str, project_key: str, start_at: int = 0, max_results: int = 50
+    ) -> list:
         """
         Find users assignable to issues in a project.
 
@@ -4476,13 +4893,16 @@ class JiraClient:
             JiraError or subclass on failure
         """
         params = {
-            'query': query,
-            'project': project_key,
-            'startAt': start_at,
-            'maxResults': max_results
+            "query": query,
+            "project": project_key,
+            "startAt": start_at,
+            "maxResults": max_results,
         }
-        return self.get('/rest/api/3/user/assignable/search', params=params,
-                       operation=f"find assignable users for {project_key}")
+        return self.get(
+            "/rest/api/3/user/assignable/search",
+            params=params,
+            operation=f"find assignable users for {project_key}",
+        )
 
     def get_all_users(self, start_at: int = 0, max_results: int = 50) -> list:
         """
@@ -4500,14 +4920,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {
-            'startAt': start_at,
-            'maxResults': max_results
-        }
-        return self.get('/rest/api/3/users/search', params=params,
-                       operation="get all users")
+        params = {"startAt": start_at, "maxResults": max_results}
+        return self.get(
+            "/rest/api/3/users/search", params=params, operation="get all users"
+        )
 
-    def get_users_bulk(self, account_ids: list, max_results: int = 200) -> Dict[str, Any]:
+    def get_users_bulk(
+        self, account_ids: list, max_results: int = 200
+    ) -> dict[str, Any]:
         """
         Get multiple users by account IDs.
 
@@ -4521,18 +4941,21 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {
-            'accountId': account_ids,
-            'maxResults': max_results
-        }
-        return self.get('/rest/api/3/user/bulk', params=params,
-                       operation="get users bulk")
+        params = {"accountId": account_ids, "maxResults": max_results}
+        return self.get(
+            "/rest/api/3/user/bulk", params=params, operation="get users bulk"
+        )
 
     # ========== Group Management API Methods (/rest/api/3/group) ==========
 
-    def find_groups(self, query: str = '', start_at: int = 0,
-                    max_results: int = 50, exclude_id: Optional[list] = None,
-                    caseInsensitive: bool = True) -> Dict[str, Any]:
+    def find_groups(
+        self,
+        query: str = "",
+        start_at: int = 0,
+        max_results: int = 50,
+        exclude_id: list | None = None,
+        caseInsensitive: bool = True,
+    ) -> dict[str, Any]:
         """
         Find groups by name using the groups picker API.
 
@@ -4550,18 +4973,20 @@ class JiraClient:
             JiraError or subclass on failure
         """
         params = {
-            'query': query,
-            'maxResults': max_results,
-            'caseInsensitive': str(caseInsensitive).lower()
+            "query": query,
+            "maxResults": max_results,
+            "caseInsensitive": str(caseInsensitive).lower(),
         }
         if exclude_id:
-            params['exclude'] = ','.join(exclude_id)
+            params["exclude"] = ",".join(exclude_id)
 
-        return self.get('/rest/api/3/groups/picker', params=params,
-                       operation="find groups")
+        return self.get(
+            "/rest/api/3/groups/picker", params=params, operation="find groups"
+        )
 
-    def get_group(self, group_name: Optional[str] = None,
-                  group_id: Optional[str] = None) -> Dict[str, Any]:
+    def get_group(
+        self, group_name: str | None = None, group_id: str | None = None
+    ) -> dict[str, Any]:
         """
         Get group details.
 
@@ -4578,18 +5003,18 @@ class JiraClient:
         """
         if not group_name and not group_id:
             from jira_assistant_skills_lib import ValidationError
+
             raise ValidationError("Either group_name or group_id must be provided")
 
         params = {}
         if group_id:
-            params['groupId'] = group_id
+            params["groupId"] = group_id
         elif group_name:
-            params['groupname'] = group_name
+            params["groupname"] = group_name
 
-        return self.get('/rest/api/3/group', params=params,
-                       operation="get group")
+        return self.get("/rest/api/3/group", params=params, operation="get group")
 
-    def create_group(self, name: str) -> Dict[str, Any]:
+    def create_group(self, name: str) -> dict[str, Any]:
         """
         Create a new group.
 
@@ -4604,13 +5029,17 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.post('/rest/api/3/group', data={'name': name},
-                        operation=f"create group '{name}'")
+        return self.post(
+            "/rest/api/3/group", data={"name": name}, operation=f"create group '{name}'"
+        )
 
-    def delete_group(self, group_name: Optional[str] = None,
-                     group_id: Optional[str] = None,
-                     swap_group: Optional[str] = None,
-                     swap_group_id: Optional[str] = None) -> None:
+    def delete_group(
+        self,
+        group_name: str | None = None,
+        group_id: str | None = None,
+        swap_group: str | None = None,
+        swap_group_id: str | None = None,
+    ) -> None:
         """
         Delete a group.
 
@@ -4628,27 +5057,32 @@ class JiraClient:
         """
         if not group_name and not group_id:
             from jira_assistant_skills_lib import ValidationError
+
             raise ValidationError("Either group_name or group_id must be provided")
 
         params = {}
         if group_id:
-            params['groupId'] = group_id
+            params["groupId"] = group_id
         elif group_name:
-            params['groupname'] = group_name
+            params["groupname"] = group_name
         if swap_group:
-            params['swapGroup'] = swap_group
+            params["swapGroup"] = swap_group
         if swap_group_id:
-            params['swapGroupId'] = swap_group_id
+            params["swapGroupId"] = swap_group_id
 
-        endpoint = '/rest/api/3/group'
+        endpoint = "/rest/api/3/group"
         url = f"{self.base_url}{endpoint}"
         response = self.session.delete(url, params=params, timeout=self.timeout)
-        handle_jira_error(response, f"delete group")
+        handle_jira_error(response, "delete group")
 
-    def get_group_members(self, group_name: Optional[str] = None,
-                          group_id: Optional[str] = None,
-                          include_inactive: bool = False,
-                          start_at: int = 0, max_results: int = 50) -> Dict[str, Any]:
+    def get_group_members(
+        self,
+        group_name: str | None = None,
+        group_id: str | None = None,
+        include_inactive: bool = False,
+        start_at: int = 0,
+        max_results: int = 50,
+    ) -> dict[str, Any]:
         """
         Get members of a group.
 
@@ -4668,24 +5102,29 @@ class JiraClient:
         """
         if not group_name and not group_id:
             from jira_assistant_skills_lib import ValidationError
+
             raise ValidationError("Either group_name or group_id must be provided")
 
         params = {
-            'startAt': start_at,
-            'maxResults': max_results,
-            'includeInactiveUsers': str(include_inactive).lower()
+            "startAt": start_at,
+            "maxResults": max_results,
+            "includeInactiveUsers": str(include_inactive).lower(),
         }
         if group_id:
-            params['groupId'] = group_id
+            params["groupId"] = group_id
         elif group_name:
-            params['groupname'] = group_name
+            params["groupname"] = group_name
 
-        return self.get('/rest/api/3/group/member', params=params,
-                       operation="get group members")
+        return self.get(
+            "/rest/api/3/group/member", params=params, operation="get group members"
+        )
 
-    def add_user_to_group(self, account_id: str,
-                          group_name: Optional[str] = None,
-                          group_id: Optional[str] = None) -> Dict[str, Any]:
+    def add_user_to_group(
+        self,
+        account_id: str,
+        group_name: str | None = None,
+        group_id: str | None = None,
+    ) -> dict[str, Any]:
         """
         Add a user to a group.
 
@@ -4709,24 +5148,29 @@ class JiraClient:
         """
         if not group_name and not group_id:
             from jira_assistant_skills_lib import ValidationError
+
             raise ValidationError("Either group_name or group_id must be provided")
 
         params = {}
         if group_id:
-            params['groupId'] = group_id
+            params["groupId"] = group_id
         elif group_name:
-            params['groupname'] = group_name
+            params["groupname"] = group_name
 
-        endpoint = '/rest/api/3/group/user'
+        endpoint = "/rest/api/3/group/user"
         url = f"{self.base_url}{endpoint}"
-        response = self.session.post(url, json={'accountId': account_id},
-                                     params=params, timeout=self.timeout)
-        handle_jira_error(response, f"add user to group")
+        response = self.session.post(
+            url, json={"accountId": account_id}, params=params, timeout=self.timeout
+        )
+        handle_jira_error(response, "add user to group")
         return response.json()
 
-    def remove_user_from_group(self, account_id: str,
-                               group_name: Optional[str] = None,
-                               group_id: Optional[str] = None) -> None:
+    def remove_user_from_group(
+        self,
+        account_id: str,
+        group_name: str | None = None,
+        group_id: str | None = None,
+    ) -> None:
         """
         Remove a user from a group.
 
@@ -4747,22 +5191,23 @@ class JiraClient:
         """
         if not group_name and not group_id:
             from jira_assistant_skills_lib import ValidationError
+
             raise ValidationError("Either group_name or group_id must be provided")
 
-        params = {'accountId': account_id}
+        params = {"accountId": account_id}
         if group_id:
-            params['groupId'] = group_id
+            params["groupId"] = group_id
         elif group_name:
-            params['groupname'] = group_name
+            params["groupname"] = group_name
 
-        endpoint = '/rest/api/3/group/user'
+        endpoint = "/rest/api/3/group/user"
         url = f"{self.base_url}{endpoint}"
         response = self.session.delete(url, params=params, timeout=self.timeout)
-        handle_jira_error(response, f"remove user from group")
+        handle_jira_error(response, "remove user from group")
 
     # ========== Project Admin API Methods (/rest/api/3/project) ==========
 
-    def update_project(self, project_key: str, **kwargs) -> Dict[str, Any]:
+    def update_project(self, project_key: str, **kwargs) -> dict[str, Any]:
         """
         Update a project.
 
@@ -4782,30 +5227,35 @@ class JiraClient:
         """
         data = {}
         field_mapping = {
-            'name': 'name',
-            'description': 'description',
-            'lead': 'lead',
-            'url': 'url',
-            'assignee_type': 'assigneeType',
-            'category_id': 'categoryId',
-            'new_key': 'key',
+            "name": "name",
+            "description": "description",
+            "lead": "lead",
+            "url": "url",
+            "assignee_type": "assigneeType",
+            "category_id": "categoryId",
+            "new_key": "key",
         }
         for key, api_key in field_mapping.items():
             if key in kwargs and kwargs[key] is not None:
                 data[api_key] = kwargs[key]
 
-        return self.put(f'/rest/api/3/project/{project_key}',
-                       data=data,
-                       operation=f"update project {project_key}")
+        return self.put(
+            f"/rest/api/3/project/{project_key}",
+            data=data,
+            operation=f"update project {project_key}",
+        )
 
-    def search_projects(self, query: Optional[str] = None,
-                        type_key: Optional[str] = None,
-                        category_id: Optional[int] = None,
-                        action: str = 'browse',
-                        expand: Optional[list] = None,
-                        status: Optional[list] = None,
-                        start_at: int = 0,
-                        max_results: int = 50) -> Dict[str, Any]:
+    def search_projects(
+        self,
+        query: str | None = None,
+        type_key: str | None = None,
+        category_id: int | None = None,
+        action: str = "browse",
+        expand: list | None = None,
+        status: list | None = None,
+        start_at: int = 0,
+        max_results: int = 50,
+    ) -> dict[str, Any]:
         """
         Search for projects with filtering and pagination.
 
@@ -4826,24 +5276,24 @@ class JiraClient:
             JiraError or subclass on failure
         """
         params = {
-            'startAt': start_at,
-            'maxResults': max_results,
-            'action': action,
+            "startAt": start_at,
+            "maxResults": max_results,
+            "action": action,
         }
         if query:
-            params['query'] = query
+            params["query"] = query
         if type_key:
-            params['typeKey'] = type_key
+            params["typeKey"] = type_key
         if category_id:
-            params['categoryId'] = category_id
+            params["categoryId"] = category_id
         if expand:
-            params['expand'] = ','.join(expand)
+            params["expand"] = ",".join(expand)
         if status:
-            params['status'] = ','.join(status)
+            params["status"] = ",".join(status)
 
-        return self.get('/rest/api/3/project/search',
-                       params=params,
-                       operation="search projects")
+        return self.get(
+            "/rest/api/3/project/search", params=params, operation="search projects"
+        )
 
     def archive_project(self, project_key: str) -> None:
         """
@@ -4860,10 +5310,12 @@ class JiraClient:
         Note:
             Requires Administer Jira global permission.
         """
-        self.post(f'/rest/api/3/project/{project_key}/archive',
-                 operation=f"archive project {project_key}")
+        self.post(
+            f"/rest/api/3/project/{project_key}/archive",
+            operation=f"archive project {project_key}",
+        )
 
-    def restore_project(self, project_key: str) -> Dict[str, Any]:
+    def restore_project(self, project_key: str) -> dict[str, Any]:
         """
         Restore an archived or deleted project.
 
@@ -4880,8 +5332,10 @@ class JiraClient:
             Deleted projects can be restored within 60 days.
             Requires Administer Jira global permission.
         """
-        return self.post(f'/rest/api/3/project/{project_key}/restore',
-                        operation=f"restore project {project_key}")
+        return self.post(
+            f"/rest/api/3/project/{project_key}/restore",
+            operation=f"restore project {project_key}",
+        )
 
     def delete_project_async(self, project_key: str) -> str:
         """
@@ -4901,11 +5355,13 @@ class JiraClient:
         Note:
             Use get_task_status() to poll for completion.
         """
-        result = self.post(f'/rest/api/3/project/{project_key}/delete',
-                          operation=f"delete project {project_key} (async)")
-        return result.get('taskId', '')
+        result = self.post(
+            f"/rest/api/3/project/{project_key}/delete",
+            operation=f"delete project {project_key} (async)",
+        )
+        return result.get("taskId", "")
 
-    def get_task_status(self, task_id: str) -> Dict[str, Any]:
+    def get_task_status(self, task_id: str) -> dict[str, Any]:
         """
         Get status of an async task.
 
@@ -4918,8 +5374,9 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/task/{task_id}',
-                       operation=f"get task status {task_id}")
+        return self.get(
+            f"/rest/api/3/task/{task_id}", operation=f"get task status {task_id}"
+        )
 
     # ========== Project Category API Methods (/rest/api/3/projectCategory) ==========
 
@@ -4933,10 +5390,11 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get('/rest/api/3/projectCategory',
-                       operation="get project categories")
+        return self.get(
+            "/rest/api/3/projectCategory", operation="get project categories"
+        )
 
-    def get_project_category(self, category_id: str) -> Dict[str, Any]:
+    def get_project_category(self, category_id: str) -> dict[str, Any]:
         """
         Get a specific project category.
 
@@ -4949,11 +5407,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/projectCategory/{category_id}',
-                       operation=f"get project category {category_id}")
+        return self.get(
+            f"/rest/api/3/projectCategory/{category_id}",
+            operation=f"get project category {category_id}",
+        )
 
-    def create_project_category(self, name: str,
-                                 description: Optional[str] = None) -> Dict[str, Any]:
+    def create_project_category(
+        self, name: str, description: str | None = None
+    ) -> dict[str, Any]:
         """
         Create a new project category.
 
@@ -4970,17 +5431,22 @@ class JiraClient:
         Note:
             Requires Administer Jira global permission.
         """
-        data = {'name': name}
+        data = {"name": name}
         if description:
-            data['description'] = description
+            data["description"] = description
 
-        return self.post('/rest/api/3/projectCategory',
-                        data=data,
-                        operation=f"create project category '{name}'")
+        return self.post(
+            "/rest/api/3/projectCategory",
+            data=data,
+            operation=f"create project category '{name}'",
+        )
 
-    def update_project_category(self, category_id: str,
-                                 name: Optional[str] = None,
-                                 description: Optional[str] = None) -> Dict[str, Any]:
+    def update_project_category(
+        self,
+        category_id: str,
+        name: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
         """
         Update a project category.
 
@@ -4997,13 +5463,15 @@ class JiraClient:
         """
         data = {}
         if name is not None:
-            data['name'] = name
+            data["name"] = name
         if description is not None:
-            data['description'] = description
+            data["description"] = description
 
-        return self.put(f'/rest/api/3/projectCategory/{category_id}',
-                       data=data,
-                       operation=f"update project category {category_id}")
+        return self.put(
+            f"/rest/api/3/projectCategory/{category_id}",
+            data=data,
+            operation=f"update project category {category_id}",
+        )
 
     def delete_project_category(self, category_id: str) -> None:
         """
@@ -5018,8 +5486,10 @@ class JiraClient:
         Note:
             Projects in this category will have their category set to None.
         """
-        self.delete(f'/rest/api/3/projectCategory/{category_id}',
-                   operation=f"delete project category {category_id}")
+        self.delete(
+            f"/rest/api/3/projectCategory/{category_id}",
+            operation=f"delete project category {category_id}",
+        )
 
     # ========== Project Type API Methods (/rest/api/3/project/type) ==========
 
@@ -5033,10 +5503,9 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get('/rest/api/3/project/type',
-                       operation="get project types")
+        return self.get("/rest/api/3/project/type", operation="get project types")
 
-    def get_project_type(self, type_key: str) -> Dict[str, Any]:
+    def get_project_type(self, type_key: str) -> dict[str, Any]:
         """
         Get a specific project type.
 
@@ -5049,12 +5518,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/project/type/{type_key}',
-                       operation=f"get project type {type_key}")
+        return self.get(
+            f"/rest/api/3/project/type/{type_key}",
+            operation=f"get project type {type_key}",
+        )
 
     # ========== Project Avatar API Methods (/rest/api/3/project/{}/avatar) ==========
 
-    def get_project_avatars(self, project_key: str) -> Dict[str, Any]:
+    def get_project_avatars(self, project_key: str) -> dict[str, Any]:
         """
         Get all avatars for a project.
 
@@ -5067,8 +5538,10 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/project/{project_key}/avatars',
-                       operation=f"get avatars for project {project_key}")
+        return self.get(
+            f"/rest/api/3/project/{project_key}/avatars",
+            operation=f"get avatars for project {project_key}",
+        )
 
     def set_project_avatar(self, project_key: str, avatar_id: str) -> None:
         """
@@ -5081,12 +5554,15 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        self.put(f'/rest/api/3/project/{project_key}/avatar',
-                data={'id': avatar_id},
-                operation=f"set avatar for project {project_key}")
+        self.put(
+            f"/rest/api/3/project/{project_key}/avatar",
+            data={"id": avatar_id},
+            operation=f"set avatar for project {project_key}",
+        )
 
-    def upload_project_avatar(self, project_key: str, file_path: str,
-                               x: int = 0, y: int = 0, size: int = 48) -> Dict[str, Any]:
+    def upload_project_avatar(
+        self, project_key: str, file_path: str, x: int = 0, y: int = 0, size: int = 48
+    ) -> dict[str, Any]:
         """
         Upload a custom avatar for a project.
 
@@ -5103,27 +5579,28 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {'x': x, 'y': y, 'size': size}
-        endpoint = f'/rest/api/3/project/{project_key}/avatar2'
+        params = {"x": x, "y": y, "size": size}
+        endpoint = f"/rest/api/3/project/{project_key}/avatar2"
         url = f"{self.base_url}{endpoint}"
 
-        import os
-        with open(file_path, 'rb') as f:
-            content_type = 'image/png'
-            if file_path.lower().endswith('.jpg') or file_path.lower().endswith('.jpeg'):
-                content_type = 'image/jpeg'
-            elif file_path.lower().endswith('.gif'):
-                content_type = 'image/gif'
+        with open(file_path, "rb") as f:
+            content_type = "image/png"
+            if file_path.lower().endswith(".jpg") or file_path.lower().endswith(
+                ".jpeg"
+            ):
+                content_type = "image/jpeg"
+            elif file_path.lower().endswith(".gif"):
+                content_type = "image/gif"
 
             response = self.session.post(
                 url,
                 params=params,
                 data=f.read(),
                 headers={
-                    'Content-Type': content_type,
-                    'X-Atlassian-Token': 'no-check',
+                    "Content-Type": content_type,
+                    "X-Atlassian-Token": "no-check",
                 },
-                timeout=self.timeout
+                timeout=self.timeout,
             )
 
         handle_jira_error(response, f"upload avatar for project {project_key}")
@@ -5143,14 +5620,20 @@ class JiraClient:
         Note:
             Cannot delete system avatars.
         """
-        self.delete(f'/rest/api/3/project/{project_key}/avatar/{avatar_id}',
-                   operation=f"delete avatar {avatar_id} from project {project_key}")
+        self.delete(
+            f"/rest/api/3/project/{project_key}/avatar/{avatar_id}",
+            operation=f"delete avatar {avatar_id} from project {project_key}",
+        )
 
     # ========== Screen Management API Methods (/rest/api/2/screens) ==========
 
-    def get_screens(self, start_at: int = 0, max_results: int = 100,
-                    scope: Optional[list] = None,
-                    query_string: Optional[str] = None) -> Dict[str, Any]:
+    def get_screens(
+        self,
+        start_at: int = 0,
+        max_results: int = 100,
+        scope: list | None = None,
+        query_string: str | None = None,
+    ) -> dict[str, Any]:
         """
         Get all screens with pagination.
 
@@ -5173,19 +5656,15 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {
-            'startAt': start_at,
-            'maxResults': max_results
-        }
+        params = {"startAt": start_at, "maxResults": max_results}
         if scope:
-            params['scope'] = ','.join(scope)
+            params["scope"] = ",".join(scope)
         if query_string:
-            params['queryString'] = query_string
+            params["queryString"] = query_string
 
-        return self.get('/rest/api/2/screens', params=params,
-                       operation="get screens")
+        return self.get("/rest/api/2/screens", params=params, operation="get screens")
 
-    def get_screen(self, screen_id: int) -> Dict[str, Any]:
+    def get_screen(self, screen_id: int) -> dict[str, Any]:
         """
         Get a specific screen by ID.
 
@@ -5204,28 +5683,33 @@ class JiraClient:
         """
         # JIRA doesn't have a direct GET /screens/{id} endpoint
         # We need to list all screens and find the one we need
-        result = self.get('/rest/api/2/screens',
-                         params={'maxResults': 100},
-                         operation=f"get screen {screen_id}")
+        result = self.get(
+            "/rest/api/2/screens",
+            params={"maxResults": 100},
+            operation=f"get screen {screen_id}",
+        )
 
-        for screen in result.get('values', []):
-            if screen.get('id') == screen_id:
+        for screen in result.get("values", []):
+            if screen.get("id") == screen_id:
                 return screen
 
         # If not found in first page, search more
-        total = result.get('total', 0)
+        total = result.get("total", 0)
         start_at = 100
         while start_at < total:
-            result = self.get('/rest/api/2/screens',
-                             params={'maxResults': 100, 'startAt': start_at},
-                             operation=f"get screen {screen_id}")
-            for screen in result.get('values', []):
-                if screen.get('id') == screen_id:
+            result = self.get(
+                "/rest/api/2/screens",
+                params={"maxResults": 100, "startAt": start_at},
+                operation=f"get screen {screen_id}",
+            )
+            for screen in result.get("values", []):
+                if screen.get("id") == screen_id:
                     return screen
             start_at += 100
 
         # Screen not found
         from jira_assistant_skills_lib import NotFoundError
+
         raise NotFoundError(f"Screen with ID {screen_id} not found")
 
     def get_screen_tabs(self, screen_id: int) -> list:
@@ -5241,8 +5725,10 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        result = self.get(f'/rest/api/2/screens/{screen_id}/tabs',
-                         operation=f"get tabs for screen {screen_id}")
+        result = self.get(
+            f"/rest/api/2/screens/{screen_id}/tabs",
+            operation=f"get tabs for screen {screen_id}",
+        )
         return result if isinstance(result, list) else []
 
     def get_screen_tab_fields(self, screen_id: int, tab_id: int) -> list:
@@ -5259,12 +5745,15 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        result = self.get(f'/rest/api/2/screens/{screen_id}/tabs/{tab_id}/fields',
-                         operation=f"get fields for screen {screen_id} tab {tab_id}")
+        result = self.get(
+            f"/rest/api/2/screens/{screen_id}/tabs/{tab_id}/fields",
+            operation=f"get fields for screen {screen_id} tab {tab_id}",
+        )
         return result if isinstance(result, list) else []
 
-    def add_field_to_screen_tab(self, screen_id: int, tab_id: int,
-                                 field_id: str) -> Dict[str, Any]:
+    def add_field_to_screen_tab(
+        self, screen_id: int, tab_id: int, field_id: str
+    ) -> dict[str, Any]:
         """
         Add a field to a screen tab.
 
@@ -5279,13 +5768,16 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {'fieldId': field_id}
-        return self.post(f'/rest/api/2/screens/{screen_id}/tabs/{tab_id}/fields',
-                        data=data,
-                        operation=f"add field {field_id} to screen {screen_id} tab {tab_id}")
+        data = {"fieldId": field_id}
+        return self.post(
+            f"/rest/api/2/screens/{screen_id}/tabs/{tab_id}/fields",
+            data=data,
+            operation=f"add field {field_id} to screen {screen_id} tab {tab_id}",
+        )
 
-    def remove_field_from_screen_tab(self, screen_id: int, tab_id: int,
-                                      field_id: str) -> None:
+    def remove_field_from_screen_tab(
+        self, screen_id: int, tab_id: int, field_id: str
+    ) -> None:
         """
         Remove a field from a screen tab.
 
@@ -5297,8 +5789,10 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        self.delete(f'/rest/api/2/screens/{screen_id}/tabs/{tab_id}/fields/{field_id}',
-                   operation=f"remove field {field_id} from screen {screen_id} tab {tab_id}")
+        self.delete(
+            f"/rest/api/2/screens/{screen_id}/tabs/{tab_id}/fields/{field_id}",
+            operation=f"remove field {field_id} from screen {screen_id} tab {tab_id}",
+        )
 
     def get_screen_available_fields(self, screen_id: int) -> list:
         """
@@ -5313,15 +5807,21 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        result = self.get(f'/rest/api/2/screens/{screen_id}/availableFields',
-                         operation=f"get available fields for screen {screen_id}")
+        result = self.get(
+            f"/rest/api/2/screens/{screen_id}/availableFields",
+            operation=f"get available fields for screen {screen_id}",
+        )
         return result if isinstance(result, list) else []
 
     # ========== Screen Schemes API Methods (/rest/api/3/screenscheme) ==========
 
-    def get_screen_schemes(self, start_at: int = 0, max_results: int = 100,
-                           query_string: Optional[str] = None,
-                           expand: Optional[str] = None) -> Dict[str, Any]:
+    def get_screen_schemes(
+        self,
+        start_at: int = 0,
+        max_results: int = 100,
+        query_string: str | None = None,
+        expand: str | None = None,
+    ) -> dict[str, Any]:
         """
         Get all screen schemes with pagination.
 
@@ -5344,19 +5844,17 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {
-            'startAt': start_at,
-            'maxResults': max_results
-        }
+        params = {"startAt": start_at, "maxResults": max_results}
         if query_string:
-            params['queryString'] = query_string
+            params["queryString"] = query_string
         if expand:
-            params['expand'] = expand
+            params["expand"] = expand
 
-        return self.get('/rest/api/3/screenscheme', params=params,
-                       operation="get screen schemes")
+        return self.get(
+            "/rest/api/3/screenscheme", params=params, operation="get screen schemes"
+        )
 
-    def get_screen_scheme(self, scheme_id: int) -> Dict[str, Any]:
+    def get_screen_scheme(self, scheme_id: int) -> dict[str, Any]:
         """
         Get a specific screen scheme by ID.
 
@@ -5372,15 +5870,18 @@ class JiraClient:
             JiraError or subclass on failure
         """
         # Search for the specific scheme
-        result = self.get('/rest/api/3/screenscheme',
-                         params={'id': [scheme_id]},
-                         operation=f"get screen scheme {scheme_id}")
+        result = self.get(
+            "/rest/api/3/screenscheme",
+            params={"id": [scheme_id]},
+            operation=f"get screen scheme {scheme_id}",
+        )
 
-        values = result.get('values', [])
+        values = result.get("values", [])
         if values:
             return values[0]
 
         from jira_assistant_skills_lib import NotFoundError
+
         raise NotFoundError(f"Screen scheme with ID {scheme_id} not found")
 
     # ========== Issue Type API Methods (/rest/api/3/issuetype) ==========
@@ -5395,10 +5896,9 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get('/rest/api/3/issuetype',
-                       operation='get issue types')
+        return self.get("/rest/api/3/issuetype", operation="get issue types")
 
-    def get_issue_type(self, issue_type_id: str) -> Dict[str, Any]:
+    def get_issue_type(self, issue_type_id: str) -> dict[str, Any]:
         """
         Get issue type by ID.
 
@@ -5411,16 +5911,18 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/issuetype/{issue_type_id}',
-                       operation=f'get issue type {issue_type_id}')
+        return self.get(
+            f"/rest/api/3/issuetype/{issue_type_id}",
+            operation=f"get issue type {issue_type_id}",
+        )
 
     def create_issue_type(
         self,
         name: str,
-        description: Optional[str] = None,
-        issue_type: str = 'standard',
-        hierarchy_level: Optional[int] = None
-    ) -> Dict[str, Any]:
+        description: str | None = None,
+        issue_type: str = "standard",
+        hierarchy_level: int | None = None,
+    ) -> dict[str, Any]:
         """
         Create new issue type.
 
@@ -5436,28 +5938,25 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {
-            'name': name,
-            'type': issue_type
-        }
+        data = {"name": name, "type": issue_type}
 
         if description:
-            data['description'] = description
+            data["description"] = description
 
         if hierarchy_level is not None:
-            data['hierarchyLevel'] = hierarchy_level
+            data["hierarchyLevel"] = hierarchy_level
 
-        return self.post('/rest/api/3/issuetype',
-                        data=data,
-                        operation='create issue type')
+        return self.post(
+            "/rest/api/3/issuetype", data=data, operation="create issue type"
+        )
 
     def update_issue_type(
         self,
         issue_type_id: str,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-        avatar_id: Optional[int] = None
-    ) -> Dict[str, Any]:
+        name: str | None = None,
+        description: str | None = None,
+        avatar_id: int | None = None,
+    ) -> dict[str, Any]:
         """
         Update issue type.
 
@@ -5476,20 +5975,20 @@ class JiraClient:
         data = {}
 
         if name:
-            data['name'] = name
+            data["name"] = name
         if description is not None:
-            data['description'] = description
+            data["description"] = description
         if avatar_id:
-            data['avatarId'] = avatar_id
+            data["avatarId"] = avatar_id
 
-        return self.put(f'/rest/api/3/issuetype/{issue_type_id}',
-                       data=data,
-                       operation=f'update issue type {issue_type_id}')
+        return self.put(
+            f"/rest/api/3/issuetype/{issue_type_id}",
+            data=data,
+            operation=f"update issue type {issue_type_id}",
+        )
 
     def delete_issue_type(
-        self,
-        issue_type_id: str,
-        alternative_issue_type_id: Optional[str] = None
+        self, issue_type_id: str, alternative_issue_type_id: str | None = None
     ) -> None:
         """
         Delete issue type.
@@ -5503,13 +6002,14 @@ class JiraClient:
         """
         params = {}
         if alternative_issue_type_id:
-            params['alternativeIssueTypeId'] = alternative_issue_type_id
+            params["alternativeIssueTypeId"] = alternative_issue_type_id
 
-        endpoint = f'/rest/api/3/issuetype/{issue_type_id}'
+        endpoint = f"/rest/api/3/issuetype/{issue_type_id}"
         url = f"{self.base_url}{endpoint}"
-        response = self.session.delete(url, params=params if params else None,
-                                       timeout=self.timeout)
-        handle_jira_error(response, f'delete issue type {issue_type_id}')
+        response = self.session.delete(
+            url, params=params if params else None, timeout=self.timeout
+        )
+        handle_jira_error(response, f"delete issue type {issue_type_id}")
 
     def get_issue_type_alternatives(self, issue_type_id: str) -> list:
         """
@@ -5524,8 +6024,10 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get(f'/rest/api/3/issuetype/{issue_type_id}/alternatives',
-                       operation=f'get alternatives for issue type {issue_type_id}')
+        return self.get(
+            f"/rest/api/3/issuetype/{issue_type_id}/alternatives",
+            operation=f"get alternatives for issue type {issue_type_id}",
+        )
 
     # ========== Issue Type Scheme API Methods (/rest/api/3/issuetypescheme) ==========
 
@@ -5533,9 +6035,9 @@ class JiraClient:
         self,
         start_at: int = 0,
         max_results: int = 50,
-        scheme_ids: Optional[list] = None,
-        order_by: Optional[str] = None
-    ) -> Dict[str, Any]:
+        scheme_ids: list | None = None,
+        order_by: str | None = None,
+    ) -> dict[str, Any]:
         """
         Get all issue type schemes.
 
@@ -5551,26 +6053,25 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {
-            'startAt': start_at,
-            'maxResults': max_results
-        }
+        params = {"startAt": start_at, "maxResults": max_results}
 
         if scheme_ids:
-            params['id'] = scheme_ids
+            params["id"] = scheme_ids
         if order_by:
-            params['orderBy'] = order_by
+            params["orderBy"] = order_by
 
-        return self.get('/rest/api/3/issuetypescheme',
-                       params=params,
-                       operation='get issue type schemes')
+        return self.get(
+            "/rest/api/3/issuetypescheme",
+            params=params,
+            operation="get issue type schemes",
+        )
 
     def get_issue_type_scheme_items(
         self,
         start_at: int = 0,
         max_results: int = 50,
-        scheme_ids: Optional[list] = None
-    ) -> Dict[str, Any]:
+        scheme_ids: list | None = None,
+    ) -> dict[str, Any]:
         """
         Get issue type scheme items (issue types in schemes).
 
@@ -5585,25 +6086,24 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {
-            'startAt': start_at,
-            'maxResults': max_results
-        }
+        params = {"startAt": start_at, "maxResults": max_results}
 
         if scheme_ids:
-            params['issueTypeSchemeId'] = scheme_ids
+            params["issueTypeSchemeId"] = scheme_ids
 
-        return self.get('/rest/api/3/issuetypescheme/mapping',
-                       params=params,
-                       operation='get issue type scheme items')
+        return self.get(
+            "/rest/api/3/issuetypescheme/mapping",
+            params=params,
+            operation="get issue type scheme items",
+        )
 
     def create_issue_type_scheme(
         self,
         name: str,
         issue_type_ids: list,
-        description: Optional[str] = None,
-        default_issue_type_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        description: str | None = None,
+        default_issue_type_id: str | None = None,
+    ) -> dict[str, Any]:
         """
         Create issue type scheme.
 
@@ -5619,27 +6119,26 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {
-            'name': name,
-            'issueTypeIds': issue_type_ids
-        }
+        data = {"name": name, "issueTypeIds": issue_type_ids}
 
         if description:
-            data['description'] = description
+            data["description"] = description
         if default_issue_type_id:
-            data['defaultIssueTypeId'] = default_issue_type_id
+            data["defaultIssueTypeId"] = default_issue_type_id
 
-        return self.post('/rest/api/3/issuetypescheme',
-                        data=data,
-                        operation='create issue type scheme')
+        return self.post(
+            "/rest/api/3/issuetypescheme",
+            data=data,
+            operation="create issue type scheme",
+        )
 
     def update_issue_type_scheme(
         self,
         scheme_id: str,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-        default_issue_type_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        name: str | None = None,
+        description: str | None = None,
+        default_issue_type_id: str | None = None,
+    ) -> dict[str, Any]:
         """
         Update issue type scheme.
 
@@ -5658,15 +6157,17 @@ class JiraClient:
         data = {}
 
         if name:
-            data['name'] = name
+            data["name"] = name
         if description is not None:
-            data['description'] = description
+            data["description"] = description
         if default_issue_type_id:
-            data['defaultIssueTypeId'] = default_issue_type_id
+            data["defaultIssueTypeId"] = default_issue_type_id
 
-        return self.put(f'/rest/api/3/issuetypescheme/{scheme_id}',
-                       data=data,
-                       operation=f'update issue type scheme {scheme_id}')
+        return self.put(
+            f"/rest/api/3/issuetypescheme/{scheme_id}",
+            data=data,
+            operation=f"update issue type scheme {scheme_id}",
+        )
 
     def delete_issue_type_scheme(self, scheme_id: str) -> None:
         """
@@ -5678,15 +6179,14 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        self.delete(f'/rest/api/3/issuetypescheme/{scheme_id}',
-                   operation=f'delete issue type scheme {scheme_id}')
+        self.delete(
+            f"/rest/api/3/issuetypescheme/{scheme_id}",
+            operation=f"delete issue type scheme {scheme_id}",
+        )
 
     def get_issue_type_scheme_for_projects(
-        self,
-        project_ids: list,
-        start_at: int = 0,
-        max_results: int = 50
-    ) -> Dict[str, Any]:
+        self, project_ids: list, start_at: int = 0, max_results: int = 50
+    ) -> dict[str, Any]:
         """
         Get issue type schemes for projects.
 
@@ -5708,20 +6208,18 @@ class JiraClient:
             raise ValidationError("Maximum 100 project IDs allowed")
 
         params = {
-            'projectId': project_ids,
-            'startAt': start_at,
-            'maxResults': max_results
+            "projectId": project_ids,
+            "startAt": start_at,
+            "maxResults": max_results,
         }
 
-        return self.get('/rest/api/3/issuetypescheme/project',
-                       params=params,
-                       operation='get project issue type schemes')
+        return self.get(
+            "/rest/api/3/issuetypescheme/project",
+            params=params,
+            operation="get project issue type schemes",
+        )
 
-    def assign_issue_type_scheme(
-        self,
-        scheme_id: str,
-        project_id: str
-    ) -> None:
+    def assign_issue_type_scheme(self, scheme_id: str, project_id: str) -> None:
         """
         Assign issue type scheme to project.
 
@@ -5736,20 +6234,15 @@ class JiraClient:
             Only works for classic projects.
             Fails if issues use types not in the new scheme.
         """
-        data = {
-            'issueTypeSchemeId': scheme_id,
-            'projectId': project_id
-        }
+        data = {"issueTypeSchemeId": scheme_id, "projectId": project_id}
 
-        self.put('/rest/api/3/issuetypescheme/project',
-                data=data,
-                operation=f'assign issue type scheme {scheme_id} to project {project_id}')
+        self.put(
+            "/rest/api/3/issuetypescheme/project",
+            data=data,
+            operation=f"assign issue type scheme {scheme_id} to project {project_id}",
+        )
 
-    def add_issue_types_to_scheme(
-        self,
-        scheme_id: str,
-        issue_type_ids: list
-    ) -> None:
+    def add_issue_types_to_scheme(self, scheme_id: str, issue_type_ids: list) -> None:
         """
         Add issue types to scheme.
 
@@ -5760,19 +6253,15 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {
-            'issueTypeIds': issue_type_ids
-        }
+        data = {"issueTypeIds": issue_type_ids}
 
-        self.put(f'/rest/api/3/issuetypescheme/{scheme_id}/issuetype',
-                data=data,
-                operation=f'add issue types to scheme {scheme_id}')
+        self.put(
+            f"/rest/api/3/issuetypescheme/{scheme_id}/issuetype",
+            data=data,
+            operation=f"add issue types to scheme {scheme_id}",
+        )
 
-    def remove_issue_type_from_scheme(
-        self,
-        scheme_id: str,
-        issue_type_id: str
-    ) -> None:
+    def remove_issue_type_from_scheme(self, scheme_id: str, issue_type_id: str) -> None:
         """
         Remove issue type from scheme.
 
@@ -5786,14 +6275,13 @@ class JiraClient:
         Note:
             Cannot remove default issue type or last issue type.
         """
-        self.delete(f'/rest/api/3/issuetypescheme/{scheme_id}/issuetype/{issue_type_id}',
-                   operation=f'remove issue type {issue_type_id} from scheme {scheme_id}')
+        self.delete(
+            f"/rest/api/3/issuetypescheme/{scheme_id}/issuetype/{issue_type_id}",
+            operation=f"remove issue type {issue_type_id} from scheme {scheme_id}",
+        )
 
     def reorder_issue_types_in_scheme(
-        self,
-        scheme_id: str,
-        issue_type_id: str,
-        after: Optional[str] = None
+        self, scheme_id: str, issue_type_id: str, after: str | None = None
     ) -> None:
         """
         Reorder issue types in scheme.
@@ -5806,22 +6294,22 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        data = {
-            'issueTypeId': issue_type_id
-        }
+        data = {"issueTypeId": issue_type_id}
 
         if after:
-            data['after'] = after
+            data["after"] = after
 
-        self.put(f'/rest/api/3/issuetypescheme/{scheme_id}/issuetype/move',
-                data=data,
-                operation=f'reorder issue types in scheme {scheme_id}')
+        self.put(
+            f"/rest/api/3/issuetypescheme/{scheme_id}/issuetype/move",
+            data=data,
+            operation=f"reorder issue types in scheme {scheme_id}",
+        )
 
     # ========== Issue Type Screen Schemes API (/rest/api/3/issuetypescreenscheme) ==========
 
-    def get_issue_type_screen_schemes(self, start_at: int = 0,
-                                       max_results: int = 100,
-                                       expand: Optional[str] = None) -> Dict[str, Any]:
+    def get_issue_type_screen_schemes(
+        self, start_at: int = 0, max_results: int = 100, expand: str | None = None
+    ) -> dict[str, Any]:
         """
         Get all issue type screen schemes.
 
@@ -5836,18 +6324,17 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {
-            'startAt': start_at,
-            'maxResults': max_results
-        }
+        params = {"startAt": start_at, "maxResults": max_results}
         if expand:
-            params['expand'] = expand
+            params["expand"] = expand
 
-        return self.get('/rest/api/3/issuetypescreenscheme',
-                       params=params,
-                       operation="get issue type screen schemes")
+        return self.get(
+            "/rest/api/3/issuetypescreenscheme",
+            params=params,
+            operation="get issue type screen schemes",
+        )
 
-    def get_issue_type_screen_scheme(self, scheme_id: int) -> Dict[str, Any]:
+    def get_issue_type_screen_scheme(self, scheme_id: int) -> dict[str, Any]:
         """
         Get a specific issue type screen scheme by ID.
 
@@ -5860,20 +6347,26 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        result = self.get('/rest/api/3/issuetypescreenscheme',
-                         params={'id': [scheme_id]},
-                         operation=f"get issue type screen scheme {scheme_id}")
+        result = self.get(
+            "/rest/api/3/issuetypescreenscheme",
+            params={"id": [scheme_id]},
+            operation=f"get issue type screen scheme {scheme_id}",
+        )
 
-        values = result.get('values', [])
+        values = result.get("values", [])
         if values:
             return values[0]
 
         from jira_assistant_skills_lib import NotFoundError
+
         raise NotFoundError(f"Issue type screen scheme with ID {scheme_id} not found")
 
-    def get_issue_type_screen_scheme_mappings(self, scheme_ids: list = None,
-                                               start_at: int = 0,
-                                               max_results: int = 100) -> Dict[str, Any]:
+    def get_issue_type_screen_scheme_mappings(
+        self,
+        scheme_ids: list | None = None,
+        start_at: int = 0,
+        max_results: int = 100,
+    ) -> dict[str, Any]:
         """
         Get issue type to screen scheme mappings.
 
@@ -5888,20 +6381,22 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {
-            'startAt': start_at,
-            'maxResults': max_results
-        }
+        params = {"startAt": start_at, "maxResults": max_results}
         if scheme_ids:
-            params['issueTypeScreenSchemeId'] = scheme_ids
+            params["issueTypeScreenSchemeId"] = scheme_ids
 
-        return self.get('/rest/api/3/issuetypescreenscheme/mapping',
-                       params=params,
-                       operation="get issue type screen scheme mappings")
+        return self.get(
+            "/rest/api/3/issuetypescreenscheme/mapping",
+            params=params,
+            operation="get issue type screen scheme mappings",
+        )
 
-    def get_project_issue_type_screen_schemes(self, project_ids: list = None,
-                                               start_at: int = 0,
-                                               max_results: int = 100) -> Dict[str, Any]:
+    def get_project_issue_type_screen_schemes(
+        self,
+        project_ids: list | None = None,
+        start_at: int = 0,
+        max_results: int = 100,
+    ) -> dict[str, Any]:
         """
         Get issue type screen schemes for projects.
 
@@ -5924,20 +6419,19 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        params = {
-            'startAt': start_at,
-            'maxResults': max_results
-        }
+        params = {"startAt": start_at, "maxResults": max_results}
         if project_ids:
-            params['projectId'] = project_ids
+            params["projectId"] = project_ids
 
-        return self.get('/rest/api/3/issuetypescreenscheme/project',
-                       params=params,
-                       operation="get project issue type screen schemes")
+        return self.get(
+            "/rest/api/3/issuetypescreenscheme/project",
+            params=params,
+            operation="get project issue type screen schemes",
+        )
 
     # ========== Permission Scheme API Methods (/rest/api/3/permissionscheme) ==========
 
-    def get_permission_schemes(self, expand: Optional[str] = None) -> Dict[str, Any]:
+    def get_permission_schemes(self, expand: str | None = None) -> dict[str, Any]:
         """
         Get all permission schemes.
 
@@ -5952,13 +6446,17 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = expand
+            params["expand"] = expand
 
-        return self.get('/rest/api/3/permissionscheme',
-                       params=params if params else None,
-                       operation="get permission schemes")
+        return self.get(
+            "/rest/api/3/permissionscheme",
+            params=params if params else None,
+            operation="get permission schemes",
+        )
 
-    def get_permission_scheme(self, scheme_id: int, expand: Optional[str] = None) -> Dict[str, Any]:
+    def get_permission_scheme(
+        self, scheme_id: int, expand: str | None = None
+    ) -> dict[str, Any]:
         """
         Get a specific permission scheme by ID.
 
@@ -5974,14 +6472,20 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = expand
+            params["expand"] = expand
 
-        return self.get(f'/rest/api/3/permissionscheme/{scheme_id}',
-                       params=params if params else None,
-                       operation=f"get permission scheme {scheme_id}")
+        return self.get(
+            f"/rest/api/3/permissionscheme/{scheme_id}",
+            params=params if params else None,
+            operation=f"get permission scheme {scheme_id}",
+        )
 
-    def create_permission_scheme(self, name: str, description: Optional[str] = None,
-                                  permissions: Optional[list] = None) -> Dict[str, Any]:
+    def create_permission_scheme(
+        self,
+        name: str,
+        description: str | None = None,
+        permissions: list | None = None,
+    ) -> dict[str, Any]:
         """
         Create a new permission scheme.
 
@@ -5999,17 +6503,24 @@ class JiraClient:
         Note:
             Requires 'Administer Jira' global permission.
         """
-        data = {'name': name}
+        data = {"name": name}
         if description:
-            data['description'] = description
+            data["description"] = description
         if permissions:
-            data['permissions'] = permissions
+            data["permissions"] = permissions
 
-        return self.post('/rest/api/3/permissionscheme', data=data,
-                        operation="create permission scheme")
+        return self.post(
+            "/rest/api/3/permissionscheme",
+            data=data,
+            operation="create permission scheme",
+        )
 
-    def update_permission_scheme(self, scheme_id: int, name: Optional[str] = None,
-                                  description: Optional[str] = None) -> Dict[str, Any]:
+    def update_permission_scheme(
+        self,
+        scheme_id: int,
+        name: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
         """
         Update a permission scheme's name and/or description.
 
@@ -6030,12 +6541,15 @@ class JiraClient:
         """
         data = {}
         if name is not None:
-            data['name'] = name
+            data["name"] = name
         if description is not None:
-            data['description'] = description
+            data["description"] = description
 
-        return self.put(f'/rest/api/3/permissionscheme/{scheme_id}', data=data,
-                       operation=f"update permission scheme {scheme_id}")
+        return self.put(
+            f"/rest/api/3/permissionscheme/{scheme_id}",
+            data=data,
+            operation=f"update permission scheme {scheme_id}",
+        )
 
     def delete_permission_scheme(self, scheme_id: int) -> None:
         """
@@ -6051,10 +6565,14 @@ class JiraClient:
             Requires 'Administer Jira' global permission.
             Cannot delete schemes that are assigned to projects.
         """
-        self.delete(f'/rest/api/3/permissionscheme/{scheme_id}',
-                   operation=f"delete permission scheme {scheme_id}")
+        self.delete(
+            f"/rest/api/3/permissionscheme/{scheme_id}",
+            operation=f"delete permission scheme {scheme_id}",
+        )
 
-    def get_permission_scheme_grants(self, scheme_id: int, expand: Optional[str] = None) -> Dict[str, Any]:
+    def get_permission_scheme_grants(
+        self, scheme_id: int, expand: str | None = None
+    ) -> dict[str, Any]:
         """
         Get all permission grants for a permission scheme.
 
@@ -6070,14 +6588,21 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = expand
+            params["expand"] = expand
 
-        return self.get(f'/rest/api/3/permissionscheme/{scheme_id}/permission',
-                       params=params if params else None,
-                       operation=f"get permission grants for scheme {scheme_id}")
+        return self.get(
+            f"/rest/api/3/permissionscheme/{scheme_id}/permission",
+            params=params if params else None,
+            operation=f"get permission grants for scheme {scheme_id}",
+        )
 
-    def create_permission_grant(self, scheme_id: int, permission: str,
-                                 holder_type: str, holder_parameter: Optional[str] = None) -> Dict[str, Any]:
+    def create_permission_grant(
+        self,
+        scheme_id: int,
+        permission: str,
+        holder_type: str,
+        holder_parameter: str | None = None,
+    ) -> dict[str, Any]:
         """
         Create a permission grant in a permission scheme.
 
@@ -6096,21 +6621,21 @@ class JiraClient:
         Note:
             Requires 'Administer Jira' global permission.
         """
-        holder = {'type': holder_type}
+        holder = {"type": holder_type}
         if holder_parameter:
-            holder['parameter'] = holder_parameter
+            holder["parameter"] = holder_parameter
 
-        data = {
-            'permission': permission,
-            'holder': holder
-        }
+        data = {"permission": permission, "holder": holder}
 
-        return self.post(f'/rest/api/3/permissionscheme/{scheme_id}/permission',
-                        data=data,
-                        operation=f"create permission grant in scheme {scheme_id}")
+        return self.post(
+            f"/rest/api/3/permissionscheme/{scheme_id}/permission",
+            data=data,
+            operation=f"create permission grant in scheme {scheme_id}",
+        )
 
-    def get_permission_grant(self, scheme_id: int, permission_id: int,
-                              expand: Optional[str] = None) -> Dict[str, Any]:
+    def get_permission_grant(
+        self, scheme_id: int, permission_id: int, expand: str | None = None
+    ) -> dict[str, Any]:
         """
         Get a specific permission grant.
 
@@ -6127,11 +6652,13 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = expand
+            params["expand"] = expand
 
-        return self.get(f'/rest/api/3/permissionscheme/{scheme_id}/permission/{permission_id}',
-                       params=params if params else None,
-                       operation=f"get permission grant {permission_id}")
+        return self.get(
+            f"/rest/api/3/permissionscheme/{scheme_id}/permission/{permission_id}",
+            params=params if params else None,
+            operation=f"get permission grant {permission_id}",
+        )
 
     def delete_permission_grant(self, scheme_id: int, permission_id: int) -> None:
         """
@@ -6147,10 +6674,12 @@ class JiraClient:
         Note:
             Requires 'Administer Jira' global permission.
         """
-        self.delete(f'/rest/api/3/permissionscheme/{scheme_id}/permission/{permission_id}',
-                   operation=f"delete permission grant {permission_id}")
+        self.delete(
+            f"/rest/api/3/permissionscheme/{scheme_id}/permission/{permission_id}",
+            operation=f"delete permission grant {permission_id}",
+        )
 
-    def get_all_permissions(self) -> Dict[str, Any]:
+    def get_all_permissions(self) -> dict[str, Any]:
         """
         Get all permissions available in the JIRA instance.
 
@@ -6163,11 +6692,11 @@ class JiraClient:
         Note:
             This is a public endpoint - no special permissions required.
         """
-        return self.get('/rest/api/3/permissions',
-                       operation="get all permissions")
+        return self.get("/rest/api/3/permissions", operation="get all permissions")
 
-    def get_project_permission_scheme(self, project_key_or_id: str,
-                                       expand: Optional[str] = None) -> Dict[str, Any]:
+    def get_project_permission_scheme(
+        self, project_key_or_id: str, expand: str | None = None
+    ) -> dict[str, Any]:
         """
         Get the permission scheme associated with a project.
 
@@ -6186,13 +6715,17 @@ class JiraClient:
         """
         params = {}
         if expand:
-            params['expand'] = expand
+            params["expand"] = expand
 
-        return self.get(f'/rest/api/3/project/{project_key_or_id}/permissionscheme',
-                       params=params if params else None,
-                       operation=f"get permission scheme for project {project_key_or_id}")
+        return self.get(
+            f"/rest/api/3/project/{project_key_or_id}/permissionscheme",
+            params=params if params else None,
+            operation=f"get permission scheme for project {project_key_or_id}",
+        )
 
-    def assign_permission_scheme_to_project(self, project_key_or_id: str, scheme_id: int) -> Dict[str, Any]:
+    def assign_permission_scheme_to_project(
+        self, project_key_or_id: str, scheme_id: int
+    ) -> dict[str, Any]:
         """
         Assign a permission scheme to a project.
 
@@ -6209,10 +6742,12 @@ class JiraClient:
         Note:
             Requires 'Administer Jira' global permission.
         """
-        data = {'id': scheme_id}
-        return self.put(f'/rest/api/3/project/{project_key_or_id}/permissionscheme',
-                       data=data,
-                       operation=f"assign permission scheme to project {project_key_or_id}")
+        data = {"id": scheme_id}
+        return self.put(
+            f"/rest/api/3/project/{project_key_or_id}/permissionscheme",
+            data=data,
+            operation=f"assign permission scheme to project {project_key_or_id}",
+        )
 
     def get_project_roles(self) -> list:
         """
@@ -6224,5 +6759,4 @@ class JiraClient:
         Raises:
             JiraError or subclass on failure
         """
-        return self.get('/rest/api/3/role',
-                       operation="get project roles")
+        return self.get("/rest/api/3/role", operation="get project roles")

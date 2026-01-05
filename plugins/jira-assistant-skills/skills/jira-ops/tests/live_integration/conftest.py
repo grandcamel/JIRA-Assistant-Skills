@@ -6,20 +6,18 @@ Usage:
 """
 
 import os
-import sys
-import uuid
-import tempfile
 import shutil
-import pytest
+import sys
+import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator, Dict, Any
+
+import pytest
 
 # Add shared lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts'))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraClient
-from jira_assistant_skills_lib import JiraCache
+from jira_assistant_skills_lib import JiraCache, JiraClient, get_jira_client
 
 
 def pytest_addoption(parser):
@@ -28,7 +26,7 @@ def pytest_addoption(parser):
         "--profile",
         action="store",
         default=os.environ.get("JIRA_PROFILE", "development"),
-        help="JIRA profile to use (default: development)"
+        help="JIRA profile to use (default: development)",
     )
 
 

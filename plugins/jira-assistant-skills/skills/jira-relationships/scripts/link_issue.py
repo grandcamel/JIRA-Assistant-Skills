@@ -22,27 +22,28 @@ Usage:
     python link_issue.py PROJ-1 --type "Blocks" --to PROJ-2
 """
 
-import sys
 import argparse
-from pathlib import Path
+import sys
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import print_success
-from jira_assistant_skills_lib import text_to_adf
-
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    print_success,
+    text_to_adf,
+    validate_issue_key,
+)
 
 # Mapping of semantic flags to JIRA link type names
 LINK_TYPE_MAPPING = {
-    'blocks': 'Blocks',
-    'is_blocked_by': 'Blocks',
-    'duplicates': 'Duplicate',
-    'is_duplicated_by': 'Duplicate',
-    'relates_to': 'Relates',
-    'clones': 'Cloners',
-    'is_cloned_by': 'Cloners',
+    "blocks": "Blocks",
+    "is_blocked_by": "Blocks",
+    "duplicates": "Duplicate",
+    "is_duplicated_by": "Duplicate",
+    "relates_to": "Relates",
+    "clones": "Cloners",
+    "is_cloned_by": "Cloners",
 }
 
 
@@ -63,19 +64,28 @@ def find_link_type(link_types: list, name: str) -> dict:
     name_lower = name.lower()
 
     for lt in link_types:
-        if lt['name'].lower() == name_lower:
+        if lt["name"].lower() == name_lower:
             return lt
 
-    available = ', '.join(lt['name'] for lt in link_types)
+    available = ", ".join(lt["name"] for lt in link_types)
     raise ValidationError(f"Link type '{name}' not found. Available: {available}")
 
 
-def link_issue(issue_key: str, blocks: str = None, duplicates: str = None,
-               relates_to: str = None, clones: str = None,
-               is_blocked_by: str = None, is_duplicated_by: str = None,
-               is_cloned_by: str = None, link_type: str = None,
-               target_issue: str = None, comment: str = None,
-               dry_run: bool = False, profile: str = None) -> dict:
+def link_issue(
+    issue_key: str,
+    blocks: str | None = None,
+    duplicates: str | None = None,
+    relates_to: str | None = None,
+    clones: str | None = None,
+    is_blocked_by: str | None = None,
+    is_duplicated_by: str | None = None,
+    is_cloned_by: str | None = None,
+    link_type: str | None = None,
+    target_issue: str | None = None,
+    comment: str | None = None,
+    dry_run: bool = False,
+    profile: str | None = None,
+) -> dict:
     """
     Create a link between two issues.
 
@@ -109,13 +119,13 @@ def link_issue(issue_key: str, blocks: str = None, duplicates: str = None,
     is_inward = False  # True if source is the "inward" side (e.g., "is blocked by")
 
     semantic_args = {
-        'blocks': blocks,
-        'duplicates': duplicates,
-        'relates_to': relates_to,
-        'clones': clones,
-        'is_blocked_by': is_blocked_by,
-        'is_duplicated_by': is_duplicated_by,
-        'is_cloned_by': is_cloned_by,
+        "blocks": blocks,
+        "duplicates": duplicates,
+        "relates_to": relates_to,
+        "clones": clones,
+        "is_blocked_by": is_blocked_by,
+        "is_duplicated_by": is_duplicated_by,
+        "is_cloned_by": is_cloned_by,
     }
 
     # Check semantic flags
@@ -124,7 +134,7 @@ def link_issue(issue_key: str, blocks: str = None, duplicates: str = None,
             resolved_type = LINK_TYPE_MAPPING[flag_name]
             resolved_target = flag_value
             # Inward flags (is_blocked_by, etc.) flip the direction
-            is_inward = flag_name.startswith('is_')
+            is_inward = flag_name.startswith("is_")
             break
 
     # Check explicit type
@@ -133,7 +143,9 @@ def link_issue(issue_key: str, blocks: str = None, duplicates: str = None,
         resolved_target = target_issue
 
     if not resolved_type or not resolved_target:
-        raise ValidationError("Must specify a link type (--blocks, --duplicates, etc.) or --type with --to")
+        raise ValidationError(
+            "Must specify a link type (--blocks, --duplicates, etc.) or --type with --to"
+        )
 
     # Validate target issue key
     resolved_target = validate_issue_key(resolved_target)
@@ -169,17 +181,21 @@ def link_issue(issue_key: str, blocks: str = None, duplicates: str = None,
 
         # Dry run - just return info
         if dry_run:
-            direction = link_type_obj.get('outward', resolved_type) if not is_inward else link_type_obj.get('inward', resolved_type)
+            direction = (
+                link_type_obj.get("outward", resolved_type)
+                if not is_inward
+                else link_type_obj.get("inward", resolved_type)
+            )
             return {
-                'source': issue_key,
-                'target': resolved_target,
-                'link_type': link_type_obj['name'],
-                'direction': direction,
-                'preview': f"{issue_key} {direction} {resolved_target}"
+                "source": issue_key,
+                "target": resolved_target,
+                "link_type": link_type_obj["name"],
+                "direction": direction,
+                "preview": f"{issue_key} {direction} {resolved_target}",
             }
 
         # Create the link
-        client.create_link(link_type_obj['name'], inward_key, outward_key, adf_comment)
+        client.create_link(link_type_obj["name"], inward_key, outward_key, adf_comment)
 
     finally:
         client.close()
@@ -189,57 +205,69 @@ def link_issue(issue_key: str, blocks: str = None, duplicates: str = None,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Create a link between two JIRA issues',
-        epilog='Example: python link_issue.py PROJ-1 --blocks PROJ-2'
+        description="Create a link between two JIRA issues",
+        epilog="Example: python link_issue.py PROJ-1 --blocks PROJ-2",
     )
 
-    parser.add_argument('issue_key',
-                       help='Source issue key (e.g., PROJ-123)')
+    parser.add_argument("issue_key", help="Source issue key (e.g., PROJ-123)")
 
     # Semantic link flags (outward direction - source does X to target)
-    link_group = parser.add_argument_group('Link Types (choose one)')
-    link_group.add_argument('--blocks',
-                           metavar='ISSUE',
-                           help='This issue blocks the specified issue')
-    link_group.add_argument('--duplicates',
-                           metavar='ISSUE',
-                           help='This issue duplicates the specified issue')
-    link_group.add_argument('--relates-to',
-                           metavar='ISSUE',
-                           help='This issue relates to the specified issue')
-    link_group.add_argument('--clones',
-                           metavar='ISSUE',
-                           help='This issue clones the specified issue')
+    link_group = parser.add_argument_group("Link Types (choose one)")
+    link_group.add_argument(
+        "--blocks", metavar="ISSUE", help="This issue blocks the specified issue"
+    )
+    link_group.add_argument(
+        "--duplicates",
+        metavar="ISSUE",
+        help="This issue duplicates the specified issue",
+    )
+    link_group.add_argument(
+        "--relates-to",
+        metavar="ISSUE",
+        help="This issue relates to the specified issue",
+    )
+    link_group.add_argument(
+        "--clones", metavar="ISSUE", help="This issue clones the specified issue"
+    )
 
     # Inward direction flags (target does X to source)
-    link_group.add_argument('--is-blocked-by',
-                           metavar='ISSUE',
-                           help='This issue is blocked by the specified issue')
-    link_group.add_argument('--is-duplicated-by',
-                           metavar='ISSUE',
-                           help='This issue is duplicated by the specified issue')
-    link_group.add_argument('--is-cloned-by',
-                           metavar='ISSUE',
-                           help='This issue is cloned by the specified issue')
+    link_group.add_argument(
+        "--is-blocked-by",
+        metavar="ISSUE",
+        help="This issue is blocked by the specified issue",
+    )
+    link_group.add_argument(
+        "--is-duplicated-by",
+        metavar="ISSUE",
+        help="This issue is duplicated by the specified issue",
+    )
+    link_group.add_argument(
+        "--is-cloned-by",
+        metavar="ISSUE",
+        help="This issue is cloned by the specified issue",
+    )
 
     # Explicit type option
-    explicit_group = parser.add_argument_group('Explicit Link Type')
-    explicit_group.add_argument('--type', '-t',
-                               dest='link_type',
-                               help='Link type name (e.g., "Blocks", "Duplicate")')
-    explicit_group.add_argument('--to',
-                               dest='target_issue',
-                               metavar='ISSUE',
-                               help='Target issue when using --type')
+    explicit_group = parser.add_argument_group("Explicit Link Type")
+    explicit_group.add_argument(
+        "--type",
+        "-t",
+        dest="link_type",
+        help='Link type name (e.g., "Blocks", "Duplicate")',
+    )
+    explicit_group.add_argument(
+        "--to",
+        dest="target_issue",
+        metavar="ISSUE",
+        help="Target issue when using --type",
+    )
 
     # Options
-    parser.add_argument('--comment', '-c',
-                       help='Comment to add with the link')
-    parser.add_argument('--dry-run', '-n',
-                       action='store_true',
-                       help='Preview without creating the link')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument("--comment", "-c", help="Comment to add with the link")
+    parser.add_argument(
+        "--dry-run", "-n", action="store_true", help="Preview without creating the link"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -248,27 +276,32 @@ def main(argv: list[str] | None = None):
             issue_key=args.issue_key,
             blocks=args.blocks,
             duplicates=args.duplicates,
-            relates_to=getattr(args, 'relates_to', None),
+            relates_to=getattr(args, "relates_to", None),
             clones=args.clones,
-            is_blocked_by=getattr(args, 'is_blocked_by', None),
-            is_duplicated_by=getattr(args, 'is_duplicated_by', None),
-            is_cloned_by=getattr(args, 'is_cloned_by', None),
+            is_blocked_by=getattr(args, "is_blocked_by", None),
+            is_duplicated_by=getattr(args, "is_duplicated_by", None),
+            is_cloned_by=getattr(args, "is_cloned_by", None),
             link_type=args.link_type,
             target_issue=args.target_issue,
             comment=args.comment,
             dry_run=args.dry_run,
-            profile=args.profile
+            profile=args.profile,
         )
 
         if args.dry_run and result:
             print(f"[DRY RUN] Would create link: {result['preview']}")
         else:
             # Determine what we linked
-            target = (args.blocks or args.duplicates or
-                     getattr(args, 'relates_to', None) or args.clones or
-                     getattr(args, 'is_blocked_by', None) or
-                     getattr(args, 'is_duplicated_by', None) or
-                     getattr(args, 'is_cloned_by', None) or args.target_issue)
+            target = (
+                args.blocks
+                or args.duplicates
+                or getattr(args, "relates_to", None)
+                or args.clones
+                or getattr(args, "is_blocked_by", None)
+                or getattr(args, "is_duplicated_by", None)
+                or getattr(args, "is_cloned_by", None)
+                or args.target_issue
+            )
             print_success(f"Linked {args.issue_key} to {target}")
 
     except JiraError as e:
@@ -279,5 +312,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -12,26 +12,28 @@ Usage:
     python list_automation_templates.py --profile development
 """
 
-import sys
-import json
 import argparse
-from pathlib import Path
-from typing import Optional, List, Dict, Any
+import json
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_automation_client
-from jira_assistant_skills_lib import print_error, JiraError, AutomationError
-from jira_assistant_skills_lib import format_table
+from jira_assistant_skills_lib import (
+    AutomationError,
+    JiraError,
+    format_table,
+    get_automation_client,
+    print_error,
+)
 
 
 def list_automation_templates(
     client=None,
-    category: Optional[str] = None,
+    category: str | None = None,
     limit: int = 50,
     fetch_all: bool = False,
-    profile: Optional[str] = None
-) -> List[Dict[str, Any]]:
+    profile: str | None = None,
+) -> list[dict[str, Any]]:
     """
     List available automation templates.
 
@@ -52,50 +54,52 @@ def list_automation_templates(
     cursor = None
 
     while True:
-        response = client.get_templates(
-            category=category,
-            limit=limit,
-            cursor=cursor
-        )
+        response = client.get_templates(category=category, limit=limit, cursor=cursor)
 
-        templates = response.get('values', [])
+        templates = response.get("values", [])
         all_templates.extend(templates)
 
         # Check for pagination
-        if not fetch_all or not response.get('hasMore', False):
+        if not fetch_all or not response.get("hasMore", False):
             break
 
         # Get next cursor
-        links = response.get('links', {})
-        next_link = links.get('next', '')
-        if '?cursor=' in next_link:
-            cursor = next_link.split('?cursor=')[-1]
+        links = response.get("links", {})
+        next_link = links.get("next", "")
+        if "?cursor=" in next_link:
+            cursor = next_link.split("?cursor=")[-1]
         else:
             break
 
     return all_templates
 
 
-def format_template_summary(template: Dict[str, Any], verbose: bool = False) -> Dict[str, str]:
+def format_template_summary(
+    template: dict[str, Any], verbose: bool = False
+) -> dict[str, str]:
     """Format a template for display."""
     result = {
-        'ID': template.get('id', ''),
-        'Name': template.get('name', 'Unnamed'),
-        'Category': template.get('category', 'N/A')
+        "ID": template.get("id", ""),
+        "Name": template.get("name", "Unnamed"),
+        "Category": template.get("category", "N/A"),
     }
 
     if verbose:
-        result['Description'] = (template.get('description', '')[:60] + '...') if len(template.get('description', '')) > 60 else template.get('description', '')
-        tags = template.get('tags', [])
-        result['Tags'] = ', '.join(tags[:3]) + ('...' if len(tags) > 3 else '')
+        result["Description"] = (
+            (template.get("description", "")[:60] + "...")
+            if len(template.get("description", "")) > 60
+            else template.get("description", "")
+        )
+        tags = template.get("tags", [])
+        result["Tags"] = ", ".join(tags[:3]) + ("..." if len(tags) > 3 else "")
 
     return result
 
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='List available automation templates',
-        epilog='''
+        description="List available automation templates",
+        epilog="""
 Examples:
     # List all templates
     python list_automation_templates.py
@@ -114,19 +118,35 @@ Examples:
 
     # Use specific profile
     python list_automation_templates.py --profile development
-        '''
+        """,
     )
 
-    parser.add_argument('--category', '-c', help='Filter by category')
-    parser.add_argument('--limit', '-l', type=int, default=50,
-                        help='Maximum results per page (default: 50)')
-    parser.add_argument('--all', '-a', action='store_true', dest='fetch_all',
-                        help='Fetch all pages of results')
-    parser.add_argument('--verbose', '-v', action='store_true',
-                        help='Show descriptions and tags')
-    parser.add_argument('--output', '-o', choices=['table', 'json', 'csv'],
-                        default='table', help='Output format (default: table)')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument("--category", "-c", help="Filter by category")
+    parser.add_argument(
+        "--limit",
+        "-l",
+        type=int,
+        default=50,
+        help="Maximum results per page (default: 50)",
+    )
+    parser.add_argument(
+        "--all",
+        "-a",
+        action="store_true",
+        dest="fetch_all",
+        help="Fetch all pages of results",
+    )
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Show descriptions and tags"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["table", "json", "csv"],
+        default="table",
+        help="Output format (default: table)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -135,7 +155,7 @@ Examples:
             category=args.category,
             limit=args.limit,
             fetch_all=args.fetch_all,
-            profile=args.profile
+            profile=args.profile,
         )
 
         if not templates:
@@ -145,17 +165,17 @@ Examples:
                 print("No automation templates found.")
             return
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(templates, indent=2))
-        elif args.output == 'csv':
-            headers = ['ID', 'Name', 'Category']
+        elif args.output == "csv":
+            headers = ["ID", "Name", "Category"]
             if args.verbose:
-                headers.extend(['Description', 'Tags'])
-            print(','.join(headers))
+                headers.extend(["Description", "Tags"])
+            print(",".join(headers))
             for template in templates:
                 formatted = format_template_summary(template, verbose=args.verbose)
                 row = [f'"{formatted.get(h, "")}"' for h in headers]
-                print(','.join(row))
+                print(",".join(row))
         else:
             header = f"Automation Templates ({len(templates)} found)"
             if args.category:
@@ -176,5 +196,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

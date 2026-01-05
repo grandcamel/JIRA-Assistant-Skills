@@ -2,12 +2,13 @@
 Tests for jql_functions.py - List JQL functions with examples.
 """
 
-import pytest
 import sys
 from pathlib import Path
 
+import pytest
+
 # Add script path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 
 @pytest.mark.search
@@ -24,8 +25,8 @@ class TestGetFunctions:
         functions = get_functions(mock_jira_client)
 
         assert len(functions) == 6
-        assert any(f['value'] == 'currentUser()' for f in functions)
-        assert any(f['value'] == 'startOfDay()' for f in functions)
+        assert any(f["value"] == "currentUser()" for f in functions)
+        assert any(f["value"] == "startOfDay()" for f in functions)
         mock_jira_client.get_jql_autocomplete.assert_called_once()
 
     def test_filter_functions_by_name(self, mock_jira_client, sample_autocomplete_data):
@@ -34,10 +35,10 @@ class TestGetFunctions:
 
         from jql_functions import get_functions
 
-        functions = get_functions(mock_jira_client, name_filter='user')
+        functions = get_functions(mock_jira_client, name_filter="user")
 
         assert len(functions) == 1
-        assert functions[0]['value'] == 'currentUser()'
+        assert functions[0]["value"] == "currentUser()"
 
     def test_get_list_functions(self, mock_jira_client, sample_autocomplete_data):
         """Test functions that return lists (for IN operator)."""
@@ -48,8 +49,8 @@ class TestGetFunctions:
         functions = get_functions(mock_jira_client, list_only=True)
 
         assert len(functions) == 1
-        assert functions[0]['value'] == 'membersOf(group)'
-        assert functions[0]['isList'] == 'true'
+        assert functions[0]["value"] == "membersOf(group)"
+        assert functions[0]["isList"] == "true"
 
     def test_get_functions_by_type(self, mock_jira_client, sample_autocomplete_data):
         """Test filtering by return type."""
@@ -57,11 +58,11 @@ class TestGetFunctions:
 
         from jql_functions import get_functions
 
-        functions = get_functions(mock_jira_client, type_filter='Date')
+        functions = get_functions(mock_jira_client, type_filter="Date")
 
         # startOfDay, startOfWeek, endOfMonth, now all return Date
         assert len(functions) == 4
-        assert all('Date' in str(f.get('types', [])) for f in functions)
+        assert all("Date" in str(f.get("types", [])) for f in functions)
 
     def test_format_with_examples(self, mock_jira_client, sample_autocomplete_data):
         """Test showing usage examples."""
@@ -69,13 +70,13 @@ class TestGetFunctions:
 
         from jql_functions import format_functions_text
 
-        functions = sample_autocomplete_data['visibleFunctionNames']
+        functions = sample_autocomplete_data["visibleFunctionNames"]
         output = format_functions_text(functions, show_examples=True)
 
-        assert 'Function' in output
-        assert 'currentUser()' in output
+        assert "Function" in output
+        assert "currentUser()" in output
         # Examples section should be present
-        assert 'Example' in output or 'assignee = currentUser()' in output
+        assert "Example" in output or "assignee = currentUser()" in output
 
 
 @pytest.mark.search
@@ -86,6 +87,7 @@ class TestJqlFunctionsErrorHandling:
     def test_authentication_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
         from jira_assistant_skills_lib import AuthenticationError
+
         mock_jira_client.get_jql_autocomplete.side_effect = AuthenticationError(
             "Invalid API token"
         )
@@ -98,6 +100,7 @@ class TestJqlFunctionsErrorHandling:
     def test_forbidden_error(self, mock_jira_client):
         """Test handling of 403 forbidden."""
         from jira_assistant_skills_lib import PermissionError
+
         mock_jira_client.get_jql_autocomplete.side_effect = PermissionError(
             "You don't have permission to access this resource"
         )
@@ -110,6 +113,7 @@ class TestJqlFunctionsErrorHandling:
     def test_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
         from jira_assistant_skills_lib import JiraError
+
         mock_jira_client.get_jql_autocomplete.side_effect = JiraError(
             "Rate limit exceeded", status_code=429
         )
@@ -123,6 +127,7 @@ class TestJqlFunctionsErrorHandling:
     def test_server_error(self, mock_jira_client):
         """Test handling of 500 internal server error."""
         from jira_assistant_skills_lib import JiraError
+
         mock_jira_client.get_jql_autocomplete.side_effect = JiraError(
             "Internal server error", status_code=500
         )

@@ -12,27 +12,29 @@ Usage:
     python update_automation_rule.py RULE_ID --name "New Name" --profile development
 """
 
-import sys
-import json
 import argparse
-from pathlib import Path
-from typing import Optional, Dict, Any
+import json
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_automation_client
-from jira_assistant_skills_lib import print_error, JiraError, AutomationError
+from jira_assistant_skills_lib import (
+    AutomationError,
+    JiraError,
+    get_automation_client,
+    print_error,
+)
 
 
 def update_automation_rule(
     client=None,
-    rule_id: str = None,
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    config: Optional[Dict[str, Any]] = None,
+    rule_id: str | None = None,
+    name: str | None = None,
+    description: str | None = None,
+    config: dict[str, Any] | None = None,
     dry_run: bool = False,
-    profile: Optional[str] = None
-) -> Dict[str, Any]:
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Update an automation rule configuration.
 
@@ -60,23 +62,25 @@ def update_automation_rule(
     # Build update config
     rule_config = config or {}
     if name:
-        rule_config['name'] = name
+        rule_config["name"] = name
     if description:
-        rule_config['description'] = description
+        rule_config["description"] = description
 
     if not rule_config:
-        raise ValueError("At least one update (--name, --description, or --config) must be provided")
+        raise ValueError(
+            "At least one update (--name, --description, or --config) must be provided"
+        )
 
     if dry_run:
         # Get current rule for preview
         current_rule = client.get_rule(rule_id)
         return {
-            'dry_run': True,
-            'would_update': True,
-            'rule_id': rule_id,
-            'current_name': current_rule.get('name'),
-            'current_description': current_rule.get('description'),
-            'updates': rule_config
+            "dry_run": True,
+            "would_update": True,
+            "rule_id": rule_id,
+            "current_name": current_rule.get("name"),
+            "current_description": current_rule.get("description"),
+            "updates": rule_config,
         }
 
     # Update the rule
@@ -85,8 +89,8 @@ def update_automation_rule(
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Update an automation rule configuration',
-        epilog='''
+        description="Update an automation rule configuration",
+        epilog="""
 Examples:
     # Update rule name
     python update_automation_rule.py RULE_ID --name "New Rule Name"
@@ -108,30 +112,38 @@ Examples:
 
     # Use specific profile
     python update_automation_rule.py RULE_ID --name "New Name" --profile development
-        '''
+        """,
     )
 
-    parser.add_argument('rule_id', help='Rule ID (UUID/ARI format)')
-    parser.add_argument('--name', '-n', help='New rule name')
-    parser.add_argument('--description', '-d', dest='desc', help='New description')
-    parser.add_argument('--config', '-f', help='JSON config file')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Preview without updating')
-    parser.add_argument('--output', '-o', choices=['text', 'json'],
-                        default='text', help='Output format (default: text)')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument("rule_id", help="Rule ID (UUID/ARI format)")
+    parser.add_argument("--name", "-n", help="New rule name")
+    parser.add_argument("--description", "-d", dest="desc", help="New description")
+    parser.add_argument("--config", "-f", help="JSON config file")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Preview without updating"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     # Must have at least one update
     if not any([args.name, args.desc, args.config]):
-        parser.error("At least one update (--name, --description, or --config) must be provided")
+        parser.error(
+            "At least one update (--name, --description, or --config) must be provided"
+        )
 
     try:
         # Load config from file if provided
         config = None
         if args.config:
-            with open(args.config, 'r') as f:
+            with open(args.config) as f:
                 config = json.load(f)
 
         result = update_automation_rule(
@@ -140,10 +152,10 @@ Examples:
             description=args.desc,
             config=config,
             dry_run=args.dry_run,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(result, indent=2))
         else:
             if args.dry_run:
@@ -156,9 +168,9 @@ Examples:
                 print("=" * 40)
                 print(f"Rule ID: {result.get('id')}")
                 print(f"Name: {result.get('name')}")
-                if result.get('description'):
+                if result.get("description"):
                     print(f"Description: {result.get('description')}")
-                print(f"\nSuccess: Rule has been updated.")
+                print("\nSuccess: Rule has been updated.")
 
     except json.JSONDecodeError as e:
         print(f"\nError: Invalid JSON - {e}", file=sys.stderr)
@@ -177,5 +189,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

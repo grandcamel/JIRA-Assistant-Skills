@@ -28,21 +28,25 @@ Usage:
     python get_dependencies.py PROJ-123 --output d2 > deps.d2
 """
 
-import sys
 import argparse
 import json
-from pathlib import Path
+import sys
 from collections import defaultdict
-from typing import List, Dict, Any, Optional
+from typing import Any
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    get_jira_client,
+    print_error,
+    validate_issue_key,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import validate_issue_key
-
-
-def get_dependencies(issue_key: str, link_types: Optional[List[str]] = None,
-                     profile: str = None) -> Dict[str, Any]:
+def get_dependencies(
+    issue_key: str,
+    link_types: list[str] | None = None,
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     Get all dependencies for an issue.
 
@@ -67,43 +71,45 @@ def get_dependencies(issue_key: str, link_types: Optional[List[str]] = None,
     status_counts = defaultdict(int)
 
     for link in links:
-        link_type = link['type']['name']
+        link_type = link["type"]["name"]
 
         # Filter by link type if specified
         if link_types and link_type.lower() not in [t.lower() for t in link_types]:
             continue
 
-        if 'outwardIssue' in link:
-            issue = link['outwardIssue']
-            direction = 'outward'
-            direction_label = link['type']['outward']
+        if "outwardIssue" in link:
+            issue = link["outwardIssue"]
+            direction = "outward"
+            direction_label = link["type"]["outward"]
         else:
-            issue = link['inwardIssue']
-            direction = 'inward'
-            direction_label = link['type']['inward']
+            issue = link["inwardIssue"]
+            direction = "inward"
+            direction_label = link["type"]["inward"]
 
-        status = issue.get('fields', {}).get('status', {}).get('name', 'Unknown')
+        status = issue.get("fields", {}).get("status", {}).get("name", "Unknown")
         status_counts[status] += 1
 
-        dependencies.append({
-            'key': issue['key'],
-            'summary': issue.get('fields', {}).get('summary', ''),
-            'status': status,
-            'link_type': link_type,
-            'direction': direction,
-            'direction_label': direction_label,
-            'link_id': link['id']
-        })
+        dependencies.append(
+            {
+                "key": issue["key"],
+                "summary": issue.get("fields", {}).get("summary", ""),
+                "status": status,
+                "link_type": link_type,
+                "direction": direction,
+                "direction_label": direction_label,
+                "link_id": link["id"],
+            }
+        )
 
     return {
-        'issue_key': issue_key,
-        'dependencies': dependencies,
-        'total': len(dependencies),
-        'status_summary': dict(status_counts)
+        "issue_key": issue_key,
+        "dependencies": dependencies,
+        "total": len(dependencies),
+        "status_summary": dict(status_counts),
     }
 
 
-def format_dependencies(result: Dict[str, Any], output_format: str = 'text') -> str:
+def format_dependencies(result: dict[str, Any], output_format: str = "text") -> str:
     """
     Format dependencies for output.
 
@@ -114,19 +120,19 @@ def format_dependencies(result: Dict[str, Any], output_format: str = 'text') -> 
     Returns:
         Formatted string
     """
-    if output_format == 'json':
+    if output_format == "json":
         return json.dumps(result, indent=2)
 
-    issue_key = result['issue_key']
-    dependencies = result.get('dependencies', [])
+    issue_key = result["issue_key"]
+    dependencies = result.get("dependencies", [])
 
-    if output_format == 'mermaid':
+    if output_format == "mermaid":
         return format_mermaid(issue_key, dependencies)
-    elif output_format == 'dot':
+    elif output_format == "dot":
         return format_dot(issue_key, dependencies)
-    elif output_format == 'plantuml':
+    elif output_format == "plantuml":
         return format_plantuml(issue_key, dependencies)
-    elif output_format == 'd2':
+    elif output_format == "d2":
         return format_d2(issue_key, dependencies)
 
     # Text format
@@ -140,19 +146,19 @@ def format_dependencies(result: Dict[str, Any], output_format: str = 'text') -> 
     # Group by link type
     by_type = defaultdict(list)
     for dep in dependencies:
-        by_type[dep['link_type']].append(dep)
+        by_type[dep["link_type"]].append(dep)
 
     for link_type, deps in by_type.items():
         lines.append(f"{link_type}:")
         for dep in deps:
-            status = dep['status']
-            summary = dep['summary'][:45] if dep['summary'] else ''
-            arrow = "->" if dep['direction'] == 'outward' else "<-"
+            status = dep["status"]
+            summary = dep["summary"][:45] if dep["summary"] else ""
+            arrow = "->" if dep["direction"] == "outward" else "<-"
             lines.append(f"  {arrow} {dep['key']} [{status}] {summary}")
         lines.append("")
 
     # Status summary
-    status_summary = result.get('status_summary', {})
+    status_summary = result.get("status_summary", {})
     if status_summary:
         lines.append("Status Summary:")
         for status, count in sorted(status_summary.items()):
@@ -175,19 +181,25 @@ def format_mermaid(issue_key: str, dependencies: list) -> str:
     # Add nodes and edges
     seen_nodes = {issue_key}
     for dep in dependencies:
-        dep_key = dep['key']
+        dep_key = dep["key"]
         if dep_key not in seen_nodes:
             seen_nodes.add(dep_key)
             # Node with summary
-            summary = dep['summary'][:30].replace('"', "'") if dep['summary'] else dep_key
-            lines.append(f"    {sanitize_key(dep_key)}[\"{dep_key}: {summary}\"]")
+            summary = (
+                dep["summary"][:30].replace('"', "'") if dep["summary"] else dep_key
+            )
+            lines.append(f'    {sanitize_key(dep_key)}["{dep_key}: {summary}"]')
 
         # Edge
-        label = dep['direction_label']
-        if dep['direction'] == 'outward':
-            lines.append(f"    {sanitize_key(issue_key)} -->|{label}| {sanitize_key(dep_key)}")
+        label = dep["direction_label"]
+        if dep["direction"] == "outward":
+            lines.append(
+                f"    {sanitize_key(issue_key)} -->|{label}| {sanitize_key(dep_key)}"
+            )
         else:
-            lines.append(f"    {sanitize_key(dep_key)} -->|{label}| {sanitize_key(issue_key)}")
+            lines.append(
+                f"    {sanitize_key(dep_key)} -->|{label}| {sanitize_key(issue_key)}"
+            )
 
     return "\n".join(lines)
 
@@ -205,16 +217,22 @@ def format_dot(issue_key: str, dependencies: list) -> str:
 
     # Dependencies
     for dep in dependencies:
-        dep_key = dep['key']
-        status = dep['status']
+        dep_key = dep["key"]
+        status = dep["status"]
 
         # Color by status
-        color = 'lightgreen' if status == 'Done' else 'lightyellow' if status == 'In Progress' else 'white'
+        color = (
+            "lightgreen"
+            if status == "Done"
+            else "lightyellow"
+            if status == "In Progress"
+            else "white"
+        )
         lines.append(f'    "{dep_key}" [style=filled, fillcolor={color}];')
 
         # Edge
-        label = dep['direction_label']
-        if dep['direction'] == 'outward':
+        label = dep["direction_label"]
+        if dep["direction"] == "outward":
             lines.append(f'    "{issue_key}" -> "{dep_key}" [label="{label}"];')
         else:
             lines.append(f'    "{dep_key}" -> "{issue_key}" [label="{label}"];')
@@ -225,7 +243,7 @@ def format_dot(issue_key: str, dependencies: list) -> str:
 
 def sanitize_key(key: str) -> str:
     """Sanitize issue key for Mermaid node ID."""
-    return key.replace('-', '_')
+    return key.replace("-", "_")
 
 
 def format_plantuml(issue_key: str, dependencies: list) -> str:
@@ -249,33 +267,41 @@ def format_plantuml(issue_key: str, dependencies: list) -> str:
     # Dependency nodes
     seen_nodes = {issue_key}
     for dep in dependencies:
-        dep_key = dep['key']
+        dep_key = dep["key"]
         if dep_key not in seen_nodes:
             seen_nodes.add(dep_key)
-            status = dep['status'].lower().replace(' ', '')
-            summary = dep['summary'][:40].replace('"', "'") if dep['summary'] else dep_key
+            status = dep["status"].lower().replace(" ", "")
+            summary = (
+                dep["summary"][:40].replace('"', "'") if dep["summary"] else dep_key
+            )
 
             # Determine stereotype based on status
-            if 'done' in status or 'closed' in status or 'resolved' in status:
+            if "done" in status or "closed" in status or "resolved" in status:
                 stereotype = "<<done>>"
-            elif 'progress' in status:
+            elif "progress" in status:
                 stereotype = "<<inprogress>>"
             else:
                 stereotype = "<<open>>"
 
-            lines.append(f'rectangle "{dep_key}\\n{summary}" as {sanitize_key(dep_key)} {stereotype}')
+            lines.append(
+                f'rectangle "{dep_key}\\n{summary}" as {sanitize_key(dep_key)} {stereotype}'
+            )
 
     lines.append("")
 
     # Edges
     for dep in dependencies:
-        dep_key = dep['key']
-        label = dep['direction_label']
+        dep_key = dep["key"]
+        label = dep["direction_label"]
 
-        if dep['direction'] == 'outward':
-            lines.append(f'{sanitize_key(issue_key)} --> {sanitize_key(dep_key)} : {label}')
+        if dep["direction"] == "outward":
+            lines.append(
+                f"{sanitize_key(issue_key)} --> {sanitize_key(dep_key)} : {label}"
+            )
         else:
-            lines.append(f'{sanitize_key(dep_key)} --> {sanitize_key(issue_key)} : {label}')
+            lines.append(
+                f"{sanitize_key(dep_key)} --> {sanitize_key(issue_key)} : {label}"
+            )
 
     lines.append("")
     lines.append("@enduml")
@@ -291,7 +317,7 @@ def format_d2(issue_key: str, dependencies: list) -> str:
     lines.append("")
 
     # Define main issue
-    safe_main = issue_key.replace('-', '_')
+    safe_main = issue_key.replace("-", "_")
     lines.append(f'{safe_main}: "{issue_key}" {{')
     lines.append('  style.fill: "#87CEEB"')  # Light blue
     lines.append('  style.stroke: "#4169E1"')
@@ -301,18 +327,22 @@ def format_d2(issue_key: str, dependencies: list) -> str:
     # Define dependency nodes
     seen_nodes = {issue_key}
     for dep in dependencies:
-        dep_key = dep['key']
+        dep_key = dep["key"]
         if dep_key not in seen_nodes:
             seen_nodes.add(dep_key)
-            safe_key = dep_key.replace('-', '_')
-            status = dep['status']
-            summary = dep['summary'][:35].replace('"', "'") if dep['summary'] else ''
+            safe_key = dep_key.replace("-", "_")
+            status = dep["status"]
+            summary = dep["summary"][:35].replace('"', "'") if dep["summary"] else ""
 
             # Color based on status
             status_lower = status.lower()
-            if 'done' in status_lower or 'closed' in status_lower or 'resolved' in status_lower:
+            if (
+                "done" in status_lower
+                or "closed" in status_lower
+                or "resolved" in status_lower
+            ):
                 fill_color = "#90EE90"  # Light green
-            elif 'progress' in status_lower:
+            elif "progress" in status_lower:
                 fill_color = "#FFFACD"  # Light yellow
             else:
                 fill_color = "#FFFFFF"  # White
@@ -330,11 +360,11 @@ def format_d2(issue_key: str, dependencies: list) -> str:
 
     # Define edges
     for dep in dependencies:
-        dep_key = dep['key']
-        safe_dep = dep_key.replace('-', '_')
-        label = dep['direction_label']
+        dep_key = dep["key"]
+        safe_dep = dep_key.replace("-", "_")
+        label = dep["direction_label"]
 
-        if dep['direction'] == 'outward':
+        if dep["direction"] == "outward":
             lines.append(f'{safe_main} -> {safe_dep}: "{label}"')
         else:
             lines.append(f'{safe_dep} -> {safe_main}: "{label}"')
@@ -344,8 +374,8 @@ def format_d2(issue_key: str, dependencies: list) -> str:
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Find all dependencies for a JIRA issue',
-        epilog='''
+        description="Find all dependencies for a JIRA issue",
+        epilog="""
 Examples:
   %(prog)s PROJ-123
   %(prog)s PROJ-123 --output mermaid
@@ -358,31 +388,33 @@ Export formats:
   dot       - Graphviz DOT format
   plantuml  - PlantUML diagram format
   d2        - D2 diagram format (Terrastruct)
-        '''
+        """,
     )
 
-    parser.add_argument('issue_key',
-                       help='Issue key (e.g., PROJ-123)')
+    parser.add_argument("issue_key", help="Issue key (e.g., PROJ-123)")
 
-    parser.add_argument('--type', '-t',
-                       dest='link_types',
-                       help='Comma-separated link types to include (e.g., blocks,relates)')
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json', 'mermaid', 'dot', 'plantuml', 'd2'],
-                       default='text',
-                       help='Output format (default: text)')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument(
+        "--type",
+        "-t",
+        dest="link_types",
+        help="Comma-separated link types to include (e.g., blocks,relates)",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json", "mermaid", "dot", "plantuml", "d2"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
-        link_types = args.link_types.split(',') if args.link_types else None
+        link_types = args.link_types.split(",") if args.link_types else None
 
         result = get_dependencies(
-            issue_key=args.issue_key,
-            link_types=link_types,
-            profile=args.profile
+            issue_key=args.issue_key, link_types=link_types, profile=args.profile
         )
         output = format_dependencies(result, output_format=args.output)
         print(output)
@@ -395,5 +427,5 @@ Export formats:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

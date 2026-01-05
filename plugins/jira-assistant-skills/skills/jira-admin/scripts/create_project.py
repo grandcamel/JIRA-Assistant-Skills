@@ -18,20 +18,20 @@ Examples:
 """
 
 import argparse
-import sys
 import json
-from pathlib import Path
-from typing import Optional, Dict, Any
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, ValidationError, print_error
 from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
     validate_project_key,
     validate_project_name,
-    validate_project_type,
     validate_project_template,
+    validate_project_type,
 )
 
 
@@ -39,12 +39,12 @@ def create_project(
     key: str,
     name: str,
     project_type: str,
-    template: Optional[str] = None,
-    lead: Optional[str] = None,
-    description: Optional[str] = None,
-    category_id: Optional[int] = None,
-    client=None
-) -> Dict[str, Any]:
+    template: str | None = None,
+    lead: str | None = None,
+    description: str | None = None,
+    category_id: int | None = None,
+    client=None,
+) -> dict[str, Any]:
     """
     Create a new JIRA project.
 
@@ -77,9 +77,9 @@ def create_project(
     else:
         # Default templates by project type
         default_templates = {
-            'software': 'com.pyxis.greenhopper.jira:gh-simplified-agility-scrum',
-            'business': 'com.atlassian.jira-core-project-templates:jira-core-project-management',
-            'service_desk': 'com.atlassian.servicedesk:simplified-it-service-desk',
+            "software": "com.pyxis.greenhopper.jira:gh-simplified-agility-scrum",
+            "business": "com.atlassian.jira-core-project-templates:jira-core-project-management",
+            "service_desk": "com.atlassian.servicedesk:simplified-it-service-desk",
         }
         template_key = default_templates.get(project_type)
 
@@ -94,11 +94,11 @@ def create_project(
         lead_account_id = None
         if lead:
             # Check if it's an email (contains @)
-            if '@' in lead:
+            if "@" in lead:
                 # Search for user by email
                 users = client.search_users(lead, max_results=1)
                 if users:
-                    lead_account_id = users[0].get('accountId')
+                    lead_account_id = users[0].get("accountId")
                 else:
                     raise ValidationError(f"User not found: {lead}")
             else:
@@ -112,7 +112,7 @@ def create_project(
             project_type_key=project_type,
             template_key=template_key,
             lead_account_id=lead_account_id,
-            description=description
+            description=description,
         )
 
         # Assign to category if specified
@@ -129,7 +129,7 @@ def create_project(
             client.close()
 
 
-def format_output(project: Dict[str, Any], output_format: str = "text") -> str:
+def format_output(project: dict[str, Any], output_format: str = "text") -> str:
     """Format project data for output."""
     if output_format == "json":
         return json.dumps(project, indent=2)
@@ -171,57 +171,47 @@ Template shortcuts:
   basic             Basic software project
   project-management Business project management
   it-service-desk   IT service desk (JSM)
-        """
+        """,
     )
 
     # Required arguments
     parser.add_argument(
-        "--key", "-k",
+        "--key",
+        "-k",
         required=True,
-        help="Project key (2-10 uppercase letters/numbers, must start with letter)"
+        help="Project key (2-10 uppercase letters/numbers, must start with letter)",
     )
+    parser.add_argument("--name", "-n", required=True, help="Project name")
     parser.add_argument(
-        "--name", "-n",
+        "--type",
+        "-t",
         required=True,
-        help="Project name"
-    )
-    parser.add_argument(
-        "--type", "-t",
-        required=True,
-        choices=['software', 'business', 'service_desk'],
-        help="Project type"
+        choices=["software", "business", "service_desk"],
+        help="Project type",
     )
 
     # Optional arguments
     parser.add_argument(
         "--template",
-        help="Template shortcut (scrum, kanban, basic) or full template key"
+        help="Template shortcut (scrum, kanban, basic) or full template key",
     )
     parser.add_argument(
-        "--lead", "-l",
-        help="Project lead (email or account ID, defaults to current user)"
+        "--lead",
+        "-l",
+        help="Project lead (email or account ID, defaults to current user)",
     )
-    parser.add_argument(
-        "--description", "-d",
-        help="Project description"
-    )
-    parser.add_argument(
-        "--category",
-        type=int,
-        help="Category ID to assign project to"
-    )
+    parser.add_argument("--description", "-d", help="Project description")
+    parser.add_argument("--category", type=int, help="Category ID to assign project to")
 
     # Output options
     parser.add_argument(
-        "--output", "-o",
-        choices=['text', 'json'],
-        default='text',
-        help="Output format (default: text)"
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
     )
-    parser.add_argument(
-        "--profile",
-        help="Configuration profile to use"
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -236,7 +226,7 @@ Template shortcuts:
             lead=args.lead,
             description=args.description,
             category_id=args.category,
-            client=client
+            client=client,
         )
 
         print(format_output(result, args.output))
@@ -248,7 +238,7 @@ Template shortcuts:
         print_error(e)
         sys.exit(1)
     finally:
-        if 'client' in locals():
+        if "client" in locals():
             client.close()
 
 

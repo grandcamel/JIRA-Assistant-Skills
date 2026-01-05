@@ -7,24 +7,24 @@ Requires 'Administer Jira' global permission.
 """
 
 import argparse
-import json
 import sys
-from pathlib import Path
-from typing import Optional, Dict, Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, ValidationError, print_error
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
 
 def update_issue_type_scheme(
     scheme_id: str,
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    default_issue_type_id: Optional[str] = None,
+    name: str | None = None,
+    description: str | None = None,
+    default_issue_type_id: str | None = None,
     client=None,
-    profile: Optional[str] = None
+    profile: str | None = None,
 ) -> bool:
     """
     Update an issue type scheme.
@@ -58,7 +58,7 @@ def update_issue_type_scheme(
             scheme_id=scheme_id,
             name=name,
             description=description,
-            default_issue_type_id=default_issue_type_id
+            default_issue_type_id=default_issue_type_id,
         )
         return True
     finally:
@@ -69,7 +69,7 @@ def update_issue_type_scheme(
 def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Update an issue type scheme in JIRA',
+        description="Update an issue type scheme in JIRA",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -92,29 +92,14 @@ Note:
   Requires 'Administer Jira' global permission.
   At least one field must be specified for update.
   Cannot modify the default issue type scheme name.
-"""
+""",
     )
 
-    parser.add_argument(
-        'scheme_id',
-        help='Issue type scheme ID to update'
-    )
-    parser.add_argument(
-        '--name',
-        help='New scheme name'
-    )
-    parser.add_argument(
-        '--description',
-        help='New scheme description'
-    )
-    parser.add_argument(
-        '--default-issue-type-id',
-        help='New default issue type ID'
-    )
-    parser.add_argument(
-        '--profile',
-        help='Configuration profile to use'
-    )
+    parser.add_argument("scheme_id", help="Issue type scheme ID to update")
+    parser.add_argument("--name", help="New scheme name")
+    parser.add_argument("--description", help="New scheme description")
+    parser.add_argument("--default-issue-type-id", help="New default issue type ID")
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -124,7 +109,7 @@ Note:
             name=args.name,
             description=args.description,
             default_issue_type_id=args.default_issue_type_id,
-            profile=args.profile
+            profile=args.profile,
         )
 
         print(f"Issue type scheme {args.scheme_id} updated successfully.")
@@ -134,5 +119,5 @@ Note:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

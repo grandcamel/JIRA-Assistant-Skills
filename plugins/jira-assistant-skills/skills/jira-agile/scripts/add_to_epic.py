@@ -8,26 +8,32 @@ Usage:
     python add_to_epic.py --remove --issues PROJ-101
 """
 
-import sys
 import argparse
-from pathlib import Path
-from typing import List, Optional, Dict
+import sys
 
 # Add shared lib to path
-
 # Imports from shared library
-from jira_assistant_skills_lib import get_jira_client, get_agile_field
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError, PermissionError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import print_success, print_warning
+from jira_assistant_skills_lib import (
+    JiraError,
+    PermissionError,
+    ValidationError,
+    get_agile_field,
+    get_jira_client,
+    print_error,
+    print_success,
+    print_warning,
+    validate_issue_key,
+)
 
 
-def add_to_epic(epic_key: Optional[str] = None,
-                issue_keys: List[str] = None,
-                dry_run: bool = False,
-                remove: bool = False,
-                profile: str = None,
-                client=None) -> Dict:
+def add_to_epic(
+    epic_key: str | None = None,
+    issue_keys: list[str] | None = None,
+    dry_run: bool = False,
+    remove: bool = False,
+    profile: str | None = None,
+    client=None,
+) -> dict:
     """
     Add issues to an epic or remove them from epics.
 
@@ -66,30 +72,25 @@ def add_to_epic(epic_key: Optional[str] = None,
         should_close = False
 
     try:
-        result = {
-            'added': 0,
-            'removed': 0,
-            'failed': 0,
-            'failures': []
-        }
+        result = {"added": 0, "removed": 0, "failed": 0, "failures": []}
 
         # Validate epic exists and is Epic type (unless removing)
         if not remove:
             epic_key = validate_issue_key(epic_key)
             epic = client.get_issue(epic_key)
 
-            if epic['fields']['issuetype']['name'] != 'Epic':
+            if epic["fields"]["issuetype"]["name"] != "Epic":
                 raise ValidationError(
                     f"{epic_key} is not an Epic (type: {epic['fields']['issuetype']['name']})"
                 )
 
         # Dry run mode
         if dry_run:
-            result['would_add'] = len(issue_keys)
+            result["would_add"] = len(issue_keys)
             return result
 
         # Get the Epic Link field ID from configuration
-        epic_link_field = get_agile_field('epic_link', profile)
+        epic_link_field = get_agile_field("epic_link", profile)
 
         # Process each issue
         for issue_key in issue_keys:
@@ -97,24 +98,19 @@ def add_to_epic(epic_key: Optional[str] = None,
                 issue_key = validate_issue_key(issue_key)
 
                 # Build update fields
-                fields = {
-                    epic_link_field: epic_key if not remove else None
-                }
+                fields = {epic_link_field: epic_key if not remove else None}
 
                 # Update the issue
                 client.update_issue(issue_key, fields)
 
                 if remove:
-                    result['removed'] += 1
+                    result["removed"] += 1
                 else:
-                    result['added'] += 1
+                    result["added"] += 1
 
             except (JiraError, ValidationError, PermissionError) as e:
-                result['failed'] += 1
-                result['failures'].append({
-                    'issue': issue_key,
-                    'error': str(e)
-                })
+                result["failed"] += 1
+                result["failures"].append({"issue": issue_key, "error": str(e)})
 
         return result
 
@@ -125,24 +121,28 @@ def add_to_epic(epic_key: Optional[str] = None,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Add issues to an Epic in JIRA',
-        epilog='Example: python add_to_epic.py --epic PROJ-100 --issues PROJ-101,PROJ-102,PROJ-103'
+        description="Add issues to an Epic in JIRA",
+        epilog="Example: python add_to_epic.py --epic PROJ-100 --issues PROJ-101,PROJ-102,PROJ-103",
     )
 
-    parser.add_argument('--epic', '-e',
-                       help='Epic key (e.g., PROJ-100)')
-    parser.add_argument('--issues', '-i',
-                       help='Comma-separated issue keys to add to epic')
-    parser.add_argument('--jql', '-j',
-                       help='JQL query to find issues to add')
-    parser.add_argument('--remove', '-r',
-                       action='store_true',
-                       help='Remove issues from epic instead of adding')
-    parser.add_argument('--dry-run', '-n',
-                       action='store_true',
-                       help='Preview changes without making them')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument("--epic", "-e", help="Epic key (e.g., PROJ-100)")
+    parser.add_argument(
+        "--issues", "-i", help="Comma-separated issue keys to add to epic"
+    )
+    parser.add_argument("--jql", "-j", help="JQL query to find issues to add")
+    parser.add_argument(
+        "--remove",
+        "-r",
+        action="store_true",
+        help="Remove issues from epic instead of adding",
+    )
+    parser.add_argument(
+        "--dry-run",
+        "-n",
+        action="store_true",
+        help="Preview changes without making them",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -157,14 +157,14 @@ def main(argv: list[str] | None = None):
         # Parse issue keys
         issue_keys = []
         if args.issues:
-            issue_keys = [k.strip() for k in args.issues.split(',')]
+            issue_keys = [k.strip() for k in args.issues.split(",")]
 
         # Handle JQL query
         if args.jql:
             client = get_jira_client(args.profile)
             try:
                 jql_results = client.search_issues(args.jql)
-                jql_keys = [issue['key'] for issue in jql_results.get('issues', [])]
+                jql_keys = [issue["key"] for issue in jql_results.get("issues", [])]
                 issue_keys.extend(jql_keys)
                 print(f"Found {len(jql_keys)} issues from JQL query")
             finally:
@@ -191,20 +191,20 @@ def main(argv: list[str] | None = None):
             issue_keys=issue_keys,
             dry_run=args.dry_run,
             remove=args.remove,
-            profile=args.profile
+            profile=args.profile,
         )
 
         # Report results
         if args.remove:
-            if result['removed'] > 0:
+            if result["removed"] > 0:
                 print_success(f"Removed {result['removed']} issues from epics")
         else:
-            if result['added'] > 0:
+            if result["added"] > 0:
                 print_success(f"Added {result['added']} issues to epic {args.epic}")
 
-        if result['failed'] > 0:
+        if result["failed"] > 0:
             print_warning(f"{result['failed']} issues failed:")
-            for failure in result['failures']:
+            for failure in result["failures"]:
                 print(f"  - {failure['issue']}: {failure['error']}")
 
     except JiraError as e:
@@ -218,5 +218,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

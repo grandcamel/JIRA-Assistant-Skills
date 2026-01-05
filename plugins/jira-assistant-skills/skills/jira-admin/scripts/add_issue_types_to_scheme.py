@@ -8,20 +8,21 @@ Requires 'Administer Jira' global permission.
 
 import argparse
 import sys
-from pathlib import Path
-from typing import List
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, ValidationError, print_error
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+)
 
 
 def add_issue_types_to_scheme(
     scheme_id: str,
-    issue_type_ids: List[str],
+    issue_type_ids: list[str],
     client=None,
-    profile: str = None
+    profile: str | None = None,
 ) -> bool:
     """
     Add issue types to a scheme.
@@ -47,8 +48,7 @@ def add_issue_types_to_scheme(
 
     try:
         client.add_issue_types_to_scheme(
-            scheme_id=scheme_id,
-            issue_type_ids=issue_type_ids
+            scheme_id=scheme_id, issue_type_ids=issue_type_ids
         )
         return True
     finally:
@@ -59,7 +59,7 @@ def add_issue_types_to_scheme(
 def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Add issue types to an issue type scheme',
+        description="Add issue types to an issue type scheme",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -75,24 +75,14 @@ Examples:
 Note:
   Requires 'Administer Jira' global permission.
   Issue types must not already be in the scheme.
-"""
+""",
     )
 
+    parser.add_argument("--scheme-id", required=True, help="Issue type scheme ID")
     parser.add_argument(
-        '--scheme-id',
-        required=True,
-        help='Issue type scheme ID'
+        "--issue-type-ids", nargs="+", required=True, help="Issue type IDs to add"
     )
-    parser.add_argument(
-        '--issue-type-ids',
-        nargs='+',
-        required=True,
-        help='Issue type IDs to add'
-    )
-    parser.add_argument(
-        '--profile',
-        help='Configuration profile to use'
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -100,15 +90,17 @@ Note:
         add_issue_types_to_scheme(
             scheme_id=args.scheme_id,
             issue_type_ids=args.issue_type_ids,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        print(f"Added {len(args.issue_type_ids)} issue type(s) to scheme {args.scheme_id}.")
+        print(
+            f"Added {len(args.issue_type_ids)} issue type(s) to scheme {args.scheme_id}."
+        )
 
     except (ValidationError, JiraError) as e:
         print_error(e)
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

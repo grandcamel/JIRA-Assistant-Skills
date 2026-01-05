@@ -4,10 +4,11 @@ Tests for bulk_transition.py - TDD approach.
 
 import sys
 from pathlib import Path
+
 import pytest
 
 # Add scripts to path
-sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 
 @pytest.mark.bulk
@@ -15,7 +16,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 class TestBulkTransitionByKeys:
     """Test transitioning multiple issues by key list."""
 
-    def test_bulk_transition_by_keys_success(self, mock_jira_client, sample_issues, sample_transitions):
+    def test_bulk_transition_by_keys_success(
+        self, mock_jira_client, sample_issues, sample_transitions
+    ):
         """Test transitioning multiple issues by key list."""
         from bulk_transition import bulk_transition
 
@@ -26,14 +29,14 @@ class TestBulkTransitionByKeys:
         # Execute
         result = bulk_transition(
             client=mock_jira_client,
-            issue_keys=['PROJ-1', 'PROJ-2', 'PROJ-3'],
-            target_status='Done',
-            dry_run=False
+            issue_keys=["PROJ-1", "PROJ-2", "PROJ-3"],
+            target_status="Done",
+            dry_run=False,
         )
 
         # Verify
-        assert result['success'] == 3
-        assert result['failed'] == 0
+        assert result["success"] == 3
+        assert result["failed"] == 0
         assert mock_jira_client.get_transitions.call_count == 3
         assert mock_jira_client.transition_issue.call_count == 3
 
@@ -43,14 +46,16 @@ class TestBulkTransitionByKeys:
 class TestBulkTransitionByJql:
     """Test transitioning all issues matching JQL query."""
 
-    def test_bulk_transition_by_jql_success(self, mock_jira_client, sample_issues, sample_transitions):
+    def test_bulk_transition_by_jql_success(
+        self, mock_jira_client, sample_issues, sample_transitions
+    ):
         """Test transitioning all issues matching JQL query."""
         from bulk_transition import bulk_transition
 
         # Setup mock
         mock_jira_client.search_issues.return_value = {
-            'issues': sample_issues,
-            'total': 3
+            "issues": sample_issues,
+            "total": 3,
         }
         mock_jira_client.get_transitions.return_value = sample_transitions
         mock_jira_client.transition_issue.return_value = None
@@ -59,13 +64,13 @@ class TestBulkTransitionByJql:
         result = bulk_transition(
             client=mock_jira_client,
             jql="project=PROJ AND status='In Progress'",
-            target_status='Done',
-            dry_run=False
+            target_status="Done",
+            dry_run=False,
         )
 
         # Verify
-        assert result['success'] == 3
-        assert result['failed'] == 0
+        assert result["success"] == 3
+        assert result["failed"] == 0
         mock_jira_client.search_issues.assert_called_once()
 
 
@@ -74,7 +79,9 @@ class TestBulkTransitionByJql:
 class TestBulkTransitionWithResolution:
     """Test setting resolution during transition."""
 
-    def test_bulk_transition_with_resolution(self, mock_jira_client, sample_transitions):
+    def test_bulk_transition_with_resolution(
+        self, mock_jira_client, sample_transitions
+    ):
         """Test setting resolution during transition."""
         from bulk_transition import bulk_transition
 
@@ -85,17 +92,18 @@ class TestBulkTransitionWithResolution:
         # Execute
         result = bulk_transition(
             client=mock_jira_client,
-            issue_keys=['PROJ-1'],
-            target_status='Done',
-            resolution='Fixed',
-            dry_run=False
+            issue_keys=["PROJ-1"],
+            target_status="Done",
+            resolution="Fixed",
+            dry_run=False,
         )
 
         # Verify resolution was passed
-        assert result['success'] == 1
+        assert result["success"] == 1
         call_args = mock_jira_client.transition_issue.call_args
-        assert 'resolution' in call_args[1].get('fields', {}) or \
-               'resolution' in (call_args[0][2] if len(call_args[0]) > 2 else {})
+        assert "resolution" in call_args[1].get("fields", {}) or "resolution" in (
+            call_args[0][2] if len(call_args[0]) > 2 else {}
+        )
 
 
 @pytest.mark.bulk
@@ -114,14 +122,14 @@ class TestBulkTransitionWithComment:
         # Execute
         result = bulk_transition(
             client=mock_jira_client,
-            issue_keys=['PROJ-1'],
-            target_status='Done',
-            comment='Bulk transition complete',
-            dry_run=False
+            issue_keys=["PROJ-1"],
+            target_status="Done",
+            comment="Bulk transition complete",
+            dry_run=False,
         )
 
         # Verify
-        assert result['success'] == 1
+        assert result["success"] == 1
 
 
 @pytest.mark.bulk
@@ -129,14 +137,16 @@ class TestBulkTransitionWithComment:
 class TestBulkTransitionDryRun:
     """Test dry-run mode shows preview without changes."""
 
-    def test_bulk_transition_dry_run(self, mock_jira_client, sample_issues, sample_transitions):
+    def test_bulk_transition_dry_run(
+        self, mock_jira_client, sample_issues, sample_transitions
+    ):
         """Test dry-run mode shows preview without changes."""
         from bulk_transition import bulk_transition
 
         # Setup mock
         mock_jira_client.search_issues.return_value = {
-            'issues': sample_issues,
-            'total': 3
+            "issues": sample_issues,
+            "total": 3,
         }
         mock_jira_client.get_transitions.return_value = sample_transitions
 
@@ -144,13 +154,13 @@ class TestBulkTransitionDryRun:
         result = bulk_transition(
             client=mock_jira_client,
             jql="project=PROJ",
-            target_status='Done',
-            dry_run=True
+            target_status="Done",
+            dry_run=True,
         )
 
         # Verify no actual transitions made
-        assert result['success'] == 0
-        assert result['would_process'] == 3
+        assert result["success"] == 0
+        assert result["would_process"] == 3
         mock_jira_client.transition_issue.assert_not_called()
 
 
@@ -159,35 +169,39 @@ class TestBulkTransitionDryRun:
 class TestBulkTransitionRateLimiting:
     """Test rate limiting and throttling."""
 
-    def test_bulk_transition_respects_rate_limit(self, mock_jira_client, sample_transitions):
+    def test_bulk_transition_respects_rate_limit(
+        self, mock_jira_client, sample_transitions
+    ):
         """Test rate limiting delays between operations."""
-        from bulk_transition import bulk_transition
         import time
+
+        from bulk_transition import bulk_transition
 
         # Setup mock
         mock_jira_client.get_transitions.return_value = sample_transitions
         mock_jira_client.transition_issue.return_value = None
 
         # Execute with many issues
-        issue_keys = [f'PROJ-{i}' for i in range(10)]
+        issue_keys = [f"PROJ-{i}" for i in range(10)]
         start_time = time.time()
 
         result = bulk_transition(
             client=mock_jira_client,
             issue_keys=issue_keys,
-            target_status='Done',
+            target_status="Done",
             dry_run=False,
-            delay_between_ops=0.01  # Small delay for testing
+            delay_between_ops=0.01,  # Small delay for testing
         )
 
         elapsed = time.time() - start_time
 
         # Verify some delay occurred (at least 9 delays of 0.01s)
-        assert result['success'] == 10
+        assert result["success"] == 10
         # Verify delay_between_ops was applied (9 delays for 10 issues)
         expected_min_delay = 9 * 0.01 * 0.5  # 0.045s minimum (allow 50% tolerance)
-        assert elapsed >= expected_min_delay, \
+        assert elapsed >= expected_min_delay, (
             f"Expected at least {expected_min_delay}s delay, got {elapsed}s"
+        )
 
 
 @pytest.mark.bulk
@@ -195,16 +209,19 @@ class TestBulkTransitionRateLimiting:
 class TestBulkTransitionPartialFailure:
     """Test handling when some issues fail to transition."""
 
-    def test_bulk_transition_partial_failure(self, mock_jira_client, sample_transitions):
+    def test_bulk_transition_partial_failure(
+        self, mock_jira_client, sample_transitions
+    ):
         """Test handling when some issues fail to transition."""
         from bulk_transition import bulk_transition
+
         from jira_assistant_skills_lib import JiraError
 
         # Setup mock - fail on second issue
         mock_jira_client.get_transitions.return_value = sample_transitions
 
         def transition_side_effect(issue_key, transition_id, fields=None):
-            if issue_key == 'PROJ-2':
+            if issue_key == "PROJ-2":
                 raise JiraError("Permission denied for PROJ-2")
             return None
 
@@ -213,15 +230,15 @@ class TestBulkTransitionPartialFailure:
         # Execute
         result = bulk_transition(
             client=mock_jira_client,
-            issue_keys=['PROJ-1', 'PROJ-2', 'PROJ-3'],
-            target_status='Done',
-            dry_run=False
+            issue_keys=["PROJ-1", "PROJ-2", "PROJ-3"],
+            target_status="Done",
+            dry_run=False,
         )
 
         # Verify partial success
-        assert result['success'] == 2
-        assert result['failed'] == 1
-        assert 'PROJ-2' in result['errors']
+        assert result["success"] == 2
+        assert result["failed"] == 1
+        assert "PROJ-2" in result["errors"]
 
 
 @pytest.mark.bulk
@@ -235,21 +252,21 @@ class TestBulkTransitionInvalidTransition:
 
         # Setup mock - no matching transition
         mock_jira_client.get_transitions.return_value = [
-            {'id': '21', 'name': 'In Progress', 'to': {'name': 'In Progress'}}
+            {"id": "21", "name": "In Progress", "to": {"name": "In Progress"}}
         ]
 
         # Execute - trying to transition to 'Done' which isn't available
         result = bulk_transition(
             client=mock_jira_client,
-            issue_keys=['PROJ-1'],
-            target_status='Done',
-            dry_run=False
+            issue_keys=["PROJ-1"],
+            target_status="Done",
+            dry_run=False,
         )
 
         # Verify failure due to invalid transition
-        assert result['success'] == 0
-        assert result['failed'] == 1
-        assert 'PROJ-1' in result['errors']
+        assert result["success"] == 0
+        assert result["failed"] == 1
+        assert "PROJ-1" in result["errors"]
 
 
 @pytest.mark.bulk
@@ -257,7 +274,9 @@ class TestBulkTransitionInvalidTransition:
 class TestBulkTransitionProgressCallback:
     """Test progress reporting during operation."""
 
-    def test_bulk_transition_progress_callback(self, mock_jira_client, sample_transitions):
+    def test_bulk_transition_progress_callback(
+        self, mock_jira_client, sample_transitions
+    ):
         """Test progress reporting during operation."""
         from bulk_transition import bulk_transition
 
@@ -269,26 +288,28 @@ class TestBulkTransitionProgressCallback:
         progress_calls = []
 
         def progress_callback(current, total, issue_key, status):
-            progress_calls.append({
-                'current': current,
-                'total': total,
-                'issue_key': issue_key,
-                'status': status
-            })
+            progress_calls.append(
+                {
+                    "current": current,
+                    "total": total,
+                    "issue_key": issue_key,
+                    "status": status,
+                }
+            )
 
         # Execute
-        result = bulk_transition(
+        bulk_transition(
             client=mock_jira_client,
-            issue_keys=['PROJ-1', 'PROJ-2', 'PROJ-3'],
-            target_status='Done',
+            issue_keys=["PROJ-1", "PROJ-2", "PROJ-3"],
+            target_status="Done",
             dry_run=False,
-            progress_callback=progress_callback
+            progress_callback=progress_callback,
         )
 
         # Verify progress was reported
         assert len(progress_calls) == 3
-        assert progress_calls[0]['current'] == 1
-        assert progress_calls[2]['current'] == 3
+        assert progress_calls[0]["current"] == 1
+        assert progress_calls[2]["current"] == 3
 
 
 @pytest.mark.bulk
@@ -301,23 +322,20 @@ class TestBulkTransitionNoIssuesFound:
         from bulk_transition import bulk_transition
 
         # Setup mock - empty results
-        mock_jira_client.search_issues.return_value = {
-            'issues': [],
-            'total': 0
-        }
+        mock_jira_client.search_issues.return_value = {"issues": [], "total": 0}
 
         # Execute
         result = bulk_transition(
             client=mock_jira_client,
             jql="project=NONEXISTENT",
-            target_status='Done',
-            dry_run=False
+            target_status="Done",
+            dry_run=False,
         )
 
         # Verify
-        assert result['success'] == 0
-        assert result['failed'] == 0
-        assert result['total'] == 0
+        assert result["success"] == 0
+        assert result["failed"] == 0
+        assert result["total"] == 0
 
 
 @pytest.mark.bulk
@@ -325,15 +343,17 @@ class TestBulkTransitionNoIssuesFound:
 class TestBulkTransitionMaxIssues:
     """Test respecting max_issues limit."""
 
-    def test_bulk_transition_max_issues_limit(self, mock_jira_client, sample_issues, sample_transitions):
+    def test_bulk_transition_max_issues_limit(
+        self, mock_jira_client, sample_issues, sample_transitions
+    ):
         """Test respecting max_issues limit."""
         from bulk_transition import bulk_transition
 
         # Setup mock - return only 2 issues (simulating API respecting maxResults)
         # The implementation passes max_issues to search_issues, which returns limited results
         mock_jira_client.search_issues.return_value = {
-            'issues': sample_issues[:2],  # Only 2 issues returned by API
-            'total': 100  # Total is higher
+            "issues": sample_issues[:2],  # Only 2 issues returned by API
+            "total": 100,  # Total is higher
         }
         mock_jira_client.get_transitions.return_value = sample_transitions
         mock_jira_client.transition_issue.return_value = None
@@ -342,13 +362,13 @@ class TestBulkTransitionMaxIssues:
         result = bulk_transition(
             client=mock_jira_client,
             jql="project=PROJ",
-            target_status='Done',
+            target_status="Done",
             dry_run=False,
-            max_issues=2
+            max_issues=2,
         )
 
         # Verify only 2 were processed
-        assert result['success'] == 2
+        assert result["success"] == 2
         assert mock_jira_client.transition_issue.call_count == 2
         # Verify search was called with max_results
         mock_jira_client.search_issues.assert_called_once()
@@ -362,25 +382,29 @@ class TestBulkTransitionApiErrors:
     def test_authentication_error(self, mock_jira_client, sample_transitions):
         """Test handling of 401 unauthorized error."""
         from bulk_transition import bulk_transition
+
         from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get_transitions.return_value = sample_transitions
-        mock_jira_client.transition_issue.side_effect = AuthenticationError("Invalid token")
+        mock_jira_client.transition_issue.side_effect = AuthenticationError(
+            "Invalid token"
+        )
 
         result = bulk_transition(
             client=mock_jira_client,
-            issue_keys=['PROJ-1'],
-            target_status='Done',
-            dry_run=False
+            issue_keys=["PROJ-1"],
+            target_status="Done",
+            dry_run=False,
         )
 
-        assert result['failed'] == 1
-        assert result['success'] == 0
-        assert 'PROJ-1' in result.get('errors', {})
+        assert result["failed"] == 1
+        assert result["success"] == 0
+        assert "PROJ-1" in result.get("errors", {})
 
     def test_permission_denied_error(self, mock_jira_client, sample_transitions):
         """Test handling of 403 forbidden error."""
         from bulk_transition import bulk_transition
+
         from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_transitions.return_value = sample_transitions
@@ -390,18 +414,19 @@ class TestBulkTransitionApiErrors:
 
         result = bulk_transition(
             client=mock_jira_client,
-            issue_keys=['PROJ-1'],
-            target_status='Done',
-            dry_run=False
+            issue_keys=["PROJ-1"],
+            target_status="Done",
+            dry_run=False,
         )
 
-        assert result['failed'] == 1
-        assert result['success'] == 0
-        assert 'PROJ-1' in result.get('errors', {})
+        assert result["failed"] == 1
+        assert result["success"] == 0
+        assert "PROJ-1" in result.get("errors", {})
 
     def test_not_found_error(self, mock_jira_client):
         """Test handling of 404 not found error."""
         from bulk_transition import bulk_transition
+
         from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_transitions.side_effect = JiraError(
@@ -410,17 +435,18 @@ class TestBulkTransitionApiErrors:
 
         result = bulk_transition(
             client=mock_jira_client,
-            issue_keys=['PROJ-999'],
-            target_status='Done',
-            dry_run=False
+            issue_keys=["PROJ-999"],
+            target_status="Done",
+            dry_run=False,
         )
 
-        assert result['failed'] == 1
-        assert result['success'] == 0
+        assert result["failed"] == 1
+        assert result["success"] == 0
 
     def test_rate_limit_error(self, mock_jira_client, sample_transitions):
         """Test handling of 429 rate limit error."""
         from bulk_transition import bulk_transition
+
         from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_transitions.return_value = sample_transitions
@@ -430,17 +456,18 @@ class TestBulkTransitionApiErrors:
 
         result = bulk_transition(
             client=mock_jira_client,
-            issue_keys=['PROJ-1'],
-            target_status='Done',
-            dry_run=False
+            issue_keys=["PROJ-1"],
+            target_status="Done",
+            dry_run=False,
         )
 
-        assert result['failed'] == 1
-        assert result['success'] == 0
+        assert result["failed"] == 1
+        assert result["success"] == 0
 
     def test_server_error(self, mock_jira_client, sample_transitions):
         """Test handling of 500 internal server error."""
         from bulk_transition import bulk_transition
+
         from jira_assistant_skills_lib import JiraError
 
         mock_jira_client.get_transitions.return_value = sample_transitions
@@ -450,10 +477,10 @@ class TestBulkTransitionApiErrors:
 
         result = bulk_transition(
             client=mock_jira_client,
-            issue_keys=['PROJ-1'],
-            target_status='Done',
-            dry_run=False
+            issue_keys=["PROJ-1"],
+            target_status="Done",
+            dry_run=False,
         )
 
-        assert result['failed'] == 1
-        assert result['success'] == 0
+        assert result["failed"] == 1
+        assert result["success"] == 0

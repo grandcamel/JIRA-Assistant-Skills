@@ -14,23 +14,23 @@ Examples:
 """
 
 import argparse
-import sys
 import json
-from pathlib import Path
-from typing import Optional, Dict, Any
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, ValidationError, print_error
-from jira_assistant_skills_lib import validate_category_name
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    validate_category_name,
+)
 
 
 def create_category(
-    name: str,
-    description: Optional[str] = None,
-    client=None
-) -> Dict[str, Any]:
+    name: str, description: str | None = None, client=None
+) -> dict[str, Any]:
     """
     Create a new project category.
 
@@ -56,10 +56,7 @@ def create_category(
         should_close = True
 
     try:
-        result = client.create_project_category(
-            name=name,
-            description=description
-        )
+        result = client.create_project_category(name=name, description=description)
 
         return result
 
@@ -68,7 +65,7 @@ def create_category(
             client.close()
 
 
-def format_output(category: Dict[str, Any], output_format: str = "text") -> str:
+def format_output(category: dict[str, Any], output_format: str = "text") -> str:
     """Format category data for output."""
     if output_format == "json":
         return json.dumps(category, indent=2)
@@ -81,7 +78,7 @@ def format_output(category: Dict[str, Any], output_format: str = "text") -> str:
         f"  Name:        {category.get('name')}",
     ]
 
-    description = category.get('description')
+    description = category.get("description")
     if description:
         lines.append(f"  Description: {description}")
 
@@ -102,33 +99,24 @@ Examples:
 
   # Create with just a name
   %(prog)s --name "Marketing"
-        """
+        """,
     )
 
     # Required arguments
-    parser.add_argument(
-        "--name", "-n",
-        required=True,
-        help="Category name"
-    )
+    parser.add_argument("--name", "-n", required=True, help="Category name")
 
     # Optional arguments
-    parser.add_argument(
-        "--description", "-d",
-        help="Category description"
-    )
+    parser.add_argument("--description", "-d", help="Category description")
 
     # Output options
     parser.add_argument(
-        "--output", "-o",
-        choices=['text', 'json'],
-        default='text',
-        help="Output format (default: text)"
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
     )
-    parser.add_argument(
-        "--profile",
-        help="Configuration profile to use"
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -136,9 +124,7 @@ Examples:
         client = get_jira_client(profile=args.profile)
 
         result = create_category(
-            name=args.name,
-            description=args.description,
-            client=client
+            name=args.name, description=args.description, client=client
         )
 
         print(format_output(result, args.output))
@@ -150,7 +136,7 @@ Examples:
         print_error(e)
         sys.exit(1)
     finally:
-        if 'client' in locals():
+        if "client" in locals():
             client.close()
 
 

@@ -10,28 +10,31 @@ Usage:
     python rank_issue.py PROJ-1,PROJ-2,PROJ-3 --before PROJ-10
 """
 
-import sys
 import argparse
 import json
-from pathlib import Path
-from typing import Optional, List
+import sys
 
 # Add shared lib to path
-
 # Imports from shared library
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError
-from jira_assistant_skills_lib import validate_issue_key
-from jira_assistant_skills_lib import print_success
+from jira_assistant_skills_lib import (
+    JiraError,
+    ValidationError,
+    get_jira_client,
+    print_error,
+    print_success,
+    validate_issue_key,
+)
 
 
-def rank_issue(issue_keys: List[str],
-               before_key: str = None,
-               after_key: str = None,
-               position: str = None,
-               board_id: int = None,
-               profile: str = None,
-               client=None) -> dict:
+def rank_issue(
+    issue_keys: list[str],
+    before_key: str | None = None,
+    after_key: str | None = None,
+    position: str | None = None,
+    board_id: int | None = None,
+    profile: str | None = None,
+    client=None,
+) -> dict:
     """
     Rank issues in the backlog.
 
@@ -56,7 +59,9 @@ def rank_issue(issue_keys: List[str],
 
     # Validate that a position is specified
     if not before_key and not after_key and not position:
-        raise ValidationError("Must specify --before, --after, --top, or --bottom position")
+        raise ValidationError(
+            "Must specify --before, --after, --top, or --bottom position"
+        )
 
     # Validate issue keys
     issue_keys = [validate_issue_key(k) for k in issue_keys]
@@ -80,17 +85,18 @@ def rank_issue(issue_keys: List[str],
             client.rank_issues(issue_keys, rank_before=before_key)
         elif after_key:
             client.rank_issues(issue_keys, rank_after=after_key)
-        elif position == 'top':
+        elif position == "top":
             # For top/bottom, we need to get the first/last issue from the backlog
             # and rank before/after it - this requires board context
-            raise ValidationError("Top/bottom ranking requires implementation with board context")
-        elif position == 'bottom':
-            raise ValidationError("Top/bottom ranking requires implementation with board context")
+            raise ValidationError(
+                "Top/bottom ranking requires implementation with board context"
+            )
+        elif position == "bottom":
+            raise ValidationError(
+                "Top/bottom ranking requires implementation with board context"
+            )
 
-        return {
-            'ranked': len(issue_keys),
-            'issues': issue_keys
-        }
+        return {"ranked": len(issue_keys), "issues": issue_keys}
 
     finally:
         if should_close:
@@ -99,45 +105,43 @@ def rank_issue(issue_keys: List[str],
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Rank issues in JIRA backlog',
-        epilog='Example: python rank_issue.py PROJ-1 --before PROJ-2'
+        description="Rank issues in JIRA backlog",
+        epilog="Example: python rank_issue.py PROJ-1 --before PROJ-2",
     )
 
-    parser.add_argument('issues',
-                       help='Issue key(s) to rank (comma-separated)')
+    parser.add_argument("issues", help="Issue key(s) to rank (comma-separated)")
 
     # Position options (mutually exclusive)
     position_group = parser.add_mutually_exclusive_group(required=True)
-    position_group.add_argument('--before', '-b',
-                               help='Rank before this issue')
-    position_group.add_argument('--after', '-a',
-                               help='Rank after this issue')
-    position_group.add_argument('--top', action='store_true',
-                               help='Move to top of backlog')
-    position_group.add_argument('--bottom', action='store_true',
-                               help='Move to bottom of backlog')
+    position_group.add_argument("--before", "-b", help="Rank before this issue")
+    position_group.add_argument("--after", "-a", help="Rank after this issue")
+    position_group.add_argument(
+        "--top", action="store_true", help="Move to top of backlog"
+    )
+    position_group.add_argument(
+        "--bottom", action="store_true", help="Move to bottom of backlog"
+    )
 
-    parser.add_argument('--board', type=int,
-                       help='Board ID (may be required for top/bottom)')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use')
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format')
+    parser.add_argument(
+        "--board", type=int, help="Board ID (may be required for top/bottom)"
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
+    parser.add_argument(
+        "--output", "-o", choices=["text", "json"], default="text", help="Output format"
+    )
 
     args = parser.parse_args(argv)
 
     try:
         # Parse issue keys
-        issue_keys = [k.strip() for k in args.issues.split(',')]
+        issue_keys = [k.strip() for k in args.issues.split(",")]
 
         # Determine position
         position = None
         if args.top:
-            position = 'top'
+            position = "top"
         elif args.bottom:
-            position = 'bottom'
+            position = "bottom"
 
         result = rank_issue(
             issue_keys=issue_keys,
@@ -145,10 +149,10 @@ def main(argv: list[str] | None = None):
             after_key=args.after,
             position=position,
             board_id=args.board,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(json.dumps(result, indent=2))
         else:
             print_success(f"Ranked {result['ranked']} issue(s)")
@@ -170,5 +174,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

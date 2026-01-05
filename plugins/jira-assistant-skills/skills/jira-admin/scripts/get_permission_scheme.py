@@ -20,28 +20,27 @@ Examples:
 """
 
 import argparse
-import sys
 import json
-from pathlib import Path
-from typing import List, Dict, Any, Optional
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, ValidationError, NotFoundError
-from jira_assistant_skills_lib import format_json
 from jira_assistant_skills_lib import (
+    JiraError,
+    NotFoundError,
+    ValidationError,
+    find_scheme_by_name,
     format_grant_for_export,
+    format_json,
     get_holder_display,
-    find_scheme_by_name
+    get_jira_client,
+    print_error,
 )
 
 
 def get_permission_scheme(
-    client,
-    scheme_id_or_name: str,
-    fuzzy: bool = False
-) -> Dict[str, Any]:
+    client, scheme_id_or_name: str, fuzzy: bool = False
+) -> dict[str, Any]:
     """
     Get a permission scheme by ID or name.
 
@@ -61,15 +60,14 @@ def get_permission_scheme(
     try:
         scheme_id = int(scheme_id_or_name)
         return client.get_permission_scheme(
-            scheme_id,
-            expand='permissions,user,group,projectRole'
+            scheme_id, expand="permissions,user,group,projectRole"
         )
     except ValueError:
         pass
 
     # Look up by name
     response = client.get_permission_schemes()
-    schemes = response.get('permissionSchemes', [])
+    schemes = response.get("permissionSchemes", [])
 
     scheme = find_scheme_by_name(schemes, scheme_id_or_name, fuzzy=fuzzy)
 
@@ -81,12 +79,13 @@ def get_permission_scheme(
 
     # Get the full scheme with permissions
     return client.get_permission_scheme(
-        scheme['id'],
-        expand='permissions,user,group,projectRole'
+        scheme["id"], expand="permissions,user,group,projectRole"
     )
 
 
-def group_grants_by_permission(grants: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+def group_grants_by_permission(
+    grants: list[dict[str, Any]],
+) -> dict[str, list[dict[str, Any]]]:
     """
     Group permission grants by permission key.
 
@@ -98,14 +97,16 @@ def group_grants_by_permission(grants: List[Dict[str, Any]]) -> Dict[str, List[D
     """
     grouped = {}
     for grant in grants:
-        permission = grant.get('permission', 'UNKNOWN')
+        permission = grant.get("permission", "UNKNOWN")
         if permission not in grouped:
             grouped[permission] = []
         grouped[permission].append(grant)
     return grouped
 
 
-def group_grants_by_holder(grants: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+def group_grants_by_holder(
+    grants: list[dict[str, Any]],
+) -> dict[str, list[dict[str, Any]]]:
     """
     Group permission grants by holder.
 
@@ -117,9 +118,9 @@ def group_grants_by_holder(grants: List[Dict[str, Any]]) -> Dict[str, List[Dict[
     """
     grouped = {}
     for grant in grants:
-        holder = grant.get('holder', {})
-        holder_type = holder.get('type', 'unknown')
-        parameter = holder.get('parameter', '')
+        holder = grant.get("holder", {})
+        holder_type = holder.get("type", "unknown")
+        parameter = holder.get("parameter", "")
 
         if parameter:
             key = f"{holder_type}:{parameter}"
@@ -132,7 +133,7 @@ def group_grants_by_holder(grants: List[Dict[str, Any]]) -> Dict[str, List[Dict[
     return grouped
 
 
-def export_grants_template(scheme: Dict[str, Any]) -> List[str]:
+def export_grants_template(scheme: dict[str, Any]) -> list[str]:
     """
     Export permission grants as a template list.
 
@@ -142,14 +143,12 @@ def export_grants_template(scheme: Dict[str, Any]) -> List[str]:
     Returns:
         List of grant strings in format PERMISSION:holder_type[:parameter]
     """
-    grants = scheme.get('permissions', [])
+    grants = scheme.get("permissions", [])
     return [format_grant_for_export(grant) for grant in grants]
 
 
 def format_permission_scheme(
-    scheme: Dict[str, Any],
-    output_format: str = 'table',
-    group_by: Optional[str] = None
+    scheme: dict[str, Any], output_format: str = "table", group_by: str | None = None
 ) -> str:
     """
     Format a permission scheme for output.
@@ -162,7 +161,7 @@ def format_permission_scheme(
     Returns:
         Formatted string
     """
-    if output_format == 'json':
+    if output_format == "json":
         return format_json(scheme)
 
     # Table format
@@ -170,102 +169,91 @@ def format_permission_scheme(
     lines.append(f"Permission Scheme: {scheme.get('name', 'Unknown')}")
     lines.append(f"ID: {scheme.get('id', 'N/A')}")
 
-    description = scheme.get('description', '')
+    description = scheme.get("description", "")
     if description:
         lines.append(f"Description: {description}")
 
-    grants = scheme.get('permissions', [])
+    grants = scheme.get("permissions", [])
     lines.append(f"\nPermission Grants ({len(grants)}):")
     lines.append("-" * 60)
 
     if not grants:
         lines.append("  No grants configured")
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
-    if group_by == 'holder':
+    if group_by == "holder":
         grouped = group_grants_by_holder(grants)
         for holder_key, holder_grants in sorted(grouped.items()):
             lines.append(f"\n  {holder_key}:")
             for grant in holder_grants:
-                permission = grant.get('permission', 'UNKNOWN')
+                permission = grant.get("permission", "UNKNOWN")
                 lines.append(f"    - {permission}")
     else:
         # Default: group by permission
         grouped = group_grants_by_permission(grants)
         for permission, perm_grants in sorted(grouped.items()):
-            holders = [get_holder_display(g.get('holder', {})) for g in perm_grants]
+            holders = [get_holder_display(g.get("holder", {})) for g in perm_grants]
             lines.append(f"  {permission}:")
             for holder in holders:
                 lines.append(f"    - {holder}")
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Get detailed information about a JIRA permission scheme',
-        epilog='''
+        description="Get detailed information about a JIRA permission scheme",
+        epilog="""
 Examples:
   %(prog)s 10000
   %(prog)s "Default Software Scheme"
   %(prog)s 10000 --output json
   %(prog)s 10000 --export-template grants.json
   %(prog)s "Software" --fuzzy
-'''
+""",
+    )
+    parser.add_argument("scheme", help="Permission scheme ID or name")
+    parser.add_argument(
+        "--fuzzy", "-F", action="store_true", help="Allow partial name matching"
     )
     parser.add_argument(
-        'scheme',
-        help='Permission scheme ID or name'
+        "--group-by",
+        "-g",
+        choices=["permission", "holder"],
+        default="permission",
+        help="How to group grants (default: permission)",
     )
     parser.add_argument(
-        '--fuzzy', '-F',
-        action='store_true',
-        help='Allow partial name matching'
+        "--export-template",
+        "-e",
+        metavar="FILE",
+        help="Export grants as template to file",
     )
     parser.add_argument(
-        '--group-by', '-g',
-        choices=['permission', 'holder'],
-        default='permission',
-        help='How to group grants (default: permission)'
+        "--output",
+        "-o",
+        choices=["table", "json"],
+        default="table",
+        help="Output format (default: table)",
     )
-    parser.add_argument(
-        '--export-template', '-e',
-        metavar='FILE',
-        help='Export grants as template to file'
-    )
-    parser.add_argument(
-        '--output', '-o',
-        choices=['table', 'json'],
-        default='table',
-        help='Output format (default: table)'
-    )
-    parser.add_argument(
-        '--profile', '-p',
-        help='JIRA profile to use'
-    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         client = get_jira_client(profile=args.profile)
 
-        scheme = get_permission_scheme(
-            client,
-            args.scheme,
-            fuzzy=args.fuzzy
-        )
+        scheme = get_permission_scheme(client, args.scheme, fuzzy=args.fuzzy)
 
         if args.export_template:
             template = export_grants_template(scheme)
-            with open(args.export_template, 'w') as f:
+            with open(args.export_template, "w") as f:
                 json.dump(template, f, indent=2)
             print(f"Exported {len(template)} grants to {args.export_template}")
         else:
             output = format_permission_scheme(
-                scheme,
-                output_format=args.output,
-                group_by=args.group_by
+                scheme, output_format=args.output, group_by=args.group_by
             )
             print(output)
 
@@ -277,5 +265,5 @@ Examples:
         sys.exit(130)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

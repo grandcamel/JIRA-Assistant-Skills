@@ -29,25 +29,26 @@ import platform
 import re
 import socket
 import subprocess
-import sys
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Optional
 
 # OpenTelemetry imports
 try:
+    import opentelemetry.version
     from opentelemetry import metrics, trace
+    from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
+        OTLPMetricExporter,
+    )
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.metrics import MeterProvider
     from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+    from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
-    from opentelemetry.sdk.resources import Resource
     from opentelemetry.semconv.resource import ResourceAttributes
-    from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
-    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.trace import Status, StatusCode
-    import opentelemetry.version
+
     OTEL_AVAILABLE = True
 except ImportError:
     OTEL_AVAILABLE = False
@@ -99,16 +100,20 @@ def _get_git_info() -> dict:
     try:
         result = subprocess.run(
             ["git", "rev-parse", "HEAD"],
-            capture_output=True, text=True, timeout=5,
-            cwd=PLUGIN_DIR
+            capture_output=True,
+            text=True,
+            timeout=5,
+            cwd=PLUGIN_DIR,
         )
         if result.returncode == 0:
             info["commit"] = result.stdout.strip()[:12]
 
         result = subprocess.run(
             ["git", "branch", "--show-current"],
-            capture_output=True, text=True, timeout=5,
-            cwd=PLUGIN_DIR
+            capture_output=True,
+            text=True,
+            timeout=5,
+            cwd=PLUGIN_DIR,
         )
         if result.returncode == 0:
             info["branch"] = result.stdout.strip() or "detached"
@@ -155,12 +160,11 @@ def _get_claude_version() -> str:
     """Get Claude CLI version."""
     try:
         result = subprocess.run(
-            ["claude", "--version"],
-            capture_output=True, text=True, timeout=5
+            ["claude", "--version"], capture_output=True, text=True, timeout=5
         )
         if result.returncode == 0:
             # Parse version from output like "claude 1.0.0"
-            match = re.search(r'(\d+\.\d+\.\d+)', result.stdout)
+            match = re.search(r"(\d+\.\d+\.\d+)", result.stdout)
             if match:
                 return match.group(1)
     except Exception:
@@ -177,32 +181,29 @@ def _build_resource_attributes() -> dict:
         ResourceAttributes.SERVICE_NAME: SERVICE_NAME,
         ResourceAttributes.SERVICE_VERSION: _get_plugin_version(),
         ResourceAttributes.SERVICE_NAMESPACE: SERVICE_NAMESPACE,
-
         # Deployment
-        ResourceAttributes.DEPLOYMENT_ENVIRONMENT: os.getenv("DEPLOYMENT_ENV", "development"),
-
+        ResourceAttributes.DEPLOYMENT_ENVIRONMENT: os.getenv(
+            "DEPLOYMENT_ENV", "development"
+        ),
         # Host
         ResourceAttributes.HOST_NAME: socket.gethostname(),
         ResourceAttributes.OS_TYPE: platform.system(),
         ResourceAttributes.OS_VERSION: platform.release(),
-
         # Runtime
         "python.version": platform.python_version(),
         "python.implementation": platform.python_implementation(),
-
         # OpenTelemetry SDK
-        "otel.sdk.version": opentelemetry.version.__version__ if OTEL_AVAILABLE else "N/A",
-
+        "otel.sdk.version": opentelemetry.version.__version__
+        if OTEL_AVAILABLE
+        else "N/A",
         # Version Control
         "vcs.commit.sha": git_info["commit"],
         "vcs.branch": git_info["branch"],
         "vcs.repository": "jira-assistant-skills",
-
         # Skill/Test versions
         "skill.version": _get_skill_version(),
         "golden_set.version": _get_golden_set_version(),
         "claude.cli.version": _get_claude_version(),
-
         # Test framework
         "test.framework": "pytest",
         "test.type": "routing",
@@ -230,7 +231,9 @@ def init_telemetry() -> bool:
     global _test_counter, _duration_histogram, _cost_histogram, _accuracy_gauge
 
     if not OTEL_AVAILABLE:
-        print("OpenTelemetry not available. Install with: pip install -r requirements-otel.txt")
+        print(
+            "OpenTelemetry not available. Install with: pip install -r requirements-otel.txt"
+        )
         return False
 
     if _metrics_initialized:
@@ -242,8 +245,14 @@ def init_telemetry() -> bool:
         resource = Resource.create(resource_attrs)
 
         # Log resource attributes for debugging
-        print(f"OpenTelemetry Resource Attributes:")
-        for key in ["service.version", "vcs.commit.sha", "vcs.branch", "skill.version", "golden_set.version"]:
+        print("OpenTelemetry Resource Attributes:")
+        for key in [
+            "service.version",
+            "vcs.commit.sha",
+            "vcs.branch",
+            "skill.version",
+            "golden_set.version",
+        ]:
             print(f"  {key}: {resource_attrs.get(key, 'N/A')}")
 
         # Setup metrics
@@ -252,19 +261,16 @@ def init_telemetry() -> bool:
         )
         metric_reader = PeriodicExportingMetricReader(
             metric_exporter,
-            export_interval_millis=5000  # Export every 5 seconds
+            export_interval_millis=5000,  # Export every 5 seconds
         )
         meter_provider = MeterProvider(
-            resource=resource,
-            metric_readers=[metric_reader]
+            resource=resource, metric_readers=[metric_reader]
         )
         metrics.set_meter_provider(meter_provider)
         _meter = metrics.get_meter("routing_tests", _get_plugin_version())
 
         # Setup tracing
-        trace_exporter = OTLPSpanExporter(
-            endpoint=f"{OTLP_HTTP_ENDPOINT}/v1/traces"
-        )
+        trace_exporter = OTLPSpanExporter(endpoint=f"{OTLP_HTTP_ENDPOINT}/v1/traces")
         tracer_provider = TracerProvider(resource=resource)
         tracer_provider.add_span_processor(BatchSpanProcessor(trace_exporter))
         trace.set_tracer_provider(tracer_provider)
@@ -274,37 +280,39 @@ def init_telemetry() -> bool:
         _test_counter = _meter.create_counter(
             name="routing_test_total",
             description="Total number of routing tests executed",
-            unit="{test}"
+            unit="{test}",
         )
 
         _duration_histogram = _meter.create_histogram(
             name="routing_test_duration_seconds",
             description="Duration of routing tests",
-            unit="s"
+            unit="s",
         )
 
         _cost_histogram = _meter.create_histogram(
             name="routing_test_cost_usd",
             description="API cost per routing test",
-            unit="USD"
+            unit="USD",
         )
 
         _accuracy_gauge = _meter.create_observable_gauge(
             name="routing_accuracy_percent",
             description="Current routing accuracy percentage",
             unit="%",
-            callbacks=[lambda options: [
-                metrics.Observation(_accuracy_value["value"], {})
-            ]]
+            callbacks=[
+                lambda options: [metrics.Observation(_accuracy_value["value"], {})]
+            ],
         )
 
         _tool_use_accuracy_gauge = _meter.create_observable_gauge(
             name="tool_use_accuracy_percent",
             description="Current tool use accuracy percentage (expected commands matched)",
             unit="%",
-            callbacks=[lambda options: [
-                metrics.Observation(_tool_use_accuracy_value["value"], {})
-            ]]
+            callbacks=[
+                lambda options: [
+                    metrics.Observation(_tool_use_accuracy_value["value"], {})
+                ]
+            ],
         )
 
         _metrics_initialized = True
@@ -328,7 +336,7 @@ def _extract_code_blocks(text: str) -> list[str]:
     Returns a list of code block contents (including the ``` markers).
     """
     # Match fenced code blocks: ```language\n...\n```
-    pattern = r'```[\w]*\n.*?```'
+    pattern = r"```[\w]*\n.*?```"
     matches = re.findall(pattern, text, re.DOTALL)
     return matches
 
@@ -349,8 +357,8 @@ def record_test_result(
     test_id: str,
     category: str,
     input_text: str,
-    expected_skill: Optional[str],
-    actual_skill: Optional[str],
+    expected_skill: str | None,
+    actual_skill: str | None,
     passed: bool,
     duration_ms: int,
     cost_usd: float,
@@ -360,14 +368,14 @@ def record_test_result(
     tokens_input: int = 0,
     tokens_output: int = 0,
     retry_count: int = 0,
-    disambiguation_options: Optional[list] = None,
-    error_type: Optional[str] = None,
-    error_message: Optional[str] = None,
+    disambiguation_options: list | None = None,
+    error_type: str | None = None,
+    error_message: str | None = None,
     # New parameters for tool use accuracy
     response_text: str = "",
-    tool_use_accuracy: Optional[float] = None,
-    tool_use_matched: Optional[int] = None,
-    tool_use_total: Optional[int] = None,
+    tool_use_accuracy: float | None = None,
+    tool_use_matched: int | None = None,
+    tool_use_total: int | None = None,
 ):
     """
     Record a single test result with comprehensive context.
@@ -402,7 +410,13 @@ def record_test_result(
     expected = expected_skill or "none"
     actual = actual_skill or "none"
     result = "passed" if passed else "failed"
-    routing_correct = "true" if (expected == actual or (asked_clarification and category == "disambiguation")) else "false"
+    routing_correct = (
+        "true"
+        if (
+            expected == actual or (asked_clarification and category == "disambiguation")
+        )
+        else "false"
+    )
 
     # Metric labels (keep cardinality reasonable)
     metric_labels = {
@@ -422,18 +436,13 @@ def record_test_result(
     _test_counter.add(1, metric_labels)
 
     # Record duration (convert ms to seconds for standard units)
-    _duration_histogram.record(duration_ms / 1000.0, {
-        "category": category,
-        "result": result,
-        "model": model
-    })
+    _duration_histogram.record(
+        duration_ms / 1000.0, {"category": category, "result": result, "model": model}
+    )
 
     # Record cost
     if cost_usd > 0:
-        _cost_histogram.record(cost_usd, {
-            "category": category,
-            "model": model
-        })
+        _cost_histogram.record(cost_usd, {"category": category, "model": model})
 
     # Create detailed trace span with correct duration
     # Backdate the span start time so spanmetrics captures the actual test duration
@@ -468,7 +477,9 @@ def record_test_result(
             span.set_attribute("test.asked_clarification", asked_clarification)
 
             if disambiguation_options:
-                span.set_attribute("test.disambiguation_options", ",".join(disambiguation_options))
+                span.set_attribute(
+                    "test.disambiguation_options", ",".join(disambiguation_options)
+                )
 
             # Result context
             span.set_attribute("test.passed", passed)
@@ -493,9 +504,15 @@ def record_test_result(
 
             # Version control context (from resource attributes, added as span attributes for filtering)
             resource_attrs = get_resource_attributes()
-            span.set_attribute("skill.version", resource_attrs.get("skill.version", "unknown"))
-            span.set_attribute("vcs.branch", resource_attrs.get("vcs.branch", "unknown"))
-            span.set_attribute("vcs.commit.sha", resource_attrs.get("vcs.commit.sha", "unknown"))
+            span.set_attribute(
+                "skill.version", resource_attrs.get("skill.version", "unknown")
+            )
+            span.set_attribute(
+                "vcs.branch", resource_attrs.get("vcs.branch", "unknown")
+            )
+            span.set_attribute(
+                "vcs.commit.sha", resource_attrs.get("vcs.commit.sha", "unknown")
+            )
 
             # Tool use accuracy context
             if tool_use_accuracy is not None:
@@ -506,7 +523,10 @@ def record_test_result(
             if tool_use_total is not None:
                 span.set_attribute("tool_use.total_patterns", tool_use_total)
             if tool_use_total and tool_use_total > 0:
-                span.set_attribute("tool_use.passed", tool_use_accuracy >= 0.5 if tool_use_accuracy else False)
+                span.set_attribute(
+                    "tool_use.passed",
+                    tool_use_accuracy >= 0.5 if tool_use_accuracy else False,
+                )
 
             # Add span events for prompt and response (for detailed tracing)
             span.add_event(
@@ -515,7 +535,7 @@ def record_test_result(
                     "prompt.text": input_text[:2000],  # Truncate for size
                     "prompt.length": len(input_text),
                     "prompt.word_count": len(input_text.split()),
-                }
+                },
             )
 
             if response_text:
@@ -524,12 +544,16 @@ def record_test_result(
                 span.add_event(
                     "response",
                     attributes={
-                        "response.text": response_text[:4000],  # Larger limit for response
+                        "response.text": response_text[
+                            :4000
+                        ],  # Larger limit for response
                         "response.length": len(response_text),
                         "response.word_count": len(response_text.split()),
                         "response.code_block_count": len(code_blocks),
-                        "response.has_bash_command": any("```bash" in b or "```sh" in b for b in code_blocks),
-                    }
+                        "response.has_bash_command": any(
+                            "```bash" in b or "```sh" in b for b in code_blocks
+                        ),
+                    },
                 )
 
                 # Add separate event for each code block (up to 5)
@@ -540,17 +564,16 @@ def record_test_result(
                             "code_block.index": i,
                             "code_block.content": block[:1000],
                             "code_block.length": len(block),
-                        }
+                        },
                     )
 
             # Set span status
             if passed:
                 span.set_status(Status(StatusCode.OK))
             else:
-                span.set_status(Status(
-                    StatusCode.ERROR,
-                    f"Expected {expected}, got {actual}"
-                ))
+                span.set_status(
+                    Status(StatusCode.ERROR, f"Expected {expected}, got {actual}")
+                )
 
 
 def update_accuracy(passed: int, total: int):
@@ -569,7 +592,7 @@ def start_suite_span(
     suite_name: str = "routing_test_suite",
     model: str = "unknown",
     parallel_workers: int = 1,
-) -> Optional[str]:
+) -> str | None:
     """
     Start a suite-level span that will be parent to all test spans.
 
@@ -592,7 +615,9 @@ def start_suite_span(
 
     try:
         from opentelemetry import context
-        from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+        from opentelemetry.trace.propagation.tracecontext import (
+            TraceContextTextMapPropagator,
+        )
 
         _suite_start_time = time.time_ns()
 
@@ -607,9 +632,15 @@ def start_suite_span(
         _suite_span.set_attribute("suite.name", suite_name)
         _suite_span.set_attribute("suite.model", model)
         _suite_span.set_attribute("suite.parallel_workers", parallel_workers)
-        _suite_span.set_attribute("suite.skill_version", resource_attrs.get("skill.version", "unknown"))
-        _suite_span.set_attribute("suite.vcs_branch", resource_attrs.get("vcs.branch", "unknown"))
-        _suite_span.set_attribute("suite.vcs_commit", resource_attrs.get("vcs.commit.sha", "unknown"))
+        _suite_span.set_attribute(
+            "suite.skill_version", resource_attrs.get("skill.version", "unknown")
+        )
+        _suite_span.set_attribute(
+            "suite.vcs_branch", resource_attrs.get("vcs.branch", "unknown")
+        )
+        _suite_span.set_attribute(
+            "suite.vcs_commit", resource_attrs.get("vcs.commit.sha", "unknown")
+        )
 
         # Set suite span as current context
         _suite_context = trace.set_span_in_context(_suite_span)
@@ -658,7 +689,9 @@ def set_suite_context_from_traceparent(traceparent: str) -> bool:
 
     try:
         from opentelemetry import context
-        from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+        from opentelemetry.trace.propagation.tracecontext import (
+            TraceContextTextMapPropagator,
+        )
 
         carrier = {"traceparent": traceparent}
         _suite_context = TraceContextTextMapPropagator().extract(carrier)
@@ -699,7 +732,9 @@ def end_suite_span(
 
         # Calculate duration
         end_time_ns = time.time_ns()
-        duration_ms = (end_time_ns - _suite_start_time) / 1_000_000 if _suite_start_time else 0
+        duration_ms = (
+            (end_time_ns - _suite_start_time) / 1_000_000 if _suite_start_time else 0
+        )
 
         total = passed + failed
         accuracy = (passed / total * 100) if total > 0 else 0
@@ -717,10 +752,7 @@ def end_suite_span(
 
         # Set status based on failures
         if failed > 0:
-            _suite_span.set_status(Status(
-                StatusCode.ERROR,
-                f"{failed} tests failed"
-            ))
+            _suite_span.set_status(Status(StatusCode.ERROR, f"{failed} tests failed"))
         else:
             _suite_span.set_status(Status(StatusCode.OK))
 
@@ -731,7 +763,9 @@ def end_suite_span(
         if _suite_token:
             context.detach(_suite_token)
 
-        print(f"Ended suite span: {passed} passed, {failed} failed, accuracy {accuracy:.1f}%")
+        print(
+            f"Ended suite span: {passed} passed, {failed} failed, accuracy {accuracy:.1f}%"
+        )
 
         # Update accuracy gauge
         update_accuracy(passed, total)
@@ -786,7 +820,9 @@ def start_worker_span(
 
         # Set worker attributes
         _worker_span.set_attribute("worker.id", worker_id)
-        _worker_span.set_attribute("worker.type", "xdist" if worker_id.startswith("gw") else "main")
+        _worker_span.set_attribute(
+            "worker.type", "xdist" if worker_id.startswith("gw") else "main"
+        )
 
         # Set worker span as current context
         _worker_context = trace.set_span_in_context(_worker_span)
@@ -835,9 +871,11 @@ def end_worker_span(
 
         # Calculate duration
         end_time_ns = time.time_ns()
-        duration_ms = (end_time_ns - _worker_start_time) / 1_000_000 if _worker_start_time else 0
+        duration_ms = (
+            (end_time_ns - _worker_start_time) / 1_000_000 if _worker_start_time else 0
+        )
 
-        total = passed + failed
+        passed + failed
 
         # Set final attributes
         _worker_span.set_attribute("worker.passed", passed)
@@ -848,10 +886,11 @@ def end_worker_span(
 
         # Set status based on failures
         if failed > 0:
-            _worker_span.set_status(Status(
-                StatusCode.ERROR,
-                f"{failed} tests failed in worker {_worker_id}"
-            ))
+            _worker_span.set_status(
+                Status(
+                    StatusCode.ERROR, f"{failed} tests failed in worker {_worker_id}"
+                )
+            )
         else:
             _worker_span.set_status(Status(StatusCode.OK))
 
@@ -862,7 +901,9 @@ def end_worker_span(
         if _worker_token:
             context.detach(_worker_token)
 
-        print(f"Ended worker span: worker_{_worker_id} ({passed} passed, {failed} failed)")
+        print(
+            f"Ended worker span: worker_{_worker_id} ({passed} passed, {failed} failed)"
+        )
 
     except Exception as e:
         print(f"Failed to end worker span: {e}")
@@ -881,8 +922,8 @@ def record_test_session_summary(
     skipped: int,
     total_duration_ms: int,
     total_cost_usd: float,
-    categories: Optional[dict] = None,
-    skills_tested: Optional[list] = None
+    categories: dict | None = None,
+    skills_tested: list | None = None,
 ):
     """
     Record summary metrics for a complete test session.
@@ -921,11 +962,17 @@ def record_test_session_summary(
             # Performance
             span.set_attribute("session.duration_ms", total_duration_ms)
             span.set_attribute("session.duration_seconds", total_duration_ms / 1000.0)
-            span.set_attribute("session.avg_test_duration_ms", total_duration_ms / total if total > 0 else 0)
+            span.set_attribute(
+                "session.avg_test_duration_ms",
+                total_duration_ms / total if total > 0 else 0,
+            )
 
             # Cost
             span.set_attribute("session.cost_usd", total_cost_usd)
-            span.set_attribute("session.avg_cost_per_test_usd", total_cost_usd / total if total > 0 else 0)
+            span.set_attribute(
+                "session.avg_cost_per_test_usd",
+                total_cost_usd / total if total > 0 else 0,
+            )
 
             # Categories breakdown
             if categories:
@@ -939,8 +986,12 @@ def record_test_session_summary(
 
             # Resource context (for correlation)
             attrs = get_resource_attributes()
-            span.set_attribute("session.plugin_version", attrs.get("service.version", "unknown"))
-            span.set_attribute("session.skill_version", attrs.get("skill.version", "unknown"))
+            span.set_attribute(
+                "session.plugin_version", attrs.get("service.version", "unknown")
+            )
+            span.set_attribute(
+                "session.skill_version", attrs.get("skill.version", "unknown")
+            )
             span.set_attribute("session.commit", attrs.get("vcs.commit.sha", "unknown"))
 
 
@@ -974,15 +1025,15 @@ def shutdown():
     try:
         # Get providers and force flush
         meter_provider = metrics.get_meter_provider()
-        if hasattr(meter_provider, 'force_flush'):
+        if hasattr(meter_provider, "force_flush"):
             meter_provider.force_flush()
-        if hasattr(meter_provider, 'shutdown'):
+        if hasattr(meter_provider, "shutdown"):
             meter_provider.shutdown()
 
         tracer_provider = trace.get_tracer_provider()
-        if hasattr(tracer_provider, 'force_flush'):
+        if hasattr(tracer_provider, "force_flush"):
             tracer_provider.force_flush()
-        if hasattr(tracer_provider, 'shutdown'):
+        if hasattr(tracer_provider, "shutdown"):
             tracer_provider.shutdown()
 
         print("OpenTelemetry shutdown complete.")
@@ -997,21 +1048,19 @@ def test_connectivity() -> bool:
     Returns:
         True if connection successful, False otherwise.
     """
-    import urllib.request
     import urllib.error
+    import urllib.request
 
     try:
         req = urllib.request.Request(
             f"{OTLP_HTTP_ENDPOINT}/v1/metrics",
             method="POST",
-            headers={"Content-Type": "application/x-protobuf"}
+            headers={"Content-Type": "application/x-protobuf"},
         )
         urllib.request.urlopen(req, timeout=5, data=b"")
     except urllib.error.HTTPError as e:
         # 400/415 means endpoint is reachable but rejected empty payload
-        if e.code in (400, 415):
-            return True
-        return False
+        return e.code in (400, 415)
     except Exception:
         return False
 

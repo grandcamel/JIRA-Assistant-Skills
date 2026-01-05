@@ -9,17 +9,17 @@ Usage:
     python create_customer.py --email test@example.com --dry-run
 """
 
-import sys
-import os
 import argparse
 import json
 import re
-from pathlib import Path
+import sys
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import print_success
+from jira_assistant_skills_lib import (
+    JiraError,
+    get_jira_client,
+    print_error,
+    print_success,
+)
 
 
 def validate_email(email: str) -> bool:
@@ -32,12 +32,13 @@ def validate_email(email: str) -> bool:
     Returns:
         True if valid, False otherwise
     """
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return re.match(pattern, email) is not None
 
 
-def create_customer_account(email: str, display_name: str = None,
-                             profile: str = None) -> dict:
+def create_customer_account(
+    email: str, display_name: str | None = None, profile: str | None = None
+) -> dict:
     """
     Create a customer account.
 
@@ -59,7 +60,7 @@ def create_customer_account(email: str, display_name: str = None,
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Create a JSM customer account',
+        description="Create a JSM customer account",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -74,21 +75,28 @@ Examples:
 
   Dry-run:
     %(prog)s --email test@example.com --dry-run
-        """
+        """,
     )
 
-    parser.add_argument('--email', required=True,
-                        help='Customer email address')
-    parser.add_argument('--name', '--display-name',
-                        help='Display name (defaults to email)')
-    parser.add_argument('--output', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Show what would be created without creating')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use from config')
-    parser.add_argument('--verbose', '-v', action='store_true',
-                        help='Show full API response')
+    parser.add_argument("--email", required=True, help="Customer email address")
+    parser.add_argument(
+        "--name", "--display-name", help="Display name (defaults to email)"
+    )
+    parser.add_argument(
+        "--output",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be created without creating",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use from config")
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Show full API response"
+    )
 
     args = parser.parse_args(argv)
 
@@ -99,26 +107,29 @@ Examples:
 
         if args.dry_run:
             print("DRY RUN MODE - No changes will be made\n")
-            print(f"Would create customer:")
+            print("Would create customer:")
             print(f"  Email: {args.email}")
             print(f"  Display Name: {args.name or args.email}")
             return 0
 
         customer = create_customer_account(
-            email=args.email,
-            display_name=args.name,
-            profile=args.profile
+            email=args.email, display_name=args.name, profile=args.profile
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             if args.verbose:
                 print(json.dumps(customer, indent=2))
             else:
-                print(json.dumps({
-                    'accountId': customer.get('accountId'),
-                    'emailAddress': customer.get('emailAddress'),
-                    'displayName': customer.get('displayName')
-                }, indent=2))
+                print(
+                    json.dumps(
+                        {
+                            "accountId": customer.get("accountId"),
+                            "emailAddress": customer.get("emailAddress"),
+                            "displayName": customer.get("displayName"),
+                        },
+                        indent=2,
+                    )
+                )
         else:
             print_success("Customer created successfully!")
             print()
@@ -144,5 +155,5 @@ Examples:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

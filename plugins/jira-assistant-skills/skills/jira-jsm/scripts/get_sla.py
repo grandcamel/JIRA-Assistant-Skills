@@ -8,25 +8,26 @@ Usage:
     python get_sla.py SD-123 --output json
 """
 
-import sys
-import os
 import argparse
 import json
-from pathlib import Path
-from typing import Optional, Dict, Any, List
+import sys
+from typing import Any
 
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError, NotFoundError
-from jira_assistant_skills_lib import print_success
 from jira_assistant_skills_lib import (
-    format_sla_time, format_duration, get_sla_status_emoji,
-    get_sla_status_text, is_sla_at_risk
+    JiraError,
+    NotFoundError,
+    format_duration,
+    format_sla_time,
+    get_jira_client,
+    get_sla_status_emoji,
+    get_sla_status_text,
+    print_error,
 )
 
 
-def get_slas(issue_key: str, sla_id: Optional[str] = None,
-             profile: Optional[str] = None) -> Dict[str, Any]:
+def get_slas(
+    issue_key: str, sla_id: str | None = None, profile: str | None = None
+) -> dict[str, Any]:
     """
     Get SLA information for a service request.
 
@@ -48,14 +49,14 @@ def get_slas(issue_key: str, sla_id: Optional[str] = None,
             return client.get_request_slas(issue_key)
 
 
-def format_sla_text(sla_data: Dict[str, Any], show_details: bool = True) -> str:
+def format_sla_text(sla_data: dict[str, Any], show_details: bool = True) -> str:
     """Format SLA data as text output."""
     lines = []
 
     # Check if this is a single SLA or list of SLAs
-    if 'values' in sla_data:
+    if "values" in sla_data:
         # Multiple SLAs
-        slas = sla_data.get('values', [])
+        slas = sla_data.get("values", [])
         lines.append(f"\nSLAs: {len(slas)} metrics")
         lines.append("=" * 80)
         lines.append("")
@@ -67,14 +68,14 @@ def format_sla_text(sla_data: Dict[str, Any], show_details: bool = True) -> str:
         # Single SLA
         lines.extend(_format_single_sla(sla_data, show_details))
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
-def _format_single_sla(sla: Dict[str, Any], show_details: bool = True) -> List[str]:
+def _format_single_sla(sla: dict[str, Any], show_details: bool = True) -> list[str]:
     """Format a single SLA metric."""
     lines = []
 
-    name = sla.get('name', 'Unknown SLA')
+    name = sla.get("name", "Unknown SLA")
     emoji = get_sla_status_emoji(sla)
     status = get_sla_status_text(sla)
 
@@ -82,28 +83,28 @@ def _format_single_sla(sla: Dict[str, Any], show_details: bool = True) -> List[s
 
     if show_details:
         # Ongoing cycle
-        ongoing = sla.get('ongoingCycle')
+        ongoing = sla.get("ongoingCycle")
         if ongoing:
-            goal = format_duration(ongoing.get('goalDuration'))
-            elapsed = format_duration(ongoing.get('elapsedTime'))
-            remaining = format_duration(ongoing.get('remainingTime'))
-            breach_time = format_sla_time(ongoing.get('breachTime'))
+            goal = format_duration(ongoing.get("goalDuration"))
+            elapsed = format_duration(ongoing.get("elapsedTime"))
+            remaining = format_duration(ongoing.get("remainingTime"))
+            breach_time = format_sla_time(ongoing.get("breachTime"))
 
             lines.append(f"  Goal:       {goal}")
             lines.append(f"  Elapsed:    {elapsed}")
             lines.append(f"  Remaining:  {remaining}")
             lines.append(f"  Breach at:  {breach_time}")
 
-            if ongoing.get('paused'):
+            if ongoing.get("paused"):
                 lines.append("  Status:     ⏸ Paused")
 
         # Completed cycles
-        completed = sla.get('completedCycles', [])
+        completed = sla.get("completedCycles", [])
         if completed:
             last = completed[-1]
-            goal = format_duration(last.get('goalDuration'))
-            elapsed = format_duration(last.get('elapsedTime'))
-            stop_time = format_sla_time(last.get('stopTime'))
+            goal = format_duration(last.get("goalDuration"))
+            elapsed = format_duration(last.get("elapsedTime"))
+            stop_time = format_sla_time(last.get("stopTime"))
 
             lines.append(f"  Completed:  {stop_time}")
             lines.append(f"  Goal:       {goal}")
@@ -112,7 +113,7 @@ def _format_single_sla(sla: Dict[str, Any], show_details: bool = True) -> List[s
     return lines
 
 
-def format_sla_json(sla_data: Dict[str, Any]) -> str:
+def format_sla_json(sla_data: dict[str, Any]) -> str:
     """Format SLA data as JSON output."""
     return json.dumps(sla_data, indent=2)
 
@@ -120,7 +121,7 @@ def format_sla_json(sla_data: Dict[str, Any]) -> str:
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Get JSM service request SLA information',
+        description="Get JSM service request SLA information",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -132,28 +133,27 @@ Examples:
 
   JSON output:
     %(prog)s SD-123 --output json
-        """
+        """,
     )
 
-    parser.add_argument('request_key',
-                        help='Request key (e.g., SD-123)')
-    parser.add_argument('--sla-id',
-                        help='Specific SLA metric ID')
-    parser.add_argument('--output', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use from config')
+    parser.add_argument("request_key", help="Request key (e.g., SD-123)")
+    parser.add_argument("--sla-id", help="Specific SLA metric ID")
+    parser.add_argument(
+        "--output",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
     try:
         sla_data = get_slas(
-            issue_key=args.request_key,
-            sla_id=args.sla_id,
-            profile=args.profile
+            issue_key=args.request_key, sla_id=args.sla_id, profile=args.profile
         )
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_sla_json(sla_data))
         else:
             print(format_sla_text(sla_data))
@@ -171,5 +171,5 @@ Examples:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

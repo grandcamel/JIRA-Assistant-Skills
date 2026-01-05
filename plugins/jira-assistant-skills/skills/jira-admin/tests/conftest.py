@@ -7,17 +7,18 @@ issue type and issue type scheme management.
 Note: Common markers (unit, integration, admin) are defined in the root pytest.ini.
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock, Mock
+
+import pytest
 
 # Add paths to sys.path before any imports that depend on them
 _this_dir = Path(__file__).parent
-_shared_lib_path = str(_this_dir.parent.parent / 'shared' / 'scripts' / 'lib')
-_scripts_path = str(_this_dir.parent / 'scripts')
+_shared_lib_path = str(_this_dir.parent.parent / "shared" / "scripts" / "lib")
+_scripts_path = str(_this_dir.parent / "scripts")
 _tests_path = str(_this_dir)
-_fixtures_path = str(_this_dir / 'fixtures')
+_fixtures_path = str(_this_dir / "fixtures")
 
 # Insert at beginning to ensure our paths take precedence
 for path in [_shared_lib_path, _scripts_path, _tests_path, _fixtures_path]:
@@ -25,104 +26,100 @@ for path in [_shared_lib_path, _scripts_path, _tests_path, _fixtures_path]:
         sys.path.insert(0, path)
 
 from fixtures.issue_type_responses import (
-    ISSUE_TYPES_RESPONSE,
-    EPIC_RESPONSE,
-    STORY_RESPONSE,
-    SUBTASK_RESPONSE,
+    ALTERNATIVES_RESPONSE,
     CREATED_ISSUE_TYPE_RESPONSE,
-    PROJECT_SCOPED_ISSUE_TYPE,
-    ISSUE_TYPE_SCHEMES_RESPONSE,
-    DEFAULT_SCHEME_RESPONSE,
-    SOFTWARE_SCHEME_RESPONSE,
     CREATED_SCHEME_RESPONSE,
+    DEFAULT_SCHEME_RESPONSE,
+    EPIC_RESPONSE,
+    ISSUE_TYPE_SCHEMES_RESPONSE,
+    ISSUE_TYPES_RESPONSE,
+    PROJECT_SCOPED_ISSUE_TYPE,
     SCHEME_FOR_PROJECTS_RESPONSE,
     SCHEME_MAPPINGS_RESPONSE,
-    ALTERNATIVES_RESPONSE,
+    SOFTWARE_SCHEME_RESPONSE,
+    STORY_RESPONSE,
+    SUBTASK_RESPONSE,
 )
-
 from fixtures.notification_scheme_responses import (
-    NOTIFICATION_SCHEMES_RESPONSE,
-    NOTIFICATION_SCHEME_DETAIL_RESPONSE,
-    NOTIFICATION_SCHEME_ALL_TYPES,
-    PROJECT_MAPPINGS_RESPONSE,
     CREATED_NOTIFICATION_SCHEME,
     EMPTY_NOTIFICATION_SCHEMES,
     EMPTY_SCHEME,
     NOTIFICATION_EVENTS,
+    NOTIFICATION_SCHEME_ALL_TYPES,
+    NOTIFICATION_SCHEME_DETAIL_RESPONSE,
+    NOTIFICATION_SCHEMES_RESPONSE,
+    PROJECT_MAPPINGS_RESPONSE,
     RECIPIENT_TYPES,
 )
-
 from fixtures.permission_scheme_responses import (
-    PERMISSION_SCHEMES_RESPONSE,
-    PERMISSION_SCHEME_DETAIL_RESPONSE,
-    MINIMAL_SCHEME_RESPONSE,
+    ALL_PERMISSIONS_RESPONSE,
+    CREATED_GRANT_RESPONSE,
     CREATED_SCHEME_RESPONSE as PERMISSION_CREATED_SCHEME_RESPONSE,
     CREATED_SCHEME_WITH_GRANTS_RESPONSE,
-    UPDATED_SCHEME_RESPONSE,
+    EMPTY_SCHEMES_RESPONSE,
+    MINIMAL_SCHEME_RESPONSE,
+    PERMISSION_DENIED_ERROR,
     PERMISSION_GRANTS_RESPONSE,
-    CREATED_GRANT_RESPONSE,
-    ALL_PERMISSIONS_RESPONSE,
+    PERMISSION_SCHEME_DETAIL_RESPONSE,
+    PERMISSION_SCHEMES_RESPONSE,
     PROJECT_PERMISSION_SCHEME_RESPONSE,
     PROJECT_ROLES_RESPONSE,
-    EMPTY_SCHEMES_RESPONSE,
-    SCHEME_NOT_FOUND_ERROR,
     SCHEME_IN_USE_ERROR,
-    PERMISSION_DENIED_ERROR,
+    SCHEME_NOT_FOUND_ERROR,
+    UPDATED_SCHEME_RESPONSE,
 )
-
 from fixtures.screen_responses import (
-    SCREENS_RESPONSE,
-    DEFAULT_SCREEN,
-    BUG_CREATE_SCREEN,
-    EPIC_SCREEN,
-    DEFAULT_SCREEN_TABS,
-    SINGLE_TAB,
-    FIELD_TAB_FIELDS,
-    CUSTOM_FIELDS_TAB_FIELDS,
+    ADDED_FIELD_RESPONSE,
     ALL_SCREEN_FIELDS,
     AVAILABLE_FIELDS,
-    ADDED_FIELD_RESPONSE,
-    SCREEN_SCHEMES_RESPONSE,
-    DEFAULT_SCREEN_SCHEME,
+    BUG_CREATE_SCREEN,
     BUG_SCREEN_SCHEME,
-    ISSUE_TYPE_SCREEN_SCHEMES_RESPONSE,
+    CUSTOM_FIELDS_TAB_FIELDS,
     DEFAULT_ISSUE_TYPE_SCREEN_SCHEME,
-    SOFTWARE_ISSUE_TYPE_SCREEN_SCHEME,
-    ISSUE_TYPE_SCREEN_SCHEME_MAPPINGS,
-    PROJECT_ISSUE_TYPE_SCREEN_SCHEMES,
-    EMPTY_SCREENS_RESPONSE,
-    EMPTY_SCREEN_SCHEMES_RESPONSE,
+    DEFAULT_SCREEN,
+    DEFAULT_SCREEN_SCHEME,
+    DEFAULT_SCREEN_TABS,
     EMPTY_ISSUE_TYPE_SCREEN_SCHEMES_RESPONSE,
+    EMPTY_SCREEN_SCHEMES_RESPONSE,
+    EMPTY_SCREENS_RESPONSE,
+    EPIC_SCREEN,
+    FIELD_TAB_FIELDS,
+    ISSUE_TYPE_SCREEN_SCHEME_MAPPINGS,
+    ISSUE_TYPE_SCREEN_SCHEMES_RESPONSE,
+    PROJECT_ISSUE_TYPE_SCREEN_SCHEMES,
+    PROJECT_ISSUE_TYPES,
+    SAMPLE_PROJECT,
+    SCREEN_SCHEMES_RESPONSE,
     SCREENS_PAGE_1,
     SCREENS_PAGE_2,
     SCREENS_PAGE_3,
-    PROJECT_ISSUE_TYPES,
-    SAMPLE_PROJECT,
+    SCREENS_RESPONSE,
+    SINGLE_TAB,
+    SOFTWARE_ISSUE_TYPE_SCREEN_SCHEME,
 )
-
 from fixtures.workflow_responses import (
-    WORKFLOWS_RESPONSE,
-    SOFTWARE_WORKFLOW,
-    BUG_WORKFLOW,
-    WORKFLOW_SEARCH_RESPONSE,
-    WORKFLOW_SCHEMES_RESPONSE as WORKFLOW_SCHEMES_LIST_RESPONSE,
-    SOFTWARE_SCHEME_DETAIL,
-    PROJECT_WORKFLOW_SCHEME,
-    ASSIGN_SCHEME_TASK_RESPONSE,
-    TASK_COMPLETE_RESPONSE,
-    TASK_IN_PROGRESS_RESPONSE,
-    TASK_FAILED_RESPONSE,
     ALL_STATUSES_RESPONSE,
-    STATUS_SEARCH_RESPONSE,
-    SINGLE_STATUS,
-    ISSUE_TRANSITIONS,
-    ISSUE_WITH_STATUS,
-    SCHEMES_FOR_WORKFLOW,
-    EMPTY_WORKFLOWS_RESPONSE,
+    ASSIGN_SCHEME_TASK_RESPONSE,
+    BUG_WORKFLOW,
     EMPTY_SCHEMES_RESPONSE as WORKFLOW_EMPTY_SCHEMES_RESPONSE,
     EMPTY_STATUSES_RESPONSE,
+    EMPTY_WORKFLOWS_RESPONSE,
+    ISSUE_TRANSITIONS,
+    ISSUE_WITH_STATUS,
+    PROJECT_WORKFLOW_SCHEME,
+    SCHEMES_FOR_WORKFLOW,
+    SINGLE_STATUS,
+    SOFTWARE_SCHEME_DETAIL,
+    SOFTWARE_WORKFLOW,
+    STATUS_SEARCH_RESPONSE,
+    TASK_COMPLETE_RESPONSE,
+    TASK_FAILED_RESPONSE,
+    TASK_IN_PROGRESS_RESPONSE,
+    WORKFLOW_SCHEMES_RESPONSE as WORKFLOW_SCHEMES_LIST_RESPONSE,
+    WORKFLOW_SEARCH_RESPONSE,
     WORKFLOWS_PAGE_1,
     WORKFLOWS_PAGE_2,
+    WORKFLOWS_RESPONSE,
 )
 
 
@@ -217,12 +214,15 @@ def alternatives_response():
 @pytest.fixture
 def mock_config_manager(mock_jira_client):
     """Mock config_manager.get_jira_client() to return mock client."""
+
     def _get_jira_client(profile=None):
         return mock_jira_client
+
     return _get_jira_client
 
 
 # ========== User Management Fixtures ==========
+
 
 @pytest.fixture
 def sample_user():
@@ -239,8 +239,8 @@ def sample_user():
             "48x48": "https://avatar.url/48x48",
             "24x24": "https://avatar.url/24x24",
             "16x16": "https://avatar.url/16x16",
-            "32x32": "https://avatar.url/32x32"
-        }
+            "32x32": "https://avatar.url/32x32",
+        },
     }
 
 
@@ -253,14 +253,12 @@ def sample_user_with_groups(sample_user):
         "items": [
             {"name": "jira-users", "groupId": "group-id-1"},
             {"name": "jira-developers", "groupId": "group-id-2"},
-            {"name": "jira-administrators", "groupId": "group-id-3"}
-        ]
+            {"name": "jira-administrators", "groupId": "group-id-3"},
+        ],
     }
     user["applicationRoles"] = {
         "size": 1,
-        "items": [
-            {"name": "Jira Software", "key": "jira-software"}
-        ]
+        "items": [{"name": "Jira Software", "key": "jira-software"}],
     }
     return user
 
@@ -275,7 +273,7 @@ def sample_inactive_user():
         "emailAddress": "inactive@example.com",
         "active": False,
         "timeZone": "UTC",
-        "locale": "en-US"
+        "locale": "en-US",
     }
 
 
@@ -286,7 +284,7 @@ def privacy_restricted_user():
         "accountId": "a1b2c3d4e5f6g7h8i9j0k1l2",
         "accountType": "atlassian",
         "displayName": "Jane Smith",
-        "active": True
+        "active": True,
         # Note: emailAddress, timeZone, locale are missing due to privacy controls
     }
 
@@ -298,7 +296,7 @@ def deleted_user():
         "accountId": "unknown",
         "accountType": "atlassian",
         "displayName": "Deleted User",
-        "active": False
+        "active": False,
     }
 
 
@@ -310,20 +308,20 @@ def sample_users():
             "accountId": "5b10ac8d82e05b22cc7d4ef5",
             "displayName": "John Doe",
             "emailAddress": "john.doe@example.com",
-            "active": True
+            "active": True,
         },
         {
             "accountId": "a1b2c3d4e5f6g7h8i9j0k1l2",
             "displayName": "John Smith",
             "emailAddress": "john.smith@example.com",
-            "active": True
+            "active": True,
         },
         {
             "accountId": "9z8y7x6w5v4u3t2s1r0q9p8o",
             "displayName": "Johnny Bravo",
             "emailAddress": "johnny@example.com",
-            "active": False
-        }
+            "active": False,
+        },
     ]
 
 
@@ -331,13 +329,26 @@ def sample_users():
 def sample_user_groups():
     """Sample user groups response."""
     return [
-        {"name": "jira-users", "groupId": "group-id-1", "self": "https://site.atlassian.net/rest/api/3/group?groupId=group-id-1"},
-        {"name": "jira-developers", "groupId": "group-id-2", "self": "https://site.atlassian.net/rest/api/3/group?groupId=group-id-2"},
-        {"name": "jira-administrators", "groupId": "group-id-3", "self": "https://site.atlassian.net/rest/api/3/group?groupId=group-id-3"}
+        {
+            "name": "jira-users",
+            "groupId": "group-id-1",
+            "self": "https://site.atlassian.net/rest/api/3/group?groupId=group-id-1",
+        },
+        {
+            "name": "jira-developers",
+            "groupId": "group-id-2",
+            "self": "https://site.atlassian.net/rest/api/3/group?groupId=group-id-2",
+        },
+        {
+            "name": "jira-administrators",
+            "groupId": "group-id-3",
+            "self": "https://site.atlassian.net/rest/api/3/group?groupId=group-id-3",
+        },
     ]
 
 
 # ========== Group Management Fixtures ==========
+
 
 @pytest.fixture
 def sample_group():
@@ -345,7 +356,7 @@ def sample_group():
     return {
         "name": "jira-developers",
         "groupId": "276f955c-63d7-42c8-9520-92d01dca0625",
-        "self": "https://site.atlassian.net/rest/api/3/group?groupId=276f955c-63d7-42c8-9520-92d01dca0625"
+        "self": "https://site.atlassian.net/rest/api/3/group?groupId=276f955c-63d7-42c8-9520-92d01dca0625",
     }
 
 
@@ -356,23 +367,23 @@ def sample_groups():
         {
             "name": "jira-administrators",
             "groupId": "admin-group-id-123",
-            "self": "https://site.atlassian.net/rest/api/3/group?groupId=admin-group-id-123"
+            "self": "https://site.atlassian.net/rest/api/3/group?groupId=admin-group-id-123",
         },
         {
             "name": "jira-developers",
             "groupId": "276f955c-63d7-42c8-9520-92d01dca0625",
-            "self": "https://site.atlassian.net/rest/api/3/group?groupId=276f955c-63d7-42c8-9520-92d01dca0625"
+            "self": "https://site.atlassian.net/rest/api/3/group?groupId=276f955c-63d7-42c8-9520-92d01dca0625",
         },
         {
             "name": "jira-users",
             "groupId": "users-group-id-456",
-            "self": "https://site.atlassian.net/rest/api/3/group?groupId=users-group-id-456"
+            "self": "https://site.atlassian.net/rest/api/3/group?groupId=users-group-id-456",
         },
         {
             "name": "project-admins",
             "groupId": "project-admins-id-789",
-            "self": "https://site.atlassian.net/rest/api/3/group?groupId=project-admins-id-789"
-        }
+            "self": "https://site.atlassian.net/rest/api/3/group?groupId=project-admins-id-789",
+        },
     ]
 
 
@@ -382,7 +393,7 @@ def sample_groups_picker_response(sample_groups):
     return {
         "header": "Showing 4 of 4 matching groups",
         "total": 4,
-        "groups": sample_groups
+        "groups": sample_groups,
     }
 
 
@@ -400,21 +411,21 @@ def sample_group_members():
                 "accountId": "5b10ac8d82e05b22cc7d4ef5",
                 "displayName": "John Doe",
                 "emailAddress": "john.doe@example.com",
-                "active": True
+                "active": True,
             },
             {
                 "accountId": "a1b2c3d4e5f6g7h8i9j0k1l2",
                 "displayName": "Jane Smith",
-                "active": True
+                "active": True,
                 # emailAddress missing due to privacy
             },
             {
                 "accountId": "9z8y7x6w5v4u3t2s1r0q9p8o",
                 "displayName": "Bob Johnson",
                 "emailAddress": "bob.j@example.com",
-                "active": True
-            }
-        ]
+                "active": True,
+            },
+        ],
     }
 
 
@@ -427,27 +438,24 @@ def sample_empty_group_members():
         "startAt": 0,
         "total": 0,
         "isLast": True,
-        "values": []
+        "values": [],
     }
 
 
 @pytest.fixture
 def system_groups():
     """List of protected system group names."""
-    return [
-        "jira-administrators",
-        "jira-users",
-        "jira-software-users",
-        "site-admins"
-    ]
+    return ["jira-administrators", "jira-users", "jira-software-users", "site-admins"]
 
 
 # ========== Notification Scheme Fixtures ==========
+
 
 @pytest.fixture
 def sample_notification_schemes():
     """Sample notification schemes list for testing."""
     import copy
+
     return copy.deepcopy(NOTIFICATION_SCHEMES_RESPONSE)
 
 
@@ -455,6 +463,7 @@ def sample_notification_schemes():
 def sample_notification_scheme_detail():
     """Sample detailed notification scheme for testing."""
     import copy
+
     return copy.deepcopy(NOTIFICATION_SCHEME_DETAIL_RESPONSE)
 
 
@@ -462,6 +471,7 @@ def sample_notification_scheme_detail():
 def sample_notification_scheme_with_all_types():
     """Sample scheme with all notification types for testing."""
     import copy
+
     return copy.deepcopy(NOTIFICATION_SCHEME_ALL_TYPES)
 
 
@@ -469,6 +479,7 @@ def sample_notification_scheme_with_all_types():
 def sample_project_mappings():
     """Sample project-to-scheme mappings for testing."""
     import copy
+
     return copy.deepcopy(PROJECT_MAPPINGS_RESPONSE)
 
 
@@ -476,6 +487,7 @@ def sample_project_mappings():
 def sample_created_notification_scheme():
     """Sample response from creating a notification scheme."""
     import copy
+
     return copy.deepcopy(CREATED_NOTIFICATION_SCHEME)
 
 
@@ -483,6 +495,7 @@ def sample_created_notification_scheme():
 def empty_notification_schemes():
     """Empty notification schemes response for testing."""
     import copy
+
     return copy.deepcopy(EMPTY_NOTIFICATION_SCHEMES)
 
 
@@ -490,6 +503,7 @@ def empty_notification_schemes():
 def empty_scheme():
     """Notification scheme with no events configured."""
     import copy
+
     return copy.deepcopy(EMPTY_SCHEME)
 
 
@@ -497,6 +511,7 @@ def empty_scheme():
 def sample_notification_events():
     """Sample notification event types for testing."""
     import copy
+
     return copy.deepcopy(NOTIFICATION_EVENTS)
 
 
@@ -504,17 +519,21 @@ def sample_notification_events():
 def sample_recipient_types():
     """Sample valid notification recipient types."""
     import copy
+
     return copy.deepcopy(RECIPIENT_TYPES)
 
 
 # ========== Automation Rules Fixtures ==========
 
+
 @pytest.fixture
 def mock_automation_client():
     """Create a mock AutomationClient with common methods."""
     client = MagicMock()
-    client.cloud_id = 'test-cloud-id-12345'
-    client.base_url = 'https://api.atlassian.com/automation/public/jira/test-cloud-id-12345'
+    client.cloud_id = "test-cloud-id-12345"
+    client.base_url = (
+        "https://api.atlassian.com/automation/public/jira/test-cloud-id-12345"
+    )
 
     # Rule discovery methods
     client.get_rules = MagicMock()
@@ -553,46 +572,36 @@ def sample_automation_rules():
     """Sample automation rule data for testing."""
     return [
         {
-            'id': 'ari:cloud:jira::site/12345-rule-001',
-            'name': 'Auto-assign to lead',
-            'state': 'ENABLED',
-            'ruleScope': {
-                'resources': ['ari:cloud:jira:12345:project/10000']
-            },
-            'canManage': True,
-            'trigger': {
-                'type': 'jira.issue.event.trigger:created'
-            },
-            'created': '2025-01-15T10:30:00.000Z',
-            'updated': '2025-01-20T14:45:00.000Z'
+            "id": "ari:cloud:jira::site/12345-rule-001",
+            "name": "Auto-assign to lead",
+            "state": "ENABLED",
+            "ruleScope": {"resources": ["ari:cloud:jira:12345:project/10000"]},
+            "canManage": True,
+            "trigger": {"type": "jira.issue.event.trigger:created"},
+            "created": "2025-01-15T10:30:00.000Z",
+            "updated": "2025-01-20T14:45:00.000Z",
         },
         {
-            'id': 'ari:cloud:jira::site/12345-rule-002',
-            'name': 'Comment on status change',
-            'state': 'DISABLED',
-            'ruleScope': {
-                'resources': []  # Global scope
+            "id": "ari:cloud:jira::site/12345-rule-002",
+            "name": "Comment on status change",
+            "state": "DISABLED",
+            "ruleScope": {
+                "resources": []  # Global scope
             },
-            'canManage': True,
-            'trigger': {
-                'type': 'jira.issue.event.trigger:transitioned'
-            },
-            'created': '2025-01-10T09:00:00.000Z',
-            'updated': '2025-01-18T16:30:00.000Z'
+            "canManage": True,
+            "trigger": {"type": "jira.issue.event.trigger:transitioned"},
+            "created": "2025-01-10T09:00:00.000Z",
+            "updated": "2025-01-18T16:30:00.000Z",
         },
         {
-            'id': 'ari:cloud:jira::site/12345-rule-003',
-            'name': 'Notify on high priority',
-            'state': 'ENABLED',
-            'ruleScope': {
-                'resources': ['ari:cloud:jira:12345:project/10001']
-            },
-            'canManage': False,
-            'trigger': {
-                'type': 'jira.issue.field.changed:priority'
-            },
-            'created': '2025-01-05T11:15:00.000Z',
-            'updated': '2025-01-12T08:20:00.000Z'
+            "id": "ari:cloud:jira::site/12345-rule-003",
+            "name": "Notify on high priority",
+            "state": "ENABLED",
+            "ruleScope": {"resources": ["ari:cloud:jira:12345:project/10001"]},
+            "canManage": False,
+            "trigger": {"type": "jira.issue.field.changed:priority"},
+            "created": "2025-01-05T11:15:00.000Z",
+            "updated": "2025-01-12T08:20:00.000Z",
         },
     ]
 
@@ -601,31 +610,27 @@ def sample_automation_rules():
 def sample_rule_detail():
     """Sample detailed automation rule configuration."""
     return {
-        'id': 'ari:cloud:jira::site/12345-rule-001',
-        'name': 'Auto-assign to lead',
-        'description': 'Automatically assigns new issues to project lead',
-        'state': 'ENABLED',
-        'ruleScope': {
-            'resources': ['ari:cloud:jira:12345:project/10000']
+        "id": "ari:cloud:jira::site/12345-rule-001",
+        "name": "Auto-assign to lead",
+        "description": "Automatically assigns new issues to project lead",
+        "state": "ENABLED",
+        "ruleScope": {"resources": ["ari:cloud:jira:12345:project/10000"]},
+        "trigger": {
+            "type": "jira.issue.event.trigger:created",
+            "configuration": {"issueEvent": "issue_created"},
         },
-        'trigger': {
-            'type': 'jira.issue.event.trigger:created',
-            'configuration': {
-                'issueEvent': 'issue_created'
-            }
-        },
-        'components': [
+        "components": [
             {
-                'type': 'jira.issue.assign',
-                'value': '{{project.lead.accountId}}',
-                'children': []
+                "type": "jira.issue.assign",
+                "value": "{{project.lead.accountId}}",
+                "children": [],
             }
         ],
-        'connections': [],
-        'canManage': True,
-        'created': '2025-01-15T10:30:00.000Z',
-        'updated': '2025-01-20T14:45:00.000Z',
-        'authorAccountId': '557058:f58131cb-b67d-43c7-b30d-6b58d40bd077'
+        "connections": [],
+        "canManage": True,
+        "created": "2025-01-15T10:30:00.000Z",
+        "updated": "2025-01-20T14:45:00.000Z",
+        "authorAccountId": "557058:f58131cb-b67d-43c7-b30d-6b58d40bd077",
     }
 
 
@@ -634,17 +639,17 @@ def sample_manual_rules():
     """Sample manually-triggered automation rules."""
     return [
         {
-            'id': '12345',
-            'name': 'Escalate to Manager',
-            'description': 'Escalate issue to manager for review',
-            'contextType': 'issue'
+            "id": "12345",
+            "name": "Escalate to Manager",
+            "description": "Escalate issue to manager for review",
+            "contextType": "issue",
         },
         {
-            'id': '12346',
-            'name': 'Request More Info',
-            'description': 'Request additional information from reporter',
-            'contextType': 'issue'
-        }
+            "id": "12346",
+            "name": "Request More Info",
+            "description": "Request additional information from reporter",
+            "contextType": "issue",
+        },
     ]
 
 
@@ -653,35 +658,35 @@ def sample_automation_templates():
     """Sample automation templates."""
     return [
         {
-            'id': 'template-001',
-            'name': 'Assign issues to project lead',
-            'description': 'Automatically assigns new issues to the project lead',
-            'category': 'Issue Management',
-            'tags': ['assignment', 'automation'],
-            'parameters': [
+            "id": "template-001",
+            "name": "Assign issues to project lead",
+            "description": "Automatically assigns new issues to the project lead",
+            "category": "Issue Management",
+            "tags": ["assignment", "automation"],
+            "parameters": [
                 {
-                    'name': 'projectKey',
-                    'type': 'string',
-                    'required': True,
-                    'description': 'Project key to apply the rule'
+                    "name": "projectKey",
+                    "type": "string",
+                    "required": True,
+                    "description": "Project key to apply the rule",
                 }
-            ]
+            ],
         },
         {
-            'id': 'template-002',
-            'name': 'Close stale issues',
-            'description': 'Automatically closes issues with no activity for 30 days',
-            'category': 'Issue Management',
-            'tags': ['cleanup', 'automation'],
-            'parameters': [
+            "id": "template-002",
+            "name": "Close stale issues",
+            "description": "Automatically closes issues with no activity for 30 days",
+            "category": "Issue Management",
+            "tags": ["cleanup", "automation"],
+            "parameters": [
                 {
-                    'name': 'daysInactive',
-                    'type': 'number',
-                    'required': True,
-                    'description': 'Days of inactivity before closing'
+                    "name": "daysInactive",
+                    "type": "number",
+                    "required": True,
+                    "description": "Days of inactivity before closing",
                 }
-            ]
-        }
+            ],
+        },
     ]
 
 
@@ -689,11 +694,9 @@ def sample_automation_templates():
 def sample_rules_response(sample_automation_rules):
     """Sample paginated rules response."""
     return {
-        'values': sample_automation_rules,
-        'links': {
-            'next': '?cursor=next_page_token'
-        },
-        'hasMore': False
+        "values": sample_automation_rules,
+        "links": {"next": "?cursor=next_page_token"},
+        "hasMore": False,
     }
 
 
@@ -701,11 +704,15 @@ def sample_rules_response(sample_automation_rules):
 def mock_get_automation_client(mock_automation_client):
     """Patch get_automation_client to return mock client."""
     from unittest.mock import patch
-    with patch('config_manager.get_automation_client', return_value=mock_automation_client):
+
+    with patch(
+        "config_manager.get_automation_client", return_value=mock_automation_client
+    ):
         yield mock_automation_client
 
 
 # ========== Project Management Fixtures ==========
+
 
 @pytest.fixture
 def sample_project_response():
@@ -720,7 +727,7 @@ def sample_project_response():
             "48x48": "https://test.atlassian.net/secure/projectavatar?avatarId=10324",
             "24x24": "https://test.atlassian.net/secure/projectavatar?size=small&avatarId=10324",
             "16x16": "https://test.atlassian.net/secure/projectavatar?size=xsmall&avatarId=10324",
-            "32x32": "https://test.atlassian.net/secure/projectavatar?size=medium&avatarId=10324"
+            "32x32": "https://test.atlassian.net/secure/projectavatar?size=medium&avatarId=10324",
         },
         "projectTypeKey": "software",
         "simplified": False,
@@ -731,7 +738,7 @@ def sample_project_response():
             "accountId": "557058:test-user-id",
             "displayName": "Test User",
             "emailAddress": "test@example.com",
-            "active": True
+            "active": True,
         },
         "url": "https://example.com/project",
         "assigneeType": "PROJECT_LEAD",
@@ -739,8 +746,8 @@ def sample_project_response():
             "self": "https://test.atlassian.net/rest/api/3/projectCategory/10000",
             "id": "10000",
             "name": "Development",
-            "description": "Development projects"
-        }
+            "description": "Development projects",
+        },
     }
 
 
@@ -758,7 +765,7 @@ def sample_project_create_response():
         "projectTypeKey": "software",
         "simplified": False,
         "style": "classic",
-        "isPrivate": False
+        "isPrivate": False,
     }
 
 
@@ -785,10 +792,7 @@ def sample_project_list_response():
                 "avatarUrls": {
                     "48x48": "https://test.atlassian.net/secure/projectavatar?avatarId=10324"
                 },
-                "projectCategory": {
-                    "id": "10000",
-                    "name": "Development"
-                }
+                "projectCategory": {"id": "10000", "name": "Development"},
             },
             {
                 "self": "https://test.atlassian.net/rest/api/3/project/10001",
@@ -801,9 +805,9 @@ def sample_project_list_response():
                 "isPrivate": False,
                 "avatarUrls": {
                     "48x48": "https://test.atlassian.net/secure/projectavatar?avatarId=10325"
-                }
-            }
-        ]
+                },
+            },
+        ],
     }
 
 
@@ -814,7 +818,7 @@ def sample_category_response():
         "self": "https://test.atlassian.net/rest/api/3/projectCategory/10000",
         "id": "10000",
         "name": "Development",
-        "description": "All development projects"
+        "description": "All development projects",
     }
 
 
@@ -826,20 +830,20 @@ def sample_categories_list():
             "self": "https://test.atlassian.net/rest/api/3/projectCategory/10000",
             "id": "10000",
             "name": "Development",
-            "description": "All development projects"
+            "description": "All development projects",
         },
         {
             "self": "https://test.atlassian.net/rest/api/3/projectCategory/10001",
             "id": "10001",
             "name": "Marketing",
-            "description": "Marketing and campaigns"
+            "description": "Marketing and campaigns",
         },
         {
             "self": "https://test.atlassian.net/rest/api/3/projectCategory/10002",
             "id": "10002",
             "name": "Support",
-            "description": "Customer support projects"
-        }
+            "description": "Customer support projects",
+        },
     ]
 
 
@@ -851,20 +855,20 @@ def sample_project_types():
             "key": "software",
             "formattedKey": "Software",
             "descriptionI18nKey": "jira.project.type.software.description",
-            "icon": "https://test.atlassian.net/images/icons/project/software.svg"
+            "icon": "https://test.atlassian.net/images/icons/project/software.svg",
         },
         {
             "key": "business",
             "formattedKey": "Business",
             "descriptionI18nKey": "jira.project.type.business.description",
-            "icon": "https://test.atlassian.net/images/icons/project/business.svg"
+            "icon": "https://test.atlassian.net/images/icons/project/business.svg",
         },
         {
             "key": "service_desk",
             "formattedKey": "Service Desk",
             "descriptionI18nKey": "jira.project.type.service_desk.description",
-            "icon": "https://test.atlassian.net/images/icons/project/servicedesk.svg"
-        }
+            "icon": "https://test.atlassian.net/images/icons/project/servicedesk.svg",
+        },
     ]
 
 
@@ -879,8 +883,8 @@ def sample_avatars_response():
                 "isSystemAvatar": True,
                 "urls": {
                     "48x48": "https://test.atlassian.net/secure/projectavatar?avatarId=10200",
-                    "24x24": "https://test.atlassian.net/secure/projectavatar?size=small&avatarId=10200"
-                }
+                    "24x24": "https://test.atlassian.net/secure/projectavatar?size=small&avatarId=10200",
+                },
             },
             {
                 "id": "10201",
@@ -888,9 +892,9 @@ def sample_avatars_response():
                 "isSystemAvatar": True,
                 "urls": {
                     "48x48": "https://test.atlassian.net/secure/projectavatar?avatarId=10201",
-                    "24x24": "https://test.atlassian.net/secure/projectavatar?size=small&avatarId=10201"
-                }
-            }
+                    "24x24": "https://test.atlassian.net/secure/projectavatar?size=small&avatarId=10201",
+                },
+            },
         ],
         "custom": [
             {
@@ -899,9 +903,9 @@ def sample_avatars_response():
                 "isSystemAvatar": False,
                 "urls": {
                     "48x48": "https://test.atlassian.net/secure/projectavatar?avatarId=10300"
-                }
+                },
             }
-        ]
+        ],
     }
 
 
@@ -921,7 +925,7 @@ def sample_task_response():
         "submitted": 1704067200000,
         "started": 1704067200100,
         "finished": 1704067205100,
-        "lastUpdate": 1704067205100
+        "lastUpdate": 1704067205100,
     }
 
 
@@ -948,20 +952,22 @@ def sample_trash_projects():
                 "deletedDate": "2025-01-10T12:00:00.000+0000",
                 "deletedBy": {
                     "accountId": "557058:test-user-id",
-                    "displayName": "Test User"
+                    "displayName": "Test User",
                 },
-                "retentionTillDate": "2025-03-11T12:00:00.000+0000"
+                "retentionTillDate": "2025-03-11T12:00:00.000+0000",
             }
-        ]
+        ],
     }
 
 
 # ========== Screen Management Fixtures ==========
 
+
 @pytest.fixture
 def screens_response():
     """Sample JIRA API response for all screens."""
     import copy
+
     return copy.deepcopy(SCREENS_RESPONSE)
 
 
@@ -969,6 +975,7 @@ def screens_response():
 def default_screen():
     """Sample default screen for testing."""
     import copy
+
     return copy.deepcopy(DEFAULT_SCREEN)
 
 
@@ -976,6 +983,7 @@ def default_screen():
 def bug_create_screen():
     """Sample bug create screen with project scope."""
     import copy
+
     return copy.deepcopy(BUG_CREATE_SCREEN)
 
 
@@ -983,6 +991,7 @@ def bug_create_screen():
 def epic_screen():
     """Sample epic screen for testing."""
     import copy
+
     return copy.deepcopy(EPIC_SCREEN)
 
 
@@ -990,6 +999,7 @@ def epic_screen():
 def default_screen_tabs():
     """Sample screen tabs for default screen."""
     import copy
+
     return copy.deepcopy(DEFAULT_SCREEN_TABS)
 
 
@@ -997,6 +1007,7 @@ def default_screen_tabs():
 def single_tab():
     """Sample single tab response."""
     import copy
+
     return copy.deepcopy(SINGLE_TAB)
 
 
@@ -1004,6 +1015,7 @@ def single_tab():
 def field_tab_fields():
     """Sample fields in Field Tab."""
     import copy
+
     return copy.deepcopy(FIELD_TAB_FIELDS)
 
 
@@ -1011,6 +1023,7 @@ def field_tab_fields():
 def custom_fields_tab_fields():
     """Sample fields in Custom Fields tab."""
     import copy
+
     return copy.deepcopy(CUSTOM_FIELDS_TAB_FIELDS)
 
 
@@ -1018,6 +1031,7 @@ def custom_fields_tab_fields():
 def all_screen_fields():
     """Sample all fields from all tabs."""
     import copy
+
     return copy.deepcopy(ALL_SCREEN_FIELDS)
 
 
@@ -1025,6 +1039,7 @@ def all_screen_fields():
 def available_fields():
     """Sample available fields that can be added."""
     import copy
+
     return copy.deepcopy(AVAILABLE_FIELDS)
 
 
@@ -1032,6 +1047,7 @@ def available_fields():
 def added_field_response():
     """Sample response when adding a field."""
     import copy
+
     return copy.deepcopy(ADDED_FIELD_RESPONSE)
 
 
@@ -1039,6 +1055,7 @@ def added_field_response():
 def screen_schemes_response():
     """Sample JIRA API response for screen schemes."""
     import copy
+
     return copy.deepcopy(SCREEN_SCHEMES_RESPONSE)
 
 
@@ -1046,6 +1063,7 @@ def screen_schemes_response():
 def default_screen_scheme():
     """Sample default screen scheme."""
     import copy
+
     return copy.deepcopy(DEFAULT_SCREEN_SCHEME)
 
 
@@ -1053,6 +1071,7 @@ def default_screen_scheme():
 def bug_screen_scheme():
     """Sample bug screen scheme."""
     import copy
+
     return copy.deepcopy(BUG_SCREEN_SCHEME)
 
 
@@ -1060,6 +1079,7 @@ def bug_screen_scheme():
 def issue_type_screen_schemes_response():
     """Sample JIRA API response for issue type screen schemes."""
     import copy
+
     return copy.deepcopy(ISSUE_TYPE_SCREEN_SCHEMES_RESPONSE)
 
 
@@ -1067,6 +1087,7 @@ def issue_type_screen_schemes_response():
 def default_issue_type_screen_scheme():
     """Sample default issue type screen scheme."""
     import copy
+
     return copy.deepcopy(DEFAULT_ISSUE_TYPE_SCREEN_SCHEME)
 
 
@@ -1074,6 +1095,7 @@ def default_issue_type_screen_scheme():
 def software_issue_type_screen_scheme():
     """Sample software issue type screen scheme."""
     import copy
+
     return copy.deepcopy(SOFTWARE_ISSUE_TYPE_SCREEN_SCHEME)
 
 
@@ -1081,6 +1103,7 @@ def software_issue_type_screen_scheme():
 def issue_type_screen_scheme_mappings():
     """Sample issue type to screen scheme mappings."""
     import copy
+
     return copy.deepcopy(ISSUE_TYPE_SCREEN_SCHEME_MAPPINGS)
 
 
@@ -1088,6 +1111,7 @@ def issue_type_screen_scheme_mappings():
 def project_issue_type_screen_schemes():
     """Sample project to issue type screen scheme mappings."""
     import copy
+
     return copy.deepcopy(PROJECT_ISSUE_TYPE_SCREEN_SCHEMES)
 
 
@@ -1095,6 +1119,7 @@ def project_issue_type_screen_schemes():
 def empty_screens_response():
     """Empty screens response for testing."""
     import copy
+
     return copy.deepcopy(EMPTY_SCREENS_RESPONSE)
 
 
@@ -1102,6 +1127,7 @@ def empty_screens_response():
 def empty_screen_schemes_response():
     """Empty screen schemes response for testing."""
     import copy
+
     return copy.deepcopy(EMPTY_SCREEN_SCHEMES_RESPONSE)
 
 
@@ -1109,6 +1135,7 @@ def empty_screen_schemes_response():
 def empty_issue_type_screen_schemes_response():
     """Empty issue type screen schemes response for testing."""
     import copy
+
     return copy.deepcopy(EMPTY_ISSUE_TYPE_SCREEN_SCHEMES_RESPONSE)
 
 
@@ -1116,6 +1143,7 @@ def empty_issue_type_screen_schemes_response():
 def screens_page_1():
     """First page of paginated screens."""
     import copy
+
     return copy.deepcopy(SCREENS_PAGE_1)
 
 
@@ -1123,6 +1151,7 @@ def screens_page_1():
 def screens_page_2():
     """Second page of paginated screens."""
     import copy
+
     return copy.deepcopy(SCREENS_PAGE_2)
 
 
@@ -1130,6 +1159,7 @@ def screens_page_2():
 def screens_page_3():
     """Third page of paginated screens."""
     import copy
+
     return copy.deepcopy(SCREENS_PAGE_3)
 
 
@@ -1137,6 +1167,7 @@ def screens_page_3():
 def project_issue_types():
     """Sample project issue types."""
     import copy
+
     return copy.deepcopy(PROJECT_ISSUE_TYPES)
 
 
@@ -1144,15 +1175,18 @@ def project_issue_types():
 def sample_project():
     """Sample project for testing."""
     import copy
+
     return copy.deepcopy(SAMPLE_PROJECT)
 
 
 # ========== Permission Scheme Fixtures ==========
 
+
 @pytest.fixture
 def permission_schemes_response():
     """Sample JIRA API response for permission schemes list."""
     import copy
+
     return copy.deepcopy(PERMISSION_SCHEMES_RESPONSE)
 
 
@@ -1160,6 +1194,7 @@ def permission_schemes_response():
 def permission_scheme_detail():
     """Sample JIRA API response for single permission scheme with grants."""
     import copy
+
     return copy.deepcopy(PERMISSION_SCHEME_DETAIL_RESPONSE)
 
 
@@ -1167,6 +1202,7 @@ def permission_scheme_detail():
 def minimal_permission_scheme():
     """Sample permission scheme with minimal grants."""
     import copy
+
     return copy.deepcopy(MINIMAL_SCHEME_RESPONSE)
 
 
@@ -1174,6 +1210,7 @@ def minimal_permission_scheme():
 def created_permission_scheme():
     """Sample JIRA API response for newly created permission scheme."""
     import copy
+
     return copy.deepcopy(PERMISSION_CREATED_SCHEME_RESPONSE)
 
 
@@ -1181,6 +1218,7 @@ def created_permission_scheme():
 def created_scheme_with_grants():
     """Sample created scheme with initial grants."""
     import copy
+
     return copy.deepcopy(CREATED_SCHEME_WITH_GRANTS_RESPONSE)
 
 
@@ -1188,6 +1226,7 @@ def created_scheme_with_grants():
 def updated_permission_scheme():
     """Sample JIRA API response for updated permission scheme."""
     import copy
+
     return copy.deepcopy(UPDATED_SCHEME_RESPONSE)
 
 
@@ -1195,6 +1234,7 @@ def updated_permission_scheme():
 def permission_grants():
     """Sample permission grants response."""
     import copy
+
     return copy.deepcopy(PERMISSION_GRANTS_RESPONSE)
 
 
@@ -1202,6 +1242,7 @@ def permission_grants():
 def created_permission_grant():
     """Sample JIRA API response for created permission grant."""
     import copy
+
     return copy.deepcopy(CREATED_GRANT_RESPONSE)
 
 
@@ -1209,6 +1250,7 @@ def created_permission_grant():
 def all_permissions():
     """Sample JIRA API response for all available permissions."""
     import copy
+
     return copy.deepcopy(ALL_PERMISSIONS_RESPONSE)
 
 
@@ -1216,6 +1258,7 @@ def all_permissions():
 def project_permission_scheme():
     """Sample JIRA API response for project's permission scheme."""
     import copy
+
     return copy.deepcopy(PROJECT_PERMISSION_SCHEME_RESPONSE)
 
 
@@ -1223,6 +1266,7 @@ def project_permission_scheme():
 def project_roles():
     """Sample JIRA API response for project roles."""
     import copy
+
     return copy.deepcopy(PROJECT_ROLES_RESPONSE)
 
 
@@ -1230,15 +1274,18 @@ def project_roles():
 def empty_permission_schemes():
     """Sample empty permission schemes response."""
     import copy
+
     return copy.deepcopy(EMPTY_SCHEMES_RESPONSE)
 
 
 # ========== Workflow Management Fixtures ==========
 
+
 @pytest.fixture
 def workflows_response():
     """Sample JIRA API response for workflows list."""
     import copy
+
     return copy.deepcopy(WORKFLOWS_RESPONSE)
 
 
@@ -1246,6 +1293,7 @@ def workflows_response():
 def software_workflow():
     """Sample Software Development Workflow with full details."""
     import copy
+
     return copy.deepcopy(SOFTWARE_WORKFLOW)
 
 
@@ -1253,6 +1301,7 @@ def software_workflow():
 def bug_workflow():
     """Sample Bug Workflow for testing."""
     import copy
+
     return copy.deepcopy(BUG_WORKFLOW)
 
 
@@ -1260,6 +1309,7 @@ def bug_workflow():
 def workflow_search_response():
     """Sample workflow search response with transitions."""
     import copy
+
     return copy.deepcopy(WORKFLOW_SEARCH_RESPONSE)
 
 
@@ -1267,6 +1317,7 @@ def workflow_search_response():
 def workflow_schemes_list_response():
     """Sample workflow schemes list response."""
     import copy
+
     return copy.deepcopy(WORKFLOW_SCHEMES_LIST_RESPONSE)
 
 
@@ -1274,6 +1325,7 @@ def workflow_schemes_list_response():
 def software_scheme_detail():
     """Sample Software Development Scheme with full details."""
     import copy
+
     return copy.deepcopy(SOFTWARE_SCHEME_DETAIL)
 
 
@@ -1281,6 +1333,7 @@ def software_scheme_detail():
 def project_workflow_scheme():
     """Sample project workflow scheme response."""
     import copy
+
     return copy.deepcopy(PROJECT_WORKFLOW_SCHEME)
 
 
@@ -1288,6 +1341,7 @@ def project_workflow_scheme():
 def assign_scheme_task_response():
     """Sample async task response for scheme assignment."""
     import copy
+
     return copy.deepcopy(ASSIGN_SCHEME_TASK_RESPONSE)
 
 
@@ -1295,6 +1349,7 @@ def assign_scheme_task_response():
 def task_complete_response():
     """Sample completed task response."""
     import copy
+
     return copy.deepcopy(TASK_COMPLETE_RESPONSE)
 
 
@@ -1302,6 +1357,7 @@ def task_complete_response():
 def task_in_progress_response():
     """Sample in-progress task response."""
     import copy
+
     return copy.deepcopy(TASK_IN_PROGRESS_RESPONSE)
 
 
@@ -1309,6 +1365,7 @@ def task_in_progress_response():
 def task_failed_response():
     """Sample failed task response."""
     import copy
+
     return copy.deepcopy(TASK_FAILED_RESPONSE)
 
 
@@ -1316,6 +1373,7 @@ def task_failed_response():
 def all_statuses_response():
     """Sample all statuses response."""
     import copy
+
     return copy.deepcopy(ALL_STATUSES_RESPONSE)
 
 
@@ -1323,6 +1381,7 @@ def all_statuses_response():
 def status_search_response():
     """Sample status search response."""
     import copy
+
     return copy.deepcopy(STATUS_SEARCH_RESPONSE)
 
 
@@ -1330,6 +1389,7 @@ def status_search_response():
 def single_status():
     """Sample single status object."""
     import copy
+
     return copy.deepcopy(SINGLE_STATUS)
 
 
@@ -1337,6 +1397,7 @@ def single_status():
 def issue_transitions():
     """Sample issue transitions response."""
     import copy
+
     return copy.deepcopy(ISSUE_TRANSITIONS)
 
 
@@ -1344,6 +1405,7 @@ def issue_transitions():
 def issue_with_status():
     """Sample issue with status information."""
     import copy
+
     return copy.deepcopy(ISSUE_WITH_STATUS)
 
 
@@ -1351,6 +1413,7 @@ def issue_with_status():
 def schemes_for_workflow():
     """Sample workflow schemes using a workflow."""
     import copy
+
     return copy.deepcopy(SCHEMES_FOR_WORKFLOW)
 
 
@@ -1358,6 +1421,7 @@ def schemes_for_workflow():
 def empty_workflows_response():
     """Empty workflows response for testing."""
     import copy
+
     return copy.deepcopy(EMPTY_WORKFLOWS_RESPONSE)
 
 
@@ -1365,6 +1429,7 @@ def empty_workflows_response():
 def empty_workflow_schemes_response():
     """Empty workflow schemes response for testing."""
     import copy
+
     return copy.deepcopy(WORKFLOW_EMPTY_SCHEMES_RESPONSE)
 
 
@@ -1372,6 +1437,7 @@ def empty_workflow_schemes_response():
 def empty_statuses_response():
     """Empty statuses response for testing."""
     import copy
+
     return copy.deepcopy(EMPTY_STATUSES_RESPONSE)
 
 
@@ -1379,6 +1445,7 @@ def empty_statuses_response():
 def workflows_page_1():
     """First page of paginated workflows."""
     import copy
+
     return copy.deepcopy(WORKFLOWS_PAGE_1)
 
 
@@ -1386,22 +1453,26 @@ def workflows_page_1():
 def workflows_page_2():
     """Second page of paginated workflows."""
     import copy
+
     return copy.deepcopy(WORKFLOWS_PAGE_2)
 
 
 @pytest.fixture
-def task_failed_response():
+def workflow_task_failed_response():
     """Sample failed task response for workflow scheme assignment."""
     import copy
+
     return copy.deepcopy(TASK_FAILED_RESPONSE)
 
 
 # ========== Permission Scheme Error Fixtures ==========
 
+
 @pytest.fixture
 def scheme_not_found_error():
     """Sample error response when permission scheme is not found."""
     import copy
+
     return copy.deepcopy(SCHEME_NOT_FOUND_ERROR)
 
 
@@ -1409,6 +1480,7 @@ def scheme_not_found_error():
 def scheme_in_use_error():
     """Sample error response when permission scheme is in use by projects."""
     import copy
+
     return copy.deepcopy(SCHEME_IN_USE_ERROR)
 
 
@@ -1416,4 +1488,5 @@ def scheme_in_use_error():
 def permission_denied_error():
     """Sample error response when user lacks permission to view schemes."""
     import copy
+
     return copy.deepcopy(PERMISSION_DENIED_ERROR)

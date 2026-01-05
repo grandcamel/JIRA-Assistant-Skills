@@ -8,19 +8,21 @@ TDD tests for:
 - get_issue_commits.py
 """
 
-import pytest
+import json
 import sys
 from pathlib import Path
-from unittest.mock import Mock, patch
-import json
+from unittest.mock import patch
+
+import pytest
 
 # Add scripts path
-sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 
 # =============================================================================
 # Tests for create_branch_name.py
 # =============================================================================
+
 
 @pytest.mark.dev
 @pytest.mark.unit
@@ -29,34 +31,36 @@ class TestCreateBranchName:
 
     def test_create_branch_name_basic(self, mock_jira_client, sample_issue):
         """Test creating branch name from issue - basic case."""
-        from create_branch_name import create_branch_name, sanitize_for_branch
+        from create_branch_name import create_branch_name
 
         mock_jira_client.get_issue.return_value = sample_issue
 
-        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
-            result = create_branch_name('PROJ-123')
+        with patch("create_branch_name.get_jira_client", return_value=mock_jira_client):
+            result = create_branch_name("PROJ-123")
 
         # Result is now a dict with 'branch_name' key
-        branch_name = result['branch_name']
+        branch_name = result["branch_name"]
         # Should produce: feature/proj-123-fix-login-button-not-responding
-        assert branch_name.startswith('feature/')
-        assert 'proj-123' in branch_name  # Lowercase
-        assert 'fix-login' in branch_name
+        assert branch_name.startswith("feature/")
+        assert "proj-123" in branch_name  # Lowercase
+        assert "fix-login" in branch_name
         assert branch_name == branch_name.lower()  # Should be lowercase
         mock_jira_client.close.assert_called_once()
 
-    def test_create_branch_name_with_custom_prefix(self, mock_jira_client, sample_issue):
+    def test_create_branch_name_with_custom_prefix(
+        self, mock_jira_client, sample_issue
+    ):
         """Test creating branch name with custom prefix (bugfix, hotfix)."""
         from create_branch_name import create_branch_name
 
         mock_jira_client.get_issue.return_value = sample_issue
 
-        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
-            result = create_branch_name('PROJ-123', prefix='bugfix')
+        with patch("create_branch_name.get_jira_client", return_value=mock_jira_client):
+            result = create_branch_name("PROJ-123", prefix="bugfix")
 
-        branch_name = result['branch_name']
-        assert branch_name.startswith('bugfix/')
-        assert 'proj-123' in branch_name  # Already lowercase
+        branch_name = result["branch_name"]
+        assert branch_name.startswith("bugfix/")
+        assert "proj-123" in branch_name  # Already lowercase
 
     def test_create_branch_name_sanitizes_special_chars(self):
         """Test removing special characters from summary."""
@@ -73,21 +77,21 @@ class TestCreateBranchName:
 
     def test_create_branch_name_max_length(self, mock_jira_client):
         """Test truncating long summaries."""
-        from create_branch_name import create_branch_name, MAX_BRANCH_LENGTH
+        from create_branch_name import MAX_BRANCH_LENGTH, create_branch_name
 
         long_summary_issue = {
-            'key': 'PROJ-123',
-            'fields': {
-                'summary': 'This is a very long summary that exceeds the maximum allowed length for a branch name and should be truncated properly',
-                'issuetype': {'name': 'Story'}
-            }
+            "key": "PROJ-123",
+            "fields": {
+                "summary": "This is a very long summary that exceeds the maximum allowed length for a branch name and should be truncated properly",
+                "issuetype": {"name": "Story"},
+            },
         }
         mock_jira_client.get_issue.return_value = long_summary_issue
 
-        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
-            result = create_branch_name('PROJ-123')
+        with patch("create_branch_name.get_jira_client", return_value=mock_jira_client):
+            result = create_branch_name("PROJ-123")
 
-        branch_name = result['branch_name']
+        branch_name = result["branch_name"]
         # Total branch name should respect max length
         assert len(branch_name) <= MAX_BRANCH_LENGTH
 
@@ -96,20 +100,20 @@ class TestCreateBranchName:
         from create_branch_name import create_branch_name
 
         mixed_case_issue = {
-            'key': 'PROJ-123',
-            'fields': {
-                'summary': 'Fix UPPERCASE and MixedCase Words',
-                'issuetype': {'name': 'Bug'}
-            }
+            "key": "PROJ-123",
+            "fields": {
+                "summary": "Fix UPPERCASE and MixedCase Words",
+                "issuetype": {"name": "Bug"},
+            },
         }
         mock_jira_client.get_issue.return_value = mixed_case_issue
 
-        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
-            result = create_branch_name('PROJ-123')
+        with patch("create_branch_name.get_jira_client", return_value=mock_jira_client):
+            result = create_branch_name("PROJ-123")
 
-        branch_name = result['branch_name']
+        branch_name = result["branch_name"]
         assert branch_name == branch_name.lower()
-        assert 'proj-123' in branch_name
+        assert "proj-123" in branch_name
 
     def test_create_branch_name_auto_prefix_bug(self, mock_jira_client, sample_issue):
         """Test auto-prefix based on Bug issue type."""
@@ -118,32 +122,36 @@ class TestCreateBranchName:
         # sample_issue has issuetype 'Bug'
         mock_jira_client.get_issue.return_value = sample_issue
 
-        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
-            result = create_branch_name('PROJ-123', auto_prefix=True)
+        with patch("create_branch_name.get_jira_client", return_value=mock_jira_client):
+            result = create_branch_name("PROJ-123", auto_prefix=True)
 
-        assert result['branch_name'].startswith('bugfix/')
+        assert result["branch_name"].startswith("bugfix/")
 
-    def test_create_branch_name_auto_prefix_story(self, mock_jira_client, sample_story_issue):
+    def test_create_branch_name_auto_prefix_story(
+        self, mock_jira_client, sample_story_issue
+    ):
         """Test auto-prefix based on Story issue type."""
         from create_branch_name import create_branch_name
 
         mock_jira_client.get_issue.return_value = sample_story_issue
 
-        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
-            result = create_branch_name('PROJ-456', auto_prefix=True)
+        with patch("create_branch_name.get_jira_client", return_value=mock_jira_client):
+            result = create_branch_name("PROJ-456", auto_prefix=True)
 
-        assert result['branch_name'].startswith('feature/')
+        assert result["branch_name"].startswith("feature/")
 
-    def test_create_branch_name_auto_prefix_task(self, mock_jira_client, sample_task_issue):
+    def test_create_branch_name_auto_prefix_task(
+        self, mock_jira_client, sample_task_issue
+    ):
         """Test auto-prefix based on Task issue type."""
         from create_branch_name import create_branch_name
 
         mock_jira_client.get_issue.return_value = sample_task_issue
 
-        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
-            result = create_branch_name('PROJ-789', auto_prefix=True)
+        with patch("create_branch_name.get_jira_client", return_value=mock_jira_client):
+            result = create_branch_name("PROJ-789", auto_prefix=True)
 
-        assert result['branch_name'].startswith('task/')
+        assert result["branch_name"].startswith("task/")
 
     def test_create_branch_name_output_json(self, mock_jira_client, sample_issue):
         """Test JSON output format."""
@@ -151,35 +159,42 @@ class TestCreateBranchName:
 
         mock_jira_client.get_issue.return_value = sample_issue
 
-        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
-            result = create_branch_name('PROJ-123')
+        with patch("create_branch_name.get_jira_client", return_value=mock_jira_client):
+            result = create_branch_name("PROJ-123")
             # format_output expects a string branch_name, not the result dict
-            output = format_output(result['branch_name'], 'PROJ-123', sample_issue, output_format='json')
+            output = format_output(
+                result["branch_name"], "PROJ-123", sample_issue, output_format="json"
+            )
 
         data = json.loads(output)
-        assert 'branch_name' in data
-        assert 'issue_key' in data
-        assert data['issue_key'] == 'PROJ-123'
+        assert "branch_name" in data
+        assert "issue_key" in data
+        assert data["issue_key"] == "PROJ-123"
 
-    def test_create_branch_name_output_git_command(self, mock_jira_client, sample_issue):
+    def test_create_branch_name_output_git_command(
+        self, mock_jira_client, sample_issue
+    ):
         """Test git command output format."""
         from create_branch_name import create_branch_name, format_output
 
         mock_jira_client.get_issue.return_value = sample_issue
 
-        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
-            result = create_branch_name('PROJ-123')
-            branch_name = result['branch_name']
+        with patch("create_branch_name.get_jira_client", return_value=mock_jira_client):
+            result = create_branch_name("PROJ-123")
+            branch_name = result["branch_name"]
             # format_output expects a string branch_name, not the result dict
-            output = format_output(branch_name, 'PROJ-123', sample_issue, output_format='git')
+            output = format_output(
+                branch_name, "PROJ-123", sample_issue, output_format="git"
+            )
 
-        assert output.startswith('git checkout -b ')
+        assert output.startswith("git checkout -b ")
         assert branch_name in output
 
 
 # =============================================================================
 # Tests for parse_commit_issues.py
 # =============================================================================
+
 
 @pytest.mark.dev
 @pytest.mark.unit
@@ -268,6 +283,7 @@ class TestParseCommitIssues:
 # Tests for link_commit.py
 # =============================================================================
 
+
 @pytest.mark.dev
 @pytest.mark.unit
 class TestLinkCommit:
@@ -277,89 +293,85 @@ class TestLinkCommit:
         """Test linking commit to issue via comment."""
         from link_commit import link_commit
 
-        mock_jira_client.post.return_value = {'id': '10001'}
+        mock_jira_client.post.return_value = {"id": "10001"}
 
-        with patch('link_commit.get_jira_client', return_value=mock_jira_client):
+        with patch("link_commit.get_jira_client", return_value=mock_jira_client):
             result = link_commit(
-                issue_key='PROJ-123',
-                commit_sha='abc123def456',
-                message='Fix login bug'
+                issue_key="PROJ-123", commit_sha="abc123def456", message="Fix login bug"
             )
 
-        assert result['success'] is True
+        assert result["success"] is True
         mock_jira_client.post.assert_called_once()
         call_args = mock_jira_client.post.call_args
-        assert '/rest/api/3/issue/PROJ-123/comment' in call_args[0][0]
+        assert "/rest/api/3/issue/PROJ-123/comment" in call_args[0][0]
 
     def test_link_commit_with_repo(self, mock_jira_client):
         """Test including repository URL."""
-        from link_commit import link_commit, build_commit_comment
+        from link_commit import build_commit_comment
 
-        mock_jira_client.post.return_value = {'id': '10001'}
+        mock_jira_client.post.return_value = {"id": "10001"}
 
         comment = build_commit_comment(
-            commit_sha='abc123def456',
-            message='Fix login bug',
-            repo_url='https://github.com/org/repo'
+            commit_sha="abc123def456",
+            message="Fix login bug",
+            repo_url="https://github.com/org/repo",
         )
 
-        assert 'github.com/org/repo' in comment
-        assert 'abc123def456' in comment
+        assert "github.com/org/repo" in comment
+        assert "abc123def456" in comment
 
     def test_link_commit_with_github_link(self, mock_jira_client):
         """Test creating GitHub commit link."""
         from link_commit import build_commit_url
 
         url = build_commit_url(
-            commit_sha='abc123def456',
-            repo_url='https://github.com/org/repo'
+            commit_sha="abc123def456", repo_url="https://github.com/org/repo"
         )
 
-        assert url == 'https://github.com/org/repo/commit/abc123def456'
+        assert url == "https://github.com/org/repo/commit/abc123def456"
 
     def test_link_commit_with_gitlab_link(self, mock_jira_client):
         """Test creating GitLab commit link."""
         from link_commit import build_commit_url
 
         url = build_commit_url(
-            commit_sha='abc123def456',
-            repo_url='https://gitlab.com/org/repo'
+            commit_sha="abc123def456", repo_url="https://gitlab.com/org/repo"
         )
 
-        assert url == 'https://gitlab.com/org/repo/-/commit/abc123def456'
+        assert url == "https://gitlab.com/org/repo/-/commit/abc123def456"
 
     def test_link_commit_with_bitbucket_link(self, mock_jira_client):
         """Test creating Bitbucket commit link."""
         from link_commit import build_commit_url
 
         url = build_commit_url(
-            commit_sha='abc123def456',
-            repo_url='https://bitbucket.org/org/repo'
+            commit_sha="abc123def456", repo_url="https://bitbucket.org/org/repo"
         )
 
-        assert url == 'https://bitbucket.org/org/repo/commits/abc123def456'
+        assert url == "https://bitbucket.org/org/repo/commits/abc123def456"
 
     def test_link_commit_multiple_issues(self, mock_jira_client):
         """Test linking same commit to multiple issues."""
         from link_commit import link_commit_to_issues
 
-        mock_jira_client.post.return_value = {'id': '10001'}
+        mock_jira_client.post.return_value = {"id": "10001"}
 
-        with patch('link_commit.get_jira_client', return_value=mock_jira_client):
+        with patch("link_commit.get_jira_client", return_value=mock_jira_client):
             results = link_commit_to_issues(
-                issue_keys=['PROJ-123', 'PROJ-456'],
-                commit_sha='abc123def456',
-                message='Fix bugs'
+                issue_keys=["PROJ-123", "PROJ-456"],
+                commit_sha="abc123def456",
+                message="Fix bugs",
             )
 
         assert len(results) == 2
-        assert all(r['success'] for r in results)
+        assert all(r["success"] for r in results)
         assert mock_jira_client.post.call_count == 2
 
 
 # =============================================================================
 # Tests for get_issue_commits.py
 # =============================================================================
+
 
 @pytest.mark.dev
 @pytest.mark.unit
@@ -372,11 +384,11 @@ class TestGetIssueCommits:
 
         mock_jira_client.get.return_value = sample_dev_info
 
-        with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
-            result = get_issue_commits('PROJ-123')
+        with patch("get_issue_commits.get_jira_client", return_value=mock_jira_client):
+            result = get_issue_commits("PROJ-123")
 
         assert len(result) == 2, "Expected 2 commits from sample_dev_info"
-        assert 'id' in result[0], "Commit should have 'id' field"
+        assert "id" in result[0], "Commit should have 'id' field"
 
     def test_get_commits_with_details(self, mock_jira_client, sample_dev_info):
         """Test including commit message and author."""
@@ -384,13 +396,13 @@ class TestGetIssueCommits:
 
         mock_jira_client.get.return_value = sample_dev_info
 
-        with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
-            result = get_issue_commits('PROJ-123', detailed=True)
+        with patch("get_issue_commits.get_jira_client", return_value=mock_jira_client):
+            result = get_issue_commits("PROJ-123", detailed=True)
 
         assert len(result) == 2, "Expected 2 commits from sample_dev_info"
         commit = result[0]
-        assert 'message' in commit, "Detailed commit should have 'message' field"
-        assert 'author' in commit, "Detailed commit should have 'author' field"
+        assert "message" in commit, "Detailed commit should have 'message' field"
+        assert "author" in commit, "Detailed commit should have 'author' field"
 
     def test_get_commits_by_repo(self, mock_jira_client, sample_dev_info):
         """Test filtering by repository."""
@@ -398,8 +410,8 @@ class TestGetIssueCommits:
 
         mock_jira_client.get.return_value = sample_dev_info
 
-        with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
-            result = get_issue_commits('PROJ-123', repo_filter='org/repo')
+        with patch("get_issue_commits.get_jira_client", return_value=mock_jira_client):
+            result = get_issue_commits("PROJ-123", repo_filter="org/repo")
 
         # Should only return commits from org/repo
         assert len(result) == 2, "Expected 2 commits from org/repo repository"
@@ -409,28 +421,30 @@ class TestGetIssueCommits:
         from get_issue_commits import get_issue_commits
 
         # Empty response
-        mock_jira_client.get.return_value = {'detail': []}
+        mock_jira_client.get.return_value = {"detail": []}
 
-        with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
-            result = get_issue_commits('PROJ-123')
+        with patch("get_issue_commits.get_jira_client", return_value=mock_jira_client):
+            result = get_issue_commits("PROJ-123")
 
         assert result == []
 
     def test_get_commits_handles_api_error(self, mock_jira_client):
         """Test graceful handling of API errors."""
         from get_issue_commits import get_issue_commits
+
         from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get.side_effect = NotFoundError("Issue", "PROJ-999")
 
-        with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
+        with patch("get_issue_commits.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(NotFoundError):
-                get_issue_commits('PROJ-999')
+                get_issue_commits("PROJ-999")
 
 
 # =============================================================================
 # Error Handling Tests
 # =============================================================================
+
 
 @pytest.mark.dev
 @pytest.mark.unit
@@ -440,57 +454,62 @@ class TestCreateBranchNameErrors:
     def test_create_branch_name_auth_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
         from create_branch_name import create_branch_name
+
         from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get_issue.side_effect = AuthenticationError("Invalid token")
 
-        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
+        with patch("create_branch_name.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(AuthenticationError):
-                create_branch_name('PROJ-123')
+                create_branch_name("PROJ-123")
 
     def test_create_branch_name_permission_error(self, mock_jira_client):
         """Test handling of 403 permission denied."""
         from create_branch_name import create_branch_name
+
         from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.get_issue.side_effect = PermissionError("Access denied")
 
-        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
+        with patch("create_branch_name.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(PermissionError):
-                create_branch_name('PROJ-123')
+                create_branch_name("PROJ-123")
 
     def test_create_branch_name_not_found_error(self, mock_jira_client):
         """Test handling of 404 issue not found."""
         from create_branch_name import create_branch_name
+
         from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.get_issue.side_effect = NotFoundError("Issue", "PROJ-999")
 
-        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
+        with patch("create_branch_name.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(NotFoundError):
-                create_branch_name('PROJ-999')
+                create_branch_name("PROJ-999")
 
     def test_create_branch_name_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
         from create_branch_name import create_branch_name
+
         from jira_assistant_skills_lib import RateLimitError
 
         mock_jira_client.get_issue.side_effect = RateLimitError(retry_after=60)
 
-        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
+        with patch("create_branch_name.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(RateLimitError):
-                create_branch_name('PROJ-123')
+                create_branch_name("PROJ-123")
 
     def test_create_branch_name_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
         from create_branch_name import create_branch_name
+
         from jira_assistant_skills_lib import ServerError
 
         mock_jira_client.get_issue.side_effect = ServerError("Internal server error")
 
-        with patch('create_branch_name.get_jira_client', return_value=mock_jira_client):
+        with patch("create_branch_name.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(ServerError):
-                create_branch_name('PROJ-123')
+                create_branch_name("PROJ-123")
 
 
 @pytest.mark.dev
@@ -501,76 +520,71 @@ class TestLinkCommitErrors:
     def test_link_commit_auth_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
         from link_commit import link_commit
+
         from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.post.side_effect = AuthenticationError("Invalid token")
 
-        with patch('link_commit.get_jira_client', return_value=mock_jira_client):
+        with patch("link_commit.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(AuthenticationError):
                 link_commit(
-                    issue_key='PROJ-123',
-                    commit_sha='abc123',
-                    message='Test commit'
+                    issue_key="PROJ-123", commit_sha="abc123", message="Test commit"
                 )
 
     def test_link_commit_permission_error(self, mock_jira_client):
         """Test handling of 403 permission denied."""
         from link_commit import link_commit
+
         from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.post.side_effect = PermissionError("Access denied")
 
-        with patch('link_commit.get_jira_client', return_value=mock_jira_client):
+        with patch("link_commit.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(PermissionError):
                 link_commit(
-                    issue_key='PROJ-123',
-                    commit_sha='abc123',
-                    message='Test commit'
+                    issue_key="PROJ-123", commit_sha="abc123", message="Test commit"
                 )
 
     def test_link_commit_not_found_error(self, mock_jira_client):
         """Test handling of 404 issue not found."""
         from link_commit import link_commit
+
         from jira_assistant_skills_lib import NotFoundError
 
         mock_jira_client.post.side_effect = NotFoundError("Issue", "PROJ-999")
 
-        with patch('link_commit.get_jira_client', return_value=mock_jira_client):
+        with patch("link_commit.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(NotFoundError):
                 link_commit(
-                    issue_key='PROJ-999',
-                    commit_sha='abc123',
-                    message='Test commit'
+                    issue_key="PROJ-999", commit_sha="abc123", message="Test commit"
                 )
 
     def test_link_commit_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
         from link_commit import link_commit
+
         from jira_assistant_skills_lib import RateLimitError
 
         mock_jira_client.post.side_effect = RateLimitError(retry_after=60)
 
-        with patch('link_commit.get_jira_client', return_value=mock_jira_client):
+        with patch("link_commit.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(RateLimitError):
                 link_commit(
-                    issue_key='PROJ-123',
-                    commit_sha='abc123',
-                    message='Test commit'
+                    issue_key="PROJ-123", commit_sha="abc123", message="Test commit"
                 )
 
     def test_link_commit_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
         from link_commit import link_commit
+
         from jira_assistant_skills_lib import ServerError
 
         mock_jira_client.post.side_effect = ServerError("Internal server error")
 
-        with patch('link_commit.get_jira_client', return_value=mock_jira_client):
+        with patch("link_commit.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(ServerError):
                 link_commit(
-                    issue_key='PROJ-123',
-                    commit_sha='abc123',
-                    message='Test commit'
+                    issue_key="PROJ-123", commit_sha="abc123", message="Test commit"
                 )
 
 
@@ -582,43 +596,47 @@ class TestGetIssueCommitsErrors:
     def test_get_commits_auth_error(self, mock_jira_client):
         """Test handling of 401 unauthorized."""
         from get_issue_commits import get_issue_commits
+
         from jira_assistant_skills_lib import AuthenticationError
 
         mock_jira_client.get.side_effect = AuthenticationError("Invalid token")
 
-        with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
+        with patch("get_issue_commits.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(AuthenticationError):
-                get_issue_commits('PROJ-123')
+                get_issue_commits("PROJ-123")
 
     def test_get_commits_permission_error(self, mock_jira_client):
         """Test handling of 403 permission denied."""
         from get_issue_commits import get_issue_commits
+
         from jira_assistant_skills_lib import PermissionError
 
         mock_jira_client.get.side_effect = PermissionError("Access denied")
 
-        with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
+        with patch("get_issue_commits.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(PermissionError):
-                get_issue_commits('PROJ-123')
+                get_issue_commits("PROJ-123")
 
     def test_get_commits_rate_limit_error(self, mock_jira_client):
         """Test handling of 429 rate limit."""
         from get_issue_commits import get_issue_commits
+
         from jira_assistant_skills_lib import RateLimitError
 
         mock_jira_client.get.side_effect = RateLimitError(retry_after=60)
 
-        with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
+        with patch("get_issue_commits.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(RateLimitError):
-                get_issue_commits('PROJ-123')
+                get_issue_commits("PROJ-123")
 
     def test_get_commits_server_error(self, mock_jira_client):
         """Test handling of 500 server error."""
         from get_issue_commits import get_issue_commits
+
         from jira_assistant_skills_lib import ServerError
 
         mock_jira_client.get.side_effect = ServerError("Internal server error")
 
-        with patch('get_issue_commits.get_jira_client', return_value=mock_jira_client):
+        with patch("get_issue_commits.get_jira_client", return_value=mock_jira_client):
             with pytest.raises(ServerError):
-                get_issue_commits('PROJ-123')
+                get_issue_commits("PROJ-123")

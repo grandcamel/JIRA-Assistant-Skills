@@ -10,22 +10,22 @@ Tests verify proper handling of error conditions including:
 - Cache corruption
 """
 
-import pytest
-import sys
 import os
-import tempfile
-import json
+import sys
 from pathlib import Path
-from unittest.mock import patch, Mock, MagicMock
-from datetime import timedelta
+from unittest.mock import patch
+
+import pytest
 
 # Add shared lib to path
-shared_lib_path = str(Path(__file__).resolve().parent.parent.parent / 'shared' / 'scripts' / 'lib')
+shared_lib_path = str(
+    Path(__file__).resolve().parent.parent.parent / "shared" / "scripts" / "lib"
+)
 if shared_lib_path not in sys.path:
     sys.path.insert(0, shared_lib_path)
 
 # Add scripts path
-scripts_path = str(Path(__file__).resolve().parent.parent / 'scripts')
+scripts_path = str(Path(__file__).resolve().parent.parent / "scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
@@ -45,9 +45,9 @@ class TestInvalidCredentials:
 
         import cache_warm
 
-        with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-            with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                with patch('sys.argv', ['cache_warm.py', '--projects']):
+        with patch("cache_warm.get_jira_client", return_value=mock_jira_client):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                with patch("sys.argv", ["cache_warm.py", "--projects"]):
                     with pytest.raises(SystemExit) as exc_info:
                         cache_warm.main()
 
@@ -64,9 +64,9 @@ class TestInvalidCredentials:
 
         import cache_warm
 
-        with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-            with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                with patch('sys.argv', ['cache_warm.py', '--projects']):
+        with patch("cache_warm.get_jira_client", return_value=mock_jira_client):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                with patch("sys.argv", ["cache_warm.py", "--projects"]):
                     with pytest.raises(SystemExit) as exc_info:
                         cache_warm.main()
 
@@ -76,15 +76,13 @@ class TestInvalidCredentials:
         """Test handling of expired API token."""
         from jira_assistant_skills_lib import AuthenticationError
 
-        mock_jira_client.get.side_effect = AuthenticationError(
-            "Token has expired"
-        )
+        mock_jira_client.get.side_effect = AuthenticationError("Token has expired")
 
         import cache_warm
 
-        with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-            with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                with patch('sys.argv', ['cache_warm.py', '--fields']):
+        with patch("cache_warm.get_jira_client", return_value=mock_jira_client):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                with patch("sys.argv", ["cache_warm.py", "--fields"]):
                     with pytest.raises(SystemExit) as exc_info:
                         cache_warm.main()
 
@@ -106,9 +104,9 @@ class TestNetworkErrors:
 
         import cache_warm
 
-        with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-            with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                with patch('sys.argv', ['cache_warm.py', '--projects']):
+        with patch("cache_warm.get_jira_client", return_value=mock_jira_client):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                with patch("sys.argv", ["cache_warm.py", "--projects"]):
                     with pytest.raises(SystemExit) as exc_info:
                         cache_warm.main()
 
@@ -124,9 +122,9 @@ class TestNetworkErrors:
 
         import cache_warm
 
-        with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-            with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                with patch('sys.argv', ['cache_warm.py', '--projects']):
+        with patch("cache_warm.get_jira_client", return_value=mock_jira_client):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                with patch("sys.argv", ["cache_warm.py", "--projects"]):
                     with pytest.raises(SystemExit) as exc_info:
                         cache_warm.main()
 
@@ -142,9 +140,9 @@ class TestNetworkErrors:
 
         import cache_warm
 
-        with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-            with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                with patch('sys.argv', ['cache_warm.py', '--all']):
+        with patch("cache_warm.get_jira_client", return_value=mock_jira_client):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                with patch("sys.argv", ["cache_warm.py", "--all"]):
                     with pytest.raises(SystemExit) as exc_info:
                         cache_warm.main()
 
@@ -164,9 +162,9 @@ class TestRateLimiting:
 
         import cache_warm
 
-        with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-            with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                with patch('sys.argv', ['cache_warm.py', '--projects']):
+        with patch("cache_warm.get_jira_client", return_value=mock_jira_client):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                with patch("sys.argv", ["cache_warm.py", "--projects"]):
                     with pytest.raises(SystemExit) as exc_info:
                         cache_warm.main()
 
@@ -179,7 +177,7 @@ class TestRateLimiting:
         error = RateLimitError(retry_after=120)
 
         assert error.retry_after == 120
-        assert '120' in str(error) or 'retry' in str(error).lower()
+        assert "120" in str(error) or "retry" in str(error).lower()
 
 
 @pytest.mark.ops
@@ -195,9 +193,9 @@ class TestServerErrors:
 
         import cache_warm
 
-        with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-            with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                with patch('sys.argv', ['cache_warm.py', '--projects']):
+        with patch("cache_warm.get_jira_client", return_value=mock_jira_client):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                with patch("sys.argv", ["cache_warm.py", "--projects"]):
                     with pytest.raises(SystemExit) as exc_info:
                         cache_warm.main()
 
@@ -211,9 +209,9 @@ class TestServerErrors:
 
         import cache_warm
 
-        with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-            with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                with patch('sys.argv', ['cache_warm.py', '--fields']):
+        with patch("cache_warm.get_jira_client", return_value=mock_jira_client):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                with patch("sys.argv", ["cache_warm.py", "--fields"]):
                     with pytest.raises(SystemExit) as exc_info:
                         cache_warm.main()
 
@@ -227,9 +225,9 @@ class TestServerErrors:
 
         import cache_warm
 
-        with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-            with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                with patch('sys.argv', ['cache_warm.py', '--all']):
+        with patch("cache_warm.get_jira_client", return_value=mock_jira_client):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                with patch("sys.argv", ["cache_warm.py", "--all"]):
                     with pytest.raises(SystemExit) as exc_info:
                         cache_warm.main()
 
@@ -243,9 +241,9 @@ class TestServerErrors:
 
         import cache_warm
 
-        with patch('cache_warm.get_jira_client', return_value=mock_jira_client):
-            with patch('cache_warm.HAS_CONFIG_MANAGER', True):
-                with patch('sys.argv', ['cache_warm.py', '--projects']):
+        with patch("cache_warm.get_jira_client", return_value=mock_jira_client):
+            with patch("cache_warm.HAS_CONFIG_MANAGER", True):
+                with patch("sys.argv", ["cache_warm.py", "--projects"]):
                     with pytest.raises(SystemExit) as exc_info:
                         cache_warm.main()
 
@@ -265,7 +263,7 @@ class TestCacheErrors:
         if os.getuid() != 0:  # Not running as root
             with pytest.raises((PermissionError, OSError)):
                 # Try to create cache in read-only location
-                cache = JiraCache(cache_dir='/root/nonexistent_cache')
+                JiraCache(cache_dir="/root/nonexistent_cache")
 
     def test_corrupted_cache_file_handling(self, temp_cache_dir):
         """Test handling corrupted cache file."""
@@ -277,15 +275,15 @@ class TestCacheErrors:
         cache.close()
 
         # Corrupt the cache file
-        cache_files = list(Path(temp_cache_dir).glob('**/*.json'))
+        cache_files = list(Path(temp_cache_dir).glob("**/*.json"))
         for cache_file in cache_files:
-            with open(cache_file, 'w') as f:
-                f.write('{ corrupted json }')
+            with open(cache_file, "w") as f:
+                f.write("{ corrupted json }")
 
         # Try to load cache - should handle gracefully
         cache2 = JiraCache(cache_dir=temp_cache_dir)
         # Getting corrupted data should return None, not crash
-        result = cache2.get("key1", category="issue")
+        cache2.get("key1", category="issue")
         # Behavior depends on implementation - might be None or raise
         cache2.close()
 

@@ -9,19 +9,20 @@ Usage:
     python get_versions.py --id 10000 --counts
 """
 
-import sys
 import argparse
 import json
-from pathlib import Path
-from typing import List, Dict, Any, Optional
+import sys
+from typing import Any
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_table,
+    get_jira_client,
+    print_error,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import format_table
-
-
-def get_versions(project: str, profile: str = None) -> List[Dict[str, Any]]:
+def get_versions(project: str, profile: str | None = None) -> list[dict[str, Any]]:
     """
     Get all versions for a project.
 
@@ -39,7 +40,7 @@ def get_versions(project: str, profile: str = None) -> List[Dict[str, Any]]:
     return result
 
 
-def get_version_by_id(version_id: str, profile: str = None) -> Dict[str, Any]:
+def get_version_by_id(version_id: str, profile: str | None = None) -> dict[str, Any]:
     """
     Get a specific version by ID.
 
@@ -57,8 +58,11 @@ def get_version_by_id(version_id: str, profile: str = None) -> Dict[str, Any]:
     return result
 
 
-def filter_versions(versions: List[Dict[str, Any]], released: Optional[bool] = None,
-                   archived: Optional[bool] = None) -> List[Dict[str, Any]]:
+def filter_versions(
+    versions: list[dict[str, Any]],
+    released: bool | None = None,
+    archived: bool | None = None,
+) -> list[dict[str, Any]]:
     """
     Filter versions by status.
 
@@ -73,15 +77,17 @@ def filter_versions(versions: List[Dict[str, Any]], released: Optional[bool] = N
     filtered = versions
 
     if released is not None:
-        filtered = [v for v in filtered if v.get('released') == released]
+        filtered = [v for v in filtered if v.get("released") == released]
 
     if archived is not None:
-        filtered = [v for v in filtered if v.get('archived') == archived]
+        filtered = [v for v in filtered if v.get("archived") == archived]
 
     return filtered
 
 
-def get_version_issue_counts(version_id: str, profile: str = None) -> Dict[str, Any]:
+def get_version_issue_counts(
+    version_id: str, profile: str | None = None
+) -> dict[str, Any]:
     """
     Get issue counts for a version.
 
@@ -99,7 +105,9 @@ def get_version_issue_counts(version_id: str, profile: str = None) -> Dict[str, 
     return result
 
 
-def get_version_unresolved_count(version_id: str, profile: str = None) -> Dict[str, Any]:
+def get_version_unresolved_count(
+    version_id: str, profile: str | None = None
+) -> dict[str, Any]:
     """
     Get unresolved issue count for a version.
 
@@ -117,7 +125,7 @@ def get_version_unresolved_count(version_id: str, profile: str = None) -> Dict[s
     return result
 
 
-def display_versions_table(versions: List[Dict[str, Any]]) -> None:
+def display_versions_table(versions: list[dict[str, Any]]) -> None:
     """
     Display versions in table format.
 
@@ -131,55 +139,78 @@ def display_versions_table(versions: List[Dict[str, Any]]) -> None:
     # Prepare table data
     table_data = []
     for version in versions:
-        table_data.append({
-            'id': version.get('id', ''),
-            'name': version.get('name', ''),
-            'description': version.get('description', '')[:40] or '',
-            'released': 'Yes' if version.get('released') else 'No',
-            'archived': 'Yes' if version.get('archived') else 'No',
-            'release_date': version.get('releaseDate', '')
-        })
+        table_data.append(
+            {
+                "id": version.get("id", ""),
+                "name": version.get("name", ""),
+                "description": version.get("description", "")[:40] or "",
+                "released": "Yes" if version.get("released") else "No",
+                "archived": "Yes" if version.get("archived") else "No",
+                "release_date": version.get("releaseDate", ""),
+            }
+        )
 
-    print(format_table(
-        table_data,
-        columns=['id', 'name', 'description', 'released', 'archived', 'release_date'],
-        headers=['ID', 'Name', 'Description', 'Released', 'Archived', 'Release Date']
-    ))
+    print(
+        format_table(
+            table_data,
+            columns=[
+                "id",
+                "name",
+                "description",
+                "released",
+                "archived",
+                "release_date",
+            ],
+            headers=[
+                "ID",
+                "Name",
+                "Description",
+                "Released",
+                "Archived",
+                "Release Date",
+            ],
+        )
+    )
 
 
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Get project versions in JIRA',
-        epilog='''
+        description="Get project versions in JIRA",
+        epilog="""
 Examples:
   %(prog)s PROJ
   %(prog)s PROJ --released
   %(prog)s PROJ --unreleased --output json
   %(prog)s --id 10000
   %(prog)s --id 10000 --counts
-        '''
+        """,
     )
 
-    parser.add_argument('project',
-                       nargs='?',
-                       help='Project key (e.g., PROJ)')
-    parser.add_argument('--id',
-                       help='Get specific version by ID')
-    parser.add_argument('--released', action='store_true',
-                       help='Filter for released versions only')
-    parser.add_argument('--unreleased', action='store_true',
-                       help='Filter for unreleased versions only')
-    parser.add_argument('--archived', action='store_true',
-                       help='Filter for archived versions only')
-    parser.add_argument('--counts', action='store_true',
-                       help='Show issue counts for the version (requires --id)')
-    parser.add_argument('--output', '-O',
-                       choices=['table', 'json'],
-                       default='table',
-                       help='Output format (default: table)')
-    parser.add_argument('--profile', '-p',
-                       help='JIRA profile to use')
+    parser.add_argument("project", nargs="?", help="Project key (e.g., PROJ)")
+    parser.add_argument("--id", help="Get specific version by ID")
+    parser.add_argument(
+        "--released", action="store_true", help="Filter for released versions only"
+    )
+    parser.add_argument(
+        "--unreleased", action="store_true", help="Filter for unreleased versions only"
+    )
+    parser.add_argument(
+        "--archived", action="store_true", help="Filter for archived versions only"
+    )
+    parser.add_argument(
+        "--counts",
+        action="store_true",
+        help="Show issue counts for the version (requires --id)",
+    )
+    parser.add_argument(
+        "--output",
+        "-O",
+        choices=["table", "json"],
+        default="table",
+        help="Output format (default: table)",
+    )
+    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -214,22 +245,22 @@ Examples:
                 unresolved = get_version_unresolved_count(args.id, args.profile)
 
                 print(f"Version: {version['name']} (ID: {version['id']})")
-                print(f"\nIssue Counts:")
+                print("\nIssue Counts:")
                 print(f"  Fixed: {counts['issuesFixedCount']}")
                 print(f"  Affected: {counts['issuesAffectedCount']}")
                 print(f"  Unresolved: {unresolved['issuesUnresolvedCount']}")
                 print(f"  Total: {unresolved['issuesCount']}")
             else:
                 # Show version details
-                if args.output == 'json':
+                if args.output == "json":
                     print(json.dumps(version, indent=2))
                 else:
                     print(f"Version: {version['name']} (ID: {version['id']})")
-                    if version.get('description'):
+                    if version.get("description"):
                         print(f"Description: {version['description']}")
-                    if version.get('startDate'):
+                    if version.get("startDate"):
                         print(f"Start Date: {version['startDate']}")
-                    if version.get('releaseDate'):
+                    if version.get("releaseDate"):
                         print(f"Release Date: {version['releaseDate']}")
                     print(f"Released: {'Yes' if version.get('released') else 'No'}")
                     print(f"Archived: {'Yes' if version.get('archived') else 'No'}")
@@ -247,7 +278,7 @@ Examples:
                 versions = filter_versions(versions, archived=True)
 
             # Output
-            if args.output == 'json':
+            if args.output == "json":
                 print(json.dumps(versions, indent=2))
             else:
                 print(f"Versions for project {args.project}:\n")
@@ -262,5 +293,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

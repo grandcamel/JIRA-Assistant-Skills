@@ -12,20 +12,21 @@ Usage:
     python jql_search.py "project = PROJ" --save-as "My Filter"
 """
 
-import sys
 import argparse
-import json
-from pathlib import Path
-from typing import Optional
+import sys
 
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_json,
+    format_search_results,
+    get_jira_client,
+    print_error,
+    print_info,
+    validate_jql,
+)
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import validate_jql
-from jira_assistant_skills_lib import format_search_results, format_json, print_info
-
-EPIC_LINK_FIELD = 'customfield_10014'
-STORY_POINTS_FIELD = 'customfield_10016'
+EPIC_LINK_FIELD = "customfield_10014"
+STORY_POINTS_FIELD = "customfield_10016"
 
 
 def get_jql_from_filter(client, filter_id: str) -> tuple:
@@ -40,12 +41,16 @@ def get_jql_from_filter(client, filter_id: str) -> tuple:
         Tuple of (jql, filter_name)
     """
     filter_data = client.get_filter(filter_id)
-    return filter_data.get('jql', ''), filter_data.get('name', f'Filter {filter_id}')
+    return filter_data.get("jql", ""), filter_data.get("name", f"Filter {filter_id}")
 
 
-def save_search_as_filter(client, jql: str, name: str,
-                          description: str = None,
-                          favourite: bool = False) -> dict:
+def save_search_as_filter(
+    client,
+    jql: str,
+    name: str,
+    description: str | None = None,
+    favourite: bool = False,
+) -> dict:
     """
     Save a JQL search as a new filter.
 
@@ -62,10 +67,16 @@ def save_search_as_filter(client, jql: str, name: str,
     return client.create_filter(name, jql, description=description, favourite=favourite)
 
 
-def search_issues(jql: str, fields: list = None, max_results: int = 50,
-                 next_page_token: str = None, profile: str = None,
-                 include_agile: bool = False, include_links: bool = False,
-                 include_time: bool = False) -> dict:
+def search_issues(
+    jql: str,
+    fields: list | None = None,
+    max_results: int = 50,
+    next_page_token: str | None = None,
+    profile: str | None = None,
+    include_agile: bool = False,
+    include_links: bool = False,
+    include_time: bool = False,
+) -> dict:
     """
     Search for issues using JQL.
 
@@ -85,17 +96,26 @@ def search_issues(jql: str, fields: list = None, max_results: int = 50,
     jql = validate_jql(jql)
 
     if fields is None:
-        fields = ['key', 'summary', 'status', 'priority', 'issuetype', 'assignee', 'reporter']
+        fields = [
+            "key",
+            "summary",
+            "status",
+            "priority",
+            "issuetype",
+            "assignee",
+            "reporter",
+        ]
         if include_agile:
-            fields.extend([EPIC_LINK_FIELD, STORY_POINTS_FIELD, 'sprint'])
+            fields.extend([EPIC_LINK_FIELD, STORY_POINTS_FIELD, "sprint"])
         if include_links:
-            fields.append('issuelinks')
+            fields.append("issuelinks")
         if include_time:
-            fields.append('timetracking')
+            fields.append("timetracking")
 
     client = get_jira_client(profile)
-    results = client.search_issues(jql, fields=fields, max_results=max_results,
-                                   next_page_token=next_page_token)
+    results = client.search_issues(
+        jql, fields=fields, max_results=max_results, next_page_token=next_page_token
+    )
     client.close()
 
     return results
@@ -103,49 +123,72 @@ def search_issues(jql: str, fields: list = None, max_results: int = 50,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Search for JIRA issues using JQL',
-        epilog='''
+        description="Search for JIRA issues using JQL",
+        epilog="""
 Examples:
   %(prog)s "project = PROJ AND status = Open"
   %(prog)s "assignee = currentUser()" --fields key,summary,status
   %(prog)s --filter 10042                    # Run saved filter
   %(prog)s "project = PROJ" --save-as "My Filter"  # Save as filter
-        '''
+        """,
     )
 
-    parser.add_argument('jql', nargs='?',
-                       help='JQL query string (not required with --filter)')
-    parser.add_argument('--filter',
-                       help='Run a saved filter by ID instead of JQL')
-    parser.add_argument('--save-as',
-                       help='Save the search as a new filter with this name')
-    parser.add_argument('--save-description',
-                       help='Description for the saved filter (use with --save-as)')
-    parser.add_argument('--save-favourite', action='store_true',
-                       help='Add saved filter to favourites (use with --save-as)')
-    parser.add_argument('--fields', '-f',
-                       help='Comma-separated list of fields to return (default: key,summary,status,priority,issuetype,assignee,reporter)')
-    parser.add_argument('--max-results', '-m',
-                       type=int,
-                       default=50,
-                       help='Maximum number of results (default: 50)')
-    parser.add_argument('--page-token', '-p',
-                       help='Next page token from previous response (for pagination)')
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format (default: text)')
-    parser.add_argument('--show-agile', '-a',
-                       action='store_true',
-                       help='Show Agile fields (epic, story points) in results')
-    parser.add_argument('--show-links', '-l',
-                       action='store_true',
-                       help='Show issue links in results')
-    parser.add_argument('--show-time', '-t',
-                       action='store_true',
-                       help='Show time tracking fields in results')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument(
+        "jql", nargs="?", help="JQL query string (not required with --filter)"
+    )
+    parser.add_argument("--filter", help="Run a saved filter by ID instead of JQL")
+    parser.add_argument(
+        "--save-as", help="Save the search as a new filter with this name"
+    )
+    parser.add_argument(
+        "--save-description",
+        help="Description for the saved filter (use with --save-as)",
+    )
+    parser.add_argument(
+        "--save-favourite",
+        action="store_true",
+        help="Add saved filter to favourites (use with --save-as)",
+    )
+    parser.add_argument(
+        "--fields",
+        "-f",
+        help="Comma-separated list of fields to return (default: key,summary,status,priority,issuetype,assignee,reporter)",
+    )
+    parser.add_argument(
+        "--max-results",
+        "-m",
+        type=int,
+        default=50,
+        help="Maximum number of results (default: 50)",
+    )
+    parser.add_argument(
+        "--page-token",
+        "-p",
+        help="Next page token from previous response (for pagination)",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument(
+        "--show-agile",
+        "-a",
+        action="store_true",
+        help="Show Agile fields (epic, story points) in results",
+    )
+    parser.add_argument(
+        "--show-links", "-l", action="store_true", help="Show issue links in results"
+    )
+    parser.add_argument(
+        "--show-time",
+        "-t",
+        action="store_true",
+        help="Show time tracking fields in results",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -161,7 +204,7 @@ Examples:
         # If using --filter, get JQL from saved filter
         if args.filter:
             jql, filter_name = get_jql_from_filter(client, args.filter)
-            if args.output != 'json':
+            if args.output != "json":
                 print_info(f"Running filter: {filter_name}")
                 print_info(f"JQL: {jql}")
                 print()
@@ -170,44 +213,59 @@ Examples:
         jql = validate_jql(jql)
 
         # Build fields list
-        fields = [f.strip() for f in args.fields.split(',')] if args.fields else None
+        fields = [f.strip() for f in args.fields.split(",")] if args.fields else None
         if fields is None:
-            fields = ['key', 'summary', 'status', 'priority', 'issuetype', 'assignee', 'reporter']
+            fields = [
+                "key",
+                "summary",
+                "status",
+                "priority",
+                "issuetype",
+                "assignee",
+                "reporter",
+            ]
             if args.show_agile:
-                fields.extend([EPIC_LINK_FIELD, STORY_POINTS_FIELD, 'sprint'])
+                fields.extend([EPIC_LINK_FIELD, STORY_POINTS_FIELD, "sprint"])
             if args.show_links:
-                fields.append('issuelinks')
+                fields.append("issuelinks")
             if args.show_time:
-                fields.append('timetracking')
+                fields.append("timetracking")
 
         # Execute search
-        results = client.search_issues(jql, fields=fields,
-                                       max_results=args.max_results,
-                                       next_page_token=args.page_token)
+        results = client.search_issues(
+            jql,
+            fields=fields,
+            max_results=args.max_results,
+            next_page_token=args.page_token,
+        )
 
-        issues = results.get('issues', [])
+        issues = results.get("issues", [])
         # Note: /rest/api/3/search/jql uses cursor pagination and doesn't return 'total'
         # It returns 'isLast' and 'nextPageToken' instead
-        total = results.get('total')  # May be None with new endpoint
-        is_last = results.get('isLast', True)
+        total = results.get("total")  # May be None with new endpoint
+        is_last = results.get("isLast", True)
 
         # Save as filter if requested
         if args.save_as:
             saved_filter = save_search_as_filter(
-                client, jql, args.save_as,
+                client,
+                jql,
+                args.save_as,
                 description=args.save_description,
-                favourite=args.save_favourite
+                favourite=args.save_favourite,
             )
-            if args.output != 'json':
-                print_info(f"Saved as filter: {saved_filter.get('name')} (ID: {saved_filter.get('id')})")
+            if args.output != "json":
+                print_info(
+                    f"Saved as filter: {saved_filter.get('name')} (ID: {saved_filter.get('id')})"
+                )
                 print()
 
         client.close()
 
-        if args.output == 'json':
+        if args.output == "json":
             output = results
             if args.save_as:
-                output['savedFilter'] = saved_filter
+                output["savedFilter"] = saved_filter
             print(format_json(output))
         else:
             # Handle both old (total) and new (isLast) API responses
@@ -221,12 +279,17 @@ Examples:
 
             if issues:
                 print()
-                print(format_search_results(issues, show_agile=args.show_agile,
-                                           show_links=args.show_links,
-                                           show_time=args.show_time))
+                print(
+                    format_search_results(
+                        issues,
+                        show_agile=args.show_agile,
+                        show_links=args.show_links,
+                        show_time=args.show_time,
+                    )
+                )
 
                 # Show pagination info if more results available
-                next_token = results.get('nextPageToken')
+                next_token = results.get("nextPageToken")
                 if next_token:
                     if total is not None:
                         print(f"\nShowing {len(issues)} of {total} results")
@@ -243,5 +306,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

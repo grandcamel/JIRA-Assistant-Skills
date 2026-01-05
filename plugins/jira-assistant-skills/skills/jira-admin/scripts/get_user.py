@@ -11,18 +11,17 @@ Supports:
 """
 
 import argparse
-import sys
 import json
-from pathlib import Path
-from typing import Dict, Any, Optional, List
+import sys
+from typing import Any
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-def get_user_by_id(client, account_id: str, expand: Optional[List[str]] = None) -> Dict[str, Any]:
+def get_user_by_id(
+    client, account_id: str, expand: list[str] | None = None
+) -> dict[str, Any]:
     """
     Get user details by account ID.
 
@@ -37,7 +36,9 @@ def get_user_by_id(client, account_id: str, expand: Optional[List[str]] = None) 
     return client.get_user(account_id=account_id, expand=expand)
 
 
-def get_user_by_email(client, email: str, expand: Optional[List[str]] = None) -> Dict[str, Any]:
+def get_user_by_email(
+    client, email: str, expand: list[str] | None = None
+) -> dict[str, Any]:
     """
     Get user details by email address.
 
@@ -54,7 +55,7 @@ def get_user_by_email(client, email: str, expand: Optional[List[str]] = None) ->
     return client.get_user(email=email, expand=expand)
 
 
-def get_current_user(client, expand: Optional[List[str]] = None) -> Dict[str, Any]:
+def get_current_user(client, expand: list[str] | None = None) -> dict[str, Any]:
     """
     Get the current authenticated user.
 
@@ -68,7 +69,7 @@ def get_current_user(client, expand: Optional[List[str]] = None) -> Dict[str, An
     return client.get_current_user(expand=expand)
 
 
-def format_user_field(value: Any, field_name: str = '') -> str:
+def format_user_field(value: Any, field_name: str = "") -> str:
     """
     Format a user field with privacy-aware handling.
 
@@ -79,12 +80,12 @@ def format_user_field(value: Any, field_name: str = '') -> str:
     Returns:
         Formatted string value
     """
-    if value is None or value == '':
-        return '[hidden]'
+    if value is None or value == "":
+        return "[hidden]"
     return str(value)
 
 
-def format_user_text(user: Dict[str, Any]) -> str:
+def format_user_text(user: dict[str, Any]) -> str:
     """
     Format user details as readable text.
 
@@ -100,8 +101,8 @@ def format_user_text(user: Dict[str, Any]) -> str:
     lines.append("")
 
     # Check for unknown/deleted user
-    account_id = user.get('accountId', 'N/A')
-    if account_id == 'unknown':
+    account_id = user.get("accountId", "N/A")
+    if account_id == "unknown":
         lines.append("Note: This represents a deleted or anonymized user.")
         lines.append("")
 
@@ -109,16 +110,18 @@ def format_user_text(user: Dict[str, Any]) -> str:
     lines.append(f"Display Name:    {user.get('displayName', 'N/A')}")
     lines.append(f"Email Address:   {format_user_field(user.get('emailAddress'))}")
     lines.append(f"Account Type:    {user.get('accountType', 'N/A')}")
-    lines.append(f"Status:          {'Active' if user.get('active', True) else 'Inactive'}")
+    lines.append(
+        f"Status:          {'Active' if user.get('active', True) else 'Inactive'}"
+    )
     lines.append(f"Time Zone:       {format_user_field(user.get('timeZone'))}")
     lines.append(f"Locale:          {format_user_field(user.get('locale'))}")
 
     # Groups
-    groups = user.get('groups', {})
-    if isinstance(groups, dict) and groups.get('items'):
+    groups = user.get("groups", {})
+    if isinstance(groups, dict) and groups.get("items"):
         lines.append("")
         lines.append("Groups:")
-        for group in groups.get('items', []):
+        for group in groups.get("items", []):
             lines.append(f"  - {group.get('name', 'Unknown')}")
     elif isinstance(groups, list):
         lines.append("")
@@ -130,24 +133,24 @@ def format_user_text(user: Dict[str, Any]) -> str:
                 lines.append(f"  - {group}")
 
     # Application Roles
-    roles = user.get('applicationRoles', {})
-    if isinstance(roles, dict) and roles.get('items'):
+    roles = user.get("applicationRoles", {})
+    if isinstance(roles, dict) and roles.get("items"):
         lines.append("")
         lines.append("Application Roles:")
-        for role in roles.get('items', []):
+        for role in roles.get("items", []):
             lines.append(f"  - {role.get('name', 'Unknown')}")
 
     # Privacy notice
-    email = user.get('emailAddress')
-    timezone = user.get('timeZone')
+    email = user.get("emailAddress")
+    timezone = user.get("timeZone")
     if email is None or timezone is None:
         lines.append("")
         lines.append("Note: Some fields are hidden due to user privacy settings.")
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
-def format_user_json(user: Dict[str, Any]) -> str:
+def format_user_json(user: dict[str, Any]) -> str:
     """
     Format user as JSON.
 
@@ -162,8 +165,8 @@ def format_user_json(user: Dict[str, Any]) -> str:
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='Get JIRA user details by account ID or email',
-        epilog='''
+        description="Get JIRA user details by account ID or email",
+        epilog="""
 Examples:
   %(prog)s --account-id 5b10ac8d82e05b22cc7d4ef5
   %(prog)s --email john.doe@example.com
@@ -171,24 +174,31 @@ Examples:
   %(prog)s --email john@example.com --include-groups
   %(prog)s --email john@example.com --include-roles
   %(prog)s --email john@example.com --output json
-''',
-        formatter_class=argparse.RawDescriptionHelpFormatter
+""",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     # User identification (mutually exclusive)
     id_group = parser.add_mutually_exclusive_group(required=True)
-    id_group.add_argument('--account-id', '-a', help='User account ID')
-    id_group.add_argument('--email', '-e', help='User email address')
-    id_group.add_argument('--me', action='store_true', help='Get current user')
+    id_group.add_argument("--account-id", "-a", help="User account ID")
+    id_group.add_argument("--email", "-e", help="User email address")
+    id_group.add_argument("--me", action="store_true", help="Get current user")
 
     # Options
-    parser.add_argument('--include-groups', '-g', action='store_true',
-                        help='Include group memberships')
-    parser.add_argument('--include-roles', '-r', action='store_true',
-                        help='Include application roles')
-    parser.add_argument('--output', '-o', choices=['text', 'json'],
-                        default='text', help='Output format (default: text)')
-    parser.add_argument('--profile', help='JIRA profile to use')
+    parser.add_argument(
+        "--include-groups", "-g", action="store_true", help="Include group memberships"
+    )
+    parser.add_argument(
+        "--include-roles", "-r", action="store_true", help="Include application roles"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -198,20 +208,24 @@ Examples:
         # Build expand list
         expand = []
         if args.include_groups:
-            expand.append('groups')
+            expand.append("groups")
         if args.include_roles:
-            expand.append('applicationRoles')
+            expand.append("applicationRoles")
 
         # Get user
         if args.me:
             user = get_current_user(client, expand=expand if expand else None)
         elif args.account_id:
-            user = get_user_by_id(client, args.account_id, expand=expand if expand else None)
+            user = get_user_by_id(
+                client, args.account_id, expand=expand if expand else None
+            )
         else:
-            user = get_user_by_email(client, args.email, expand=expand if expand else None)
+            user = get_user_by_email(
+                client, args.email, expand=expand if expand else None
+            )
 
         # Format output
-        if args.output == 'json':
+        if args.output == "json":
             print(format_user_json(user))
         else:
             print(format_user_text(user))
@@ -226,5 +240,5 @@ Examples:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

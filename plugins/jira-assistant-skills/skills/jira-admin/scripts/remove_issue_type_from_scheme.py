@@ -8,19 +8,13 @@ Requires 'Administer Jira' global permission.
 
 import argparse
 import sys
-from pathlib import Path
 
 # Add shared lib to path
-
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import JiraError, print_error
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
 def remove_issue_type_from_scheme(
-    scheme_id: str,
-    issue_type_id: str,
-    client=None,
-    profile: str = None
+    scheme_id: str, issue_type_id: str, client=None, profile: str | None = None
 ) -> bool:
     """
     Remove an issue type from a scheme.
@@ -45,8 +39,7 @@ def remove_issue_type_from_scheme(
 
     try:
         client.remove_issue_type_from_scheme(
-            scheme_id=scheme_id,
-            issue_type_id=issue_type_id
+            scheme_id=scheme_id, issue_type_id=issue_type_id
         )
         return True
     finally:
@@ -57,7 +50,7 @@ def remove_issue_type_from_scheme(
 def main(argv: list[str] | None = None):
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Remove an issue type from an issue type scheme',
+        description="Remove an issue type from an issue type scheme",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -74,28 +67,15 @@ Note:
   Requires 'Administer Jira' global permission.
   Cannot remove the default issue type from the scheme.
   Cannot remove the last issue type from the scheme.
-"""
+""",
     )
 
+    parser.add_argument("--scheme-id", required=True, help="Issue type scheme ID")
     parser.add_argument(
-        '--scheme-id',
-        required=True,
-        help='Issue type scheme ID'
+        "--issue-type-id", required=True, help="Issue type ID to remove"
     )
-    parser.add_argument(
-        '--issue-type-id',
-        required=True,
-        help='Issue type ID to remove'
-    )
-    parser.add_argument(
-        '--force',
-        action='store_true',
-        help='Skip confirmation prompt'
-    )
-    parser.add_argument(
-        '--profile',
-        help='Configuration profile to use'
-    )
+    parser.add_argument("--force", action="store_true", help="Skip confirmation prompt")
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -105,14 +85,14 @@ Note:
             confirm = input(
                 f"Remove issue type {args.issue_type_id} from scheme {args.scheme_id}? [y/N]: "
             )
-            if confirm.lower() != 'y':
+            if confirm.lower() != "y":
                 print("Removal cancelled.")
                 return
 
         remove_issue_type_from_scheme(
             scheme_id=args.scheme_id,
             issue_type_id=args.issue_type_id,
-            profile=args.profile
+            profile=args.profile,
         )
 
         print(f"Issue type {args.issue_type_id} removed from scheme {args.scheme_id}.")
@@ -122,5 +102,5 @@ Note:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

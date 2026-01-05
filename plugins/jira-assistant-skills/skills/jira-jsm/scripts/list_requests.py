@@ -9,23 +9,23 @@ Usage:
     python list_requests.py --service-desk 1 --output json
 """
 
-import sys
-import os
 import argparse
 import json
-from pathlib import Path
-from typing import Optional, Dict, Any, List
+import sys
+from typing import Any
+
+from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-
-
-def list_service_requests(service_desk_id: str, status: Optional[str] = None,
-                          request_type: Optional[str] = None,
-                          jql: Optional[str] = None,
-                          max_results: int = 50, start_at: int = 0,
-                          profile: Optional[str] = None) -> Dict[str, Any]:
+def list_service_requests(
+    service_desk_id: str,
+    status: str | None = None,
+    request_type: str | None = None,
+    jql: str | None = None,
+    max_results: int = 50,
+    start_at: int = 0,
+    profile: str | None = None,
+) -> dict[str, Any]:
     """
     List service requests.
 
@@ -53,19 +53,17 @@ def list_service_requests(service_desk_id: str, status: Optional[str] = None,
 
     # Add custom JQL
     if jql:
-        jql_parts.append(f'({jql})')
+        jql_parts.append(f"({jql})")
 
-    final_jql = ' AND '.join(jql_parts)
+    final_jql = " AND ".join(jql_parts)
 
     with get_jira_client(profile) as client:
         return client.search_issues(
-            jql=final_jql,
-            max_results=max_results,
-            start_at=start_at
+            jql=final_jql, max_results=max_results, start_at=start_at
         )
 
 
-def format_table(issues: List[Dict[str, Any]]) -> str:
+def format_table(issues: list[dict[str, Any]]) -> str:
     """Format issues as table."""
     if not issues:
         return "No requests found."
@@ -75,24 +73,24 @@ def format_table(issues: List[Dict[str, Any]]) -> str:
     lines.append("-" * 100)
 
     for issue in issues:
-        key = issue.get('key', 'N/A')
-        fields = issue.get('fields', {})
+        key = issue.get("key", "N/A")
+        fields = issue.get("fields", {})
 
-        summary = fields.get('summary', 'N/A')
+        summary = fields.get("summary", "N/A")
         if len(summary) > 37:
-            summary = summary[:37] + '...'
+            summary = summary[:37] + "..."
 
-        status = fields.get('status', {}).get('name', 'N/A')
+        status = fields.get("status", {}).get("name", "N/A")
 
-        reporter = fields.get('reporter', {})
-        reporter_email = reporter.get('emailAddress', 'N/A')
+        reporter = fields.get("reporter", {})
+        reporter_email = reporter.get("emailAddress", "N/A")
 
         lines.append(f"{key:<12} {summary:<40} {status:<20} {reporter_email}")
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
-def format_json(issues: List[Dict[str, Any]]) -> str:
+def format_json(issues: list[dict[str, Any]]) -> str:
     """Format issues as JSON."""
     return json.dumps(issues, indent=2)
 
@@ -100,7 +98,7 @@ def format_json(issues: List[Dict[str, Any]]) -> str:
 def main(argv: list[str] | None = None):
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='List JSM service requests',
+        description="List JSM service requests",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -121,25 +119,31 @@ Examples:
 
   JSON output:
     %(prog)s --service-desk 1 --output json
-        """
+        """,
     )
 
-    parser.add_argument('--service-desk', required=True,
-                        help='Service desk ID or project key')
-    parser.add_argument('--status',
-                        help='Filter by status')
-    parser.add_argument('--request-type',
-                        help='Filter by request type name')
-    parser.add_argument('--jql',
-                        help='Additional JQL filter')
-    parser.add_argument('--max-results', type=int, default=50,
-                        help='Maximum results to return (default: 50)')
-    parser.add_argument('--start-at', type=int, default=0,
-                        help='Pagination offset (default: 0)')
-    parser.add_argument('--output', choices=['text', 'json'], default='text',
-                        help='Output format (default: text)')
-    parser.add_argument('--profile',
-                        help='JIRA profile to use from config')
+    parser.add_argument(
+        "--service-desk", required=True, help="Service desk ID or project key"
+    )
+    parser.add_argument("--status", help="Filter by status")
+    parser.add_argument("--request-type", help="Filter by request type name")
+    parser.add_argument("--jql", help="Additional JQL filter")
+    parser.add_argument(
+        "--max-results",
+        type=int,
+        default=50,
+        help="Maximum results to return (default: 50)",
+    )
+    parser.add_argument(
+        "--start-at", type=int, default=0, help="Pagination offset (default: 0)"
+    )
+    parser.add_argument(
+        "--output",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -151,13 +155,13 @@ Examples:
             jql=args.jql,
             max_results=args.max_results,
             start_at=args.start_at,
-            profile=args.profile
+            profile=args.profile,
         )
 
-        issues = result.get('issues', [])
-        total = result.get('total', 0)
+        issues = result.get("issues", [])
+        total = result.get("total", 0)
 
-        if args.output == 'json':
+        if args.output == "json":
             print(format_json(issues))
         else:
             print(format_table(issues))
@@ -167,7 +171,9 @@ Examples:
                 shown = len(issues)
                 remaining = total - shown - args.start_at
                 if remaining > 0:
-                    print(f"Showing {shown} of {total} (use --start-at {args.start_at + shown} for next page)")
+                    print(
+                        f"Showing {shown} of {total} (use --start-at {args.start_at + shown} for next page)"
+                    )
 
         return 0
 
@@ -179,5 +185,5 @@ Examples:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

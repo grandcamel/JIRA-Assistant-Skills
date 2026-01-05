@@ -9,19 +9,20 @@ Usage:
     python list_request_types.py 1 --show-issue-types
 """
 
-import sys
-import os
 import argparse
-import json
-from pathlib import Path
+import sys
+
+from jira_assistant_skills_lib import (
+    JiraError,
+    format_json,
+    get_jira_client,
+    print_error,
+)
 
 
-from jira_assistant_skills_lib import get_jira_client
-from jira_assistant_skills_lib import print_error, JiraError
-from jira_assistant_skills_lib import format_json
-
-
-def list_request_types(service_desk_id: str, start: int = 0, limit: int = 50, profile: str = None) -> dict:
+def list_request_types(
+    service_desk_id: str, start: int = 0, limit: int = 50, profile: str | None = None
+) -> dict:
     """
     List request types for a service desk.
 
@@ -41,7 +42,7 @@ def list_request_types(service_desk_id: str, start: int = 0, limit: int = 50, pr
     return request_types
 
 
-def filter_request_types(request_types: dict, name_filter: str = None) -> dict:
+def filter_request_types(request_types: dict, name_filter: str | None = None) -> dict:
     """
     Filter request types by name pattern.
 
@@ -56,18 +57,19 @@ def filter_request_types(request_types: dict, name_filter: str = None) -> dict:
         return request_types
 
     filtered_values = [
-        rt for rt in request_types.get('values', [])
-        if name_filter.lower() in rt.get('name', '').lower()
+        rt
+        for rt in request_types.get("values", [])
+        if name_filter.lower() in rt.get("name", "").lower()
     ]
 
-    return {
-        **request_types,
-        'values': filtered_values,
-        'size': len(filtered_values)
-    }
+    return {**request_types, "values": filtered_values, "size": len(filtered_values)}
 
 
-def format_request_types_text(request_types: dict, service_desk_name: str = "Service Desk", show_issue_types: bool = False) -> None:
+def format_request_types_text(
+    request_types: dict,
+    service_desk_name: str = "Service Desk",
+    show_issue_types: bool = False,
+) -> None:
     """
     Format request types as human-readable text.
 
@@ -76,7 +78,7 @@ def format_request_types_text(request_types: dict, service_desk_name: str = "Ser
         service_desk_name: Service desk name for display
         show_issue_types: Show issue type IDs
     """
-    values = request_types.get('values', [])
+    values = request_types.get("values", [])
 
     if not values:
         print(f"No request types found for {service_desk_name}.")
@@ -90,10 +92,10 @@ def format_request_types_text(request_types: dict, service_desk_name: str = "Ser
         print(f"{'──':<4} {'────':<30} {'───────────':<40} {'──────────':<15}")
 
         for rt in values:
-            rt_id = rt.get('id', '')
-            name = rt.get('name', '')[:28]
-            description = rt.get('description', '')[:38]
-            issue_type_id = rt.get('issueTypeId', '')
+            rt_id = rt.get("id", "")
+            name = rt.get("name", "")[:28]
+            description = rt.get("description", "")[:38]
+            issue_type_id = rt.get("issueTypeId", "")
 
             print(f"{rt_id:<4} {name:<30} {description:<40} {issue_type_id:<15}")
     else:
@@ -101,9 +103,9 @@ def format_request_types_text(request_types: dict, service_desk_name: str = "Ser
         print(f"{'──':<4} {'────':<30} {'───────────':<50}")
 
         for rt in values:
-            rt_id = rt.get('id', '')
-            name = rt.get('name', '')[:28]
-            description = rt.get('description', '')[:48]
+            rt_id = rt.get("id", "")
+            name = rt.get("name", "")[:28]
+            description = rt.get("description", "")[:48]
 
             print(f"{rt_id:<4} {name:<30} {description:<50}")
 
@@ -126,31 +128,40 @@ def format_request_types_json(request_types: dict) -> str:
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description='List request types for a JSM service desk',
-        epilog='Example: python list_request_types.py 1'
+        description="List request types for a JSM service desk",
+        epilog="Example: python list_request_types.py 1",
     )
 
-    parser.add_argument('service_desk_id',
-                       help='Service desk ID')
-    parser.add_argument('--output', '-o',
-                       choices=['text', 'json'],
-                       default='text',
-                       help='Output format (default: text)')
-    parser.add_argument('--filter', '-f',
-                       help='Filter by name pattern')
-    parser.add_argument('--show-issue-types', '-i',
-                       action='store_true',
-                       help='Show underlying JIRA issue types')
-    parser.add_argument('--limit', '-l',
-                       type=int,
-                       default=50,
-                       help='Maximum results to return (default: 50)')
-    parser.add_argument('--start', '-s',
-                       type=int,
-                       default=0,
-                       help='Starting index for pagination (default: 0)')
-    parser.add_argument('--profile',
-                       help='JIRA profile to use (default: from config)')
+    parser.add_argument("service_desk_id", help="Service desk ID")
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument("--filter", "-f", help="Filter by name pattern")
+    parser.add_argument(
+        "--show-issue-types",
+        "-i",
+        action="store_true",
+        help="Show underlying JIRA issue types",
+    )
+    parser.add_argument(
+        "--limit",
+        "-l",
+        type=int,
+        default=50,
+        help="Maximum results to return (default: 50)",
+    )
+    parser.add_argument(
+        "--start",
+        "-s",
+        type=int,
+        default=0,
+        help="Starting index for pagination (default: 0)",
+    )
+    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -160,7 +171,7 @@ def main(argv: list[str] | None = None):
             args.service_desk_id,
             start=args.start,
             limit=args.limit,
-            profile=args.profile
+            profile=args.profile,
         )
 
         # Apply filters
@@ -174,10 +185,12 @@ def main(argv: list[str] | None = None):
         client.close()
 
         # Output results
-        if args.output == 'json':
+        if args.output == "json":
             print(format_request_types_json(request_types))
         else:
-            format_request_types_text(request_types, service_desk_name, args.show_issue_types)
+            format_request_types_text(
+                request_types, service_desk_name, args.show_issue_types
+            )
 
     except JiraError as e:
         print_error(e)
@@ -187,5 +200,5 @@ def main(argv: list[str] | None = None):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
