@@ -55,13 +55,36 @@ def epic_get(ctx, epic_key: str, include_issues: bool):
 
 
 @epic.command(name="add-issues")
-@click.argument('epic_key')
-@click.argument('issue_keys', nargs=-1, required=True)
+@click.option('--epic', '-e', required=True, help='Epic key (e.g., PROJ-100)')
+@click.option('--issues', '-i', help='Comma-separated issue keys (e.g., PROJ-101,PROJ-102)')
+@click.option('--jql', '-j', help='JQL query to find issues')
+@click.option('--dry-run', '-n', is_flag=True, help='Preview without making changes')
 @click.pass_context
-def epic_add_issues(ctx, epic_key: str, issue_keys: tuple):
-    """Add issues to an epic."""
+def epic_add_issues(ctx, epic: str, issues: str, jql: str, dry_run: bool):
+    """Add issues to an epic.
+
+    Specify issues using either --issues or --jql (mutually exclusive).
+
+    Examples:
+        jira agile epic add-issues --epic PROJ-100 --issues PROJ-101,PROJ-102
+        jira agile epic add-issues --epic PROJ-100 --jql "type = Story AND status = Open"
+    """
+    if not issues and not jql:
+        raise click.UsageError("Either --issues or --jql is required")
+    if issues and jql:
+        raise click.UsageError("--issues and --jql are mutually exclusive")
+
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "add_to_epic.py"
-    run_skill_script_subprocess(script_path, [epic_key] + list(issue_keys), ctx)
+
+    script_args = ["--epic", epic]
+    if issues:
+        script_args.extend(["--issues", issues])
+    if jql:
+        script_args.extend(["--jql", jql])
+    if dry_run:
+        script_args.append("--dry-run")
+
+    run_skill_script_subprocess(script_path, script_args, ctx)
 
 
 # Sprint commands
@@ -72,23 +95,28 @@ def sprint():
 
 
 @sprint.command(name="create")
-@click.argument('board_id', type=int)
-@click.argument('name')
+@click.option('--board', '-b', 'board_id', type=int, required=True, help='Board ID')
+@click.option('--name', '-n', required=True, help='Sprint name')
 @click.option('--goal', '-g', help='Sprint goal')
-@click.option('--start-date', help='Start date (YYYY-MM-DD)')
-@click.option('--end-date', help='End date (YYYY-MM-DD)')
+@click.option('--start-date', '-s', help='Start date (YYYY-MM-DD)')
+@click.option('--end-date', '-e', help='End date (YYYY-MM-DD)')
 @click.pass_context
 def sprint_create(ctx, board_id: int, name: str, goal: str, start_date: str, end_date: str):
-    """Create a new sprint."""
+    """Create a new sprint.
+
+    Examples:
+        jira agile sprint create --board 123 --name "Sprint 42"
+        jira agile sprint create --board 123 --name "Sprint 42" --goal "Launch MVP"
+    """
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "create_sprint.py"
 
-    script_args = [str(board_id), name]
+    script_args = ["--board", str(board_id), "--name", name]
     if goal:
         script_args.extend(["--goal", goal])
     if start_date:
-        script_args.extend(["--start-date", start_date])
+        script_args.extend(["--start", start_date])
     if end_date:
-        script_args.extend(["--end-date", end_date])
+        script_args.extend(["--end", end_date])
 
     run_skill_script_subprocess(script_path, script_args, ctx)
 
@@ -137,13 +165,46 @@ def sprint_manage(ctx, sprint_id: int, start: bool, complete: bool, name: str,
 
 
 @sprint.command(name="move-issues")
-@click.argument('sprint_id', type=int)
-@click.argument('issue_keys', nargs=-1, required=True)
+@click.option('--sprint', '-s', type=int, help='Target sprint ID')
+@click.option('--backlog', '-b', is_flag=True, help='Move to backlog instead of sprint')
+@click.option('--issues', '-i', help='Comma-separated issue keys (e.g., PROJ-101,PROJ-102)')
+@click.option('--jql', '-j', help='JQL query to find issues')
+@click.option('--dry-run', '-n', is_flag=True, help='Preview without making changes')
 @click.pass_context
-def sprint_move_issues(ctx, sprint_id: int, issue_keys: tuple):
-    """Move issues to a sprint."""
+def sprint_move_issues(ctx, sprint: int, backlog: bool, issues: str, jql: str, dry_run: bool):
+    """Move issues to a sprint or backlog.
+
+    Specify target using either --sprint or --backlog.
+    Specify issues using either --issues or --jql.
+
+    Examples:
+        jira agile sprint move-issues --sprint 456 --issues PROJ-101,PROJ-102
+        jira agile sprint move-issues --backlog --jql "sprint = 456 AND status = Done"
+    """
+    if not sprint and not backlog:
+        raise click.UsageError("Either --sprint or --backlog is required")
+    if sprint and backlog:
+        raise click.UsageError("--sprint and --backlog are mutually exclusive")
+    if not issues and not jql:
+        raise click.UsageError("Either --issues or --jql is required")
+    if issues and jql:
+        raise click.UsageError("--issues and --jql are mutually exclusive")
+
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "move_to_sprint.py"
-    run_skill_script_subprocess(script_path, [str(sprint_id)] + list(issue_keys), ctx)
+
+    script_args = []
+    if sprint:
+        script_args.extend(["--sprint", str(sprint)])
+    if backlog:
+        script_args.append("--backlog")
+    if issues:
+        script_args.extend(["--issues", issues])
+    if jql:
+        script_args.extend(["--jql", jql])
+    if dry_run:
+        script_args.append("--dry-run")
+
+    run_skill_script_subprocess(script_path, script_args, ctx)
 
 
 # Backlog commands
@@ -179,12 +240,17 @@ def agile_rank(ctx, issue_key: str, before: str, after: str):
 # Estimation
 @agile.command(name="estimate")
 @click.argument('issue_key')
-@click.argument('story_points', type=float)
+@click.option('--points', '-p', type=float, required=True, help='Story points value')
 @click.pass_context
-def agile_estimate(ctx, issue_key: str, story_points: float):
-    """Set story points for an issue."""
+def agile_estimate(ctx, issue_key: str, points: float):
+    """Set story points for an issue.
+
+    Examples:
+        jira agile estimate PROJ-123 --points 5
+        jira agile estimate PROJ-123 --points 3
+    """
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "estimate_issue.py"
-    run_skill_script_subprocess(script_path, [issue_key, str(story_points)], ctx)
+    run_skill_script_subprocess(script_path, [issue_key, "--points", str(points)], ctx)
 
 
 @agile.command(name="estimates")

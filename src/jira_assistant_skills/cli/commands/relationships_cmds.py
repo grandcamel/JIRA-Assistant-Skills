@@ -10,17 +10,53 @@ def relationships():
 
 @relationships.command(name="link")
 @click.argument('source_issue')
-@click.argument('target_issue')
-@click.option('--type', '-t', 'link_type', default='Relates', help='Link type (Blocks, Relates, Duplicate, etc.)')
+@click.option('--blocks', help='Issue that this issue blocks')
+@click.option('--is-blocked-by', help='Issue that blocks this issue')
+@click.option('--relates-to', help='Issue that this issue relates to')
+@click.option('--duplicates', help='Issue that this issue duplicates')
+@click.option('--clones', help='Issue that this issue clones')
+@click.option('--type', '-t', 'link_type', help='Explicit link type name')
+@click.option('--to', 'target', help='Target issue (use with --type)')
 @click.option('--comment', '-c', help='Add comment with the link')
+@click.option('--dry-run', '-n', is_flag=True, help='Preview without making changes')
 @click.pass_context
-def relationships_link(ctx, source_issue: str, target_issue: str, link_type: str, comment: str):
-    """Create a link between two issues."""
+def relationships_link(ctx, source_issue: str, blocks: str, is_blocked_by: str,
+                       relates_to: str, duplicates: str, clones: str,
+                       link_type: str, target: str, comment: str, dry_run: bool):
+    """Create a link between two issues.
+
+    Use one of the shorthand options or --type with --to.
+
+    Examples:
+        jira relationships link PROJ-1 --blocks PROJ-2
+        jira relationships link PROJ-1 --relates-to PROJ-2
+        jira relationships link PROJ-1 --type "Blocks" --to PROJ-2
+    """
+    # Count how many link options were provided
+    link_opts = [blocks, is_blocked_by, relates_to, duplicates, clones]
+    explicit_opts = link_type and target
+    if sum(1 for opt in link_opts if opt) + (1 if explicit_opts else 0) != 1:
+        raise click.UsageError("Specify exactly one link type: --blocks, --relates-to, --duplicates, --clones, --is-blocked-by, or --type with --to")
+
     script_path = SKILLS_ROOT_DIR / "jira-relationships" / "scripts" / "link_issue.py"
 
-    script_args = [source_issue, target_issue, "--type", link_type]
+    script_args = [source_issue]
+    if blocks:
+        script_args.extend(["--blocks", blocks])
+    elif is_blocked_by:
+        script_args.extend(["--is-blocked-by", is_blocked_by])
+    elif relates_to:
+        script_args.extend(["--relates-to", relates_to])
+    elif duplicates:
+        script_args.extend(["--duplicates", duplicates])
+    elif clones:
+        script_args.extend(["--clones", clones])
+    elif link_type and target:
+        script_args.extend(["--type", link_type, "--to", target])
     if comment:
         script_args.extend(["--comment", comment])
+    if dry_run:
+        script_args.append("--dry-run")
 
     run_skill_script_subprocess(script_path, script_args, ctx)
 
@@ -128,22 +164,63 @@ def relationships_clone(ctx, issue_key: str, project: str, prefix: str,
 
 
 @relationships.command(name="bulk-link")
-@click.argument('jql')
-@click.argument('target_issue')
-@click.option('--type', '-t', 'link_type', default='Relates', help='Link type')
-@click.option('--dry-run', '-n', is_flag=True, help='Show what would be linked')
-@click.option('--force', '-f', is_flag=True, help='Skip confirmation')
+@click.option('--jql', '-j', help='JQL query to find issues')
+@click.option('--issues', '-i', help='Comma-separated issue keys')
+@click.option('--blocks', help='Issue that source issues block')
+@click.option('--is-blocked-by', help='Issue that blocks source issues')
+@click.option('--relates-to', help='Issue that source issues relate to')
+@click.option('--duplicates', help='Issue that source issues duplicate')
+@click.option('--clones', help='Issue that source issues clone')
+@click.option('--type', '-t', 'link_type', help='Explicit link type name')
+@click.option('--to', 'target', help='Target issue (use with --type)')
+@click.option('--dry-run', '-n', is_flag=True, help='Preview without making changes')
+@click.option('--skip-existing', is_flag=True, help='Skip already linked issues')
 @click.pass_context
-def relationships_bulk_link(ctx, jql: str, target_issue: str, link_type: str,
-                            dry_run: bool, force: bool):
-    """Link multiple issues matching JQL to a target issue."""
+def relationships_bulk_link(ctx, jql: str, issues: str, blocks: str, is_blocked_by: str,
+                            relates_to: str, duplicates: str, clones: str,
+                            link_type: str, target: str, dry_run: bool, skip_existing: bool):
+    """Link multiple issues to a target issue.
+
+    Specify source issues using --jql or --issues.
+    Specify link type using --blocks, --relates-to, etc., or --type with --to.
+
+    Examples:
+        jira relationships bulk-link --jql "project=PROJ AND fixVersion=1.0" --relates-to PROJ-500
+        jira relationships bulk-link --issues PROJ-1,PROJ-2 --blocks PROJ-100 --dry-run
+    """
+    if not jql and not issues:
+        raise click.UsageError("Either --jql or --issues is required")
+    if jql and issues:
+        raise click.UsageError("--jql and --issues are mutually exclusive")
+
+    link_opts = [blocks, is_blocked_by, relates_to, duplicates, clones]
+    explicit_opts = link_type and target
+    if sum(1 for opt in link_opts if opt) + (1 if explicit_opts else 0) != 1:
+        raise click.UsageError("Specify exactly one link type: --blocks, --relates-to, etc., or --type with --to")
+
     script_path = SKILLS_ROOT_DIR / "jira-relationships" / "scripts" / "bulk_link.py"
 
-    script_args = [jql, target_issue, "--type", link_type]
+    script_args = []
+    if jql:
+        script_args.extend(["--jql", jql])
+    if issues:
+        script_args.extend(["--issues", issues])
+    if blocks:
+        script_args.extend(["--blocks", blocks])
+    elif is_blocked_by:
+        script_args.extend(["--is-blocked-by", is_blocked_by])
+    elif relates_to:
+        script_args.extend(["--relates-to", relates_to])
+    elif duplicates:
+        script_args.extend(["--duplicates", duplicates])
+    elif clones:
+        script_args.extend(["--clones", clones])
+    elif link_type and target:
+        script_args.extend(["--type", link_type, "--to", target])
     if dry_run:
         script_args.append("--dry-run")
-    if force:
-        script_args.append("--force")
+    if skip_existing:
+        script_args.append("--skip-existing")
 
     run_skill_script_subprocess(script_path, script_args, ctx)
 

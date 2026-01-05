@@ -10,25 +10,30 @@ def time():
 
 @time.command(name="log")
 @click.argument('issue_key')
-@click.argument('time_spent')
+@click.option('--time', '-t', 'time_spent', required=True, help='Time spent (e.g., 2h, 1d 4h, 30m)')
 @click.option('--comment', '-c', help='Worklog comment')
 @click.option('--started', '-s', help='Start time (YYYY-MM-DD or ISO datetime)')
-@click.option('--adjust', '-a', type=click.Choice(['auto', 'leave', 'new', 'manual']),
+@click.option('--adjust-estimate', '-a', type=click.Choice(['auto', 'leave', 'new', 'manual']),
               default='auto', help='How to adjust remaining estimate')
 @click.option('--new-estimate', help='New remaining estimate (when adjust=new or manual)')
 @click.pass_context
 def time_log(ctx, issue_key: str, time_spent: str, comment: str, started: str,
-             adjust: str, new_estimate: str):
-    """Log time worked on an issue."""
+             adjust_estimate: str, new_estimate: str):
+    """Log time worked on an issue.
+
+    Examples:
+        jira time log PROJ-123 --time 2h
+        jira time log PROJ-123 --time "1d 4h" --comment "Code review"
+    """
     script_path = SKILLS_ROOT_DIR / "jira-time" / "scripts" / "add_worklog.py"
 
-    script_args = [issue_key, time_spent]
+    script_args = [issue_key, "--time", time_spent]
     if comment:
         script_args.extend(["--comment", comment])
     if started:
         script_args.extend(["--started", started])
-    if adjust != 'auto':
-        script_args.extend(["--adjust", adjust])
+    if adjust_estimate != 'auto':
+        script_args.extend(["--adjust-estimate", adjust_estimate])
     if new_estimate:
         script_args.extend(["--new-estimate", new_estimate])
 
@@ -78,18 +83,23 @@ def time_update_worklog(ctx, issue_key: str, worklog_id: str, time_spent: str,
 
 @time.command(name="delete-worklog")
 @click.argument('issue_key')
-@click.argument('worklog_id')
-@click.option('--adjust', '-a', type=click.Choice(['auto', 'leave', 'new', 'manual']),
+@click.option('--worklog-id', '-w', required=True, help='Worklog ID to delete')
+@click.option('--adjust-estimate', '-a', type=click.Choice(['auto', 'leave', 'new', 'manual']),
               default='auto', help='How to adjust remaining estimate')
 @click.option('--force', '-f', is_flag=True, help='Skip confirmation')
 @click.pass_context
-def time_delete_worklog(ctx, issue_key: str, worklog_id: str, adjust: str, force: bool):
-    """Delete a worklog."""
+def time_delete_worklog(ctx, issue_key: str, worklog_id: str, adjust_estimate: str, force: bool):
+    """Delete a worklog.
+
+    Examples:
+        jira time delete-worklog PROJ-123 --worklog-id 12345
+        jira time delete-worklog PROJ-123 --worklog-id 12345 --adjust-estimate leave
+    """
     script_path = SKILLS_ROOT_DIR / "jira-time" / "scripts" / "delete_worklog.py"
 
     script_args = [issue_key, worklog_id]
-    if adjust != 'auto':
-        script_args.extend(["--adjust", adjust])
+    if adjust_estimate != 'auto':
+        script_args.extend(["--adjust-estimate", adjust_estimate])
     if force:
         script_args.append("--force")
 
@@ -98,14 +108,27 @@ def time_delete_worklog(ctx, issue_key: str, worklog_id: str, adjust: str, force
 
 @time.command(name="estimate")
 @click.argument('issue_key')
-@click.argument('estimate')
-@click.option('--remaining', '-r', help='Remaining estimate (updates both if not specified)')
+@click.option('--original', '-o', help='Original estimate (e.g., 2d, 4h)')
+@click.option('--remaining', '-r', help='Remaining estimate (e.g., 1d 4h)')
 @click.pass_context
-def time_estimate(ctx, issue_key: str, estimate: str, remaining: str):
-    """Set time estimate for an issue."""
+def time_estimate(ctx, issue_key: str, original: str, remaining: str):
+    """Set time estimate for an issue.
+
+    At least one of --original or --remaining is required.
+
+    Examples:
+        jira time estimate PROJ-123 --original 2d
+        jira time estimate PROJ-123 --remaining "1d 4h"
+        jira time estimate PROJ-123 --original 2d --remaining "1d 4h"
+    """
+    if not original and not remaining:
+        raise click.UsageError("At least one of --original or --remaining is required")
+
     script_path = SKILLS_ROOT_DIR / "jira-time" / "scripts" / "set_estimate.py"
 
-    script_args = [issue_key, estimate]
+    script_args = [issue_key]
+    if original:
+        script_args.extend(["--original", original])
     if remaining:
         script_args.extend(["--remaining", remaining])
 
@@ -180,22 +203,39 @@ def time_export(ctx, project: str, user: str, since: str, until: str,
 
 
 @time.command(name="bulk-log")
-@click.argument('jql')
-@click.argument('time_spent')
+@click.option('--jql', '-j', help='JQL query to find issues')
+@click.option('--issues', '-i', help='Comma-separated issue keys (e.g., PROJ-1,PROJ-2)')
+@click.option('--time', '-t', 'time_spent', required=True, help='Time to log (e.g., 2h, 30m)')
 @click.option('--comment', '-c', help='Worklog comment')
 @click.option('--dry-run', '-n', is_flag=True, help='Show what would be logged')
 @click.option('--force', '-f', is_flag=True, help='Skip confirmation')
 @click.pass_context
-def time_bulk_log(ctx, jql: str, time_spent: str, comment: str, dry_run: bool, force: bool):
-    """Log time on multiple issues matching JQL."""
+def time_bulk_log(ctx, jql: str, issues: str, time_spent: str, comment: str, dry_run: bool, force: bool):
+    """Log time on multiple issues.
+
+    Specify issues using either --jql or --issues (mutually exclusive).
+
+    Examples:
+        jira time bulk-log --jql "sprint = 456" --time 15m --comment "Standup"
+        jira time bulk-log --issues PROJ-1,PROJ-2 --time 30m --dry-run
+    """
+    if not jql and not issues:
+        raise click.UsageError("Either --jql or --issues is required")
+    if jql and issues:
+        raise click.UsageError("--jql and --issues are mutually exclusive")
+
     script_path = SKILLS_ROOT_DIR / "jira-time" / "scripts" / "bulk_log_time.py"
 
-    script_args = [jql, time_spent]
+    script_args = ["--time", time_spent]
+    if jql:
+        script_args.extend(["--jql", jql])
+    if issues:
+        script_args.extend(["--issues", issues])
     if comment:
         script_args.extend(["--comment", comment])
     if dry_run:
         script_args.append("--dry-run")
     if force:
-        script_args.append("--force")
+        script_args.append("--yes")
 
     run_skill_script_subprocess(script_path, script_args, ctx)

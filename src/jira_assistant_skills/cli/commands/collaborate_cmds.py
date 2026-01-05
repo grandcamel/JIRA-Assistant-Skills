@@ -17,20 +17,28 @@ def comment():
 
 @comment.command(name="add")
 @click.argument('issue_key')
-@click.argument('body')
+@click.option('--body', '-b', required=True, help='Comment text')
 @click.option('--format', '-f', 'body_format', type=click.Choice(['text', 'markdown', 'adf']),
               default='text', help='Comment format')
-@click.option('--visibility', '-v', help='Restrict visibility (role or group)')
+@click.option('--visibility-role', help='Restrict visibility to role')
+@click.option('--visibility-group', help='Restrict visibility to group')
 @click.pass_context
-def comment_add(ctx, issue_key: str, body: str, body_format: str, visibility: str):
-    """Add a comment to an issue."""
+def comment_add(ctx, issue_key: str, body: str, body_format: str, visibility_role: str, visibility_group: str):
+    """Add a comment to an issue.
+
+    Examples:
+        jira collaborate comment add PROJ-123 --body "Starting work"
+        jira collaborate comment add PROJ-123 --body "Internal note" --visibility-role Developers
+    """
     script_path = SKILLS_ROOT_DIR / "jira-collaborate" / "scripts" / "add_comment.py"
 
-    script_args = [issue_key, body]
+    script_args = [issue_key, "--body", body]
     if body_format != 'text':
         script_args.extend(["--format", body_format])
-    if visibility:
-        script_args.extend(["--visibility", visibility])
+    if visibility_role:
+        script_args.extend(["--visibility-role", visibility_role])
+    if visibility_group:
+        script_args.extend(["--visibility-group", visibility_group])
 
     run_skill_script_subprocess(script_path, script_args, ctx)
 
@@ -96,12 +104,23 @@ def attachment():
 
 @attachment.command(name="upload")
 @click.argument('issue_key')
-@click.argument('file_path')
+@click.option('--file', '-f', 'file_path', required=True, help='Path to file to upload')
+@click.option('--name', '-n', help='Override filename')
 @click.pass_context
-def attachment_upload(ctx, issue_key: str, file_path: str):
-    """Upload an attachment to an issue."""
+def attachment_upload(ctx, issue_key: str, file_path: str, name: str):
+    """Upload an attachment to an issue.
+
+    Examples:
+        jira collaborate attachment upload PROJ-123 --file screenshot.png
+        jira collaborate attachment upload PROJ-123 --file doc.pdf --name "Requirements.pdf"
+    """
     script_path = SKILLS_ROOT_DIR / "jira-collaborate" / "scripts" / "upload_attachment.py"
-    run_skill_script_subprocess(script_path, [issue_key, file_path], ctx)
+
+    script_args = [issue_key, "--file", file_path]
+    if name:
+        script_args.extend(["--name", name])
+
+    run_skill_script_subprocess(script_path, script_args, ctx)
 
 
 @attachment.command(name="download")
