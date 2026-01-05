@@ -108,18 +108,27 @@ All scripts support these common options:
 ```bash
 # View available link types in your JIRA instance
 jira relationships link-types
+jira relationships link-types --filter block
+jira relationships link-types --output json
 
 # Create links using semantic flags
 jira relationships link PROJ-1 --blocks PROJ-2
 jira relationships link PROJ-1 --duplicates PROJ-2
 jira relationships link PROJ-1 --relates-to PROJ-2
+jira relationships link PROJ-1 --type "Blocks" --to PROJ-2
 
 # View and remove links
 jira relationships get-links PROJ-123
+jira relationships get-links PROJ-123 --direction outward
 jira relationships unlink PROJ-1 PROJ-2
+jira relationships unlink PROJ-1 PROJ-2 --dry-run
+jira relationships unlink PROJ-1 --type blocks --all
 
 # Clone an issue with its relationships
 jira relationships clone PROJ-123 --clone-subtasks --clone-links
+jira relationships clone PROJ-123 --to-project OTHER
+jira relationships clone PROJ-123 --summary "Custom summary"
+jira relationships clone PROJ-123 --no-link  # Skip creating "clones" link
 ```
 
 ### Advanced - Blocker Analysis & Statistics
@@ -127,15 +136,21 @@ jira relationships clone PROJ-123 --clone-subtasks --clone-links
 ```bash
 # Find blocker chains for sprint planning
 jira relationships get-blockers PROJ-123 --recursive
+jira relationships get-blockers PROJ-123 --recursive --include-done
 
-# Analyze dependencies with depth control
-jira relationships get-dependencies PROJ-123 --depth 3
+# Analyze dependencies (with link type filtering)
+jira relationships get-dependencies PROJ-123
+jira relationships get-dependencies PROJ-123 --type blocks,relates
 
-# Project-wide link statistics
-jira relationships stats PROJ
+# Link statistics - multiple modes
+jira relationships stats PROJ-123                       # Single issue stats
+jira relationships stats --project PROJ                 # Project-wide stats
+jira relationships stats --jql "type = Epic"            # JQL-filtered stats
+jira relationships stats --project PROJ --top 20        # Show top 20 connected
 
 # Bulk link issues from JQL query
 jira relationships bulk-link --jql "project=PROJ AND fixVersion=1.0" --relates-to PROJ-500 --dry-run
+jira relationships bulk-link --issues PROJ-1,PROJ-2,PROJ-3 --blocks PROJ-100
 ```
 
 ### Visualization - Dependency Graphs
@@ -147,6 +162,13 @@ jira relationships get-dependencies PROJ-123 --output mermaid
 # Export for publication (Graphviz)
 jira relationships get-dependencies PROJ-123 --output dot > deps.dot
 dot -Tpng deps.dot -o deps.png
+
+# Export for PlantUML
+jira relationships get-dependencies PROJ-123 --output plantuml > deps.puml
+
+# Export for D2/Terrastruct
+jira relationships get-dependencies PROJ-123 --output d2 > deps.d2
+d2 deps.d2 deps.svg
 ```
 
 ## Exporting Dependency Graphs
@@ -187,7 +209,7 @@ Use `--blocks` when source issue blocks target; use `--is-blocked-by` when sourc
 - Confirm the project exists in your JIRA instance
 
 ### "Link type not found" error
-- Run `get_link_types.py` to see available link types
+- Run `jira relationships link-types` to see available link types
 - Link type names are case-sensitive in some JIRA instances
 - Custom link types may have different names than standard ones
 
