@@ -2,12 +2,13 @@
 Tests for export_results.py - Export JQL search results to file.
 """
 
-import pytest
-import sys
 import json
+import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import patch
+
+import pytest
 
 # Add script path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
@@ -102,7 +103,7 @@ class TestExportResults:
 
                 export_results('project = PROJ', output_path, format_type='json')
 
-                with open(output_path, 'r') as f:
+                with open(output_path) as f:
                     data = json.load(f)
                     assert data['total'] == 2
                     assert len(data['issues']) == 2
@@ -114,7 +115,7 @@ class TestExportResults:
         mock_jira_client.search_issues.return_value = sample_search_results
 
         with patch('export_results.get_jira_client', return_value=mock_jira_client), \
-             patch('export_results.export_csv') as mock_export_csv:
+             patch('export_results.export_csv'):
             from export_results import export_results
 
             export_results('project = PROJ', '/tmp/test.csv', fields=['key', 'summary', 'status'])

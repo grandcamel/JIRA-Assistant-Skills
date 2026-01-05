@@ -2,13 +2,12 @@
 Tests for download_attachment.py - Download attachments from JIRA issues.
 """
 
-import pytest
-import sys
 import json
-import os
-import tempfile
+import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
+import pytest
 
 # Add script path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
@@ -123,6 +122,7 @@ class TestDownloadAttachment:
 
         with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
             from download_attachment import download_attachment
+
             from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:
@@ -135,6 +135,7 @@ class TestDownloadAttachment:
 
         with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
             from download_attachment import download_attachment
+
             from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:
@@ -147,6 +148,7 @@ class TestDownloadAttachment:
 
         with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
             from download_attachment import download_attachment
+
             from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:
@@ -161,6 +163,7 @@ class TestDownloadAttachment:
 
         with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
             from download_attachment import download_attachment
+
             from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:

@@ -2,10 +2,11 @@
 Tests for bulk_update.py - Bulk update issues from JQL search results.
 """
 
-import pytest
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
+import pytest
 
 # Add script path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))

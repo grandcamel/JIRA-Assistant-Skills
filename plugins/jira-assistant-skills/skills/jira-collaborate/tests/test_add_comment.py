@@ -2,11 +2,12 @@
 Tests for add_comment.py - Add comments to JIRA issues.
 """
 
-import pytest
-import sys
 import json
+import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
+import pytest
 
 # Add script path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))

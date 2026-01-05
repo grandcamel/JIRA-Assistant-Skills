@@ -2,10 +2,11 @@
 Tests for run_filter.py - Run saved JIRA filters.
 """
 
-import pytest
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
+import pytest
 
 # Add script path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
@@ -65,7 +66,7 @@ class TestRunFilterById:
         with patch('run_filter.get_jira_client', return_value=mock_jira_client):
             from run_filter import run_filter
 
-            result = run_filter(filter_id='10042', max_results=100)
+            run_filter(filter_id='10042', max_results=100)
 
             mock_jira_client.search_issues.assert_called_with(
                 sample_filter['jql'],
@@ -82,6 +83,7 @@ class TestRunFilterById:
 
         with patch('run_filter.get_jira_client', return_value=mock_jira_client):
             from run_filter import run_filter
+
             from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:
@@ -130,6 +132,7 @@ class TestRunFilterByName:
 
         with patch('run_filter.get_jira_client', return_value=mock_jira_client):
             from run_filter import run_filter
+
             from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:
@@ -145,6 +148,7 @@ class TestRunFilterValidation:
     def test_no_id_or_name_raises_error(self):
         """Test that either ID or name must be specified."""
         from run_filter import run_filter
+
         from jira_assistant_skills_lib import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
@@ -194,8 +198,9 @@ class TestRunFilterMain:
         mock_jira_client.search_issues.return_value = sample_search_results
 
         with patch('run_filter.get_jira_client', return_value=mock_jira_client):
-            from run_filter import main
             import json
+
+            from run_filter import main
 
             main(['--id', '10042', '--output', 'json'])
 
@@ -266,6 +271,7 @@ class TestRunFilterErrors:
 
         with patch('run_filter.get_jira_client', return_value=mock_jira_client):
             from run_filter import run_filter
+
             from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:

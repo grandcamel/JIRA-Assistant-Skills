@@ -2,6 +2,7 @@
 Tests for create_component.py - Create a project component.
 """
 
+import copy
 import sys
 from pathlib import Path
 from unittest.mock import patch

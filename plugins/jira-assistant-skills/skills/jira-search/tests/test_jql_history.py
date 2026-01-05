@@ -2,13 +2,12 @@
 Tests for jql_history.py - Manage JQL query history and cache.
 """
 
-import pytest
-import sys
 import json
-import tempfile
+import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch, mock_open
-from datetime import datetime
+from unittest.mock import patch
+
+import pytest
 
 # Add script path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
@@ -116,7 +115,7 @@ class TestSaveHistory:
             save_history(sample_history)
 
             assert history_file.exists()
-            with open(history_file, 'r') as f:
+            with open(history_file) as f:
                 saved = json.load(f)
             assert len(saved['queries']) == 3
 
@@ -148,6 +147,7 @@ class TestAddQuery:
         with patch('jql_history.HISTORY_FILE', temp_history_file), \
              patch('jql_history.HISTORY_DIR', temp_history_file.parent):
             from jql_history import add_query
+
             from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:
@@ -222,7 +222,7 @@ class TestUpdateQueryUsage:
         """Test updating query usage statistics."""
         with patch('jql_history.HISTORY_FILE', temp_history_file), \
              patch('jql_history.HISTORY_DIR', temp_history_file.parent):
-            from jql_history import update_query_usage, load_history
+            from jql_history import load_history, update_query_usage
 
             update_query_usage(2)
 

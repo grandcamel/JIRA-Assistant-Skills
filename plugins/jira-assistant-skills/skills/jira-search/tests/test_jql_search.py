@@ -2,11 +2,12 @@
 Tests for jql_search.py - Search for JIRA issues using JQL.
 """
 
-import pytest
-import sys
 import json
+import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
+import pytest
 
 # Add script path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
@@ -92,7 +93,7 @@ class TestSearchIssues:
         with patch('jql_search.get_jira_client', return_value=mock_jira_client):
             from jql_search import search_issues
 
-            result = search_issues('project = PROJ', fields=['key', 'summary'])
+            search_issues('project = PROJ', fields=['key', 'summary'])
 
             mock_jira_client.search_issues.assert_called_with(
                 'project = PROJ',
