@@ -173,3 +173,125 @@ class TestSetEstimateErrors:
         with pytest.raises(JiraError) as exc_info:
             set_estimate(mock_jira_client, "PROJ-123", original_estimate="2d")
         assert exc_info.value.status_code == 500
+
+
+@pytest.mark.time
+@pytest.mark.unit
+class TestSetEstimateMain:
+    """Tests for main() function."""
+
+    def test_main_set_original(self, mock_jira_client, capsys):
+        """Test main setting original estimate."""
+        mock_jira_client.get_time_tracking.return_value = {
+            'originalEstimate': '2d',
+            'originalEstimateSeconds': 57600
+        }
+        mock_jira_client.set_time_tracking.return_value = None
+
+        from unittest.mock import patch
+        with patch('set_estimate.get_jira_client', return_value=mock_jira_client):
+            from set_estimate import main
+
+            main(['PROJ-123', '--original', '2d'])
+
+            captured = capsys.readouterr()
+            assert 'Time estimates updated' in captured.out
+            assert 'Original estimate' in captured.out
+
+    def test_main_set_remaining(self, mock_jira_client, capsys):
+        """Test main setting remaining estimate."""
+        mock_jira_client.get_time_tracking.return_value = {
+            'remainingEstimate': '1d 4h',
+            'remainingEstimateSeconds': 43200
+        }
+        mock_jira_client.set_time_tracking.return_value = None
+
+        from unittest.mock import patch
+        with patch('set_estimate.get_jira_client', return_value=mock_jira_client):
+            from set_estimate import main
+
+            main(['PROJ-123', '--remaining', '1d 4h'])
+
+            captured = capsys.readouterr()
+            assert 'Time estimates updated' in captured.out
+            assert 'Remaining estimate' in captured.out
+
+    def test_main_set_both(self, mock_jira_client, capsys):
+        """Test main setting both estimates."""
+        mock_jira_client.get_time_tracking.return_value = {
+            'originalEstimate': '2d',
+            'remainingEstimate': '1d',
+            'timeSpent': '4h'
+        }
+        mock_jira_client.set_time_tracking.return_value = None
+
+        from unittest.mock import patch
+        with patch('set_estimate.get_jira_client', return_value=mock_jira_client):
+            from set_estimate import main
+
+            main(['PROJ-123', '--original', '2d', '--remaining', '1d'])
+
+            captured = capsys.readouterr()
+            assert 'Original estimate' in captured.out
+            assert 'Remaining estimate' in captured.out
+            assert 'Time spent' in captured.out
+
+    def test_main_json_output(self, mock_jira_client, capsys):
+        """Test main with JSON output."""
+        import json
+        mock_jira_client.get_time_tracking.return_value = {
+            'originalEstimate': '2d',
+            'originalEstimateSeconds': 57600
+        }
+        mock_jira_client.set_time_tracking.return_value = None
+
+        from unittest.mock import patch
+        with patch('set_estimate.get_jira_client', return_value=mock_jira_client):
+            from set_estimate import main
+
+            main(['PROJ-123', '--original', '2d', '--output', 'json'])
+
+            captured = capsys.readouterr()
+            output = json.loads(captured.out)
+            assert 'originalEstimate' in output
+
+    def test_main_with_profile(self, mock_jira_client, capsys):
+        """Test main with --profile."""
+        mock_jira_client.get_time_tracking.return_value = {'originalEstimate': '2d'}
+        mock_jira_client.set_time_tracking.return_value = None
+
+        from unittest.mock import patch
+        with patch('set_estimate.get_jira_client', return_value=mock_jira_client) as mock_get_client:
+            from set_estimate import main
+
+            main(['PROJ-123', '--original', '2d', '--profile', 'dev'])
+
+            mock_get_client.assert_called_with('dev')
+
+    def test_main_jira_error(self, mock_jira_client, capsys):
+        """Test main with JIRA API error."""
+        from jira_assistant_skills_lib import JiraError
+
+        mock_jira_client.get_time_tracking.side_effect = JiraError("API Error", status_code=500)
+
+        from unittest.mock import patch
+        with patch('set_estimate.get_jira_client', return_value=mock_jira_client):
+            from set_estimate import main
+
+            with pytest.raises(SystemExit) as exc_info:
+                main(['PROJ-123', '--original', '2d'])
+
+            assert exc_info.value.code == 1
+
+    def test_main_keyboard_interrupt(self, mock_jira_client, capsys):
+        """Test main with keyboard interrupt."""
+        mock_jira_client.get_time_tracking.side_effect = KeyboardInterrupt()
+
+        from unittest.mock import patch
+        with patch('set_estimate.get_jira_client', return_value=mock_jira_client):
+            from set_estimate import main
+
+            with pytest.raises(SystemExit) as exc_info:
+                main(['PROJ-123', '--original', '2d'])
+
+            assert exc_info.value.code == 1

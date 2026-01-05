@@ -212,3 +212,136 @@ class TestGetWorklogsErrors:
         with pytest.raises(JiraError) as exc_info:
             get_worklogs(mock_jira_client, "PROJ-123")
         assert exc_info.value.status_code == 500
+
+
+@pytest.mark.time
+@pytest.mark.unit
+class TestGetWorklogsMain:
+    """Tests for main() function."""
+
+    def test_main_text_output(self, mock_jira_client, sample_worklogs, capsys):
+        """Test main with text output."""
+        mock_jira_client.get_worklogs.return_value = sample_worklogs
+
+        from unittest.mock import patch
+        with patch('get_worklogs.get_jira_client', return_value=mock_jira_client):
+            from get_worklogs import main
+
+            main(['PROJ-123'])
+
+            captured = capsys.readouterr()
+            assert 'Worklogs for PROJ-123' in captured.out
+            assert 'Alice Smith' in captured.out
+
+    def test_main_json_output(self, mock_jira_client, sample_worklogs, capsys):
+        """Test main with JSON output."""
+        import json
+        mock_jira_client.get_worklogs.return_value = sample_worklogs
+
+        from unittest.mock import patch
+        with patch('get_worklogs.get_jira_client', return_value=mock_jira_client):
+            from get_worklogs import main
+
+            main(['PROJ-123', '--output', 'json'])
+
+            captured = capsys.readouterr()
+            output = json.loads(captured.out)
+            assert 'worklogs' in output
+            assert output['total'] == 3
+
+    def test_main_with_author_filter(self, mock_jira_client, sample_worklogs, capsys):
+        """Test main with --author filter."""
+        mock_jira_client.get_worklogs.return_value = sample_worklogs
+
+        from unittest.mock import patch
+        with patch('get_worklogs.get_jira_client', return_value=mock_jira_client):
+            from get_worklogs import main
+
+            main(['PROJ-123', '--author', 'alice@company.com'])
+
+            captured = capsys.readouterr()
+            assert 'Worklogs for PROJ-123' in captured.out
+
+    def test_main_with_current_user_filter(self, mock_jira_client, sample_worklogs, capsys):
+        """Test main with --author currentUser()."""
+        mock_jira_client.get_worklogs.return_value = sample_worklogs
+        mock_jira_client.get.return_value = {
+            'emailAddress': 'alice@company.com',
+            'accountId': '5a12345'
+        }
+
+        from unittest.mock import patch
+        with patch('get_worklogs.get_jira_client', return_value=mock_jira_client):
+            from get_worklogs import main
+
+            main(['PROJ-123', '--author', 'currentUser()'])
+
+            mock_jira_client.get.assert_called_once_with(
+                '/rest/api/3/myself', operation='get current user'
+            )
+
+    def test_main_with_date_filters(self, mock_jira_client, sample_worklogs, capsys):
+        """Test main with --since and --until."""
+        mock_jira_client.get_worklogs.return_value = sample_worklogs
+
+        from unittest.mock import patch
+        with patch('get_worklogs.get_jira_client', return_value=mock_jira_client):
+            from get_worklogs import main
+
+            main(['PROJ-123', '--since', '2025-01-01', '--until', '2025-01-31'])
+
+            captured = capsys.readouterr()
+            assert 'Worklogs for PROJ-123' in captured.out
+
+    def test_main_empty_worklogs(self, mock_jira_client, sample_empty_worklogs, capsys):
+        """Test main when no worklogs exist."""
+        mock_jira_client.get_worklogs.return_value = sample_empty_worklogs
+
+        from unittest.mock import patch
+        with patch('get_worklogs.get_jira_client', return_value=mock_jira_client):
+            from get_worklogs import main
+
+            main(['PROJ-123'])
+
+            captured = capsys.readouterr()
+            assert 'No worklogs found' in captured.out
+
+    def test_main_with_profile(self, mock_jira_client, sample_worklogs, capsys):
+        """Test main with --profile."""
+        mock_jira_client.get_worklogs.return_value = sample_worklogs
+
+        from unittest.mock import patch
+        with patch('get_worklogs.get_jira_client', return_value=mock_jira_client) as mock_get_client:
+            from get_worklogs import main
+
+            main(['PROJ-123', '--profile', 'dev'])
+
+            mock_get_client.assert_called_with('dev')
+
+    def test_main_jira_error(self, mock_jira_client, capsys):
+        """Test main with JIRA API error."""
+        from jira_assistant_skills_lib import JiraError
+
+        mock_jira_client.get_worklogs.side_effect = JiraError("API Error", status_code=500)
+
+        from unittest.mock import patch
+        with patch('get_worklogs.get_jira_client', return_value=mock_jira_client):
+            from get_worklogs import main
+
+            with pytest.raises(SystemExit) as exc_info:
+                main(['PROJ-123'])
+
+            assert exc_info.value.code == 1
+
+    def test_main_keyboard_interrupt(self, mock_jira_client, capsys):
+        """Test main with keyboard interrupt."""
+        mock_jira_client.get_worklogs.side_effect = KeyboardInterrupt()
+
+        from unittest.mock import patch
+        with patch('get_worklogs.get_jira_client', return_value=mock_jira_client):
+            from get_worklogs import main
+
+            with pytest.raises(SystemExit) as exc_info:
+                main(['PROJ-123'])
+
+            assert exc_info.value.code == 1

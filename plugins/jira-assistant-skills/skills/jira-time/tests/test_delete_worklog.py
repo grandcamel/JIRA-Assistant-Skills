@@ -156,3 +156,145 @@ class TestDeleteWorklogErrors:
         with pytest.raises(JiraError) as exc_info:
             delete_worklog(mock_jira_client, "PROJ-123", "10045")
         assert exc_info.value.status_code == 500
+
+
+@pytest.mark.time
+@pytest.mark.unit
+class TestDeleteWorklogMain:
+    """Tests for main() function."""
+
+    def test_main_dry_run(self, mock_jira_client, sample_worklog, capsys):
+        """Test main with --dry-run."""
+        mock_jira_client.get_worklog.return_value = sample_worklog
+
+        from unittest.mock import patch
+        with patch('delete_worklog.get_jira_client', return_value=mock_jira_client):
+            from delete_worklog import main
+
+            main(['PROJ-123', '--worklog-id', '10045', '--dry-run'])
+
+            captured = capsys.readouterr()
+            assert 'Dry-run mode' in captured.out
+            assert 'PROJ-123' in captured.out
+            assert '10045' in captured.out
+            mock_jira_client.delete_worklog.assert_not_called()
+
+    def test_main_with_yes_flag(self, mock_jira_client, sample_worklog, capsys):
+        """Test main with --yes skips confirmation."""
+        mock_jira_client.get_worklog.return_value = sample_worklog
+        mock_jira_client.delete_worklog.return_value = None
+
+        from unittest.mock import patch
+        with patch('delete_worklog.get_jira_client', return_value=mock_jira_client):
+            from delete_worklog import main
+
+            main(['PROJ-123', '--worklog-id', '10045', '--yes'])
+
+            captured = capsys.readouterr()
+            assert 'Deleted worklog' in captured.out
+            mock_jira_client.delete_worklog.assert_called_once()
+
+    def test_main_cancel_confirmation(self, mock_jira_client, sample_worklog, capsys):
+        """Test main with confirmation cancelled."""
+        mock_jira_client.get_worklog.return_value = sample_worklog
+
+        from unittest.mock import patch
+        with patch('delete_worklog.get_jira_client', return_value=mock_jira_client), \
+             patch('builtins.input', return_value='n'):
+            from delete_worklog import main
+
+            main(['PROJ-123', '--worklog-id', '10045'])
+
+            captured = capsys.readouterr()
+            assert 'Cancelled' in captured.out
+            mock_jira_client.delete_worklog.assert_not_called()
+
+    def test_main_confirm_yes(self, mock_jira_client, sample_worklog, capsys):
+        """Test main with confirmation accepted."""
+        mock_jira_client.get_worklog.return_value = sample_worklog
+        mock_jira_client.delete_worklog.return_value = None
+
+        from unittest.mock import patch
+        with patch('delete_worklog.get_jira_client', return_value=mock_jira_client), \
+             patch('builtins.input', return_value='y'):
+            from delete_worklog import main
+
+            main(['PROJ-123', '--worklog-id', '10045'])
+
+            captured = capsys.readouterr()
+            assert 'Deleted worklog' in captured.out
+            mock_jira_client.delete_worklog.assert_called_once()
+
+    def test_main_with_adjust_estimate_new(self, mock_jira_client, sample_worklog, capsys):
+        """Test main with --adjust-estimate and --new-estimate."""
+        mock_jira_client.get_worklog.return_value = sample_worklog
+        mock_jira_client.delete_worklog.return_value = None
+
+        from unittest.mock import patch
+        with patch('delete_worklog.get_jira_client', return_value=mock_jira_client):
+            from delete_worklog import main
+
+            main(['PROJ-123', '--worklog-id', '10045', '--yes',
+                  '--adjust-estimate', 'new', '--new-estimate', '2d'])
+
+            call_args = mock_jira_client.delete_worklog.call_args
+            assert call_args[1]['adjust_estimate'] == 'new'
+            assert call_args[1]['new_estimate'] == '2d'
+
+    def test_main_with_adjust_estimate_manual(self, mock_jira_client, sample_worklog, capsys):
+        """Test main with --adjust-estimate manual."""
+        mock_jira_client.get_worklog.return_value = sample_worklog
+        mock_jira_client.delete_worklog.return_value = None
+
+        from unittest.mock import patch
+        with patch('delete_worklog.get_jira_client', return_value=mock_jira_client):
+            from delete_worklog import main
+
+            main(['PROJ-123', '--worklog-id', '10045', '--yes',
+                  '--adjust-estimate', 'manual', '--increase-by', '1h'])
+
+            call_args = mock_jira_client.delete_worklog.call_args
+            assert call_args[1]['adjust_estimate'] == 'manual'
+            assert call_args[1]['increase_by'] == '1h'
+
+    def test_main_with_profile(self, mock_jira_client, sample_worklog, capsys):
+        """Test main with --profile."""
+        mock_jira_client.get_worklog.return_value = sample_worklog
+        mock_jira_client.delete_worklog.return_value = None
+
+        from unittest.mock import patch
+        with patch('delete_worklog.get_jira_client', return_value=mock_jira_client) as mock_get_client:
+            from delete_worklog import main
+
+            main(['PROJ-123', '--worklog-id', '10045', '--yes', '--profile', 'dev'])
+
+            mock_get_client.assert_called_with('dev')
+
+    def test_main_jira_error(self, mock_jira_client, sample_worklog, capsys):
+        """Test main with JIRA API error."""
+        from jira_assistant_skills_lib import JiraError
+
+        mock_jira_client.get_worklog.side_effect = JiraError("API Error", status_code=500)
+
+        from unittest.mock import patch
+        with patch('delete_worklog.get_jira_client', return_value=mock_jira_client):
+            from delete_worklog import main
+
+            with pytest.raises(SystemExit) as exc_info:
+                main(['PROJ-123', '--worklog-id', '10045'])
+
+            assert exc_info.value.code == 1
+
+    def test_main_keyboard_interrupt(self, mock_jira_client, sample_worklog, capsys):
+        """Test main with keyboard interrupt."""
+        mock_jira_client.get_worklog.return_value = sample_worklog
+
+        from unittest.mock import patch
+        with patch('delete_worklog.get_jira_client', return_value=mock_jira_client), \
+             patch('builtins.input', side_effect=KeyboardInterrupt):
+            from delete_worklog import main
+
+            with pytest.raises(SystemExit) as exc_info:
+                main(['PROJ-123', '--worklog-id', '10045'])
+
+            assert exc_info.value.code == 1
