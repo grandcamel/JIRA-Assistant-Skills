@@ -4,8 +4,9 @@ Get story point estimation summaries.
 
 Usage:
     python get_estimates.py --sprint 456
+    python get_estimates.py --project DEMO
     python get_estimates.py --epic PROJ-100
-    python get_estimates.py --sprint 456 --group-by assignee
+    python get_estimates.py --project DEMO --group-by assignee
     python get_estimates.py --sprint 456 --group-by status
 """
 
@@ -26,8 +27,62 @@ from jira_assistant_skills_lib import (
 )
 
 
+def get_active_sprint_for_project(
+    project_key: str,
+    profile: str | None = None,
+    client=None,
+) -> tuple[int, str]:
+    """
+    Get the active sprint ID for a project.
+
+    Args:
+        project_key: Project key (e.g., DEMO)
+        profile: JIRA profile to use
+        client: JiraClient instance (for testing)
+
+    Returns:
+        Tuple of (sprint_id, sprint_name)
+
+    Raises:
+        ValidationError: If no boards or active sprints found
+    """
+    if not client:
+        client = get_jira_client(profile)
+        should_close = True
+    else:
+        should_close = False
+
+    try:
+        # Find boards for the project
+        result = client.get_all_boards(project_key=project_key, max_results=10)
+        boards = result.get("values", [])
+
+        if not boards:
+            raise ValidationError(f"No boards found for project {project_key}")
+
+        # Prefer scrum boards
+        scrum_boards = [b for b in boards if b.get("type") == "scrum"]
+        board_id = scrum_boards[0]["id"] if scrum_boards else boards[0]["id"]
+
+        # Get active sprints for the board
+        sprints_result = client.get_all_sprints(board_id, state="active")
+        sprints = sprints_result.get("values", [])
+
+        if not sprints:
+            raise ValidationError(f"No active sprints found for project {project_key}")
+
+        # Return the first active sprint
+        sprint = sprints[0]
+        return sprint["id"], sprint["name"]
+
+    finally:
+        if should_close:
+            client.close()
+
+
 def get_estimates(
     sprint_id: int | None = None,
+    project_key: str | None = None,
     epic_key: str | None = None,
     group_by: str | None = None,
     profile: str | None = None,
@@ -38,6 +93,7 @@ def get_estimates(
 
     Args:
         sprint_id: Sprint ID to get estimates for
+        project_key: Project key to find active sprint (alternative to sprint_id)
         epic_key: Epic key to get estimates for
         group_by: Group by 'assignee' or 'status'
         profile: JIRA profile to use
@@ -50,8 +106,15 @@ def get_estimates(
         ValidationError: If inputs are invalid
         JiraError: If API call fails
     """
-    if not sprint_id and not epic_key:
-        raise ValidationError("Either sprint ID or epic key is required")
+    if not sprint_id and not project_key and not epic_key:
+        raise ValidationError("Either sprint ID, project key, or epic key is required")
+
+    # Resolve project_key to sprint_id
+    sprint_name = None
+    if project_key and not sprint_id:
+        sprint_id, sprint_name = get_active_sprint_for_project(
+            project_key, profile, client
+        )
 
     # Initialize client
     if not client:
@@ -111,6 +174,10 @@ def get_estimates(
 
         if sprint_id:
             response["sprint_id"] = sprint_id
+        if sprint_name:
+            response["sprint_name"] = sprint_name
+        if project_key:
+            response["project_key"] = project_key
         if epic_key:
             response["epic_key"] = epic_key
 
@@ -124,12 +191,15 @@ def get_estimates(
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Get story point estimation summary",
-        epilog="Example: python get_estimates.py --sprint 456",
+        epilog="Example: python get_estimates.py --project DEMO",
     )
 
     # Source options (mutually exclusive)
     source_group = parser.add_mutually_exclusive_group(required=True)
     source_group.add_argument("--sprint", "-s", type=int, help="Sprint ID")
+    source_group.add_argument(
+        "--project", "-p", help="Project key (finds active sprint)"
+    )
     source_group.add_argument("--epic", "-e", help="Epic key")
 
     parser.add_argument(
@@ -145,6 +215,7 @@ def main(argv: list[str] | None = None):
     try:
         result = get_estimates(
             sprint_id=args.sprint,
+            project_key=args.project,
             epic_key=args.epic,
             group_by=args.group_by,
             profile=args.profile,
@@ -153,7 +224,12 @@ def main(argv: list[str] | None = None):
         if args.output == "json":
             print(json.dumps(result, indent=2))
         else:
-            if args.sprint:
+            if args.project:
+                sprint_name = result.get(
+                    "sprint_name", f"Sprint {result.get('sprint_id')}"
+                )
+                print_success(f"Project {args.project} - {sprint_name} Estimates")
+            elif args.sprint:
                 print_success(f"Sprint {args.sprint} Estimates")
             else:
                 print_success(f"Epic {args.epic} Estimates")
