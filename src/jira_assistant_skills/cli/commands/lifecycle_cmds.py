@@ -10,12 +10,17 @@ def lifecycle():
 
 @lifecycle.command(name="transition")
 @click.argument('issue_key')
-@click.argument('status')
+@click.option('--to', '-t', 'status', required=True, help='Target status name (e.g., "Done", "In Progress")')
 @click.option('--comment', '-c', help='Add a comment with the transition')
 @click.option('--resolution', '-r', help='Resolution (for Done transitions)')
 @click.pass_context
 def lifecycle_transition(ctx, issue_key: str, status: str, comment: str, resolution: str):
-    """Transition an issue to a new status."""
+    """Transition an issue to a new status.
+
+    Examples:
+        jira lifecycle transition PROJ-123 --to "In Progress"
+        jira lifecycle transition PROJ-123 --to Done --resolution Fixed
+    """
     script_path = SKILLS_ROOT_DIR / "jira-lifecycle" / "scripts" / "transition_issue.py"
 
     script_args = [issue_key, status]
@@ -38,12 +43,37 @@ def lifecycle_get_transitions(ctx, issue_key: str):
 
 @lifecycle.command(name="assign")
 @click.argument('issue_key')
-@click.argument('assignee')
+@click.option('--user', '-u', help='User to assign (account ID, email, or display name)')
+@click.option('--self', '-s', 'assign_self', is_flag=True, help='Assign to yourself')
+@click.option('--unassign', is_flag=True, help='Remove assignee')
+@click.option('--dry-run', '-n', is_flag=True, help='Preview without making changes')
 @click.pass_context
-def lifecycle_assign(ctx, issue_key: str, assignee: str):
-    """Assign an issue to a user (use 'self' or 'none')."""
+def lifecycle_assign(ctx, issue_key: str, user: str, assign_self: bool, unassign: bool, dry_run: bool):
+    """Assign an issue to a user.
+
+    Use exactly one of: --user, --self, or --unassign.
+
+    Examples:
+        jira lifecycle assign PROJ-123 --self
+        jira lifecycle assign PROJ-123 --user john@example.com
+        jira lifecycle assign PROJ-123 --unassign
+    """
+    if sum([bool(user), assign_self, unassign]) != 1:
+        raise click.UsageError("Specify exactly one of: --user, --self, or --unassign")
+
     script_path = SKILLS_ROOT_DIR / "jira-lifecycle" / "scripts" / "assign_issue.py"
-    run_skill_script_subprocess(script_path, [issue_key, assignee], ctx)
+
+    script_args = [issue_key]
+    if user:
+        script_args.extend(["--user", user])
+    if assign_self:
+        script_args.append("--self")
+    if unassign:
+        script_args.append("--unassign")
+    if dry_run:
+        script_args.append("--dry-run")
+
+    run_skill_script_subprocess(script_path, script_args, ctx)
 
 
 @lifecycle.command(name="resolve")

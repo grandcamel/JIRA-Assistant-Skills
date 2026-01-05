@@ -27,12 +27,12 @@ Workflow and lifecycle management for JIRA issues.
 
 | Category | Purpose | Example |
 |----------|---------|---------|
-| **Transitions** | Move issues between statuses | `jira lifecycle transition PROJ-123 --name "In Progress"` |
-| **Assignments** | Control ownership | `jira lifecycle assign PROJ-123 --user user@example.com` |
+| **Transitions** | Move issues between statuses | `jira lifecycle transition PROJ-123 --to "In Progress"` |
+| **Assignments** | Control ownership | `jira lifecycle assign PROJ-123 --self` or `--user email` |
 | **Resolution** | Mark issues complete | `jira lifecycle resolve PROJ-123 --resolution Fixed` |
 | **Reopen** | Restore resolved issues | `jira lifecycle reopen PROJ-123` |
-| **Versions** | Plan and track releases | `jira lifecycle version create PROJ --name "v2.0.0"` |
-| **Components** | Organize by subsystem | `jira lifecycle component create PROJ --name "API"` |
+| **Versions** | Plan and track releases | `jira lifecycle version create PROJ "v2.0.0"` |
+| **Components** | Organize by subsystem | `jira lifecycle component create PROJ "API"` |
 | **Discovery** | View available options | `jira lifecycle transitions PROJ-123` |
 
 All commands support `--help` for full option documentation.
@@ -41,27 +41,38 @@ All commands support `--help` for full option documentation.
 
 ### Workflow Transitions
 ```bash
-jira lifecycle transitions PROJ-123         # List available transitions
-jira lifecycle transition PROJ-123 --name "In Progress"  # Transition issue
-jira lifecycle assign PROJ-123 --user email@example.com  # Assign issue
-jira lifecycle resolve PROJ-123 --resolution Fixed       # Resolve issue
-jira lifecycle reopen PROJ-123              # Reopen issue
+jira lifecycle transitions PROJ-123                    # List available transitions
+jira lifecycle transition PROJ-123 --to "In Progress"  # Transition issue
+jira lifecycle transition PROJ-123 --to Done --resolution Fixed  # With resolution
+```
+
+### Assignments
+```bash
+jira lifecycle assign PROJ-123 --self                  # Assign to yourself
+jira lifecycle assign PROJ-123 --user email@example.com  # Assign to user
+jira lifecycle assign PROJ-123 --unassign              # Remove assignee
+```
+
+### Resolution
+```bash
+jira lifecycle resolve PROJ-123 --resolution Fixed     # Resolve issue
+jira lifecycle reopen PROJ-123                         # Reopen issue
 ```
 
 ### Version Management
 ```bash
-jira lifecycle version list PROJ            # List versions
-jira lifecycle version create PROJ --name "v2.0.0" --start-date 2024-01-01
-jira lifecycle version release PROJ --name "v1.0.0"
-jira lifecycle version archive PROJ --name "v0.9.0"
+jira lifecycle version list PROJ                       # List versions
+jira lifecycle version create PROJ "v2.0.0" --start-date 2024-01-01
+jira lifecycle version release PROJ "v1.0.0"
+jira lifecycle version archive PROJ "v0.9.0"
 ```
 
 ### Component Management
 ```bash
-jira lifecycle component list PROJ          # List components
-jira lifecycle component create PROJ --name "API"
-jira lifecycle component update PROJ --name "API" --lead user@example.com
-jira lifecycle component delete PROJ --name "Legacy" --force
+jira lifecycle component list PROJ                     # List components
+jira lifecycle component create PROJ "API"
+jira lifecycle component update PROJ "API" --lead user@example.com
+jira lifecycle component delete PROJ "Legacy" --force
 ```
 
 ## Common Options
@@ -80,7 +91,8 @@ Query commands (`transitions`, `version list`, `component list`) also support `-
 Some commands support `--dry-run` to preview changes:
 
 ```bash
-jira lifecycle component delete PROJ --name "API" --dry-run
+jira lifecycle assign PROJ-123 --self --dry-run
+jira lifecycle component delete PROJ "API" --dry-run
 ```
 
 ## Exit Codes
