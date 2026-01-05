@@ -59,7 +59,7 @@ All scripts support these common options:
 | Option | Description |
 |--------|-------------|
 | `--profile PROFILE` | Use a specific JIRA profile from settings.json |
-| `--output FORMAT` | Output format: `table` (default), `json`, or `csv` |
+| `--output FORMAT` | Output format: `text` (default) or `json` |
 | `--help` | Show help message and exit |
 
 ## Available scripts
@@ -70,11 +70,14 @@ List all custom fields in the JIRA instance.
 # List all custom fields
 jira fields list
 
-# Filter by field type
-jira fields list --type custom
+# Filter by name pattern
+jira fields list --filter "story"
 
-# Search by name pattern
-jira fields list --search "story"
+# Show only Agile-related fields
+jira fields list --agile
+
+# Show all fields (including system fields)
+jira fields list --all
 
 # Use specific profile
 jira fields list --profile production
@@ -86,8 +89,11 @@ Check field availability for a specific project.
 # Check what fields are available for issue creation
 jira fields check-project PROJ
 
-# Check specific field availability
-jira fields check-project PROJ --field customfield_10016
+# Check fields for a specific issue type
+jira fields check-project PROJ --type Story
+
+# Check Agile field availability
+jira fields check-project PROJ --check-agile
 ```
 
 ### configure_agile_fields.py
@@ -96,27 +102,27 @@ Configure Agile fields for a company-managed project.
 # Configure default Agile fields for a project
 jira fields configure-agile PROJ
 
+# Preview changes without applying (dry run)
+jira fields configure-agile PROJ --dry-run
+
 # Specify custom field IDs
 jira fields configure-agile PROJ --story-points customfield_10016 --epic-link customfield_10014
 
 # Configure all Agile field IDs
-jira fields configure-agile PROJ --story-points customfield_10016 --epic-link customfield_10014 --epic-name customfield_10011 --sprint customfield_10020
+jira fields configure-agile PROJ --story-points customfield_10016 --epic-link customfield_10014 --sprint customfield_10020
 ```
 
 ### create_field.py
 Create a new custom field (requires admin permissions).
 ```bash
 # Create Story Points field
-jira fields create "Story Points" --type number
+jira fields create --name "Story Points" --type number
 
 # Create Epic Link field
-jira fields create "Epic Link" --type select
+jira fields create --name "Epic Link" --type select
 
 # Create with description
-jira fields create "Effort" --type number --description "Effort in hours"
-
-# Make field searchable
-jira fields create "Priority Score" --type number --searchable
+jira fields create --name "Effort" --type number --description "Effort in hours"
 ```
 
 ## Searching for Agile Fields
@@ -124,14 +130,17 @@ jira fields create "Priority Score" --type number --searchable
 To find Agile-specific fields in your instance:
 
 ```bash
-# Search for Story Points field
-jira fields list --search "story"
+# List all Agile-related fields
+jira fields list --agile
 
-# Search for Epic fields
-jira fields list --search "epic"
+# Filter for Story Points field
+jira fields list --filter "story"
 
-# Search for Sprint field
-jira fields list --search "sprint"
+# Filter for Epic fields
+jira fields list --filter "epic"
+
+# Filter for Sprint field
+jira fields list --filter "sprint"
 ```
 
 JSON output includes:
@@ -147,11 +156,7 @@ All scripts use consistent exit codes:
 | Code | Meaning |
 |------|---------|
 | 0 | Success |
-| 1 | General error (API failure, invalid input) |
-| 2 | Authentication error (invalid token or email) |
-| 3 | Permission denied (insufficient JIRA permissions) |
-| 4 | Resource not found (project, field, or issue type doesn't exist) |
-| 5 | Validation error (invalid field name, type, or configuration) |
+| 1 | Error (API failure, validation error, invalid input) |
 
 ## Important Notes
 
@@ -185,13 +190,15 @@ Always run `jira fields list --agile` to verify IDs for your instance.
 ### Setting up Agile for a new project
 ```bash
 # 1. Check what fields are available in the project
-jira fields check-project NEWPROJ
+jira fields check-project NEWPROJ --check-agile
 
 # 2. Find Agile field IDs in your instance
-jira fields list --search "story"
-jira fields list --search "epic"
+jira fields list --agile
 
-# 3. Configure Agile fields with correct IDs
+# 3. Preview configuration changes (dry run)
+jira fields configure-agile NEWPROJ --dry-run
+
+# 4. Configure Agile fields with correct IDs
 jira fields configure-agile NEWPROJ --story-points customfield_10016 --epic-link customfield_10014
 ```
 
@@ -205,14 +212,14 @@ jira fields configure-agile NEWPROJ --story-points customfield_10016 --epic-link
 
 ### Diagnosing missing fields
 ```bash
-# Search for fields by name
-jira fields list --search "story"
+# Filter for fields by name
+jira fields list --filter "story"
 
 # Check what's available for the project
 jira fields check-project PROJ
 
-# Check specific field availability
-jira fields check-project PROJ --field customfield_10016
+# Check Agile field availability
+jira fields check-project PROJ --check-agile
 ```
 
 ## Troubleshooting
@@ -222,13 +229,13 @@ jira fields check-project PROJ --field customfield_10016
 **Symptom**: Script reports field ID doesn't exist or field not available.
 
 **Solutions**:
-1. Run `jira fields list --search "field name"` to find correct field IDs for your instance
+1. Run `jira fields list --filter "field name"` to find correct field IDs for your instance
 2. Field IDs vary between JIRA instances - never assume default IDs
-3. Check if the field exists: `jira fields list --search "field name"`
+3. Check if the field exists: `jira fields list --filter "field name"`
 
 ### "Permission denied" when creating fields
 
-**Symptom**: Exit code 3 when running `create_field.py`.
+**Symptom**: Exit code 1 when running `create_field.py` with permission error.
 
 **Solutions**:
 1. Field creation requires JIRA Administrator permission
@@ -260,14 +267,14 @@ jira fields check-project PROJ --field customfield_10016
 **Symptom**: Story Points or Sprint fields show unexpected data.
 
 **Solutions**:
-1. Verify field IDs match your instance: `jira fields list --search "story"` or `jira fields list --search "sprint"`
+1. Verify field IDs match your instance: `jira fields list --agile` or `jira fields list --filter "story"`
 2. Check field is configured for the correct issue types
 3. Ensure the board is configured to use the correct Story Points field
 4. For Sprint issues, verify the board includes your project
 
 ### Authentication failures
 
-**Symptom**: Exit code 2, "401 Unauthorized" errors.
+**Symptom**: Exit code 1 with "401 Unauthorized" errors.
 
 **Solutions**:
 1. Verify JIRA_API_TOKEN is set correctly (not expired)
