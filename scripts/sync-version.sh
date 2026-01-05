@@ -13,6 +13,7 @@
 # Files synced:
 #   - VERSION (source of truth)
 #   - plugins/jira-assistant-skills/plugin.json
+#   - .claude-plugin/marketplace.json
 #   - .release-please-manifest.json
 #   - pyproject.toml (main project)
 #   - jira-assistant-skills-lib/pyproject.toml (if updating lib)
@@ -34,6 +35,7 @@ NC='\033[0m' # No Color
 # Files to sync
 VERSION_FILE="$PROJECT_ROOT/VERSION"
 PLUGIN_JSON="$PROJECT_ROOT/plugins/jira-assistant-skills/plugin.json"
+MARKETPLACE_JSON="$PROJECT_ROOT/.claude-plugin/marketplace.json"
 RELEASE_MANIFEST="$PROJECT_ROOT/.release-please-manifest.json"
 PYPROJECT="$PROJECT_ROOT/pyproject.toml"
 LIB_PYPROJECT="$PROJECT_ROOT/jira-assistant-skills-lib/pyproject.toml"
@@ -56,16 +58,28 @@ get_version_from_file() {
         *VERSION)
             cat "$file" | tr -d '[:space:]'
             ;;
-        *plugin.json|*.release-please-manifest.json)
+        *plugin.json)
             if command -v jq &> /dev/null; then
-                if [[ "$file" == *".release-please-manifest.json" ]]; then
-                    jq -r '.["."//empty]' "$file" 2>/dev/null || echo ""
-                else
-                    jq -r '.version//empty' "$file" 2>/dev/null || echo ""
-                fi
+                jq -r '.version//empty' "$file" 2>/dev/null || echo ""
             else
                 grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$file" | \
                     head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/'
+            fi
+            ;;
+        *marketplace.json)
+            if command -v jq &> /dev/null; then
+                jq -r '.metadata.version//empty' "$file" 2>/dev/null || echo ""
+            else
+                grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$file" | \
+                    head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/'
+            fi
+            ;;
+        *.release-please-manifest.json)
+            if command -v jq &> /dev/null; then
+                jq -r '.["."//empty]' "$file" 2>/dev/null || echo ""
+            else
+                grep -o '"\\."[[:space:]]*:[[:space:]]*"[^"]*"' "$file" | \
+                    head -1 | sed 's/.*"\\.": "\([^"]*\)".*/\1/'
             fi
             ;;
         *pyproject.toml)
@@ -99,6 +113,16 @@ update_version_in_file() {
                 jq ".version = \"$new_version\"" "$file" > "$tmp" && mv "$tmp" "$file"
             else
                 sed -i.bak "s/\"version\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/\"version\": \"$new_version\"/" "$file"
+                rm -f "$file.bak"
+            fi
+            ;;
+        *marketplace.json)
+            if command -v jq &> /dev/null; then
+                local tmp=$(mktemp)
+                jq ".metadata.version = \"$new_version\" | .plugins[0].version = \"$new_version\"" "$file" > "$tmp" && mv "$tmp" "$file"
+            else
+                # Update both version fields (metadata.version and plugins[0].version)
+                sed -i.bak "s/\"version\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/\"version\": \"$new_version\"/g" "$file"
                 rm -f "$file.bak"
             fi
             ;;
@@ -141,7 +165,7 @@ check_versions() {
     echo ""
 
     local all_synced=true
-    local files=("$PLUGIN_JSON" "$RELEASE_MANIFEST" "$PYPROJECT")
+    local files=("$PLUGIN_JSON" "$MARKETPLACE_JSON" "$RELEASE_MANIFEST" "$PYPROJECT")
 
     for file in "${files[@]}"; do
         if [[ -f "$file" ]]; then
@@ -187,7 +211,7 @@ sync_versions() {
     info "Syncing all files to version: $source_version"
     echo ""
 
-    local files=("$PLUGIN_JSON" "$RELEASE_MANIFEST" "$PYPROJECT")
+    local files=("$PLUGIN_JSON" "$MARKETPLACE_JSON" "$RELEASE_MANIFEST" "$PYPROJECT")
 
     for file in "${files[@]}"; do
         if [[ -f "$file" ]]; then
@@ -247,6 +271,7 @@ main() {
             echo "Files synchronized:"
             echo "  - VERSION (source of truth)"
             echo "  - plugins/jira-assistant-skills/plugin.json"
+            echo "  - .claude-plugin/marketplace.json"
             echo "  - .release-please-manifest.json"
             echo "  - pyproject.toml"
             ;;

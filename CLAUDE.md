@@ -41,7 +41,7 @@ Each skill is designed for autonomous discovery and use by Claude Code.
 All skills depend on the `jira-assistant-skills-lib` PyPI package. Install with:
 
 ```bash
-pip install jira-assistant-skills-lib>=0.1.5
+pip install jira-assistant-skills-lib>=0.2.0
 ```
 
 The package provides:
@@ -835,6 +835,7 @@ jira --help
 # - jira fields     - Custom field management
 # - jira ops        - Cache and operational utilities
 # - jira jsm        - Jira Service Management
+# - jira admin      - Project and permission administration
 
 # Get help for any command
 jira issue --help
@@ -875,22 +876,35 @@ All commands support these global options:
 
 ## Version Management
 
-When releasing a new version, update version numbers in ALL of these files to stay in sync:
+Use the version sync script to keep all version files in sync:
+
+```bash
+# Check if all versions are in sync
+./scripts/sync-version.sh --check
+
+# Sync all files to match VERSION
+./scripts/sync-version.sh
+
+# Set a new version and sync all files
+./scripts/sync-version.sh --set 2.3.0
+```
+
+**Files synchronized** (source of truth: `VERSION`):
 
 | File | Field | Purpose |
 |------|-------|---------|
-| `VERSION` | entire file | Release-please source of truth |
-| `plugins/jira-assistant-skills/plugin.json` | `"version"` | Plugin manifest for marketplace |
-| `.claude-plugin/marketplace.json` | `"metadata.version"` and `"plugins[0].version"` | Marketplace listing |
+| `VERSION` | entire file | Source of truth for release-please |
+| `pyproject.toml` | `version` | PyPI package version |
+| `plugins/jira-assistant-skills/plugin.json` | `"version"` | Plugin manifest |
+| `.claude-plugin/marketplace.json` | `"metadata.version"`, `"plugins[0].version"` | Marketplace listing |
+| `.release-please-manifest.json` | `"."` | Release-please tracking |
 
 **Release workflow**:
-1. Release-please automatically updates `VERSION` and creates a release PR
-2. After merging the release PR, manually update `plugin.json` and `marketplace.json` to match
-3. Commit with: `chore: sync plugin version to X.Y.Z`
+1. Run `./scripts/sync-version.sh --set X.Y.Z` to set and sync version
+2. Commit with: `chore: bump version to X.Y.Z`
+3. Build and publish: `python -m build && python -m twine upload dist/*`
 
-**Why this matters**: Users installing via marketplace (`/plugin marketplace update`) rely on `plugin.json` version to detect updates. If versions are out of sync, users won't receive updates.
-
-**Automation opportunity**: Consider adding a GitHub Action or pre-commit hook to sync versions automatically.
+**Why this matters**: Users installing via marketplace (`/plugin marketplace update`) rely on `plugin.json` version to detect updates. PyPI users need `pyproject.toml` version for `pip install` upgrades.
 
 ### Environment Setup
 
@@ -915,4 +929,9 @@ This script:
 ./scripts/run-e2e-tests.sh --local   # Local
 ./scripts/run-e2e-tests.sh --verbose # Verbose
 ```
-- Always use `#!/usr/bin/env bash` form for bash scripts
+
+## Best Practices
+
+- Always use `#!/usr/bin/env bash` shebang for bash scripts
+- Always use `./scripts/sync-version.sh` when bumping versions
+- Run `./scripts/run_tests.sh` before committing to ensure all tests pass

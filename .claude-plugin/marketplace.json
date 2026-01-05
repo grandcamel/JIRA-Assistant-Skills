@@ -17,7 +17,15 @@
       "description": "Complete JIRA automation suite with 14 specialized skills - issue management, agile workflows, time tracking, service management, bulk operations, and more",
       "version": "2.2.5",
       "category": "productivity",
-      "keywords": ["jira", "automation", "agile", "issues", "sprints", "time-tracking", "service-desk"],
+      "keywords": [
+        "jira",
+        "automation",
+        "agile",
+        "issues",
+        "sprints",
+        "time-tracking",
+        "service-desk"
+      ],
       "author": {
         "name": "grandcamel"
       }
