@@ -194,14 +194,14 @@ def project_update(ctx, project_key, name, description, lead, category):
 
 @project_group.command(name="delete")
 @click.argument("project_key")
-@click.option("--force", "-f", is_flag=True, help="Skip confirmation prompt")
+@click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt")
 @click.option("--dry-run", is_flag=True, help="Preview without executing")
 @click.pass_context
-def project_delete(ctx, project_key, force, dry_run):
+def project_delete(ctx, project_key, yes, dry_run):
     """Delete a JIRA project."""
     args = [project_key]
-    if force:
-        args.append("--force")
+    if yes:
+        args.append("--yes")
     if dry_run:
         args.append("--dry-run")
     _run_admin_script(ctx, "delete_project.py", args)
@@ -294,18 +294,13 @@ def user_group():
 
 
 @user_group.command(name="search")
-@click.option("--query", "-q", help="Search query (name, email, username)")
-@click.option("--me", is_flag=True, help="Get current user info")
+@click.argument("query")
 @click.option("--include-groups", is_flag=True, help="Include group memberships")
 @click.option("--max-results", type=int, default=50, help="Maximum results")
 @click.pass_context
-def user_search(ctx, query, me, include_groups, max_results):
-    """Search for users."""
-    args = []
-    if query:
-        args.extend(["--query", query])
-    if me:
-        args.append("--me")
+def user_search(ctx, query, include_groups, max_results):
+    """Search for users by name or email."""
+    args = [query]  # positional argument
     if include_groups:
         args.append("--include-groups")
     if max_results != 50:
@@ -365,13 +360,16 @@ def group_create(ctx, group_name):
 
 @group_group.command(name="delete")
 @click.argument("group_name")
-@click.option("--force", "-f", is_flag=True, help="Skip confirmation")
+@click.option("--confirm", "-y", is_flag=True, help="Confirm deletion (required)")
+@click.option("--dry-run", is_flag=True, help="Preview without deleting")
 @click.pass_context
-def group_delete(ctx, group_name, force):
+def group_delete(ctx, group_name, confirm, dry_run):
     """Delete a group."""
     args = [group_name]
-    if force:
-        args.append("--force")
+    if confirm:
+        args.append("--confirm")
+    if dry_run:
+        args.append("--dry-run")
     _run_admin_script(ctx, "delete_group.py", args)
 
 
@@ -381,16 +379,22 @@ def group_delete(ctx, group_name, force):
 @click.pass_context
 def group_add_user(ctx, group_name, user):
     """Add a user to a group."""
-    _run_admin_script(ctx, "add_user_to_group.py", [group_name, "--user", user])
+    # Script expects: email --group group_name
+    _run_admin_script(ctx, "add_user_to_group.py", [user, "--group", group_name])
 
 
 @group_group.command(name="remove-user")
 @click.argument("group_name")
 @click.option("--user", "-u", required=True, help="User account ID or email")
+@click.option("--confirm", "-y", is_flag=True, help="Confirm removal (required)")
 @click.pass_context
-def group_remove_user(ctx, group_name, user):
+def group_remove_user(ctx, group_name, user, confirm):
     """Remove a user from a group."""
-    _run_admin_script(ctx, "remove_user_from_group.py", [group_name, "--user", user])
+    # Script expects: email --group group_name --confirm
+    args = [user, "--group", group_name]
+    if confirm:
+        args.append("--confirm")
+    _run_admin_script(ctx, "remove_user_from_group.py", args)
 
 
 # =============================================================================
@@ -682,12 +686,13 @@ def screen_fields(ctx, screen_id, tab):
 
 @screen_group.command(name="add-field")
 @click.argument("screen_id")
-@click.option("--field", "-f", required=True, help="Field ID")
+@click.argument("field_id")
 @click.option("--tab", "-t", help="Tab ID")
 @click.pass_context
-def screen_add_field(ctx, screen_id, field, tab):
+def screen_add_field(ctx, screen_id, field_id, tab):
     """Add a field to a screen."""
-    args = [screen_id, "--field", field]
+    # Script expects: screen_id field_id [--tab tab_id]
+    args = [screen_id, field_id]
     if tab:
         args.extend(["--tab", tab])
     _run_admin_script(ctx, "add_field_to_screen.py", args)
@@ -695,12 +700,13 @@ def screen_add_field(ctx, screen_id, field, tab):
 
 @screen_group.command(name="remove-field")
 @click.argument("screen_id")
-@click.option("--field", "-f", required=True, help="Field ID")
+@click.argument("field_id")
 @click.option("--tab", "-t", help="Tab ID")
 @click.pass_context
-def screen_remove_field(ctx, screen_id, field, tab):
+def screen_remove_field(ctx, screen_id, field_id, tab):
     """Remove a field from a screen."""
-    args = [screen_id, "--field", field]
+    # Script expects: screen_id field_id [--tab tab_id]
+    args = [screen_id, field_id]
     if tab:
         args.extend(["--tab", tab])
     _run_admin_script(ctx, "remove_field_from_screen.py", args)

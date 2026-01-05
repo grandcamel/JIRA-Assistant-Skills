@@ -140,13 +140,14 @@ jira admin permission list                 # List available permissions
 
 ### User & Group Management
 ```bash
-jira admin user search --query "name"      # Search for users
+jira admin user search "name"              # Search for users by name or email
 jira admin user get ACCOUNT_ID             # Get user details
 jira admin group list                      # List all groups
 jira admin group members GROUP_NAME        # Get group members
 jira admin group create GROUP_NAME         # Create a group
-jira admin group add-user                  # Add user to group
-jira admin group remove-user               # Remove user from group
+jira admin group delete GROUP_NAME --confirm  # Delete a group
+jira admin group add-user GROUP_NAME --user EMAIL  # Add user to group
+jira admin group remove-user GROUP_NAME --user EMAIL --confirm  # Remove user from group
 ```
 
 ### Notification Schemes
@@ -164,8 +165,8 @@ jira admin screen list                     # List screens
 jira admin screen get ID                   # Get screen details
 jira admin screen tabs ID                  # List screen tabs
 jira admin screen fields ID                # Get fields on screen
-jira admin screen add-field                # Add field to screen
-jira admin screen remove-field             # Remove field from screen
+jira admin screen add-field SCREEN_ID FIELD_ID  # Add field to screen
+jira admin screen remove-field SCREEN_ID FIELD_ID  # Remove field from screen
 jira admin screen-scheme list              # List screen schemes
 ```
 
@@ -211,8 +212,8 @@ jira admin project list
 # See project configuration
 jira admin config get PROJ
 
-# Check current user permissions
-jira admin user search --me --include-groups
+# Search for users
+jira admin user search "john" --include-groups
 ```
 
 ### Next Steps
@@ -230,6 +231,7 @@ jira admin user search --me --include-groups
 ### Preview Before Changing
 ```bash
 jira admin project delete PROJ --dry-run
+jira admin group delete GROUP_NAME --dry-run
 jira admin permission-scheme assign --project PROJ --scheme 10050 --dry-run
 ```
 
@@ -278,7 +280,7 @@ jira admin project get PROJ --profile development
 
 ### Verify Permissions
 ```bash
-jira admin user search --me --include-groups
+jira admin user search "your.name" --include-groups
 jira admin project list --type software
 ```
 
