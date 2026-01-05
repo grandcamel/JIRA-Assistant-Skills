@@ -51,9 +51,16 @@ For detailed setup, see [docs/QUICK_START.md](docs/QUICK_START.md).
 |---------|---------|---------|
 | `jira search query` | Execute JQL queries | `jira search query "project = PROJ"` |
 | `jira search export` | Export to CSV/JSON | `jira search export "JQL" -o report.csv` |
-| `jira search filter create` | Save a reusable filter | `jira search filter create "Name" "JQL"` |
 | `jira search validate` | Check JQL syntax | `jira search validate "your query"` |
+| `jira search build` | Build JQL from options | `jira search build --project PROJ --status Open` |
+| `jira search suggest` | Get field value suggestions | `jira search suggest --field status` |
+| `jira search fields` | List available JQL fields | `jira search fields` |
+| `jira search functions` | List available JQL functions | `jira search functions` |
+| `jira search filter list` | List saved filters | `jira search filter list --favourite` |
+| `jira search filter create` | Save a reusable filter | `jira search filter create "Name" "JQL"` |
 | `jira search filter run` | Run a saved filter | `jira search filter run 10042` |
+| `jira search filter share` | Share filter with users/groups | `jira search filter share 10042 --project PROJ` |
+| `jira search filter delete` | Delete a saved filter | `jira search filter delete 10042 --force` |
 
 All commands support `--help` for full documentation.
 
@@ -102,10 +109,15 @@ jira search validate "project = PROJ AND status = Open"
 jira search build --project PROJ --status Open --assignee currentUser()
 
 # Get field suggestions
-jira search suggest "project = " --field project
+jira search suggest --field status
+jira search suggest --field status --prefix "In"
+jira search suggest --field assignee --prefix "john"
 
 # List available fields and operators
 jira search fields
+
+# List available JQL functions
+jira search functions
 ```
 
 ### Saved Filters
@@ -131,13 +143,16 @@ jira search filter delete 10042 --force
 
 ```bash
 # CSV export
-jira search export "project = PROJ" --output report.csv
+jira search export "project = PROJ" -o report.csv
 
 # JSON export
-jira search export "project = PROJ" --output data.json --format json
+jira search export "project = PROJ" -o data.json --format json
 
-# Large export (>5000 issues)
-jira search export "project = PROJ" --output report.csv --enable-checkpoint
+# Export specific fields
+jira search export "project = PROJ" -o report.csv --fields key,summary,status,assignee
+
+# Limit results
+jira search export "project = PROJ" -o report.csv --max-results 500
 ```
 
 ### Using Filters in Queries
@@ -153,23 +168,23 @@ jira search query --filter 10042 --max-results 100
 jira search query "project = PROJ" --save-as "My New Filter"
 ```
 
-## Streaming Export for Large Datasets
+## Exporting Large Datasets
 
-For exports >5000 issues, use `streaming_export.py`:
+For large exports, optimize your query and field selection:
 
 | Result Size | Recommendation |
 |-------------|----------------|
-| < 1000 | `export_results.py` |
-| 1000-5000 | `export_results.py --fields key,summary,status` |
-| 5000-50000 | `streaming_export.py --enable-checkpoint` |
-| > 50000 | Split by date ranges |
+| < 1000 | `jira search export "JQL" -o file.csv` |
+| 1000-5000 | `jira search export "JQL" -o file.csv --fields key,summary,status` |
+| > 5000 | Split by date ranges using created/updated filters |
 
 ```bash
-# Resumable export
-jira search export "project = PROJ" --output report.csv --enable-checkpoint
+# Large export with minimal fields for speed
+jira search export "project = PROJ" -o report.csv --fields key,summary,status,assignee
 
-# Resume if interrupted
-jira search export --resume export-20251226-143022
+# Split by time periods for very large datasets
+jira search export "project = PROJ AND created >= -30d" -o recent.csv
+jira search export "project = PROJ AND created >= -60d AND created < -30d" -o older.csv
 ```
 
 ## Exit Codes
@@ -185,9 +200,10 @@ jira search export --resume export-20251226-143022
 
 **Quick diagnostics:**
 ```bash
-jira search validate "your query"  # Check syntax
-jira search fields                 # List fields
-jira search suggest status         # Get values
+jira search validate "your query"     # Check syntax
+jira search fields                    # List available fields
+jira search suggest --field status    # Get valid values for a field
+jira search functions                 # List available JQL functions
 ```
 
 For detailed troubleshooting, see [references/TROUBLESHOOTING.md](references/TROUBLESHOOTING.md).

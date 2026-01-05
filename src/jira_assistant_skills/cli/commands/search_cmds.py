@@ -64,18 +64,18 @@ def search_query(
     "--format",
     "-f",
     "output_format",
-    type=click.Choice(["csv", "json", "xlsx"]),
+    type=click.Choice(["csv", "json"]),
     default="csv",
     help="Export format (default: csv)",
 )
-@click.option("--output", "-o", "output_file", help="Output file path")
+@click.option("--output", "-o", "output_file", required=True, help="Output file path")
 @click.option("--fields", help="Comma-separated list of fields to export")
 @click.option("--max-results", "-m", type=int, help="Maximum results to export")
 @click.pass_context
 def search_export(
     ctx, jql: str, output_format: str, output_file: str, fields: str, max_results: int
 ):
-    """Export search results to CSV, JSON, or Excel."""
+    """Export search results to CSV or JSON."""
     script_path = SKILLS_ROOT_DIR / "jira-search" / "scripts" / "export_results.py"
 
     script_args = [jql, "--format", output_format]
@@ -152,16 +152,22 @@ def search_build(
 
 
 @search.command(name="suggest")
-@click.argument("partial_jql")
-@click.option("--field", "-f", help="Get suggestions for a specific field")
+@click.option("--field", "-f", required=True, help="Field name to get suggestions for")
+@click.option("--prefix", "-x", default="", help="Filter suggestions by prefix")
+@click.option("--no-cache", is_flag=True, help="Bypass cache and fetch from API")
+@click.option("--refresh", is_flag=True, help="Force refresh cache from API")
 @click.pass_context
-def search_suggest(ctx, partial_jql: str, field: str):
-    """Get JQL autocomplete suggestions."""
+def search_suggest(ctx, field: str, prefix: str, no_cache: bool, refresh: bool):
+    """Get JQL field value suggestions for autocomplete."""
     script_path = SKILLS_ROOT_DIR / "jira-search" / "scripts" / "jql_suggest.py"
 
-    script_args = [partial_jql]
-    if field:
-        script_args.extend(["--field", field])
+    script_args = ["--field", field]
+    if prefix:
+        script_args.extend(["--prefix", prefix])
+    if no_cache:
+        script_args.append("--no-cache")
+    if refresh:
+        script_args.append("--refresh")
 
     run_skill_script_subprocess(script_path, script_args, ctx)
 
