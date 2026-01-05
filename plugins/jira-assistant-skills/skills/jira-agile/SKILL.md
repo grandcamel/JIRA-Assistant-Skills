@@ -102,13 +102,20 @@ See [estimation examples](examples/estimation.md) for detailed usage.
 
 ```bash
 # Create epic and add issues
-jira agile epic create --project PROJ --name "MVP" --summary "Mobile App MVP"
+jira agile epic create --project PROJ --summary "Mobile App MVP"
+jira agile epic create --project PROJ --summary "MVP" --epic-name "Mobile MVP" --color blue
+jira agile epic get PROJ-100 --with-children
 jira agile epic add-issues --epic PROJ-100 --issues PROJ-101,PROJ-102
 
-# Create and start sprint
+# Create subtasks
+jira agile subtask --parent PROJ-101 --summary "Implement login API"
+jira agile subtask --parent PROJ-101 --summary "Task" --assignee self --estimate 4h
+
+# Create and manage sprints
 jira agile sprint create --board 123 --name "Sprint 42" --goal "Launch MVP"
 jira agile sprint move-issues --sprint 456 --issues PROJ-101,PROJ-102
-jira agile sprint manage 456 --start
+jira agile sprint manage --sprint 456 --start
+jira agile sprint manage --sprint 456 --close --move-incomplete-to 457
 
 # Estimate and track
 jira agile estimate PROJ-101 --points 5

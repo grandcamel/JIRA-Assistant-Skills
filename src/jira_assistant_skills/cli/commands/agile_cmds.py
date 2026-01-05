@@ -18,46 +18,62 @@ def epic():
 
 @epic.command(name="create")
 @click.option("--project", "-p", required=True, help="Project key")
-@click.option("--name", "-n", required=True, help="Epic name")
-@click.option("--summary", "-s", required=True, help="Epic summary")
+@click.option("--summary", "-s", required=True, help="Epic summary (title)")
+@click.option("--epic-name", "-n", help="Epic Name field value")
 @click.option("--description", "-d", help="Epic description")
 @click.option("--priority", help="Priority")
 @click.option("--labels", "-l", help="Comma-separated labels")
+@click.option("--color", "-c", help="Epic color (blue, green, red, etc.)")
 @click.pass_context
 def epic_create(
     ctx,
     project: str,
-    name: str,
     summary: str,
+    epic_name: str,
     description: str,
     priority: str,
     labels: str,
+    color: str,
 ):
-    """Create a new epic."""
+    """Create a new epic.
+
+    Examples:
+        jira agile epic create --project PROJ --summary "Mobile App MVP"
+        jira agile epic create --project PROJ --summary "MVP" --epic-name "Mobile MVP" --color blue
+    """
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "create_epic.py"
 
-    script_args = ["--project", project, "--name", name, "--summary", summary]
+    script_args = ["--project", project, "--summary", summary]
+    if epic_name:
+        script_args.extend(["--epic-name", epic_name])
     if description:
         script_args.extend(["--description", description])
     if priority:
         script_args.extend(["--priority", priority])
     if labels:
         script_args.extend(["--labels", labels])
+    if color:
+        script_args.extend(["--color", color])
 
     run_skill_script_subprocess(script_path, script_args, ctx)
 
 
 @epic.command(name="get")
 @click.argument("epic_key")
-@click.option("--include-issues", "-i", is_flag=True, help="Include issues in epic")
+@click.option("--with-children", "-c", is_flag=True, help="Fetch child issues and calculate progress")
 @click.pass_context
-def epic_get(ctx, epic_key: str, include_issues: bool):
-    """Get epic details."""
+def epic_get(ctx, epic_key: str, with_children: bool):
+    """Get epic details.
+
+    Examples:
+        jira agile epic get PROJ-100
+        jira agile epic get PROJ-100 --with-children
+    """
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "get_epic.py"
 
     script_args = [epic_key]
-    if include_issues:
-        script_args.append("--include-issues")
+    if with_children:
+        script_args.append("--with-children")
 
     run_skill_script_subprocess(script_path, script_args, ctx)
 
@@ -149,30 +165,44 @@ def sprint_get(ctx, sprint_id: int, include_issues: bool):
 
 
 @sprint.command(name="manage")
-@click.argument("sprint_id", type=int)
+@click.option("--sprint", "-s", type=int, required=True, help="Sprint ID to manage")
 @click.option("--start", is_flag=True, help="Start the sprint")
-@click.option("--complete", is_flag=True, help="Complete the sprint")
+@click.option("--close", is_flag=True, help="Close the sprint")
 @click.option("--name", "-n", help="Update sprint name")
 @click.option("--goal", "-g", help="Update sprint goal")
-@click.option("--move-to", type=int, help="Move incomplete issues to sprint ID")
+@click.option("--move-incomplete-to", type=int, help="Sprint ID to move incomplete issues to (with --close)")
+@click.option("--start-date", help="Start date (YYYY-MM-DD)")
+@click.option("--end-date", help="End date (YYYY-MM-DD)")
 @click.pass_context
 def sprint_manage(
-    ctx, sprint_id: int, start: bool, complete: bool, name: str, goal: str, move_to: int
+    ctx, sprint: int, start: bool, close: bool, name: str, goal: str,
+    move_incomplete_to: int, start_date: str, end_date: str
 ):
-    """Manage sprint lifecycle (start, complete, update)."""
+    """Manage sprint lifecycle (start, close, update).
+
+    Examples:
+        jira agile sprint manage --sprint 456 --start
+        jira agile sprint manage --sprint 456 --close
+        jira agile sprint manage --sprint 456 --close --move-incomplete-to 457
+        jira agile sprint manage --sprint 456 --name "Sprint 42 - Updated"
+    """
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "manage_sprint.py"
 
-    script_args = [str(sprint_id)]
+    script_args = ["--sprint", str(sprint)]
     if start:
         script_args.append("--start")
-    if complete:
-        script_args.append("--complete")
+    if close:
+        script_args.append("--close")
     if name:
         script_args.extend(["--name", name])
     if goal:
         script_args.extend(["--goal", goal])
-    if move_to:
-        script_args.extend(["--move-to", str(move_to)])
+    if move_incomplete_to:
+        script_args.extend(["--move-incomplete-to", str(move_incomplete_to)])
+    if start_date:
+        script_args.extend(["--start-date", start_date])
+    if end_date:
+        script_args.extend(["--end-date", end_date])
 
     run_skill_script_subprocess(script_path, script_args, ctx)
 
@@ -335,19 +365,34 @@ def agile_estimates(ctx, sprint: int, project: str, epic: str, group_by: str):
 
 # Subtasks
 @agile.command(name="subtask")
-@click.argument("parent_key")
+@click.option("--parent", "-p", required=True, help="Parent issue key (e.g., PROJ-101)")
 @click.option("--summary", "-s", required=True, help="Subtask summary")
 @click.option("--description", "-d", help="Subtask description")
-@click.option("--assignee", "-a", help="Assignee")
+@click.option("--assignee", "-a", help="Assignee (account ID, email, or 'self')")
+@click.option("--estimate", "-e", help="Time estimate (e.g., 4h, 2d, 1w)")
+@click.option("--priority", help="Priority (Highest, High, Medium, Low, Lowest)")
+@click.option("--labels", "-l", help="Comma-separated labels")
 @click.pass_context
-def agile_subtask(ctx, parent_key: str, summary: str, description: str, assignee: str):
-    """Create a subtask under a parent issue."""
+def agile_subtask(ctx, parent: str, summary: str, description: str, assignee: str,
+                  estimate: str, priority: str, labels: str):
+    """Create a subtask under a parent issue.
+
+    Examples:
+        jira agile subtask --parent PROJ-101 --summary "Implement login API"
+        jira agile subtask --parent PROJ-101 --summary "Task" --assignee self --estimate 4h
+    """
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "create_subtask.py"
 
-    script_args = [parent_key, "--summary", summary]
+    script_args = ["--parent", parent, "--summary", summary]
     if description:
         script_args.extend(["--description", description])
     if assignee:
         script_args.extend(["--assignee", assignee])
+    if estimate:
+        script_args.extend(["--estimate", estimate])
+    if priority:
+        script_args.extend(["--priority", priority])
+    if labels:
+        script_args.extend(["--labels", labels])
 
     run_skill_script_subprocess(script_path, script_args, ctx)
