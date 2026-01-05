@@ -82,26 +82,53 @@ All scripts support `--help` for detailed usage. See [scripts/REFERENCE.md](scri
 ### Quick Examples
 
 ```bash
-# Generate branch name
-jira dev branch-name PROJ-123 --format feature
+# Generate branch name with default prefix (feature)
+jira dev branch-name PROJ-123
 
-# Extract issues from commit messages
-jira dev parse-commits "feat(PROJ-123): add login" "fix(PROJ-456): bug fix"
+# Generate branch name with explicit prefix
+jira dev branch-name PROJ-123 --prefix bugfix
 
-# Extract issues from file
-jira dev parse-commits --file commits.txt
+# Auto-detect prefix from issue type (Bug -> bugfix, Story -> feature, etc.)
+jira dev branch-name PROJ-123 --auto-prefix
 
-# Generate PR description
-jira dev pr-description PROJ-123 --include-commits
+# Output git checkout command directly
+jira dev branch-name PROJ-123 --output git
 
-# Link PR to issue
-jira dev link-pr PROJ-123 https://github.com/org/repo/pull/456
+# Extract issues from a single commit message
+jira dev parse-commits "feat(PROJ-123): add login"
 
-# Link commit to issue
-jira dev link-commit PROJ-123 abc123def --message "feat: add login" --repo myrepo
+# Extract issues from git log via pipe
+git log --oneline -10 | jira dev parse-commits --from-stdin
+
+# Filter to specific project
+jira dev parse-commits "Fix PROJ-123 and OTHER-456" --project PROJ
+
+# Generate PR description with testing checklist
+jira dev pr-description PROJ-123 --include-checklist
+
+# Generate PR description with labels and components
+jira dev pr-description PROJ-123 --include-labels --include-components
+
+# Link PR to issue (--pr is required)
+jira dev link-pr PROJ-123 --pr https://github.com/org/repo/pull/456
+
+# Link PR with status and author
+jira dev link-pr PROJ-123 --pr https://github.com/org/repo/pull/456 --status merged --author "Jane Doe"
+
+# Link commit to issue (--commit is required)
+jira dev link-commit PROJ-123 --commit abc123def --message "feat: add login" --repo https://github.com/org/repo
+
+# Link commit with additional metadata
+jira dev link-commit PROJ-123 --commit abc123def --author "John Doe" --branch feature/login
 
 # Get commits linked to issue
-jira dev get-commits PROJ-123 --limit 10
+jira dev get-commits PROJ-123
+
+# Get commits with detailed information
+jira dev get-commits PROJ-123 --detailed
+
+# Get commits filtered by repository
+jira dev get-commits PROJ-123 --repo "org/repo" --output table
 ```
 
 ## Configuration
@@ -119,8 +146,19 @@ Requires JIRA credentials via environment variables:
 | Option | Description |
 |--------|-------------|
 | `--profile` | JIRA profile for multi-instance support |
-| `--output` | Output format: text (default), json |
+| `--output, -o` | Output format varies by command (see below) |
 | `--help` | Show detailed help and examples |
+
+### Output Formats by Command
+
+| Command | Available Formats |
+|---------|------------------|
+| `branch-name` | text, json, git |
+| `parse-commits` | text, json, csv |
+| `pr-description` | text, json |
+| `link-commit` | text, json |
+| `link-pr` | text, json |
+| `get-commits` | text, json, table |
 
 ## Exit Codes
 
