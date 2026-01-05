@@ -226,15 +226,34 @@ def sprint_move_issues(
 
 # Backlog commands
 @agile.command(name="backlog")
-@click.argument("board_id", type=int)
+@click.option("--board", "-b", type=int, help="Board ID")
+@click.option("--project", "-p", help="Project key (alternative to --board)")
 @click.option("--max-results", "-m", type=int, default=50, help="Maximum results")
 @click.pass_context
-def agile_backlog(ctx, board_id: int, max_results: int):
-    """Get backlog issues for a board."""
+def agile_backlog(ctx, board: int, project: str, max_results: int):
+    """Get backlog issues for a board.
+
+    Specify board using either --board (ID) or --project (key).
+
+    Examples:
+        jira agile backlog --project DEMO
+        jira agile backlog --board 123
+        jira agile backlog --project DEMO --max-results 100
+    """
+    if not board and not project:
+        raise click.UsageError("Either --board or --project is required")
+    if board and project:
+        raise click.UsageError("--board and --project are mutually exclusive")
+
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "get_backlog.py"
-    run_skill_script_subprocess(
-        script_path, [str(board_id), "--max-results", str(max_results)], ctx
-    )
+
+    script_args = ["--max-results", str(max_results)]
+    if board:
+        script_args.extend(["--board", str(board)])
+    if project:
+        script_args.extend(["--project", project])
+
+    run_skill_script_subprocess(script_path, script_args, ctx)
 
 
 # Ranking
