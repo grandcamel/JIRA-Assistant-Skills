@@ -160,36 +160,45 @@ class TestGetTransitionsErrorHandling:
 class TestGetTransitionsMain:
     """Tests for main() function."""
 
-    @patch('get_transitions.get_jira_client')
-    def test_main_text_output(self, mock_get_client, mock_jira_client, sample_transitions, capsys):
+    @patch("get_transitions.get_jira_client")
+    def test_main_text_output(
+        self, mock_get_client, mock_jira_client, sample_transitions, capsys
+    ):
         """Test main with text output."""
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_transitions.return_value = copy.deepcopy(sample_transitions)
+        mock_jira_client.get_transitions.return_value = copy.deepcopy(
+            sample_transitions
+        )
 
         from get_transitions import main
 
-        main(['PROJ-123'])
+        main(["PROJ-123"])
 
         captured = capsys.readouterr()
-        assert 'Available transitions for PROJ-123' in captured.out
+        assert "Available transitions for PROJ-123" in captured.out
 
-    @patch('get_transitions.get_jira_client')
-    def test_main_json_output(self, mock_get_client, mock_jira_client, sample_transitions, capsys):
+    @patch("get_transitions.get_jira_client")
+    def test_main_json_output(
+        self, mock_get_client, mock_jira_client, sample_transitions, capsys
+    ):
         """Test main with --output json."""
         import json
+
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_transitions.return_value = copy.deepcopy(sample_transitions)
+        mock_jira_client.get_transitions.return_value = copy.deepcopy(
+            sample_transitions
+        )
 
         from get_transitions import main
 
-        main(['PROJ-123', '--output', 'json'])
+        main(["PROJ-123", "--output", "json"])
 
         captured = capsys.readouterr()
         output = json.loads(captured.out)
         assert isinstance(output, list)
         assert len(output) == 3
 
-    @patch('get_transitions.get_jira_client')
+    @patch("get_transitions.get_jira_client")
     def test_main_no_transitions(self, mock_get_client, mock_jira_client, capsys):
         """Test main when no transitions available."""
         mock_get_client.return_value = mock_jira_client
@@ -197,33 +206,40 @@ class TestGetTransitionsMain:
 
         from get_transitions import main
 
-        main(['PROJ-123'])
+        main(["PROJ-123"])
 
         captured = capsys.readouterr()
-        assert 'No transitions available' in captured.out
+        assert "No transitions available" in captured.out
 
-    @patch('get_transitions.get_jira_client')
-    def test_main_with_profile(self, mock_get_client, mock_jira_client, sample_transitions, capsys):
+    @patch("get_transitions.get_jira_client")
+    def test_main_with_profile(
+        self, mock_get_client, mock_jira_client, sample_transitions, capsys
+    ):
         """Test main with --profile."""
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_transitions.return_value = copy.deepcopy(sample_transitions)
+        mock_jira_client.get_transitions.return_value = copy.deepcopy(
+            sample_transitions
+        )
 
         from get_transitions import main
 
-        main(['PROJ-123', '--profile', 'dev'])
+        main(["PROJ-123", "--profile", "dev"])
 
-        mock_get_client.assert_called_with('dev')
+        mock_get_client.assert_called_with("dev")
 
-    @patch('get_transitions.get_jira_client')
+    @patch("get_transitions.get_jira_client")
     def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):
         """Test main with JIRA API error."""
         from jira_assistant_skills_lib import JiraError
+
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_transitions.side_effect = JiraError("API Error", status_code=500)
+        mock_jira_client.get_transitions.side_effect = JiraError(
+            "API Error", status_code=500
+        )
 
         from get_transitions import main
 
         with pytest.raises(SystemExit) as exc_info:
-            main(['PROJ-123'])
+            main(["PROJ-123"])
 
         assert exc_info.value.code == 1

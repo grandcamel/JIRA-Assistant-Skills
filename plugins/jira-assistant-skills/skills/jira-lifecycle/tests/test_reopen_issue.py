@@ -212,60 +212,63 @@ class TestReopenIssueErrorHandling:
 class TestReopenIssueMain:
     """Tests for main() function."""
 
-    @patch('reopen_issue.get_jira_client')
+    @patch("reopen_issue.get_jira_client")
     def test_main_success(self, mock_get_client, mock_jira_client, capsys):
         """Test main successfully reopening issue."""
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_transitions.return_value = [
-            {'id': '11', 'name': 'Reopen', 'to': {'name': 'Open'}}
+            {"id": "11", "name": "Reopen", "to": {"name": "Open"}}
         ]
 
         from reopen_issue import main
 
-        main(['PROJ-123'])
+        main(["PROJ-123"])
 
         captured = capsys.readouterr()
-        assert 'Reopened' in captured.out
+        assert "Reopened" in captured.out
 
-    @patch('reopen_issue.get_jira_client')
+    @patch("reopen_issue.get_jira_client")
     def test_main_with_comment(self, mock_get_client, mock_jira_client, capsys):
         """Test main with --comment."""
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_transitions.return_value = [
-            {'id': '11', 'name': 'Reopen', 'to': {'name': 'Open'}}
+            {"id": "11", "name": "Reopen", "to": {"name": "Open"}}
         ]
 
         from reopen_issue import main
 
-        main(['PROJ-123', '--comment', 'Regression found'])
+        main(["PROJ-123", "--comment", "Regression found"])
 
         call_args = mock_jira_client.transition_issue.call_args
-        assert call_args[1]['fields'] is not None
+        assert call_args[1]["fields"] is not None
 
-    @patch('reopen_issue.get_jira_client')
+    @patch("reopen_issue.get_jira_client")
     def test_main_with_profile(self, mock_get_client, mock_jira_client, capsys):
         """Test main with --profile."""
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_transitions.return_value = [
-            {'id': '11', 'name': 'Reopen', 'to': {'name': 'Open'}}
+            {"id": "11", "name": "Reopen", "to": {"name": "Open"}}
         ]
 
         from reopen_issue import main
 
-        main(['PROJ-123', '--profile', 'dev'])
+        main(["PROJ-123", "--profile", "dev"])
 
-        mock_get_client.assert_called_with('dev')
+        mock_get_client.assert_called_with("dev")
 
-    @patch('reopen_issue.get_jira_client')
+    @patch("reopen_issue.get_jira_client")
     def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):
         """Test main with JIRA API error."""
         from jira_assistant_skills_lib import JiraError
+
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_transitions.side_effect = JiraError("API Error", status_code=500)
+        mock_jira_client.get_transitions.side_effect = JiraError(
+            "API Error", status_code=500
+        )
 
         from reopen_issue import main
 
         with pytest.raises(SystemExit) as exc_info:
-            main(['PROJ-123'])
+            main(["PROJ-123"])
 
         assert exc_info.value.code == 1

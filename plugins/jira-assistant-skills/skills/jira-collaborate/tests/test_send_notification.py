@@ -246,7 +246,7 @@ class TestSendNotificationErrorHandling:
 class TestSendNotificationMain:
     """Tests for main() function."""
 
-    @patch('send_notification.get_jira_client')
+    @patch("send_notification.get_jira_client")
     def test_main_notify_watchers(self, mock_get_client, mock_jira_client, capsys):
         """Test main with --watchers flag."""
         mock_get_client.return_value = mock_jira_client
@@ -254,14 +254,14 @@ class TestSendNotificationMain:
 
         from send_notification import main
 
-        main(['PROJ-123', '--watchers'])
+        main(["PROJ-123", "--watchers"])
 
         captured = capsys.readouterr()
-        assert 'Notification sent' in captured.out
-        assert 'Watchers' in captured.out
+        assert "Notification sent" in captured.out
+        assert "Watchers" in captured.out
         mock_jira_client.notify_issue.assert_called_once()
 
-    @patch('send_notification.get_jira_client')
+    @patch("send_notification.get_jira_client")
     def test_main_notify_assignee(self, mock_get_client, mock_jira_client, capsys):
         """Test main with --assignee flag."""
         mock_get_client.return_value = mock_jira_client
@@ -269,13 +269,13 @@ class TestSendNotificationMain:
 
         from send_notification import main
 
-        main(['PROJ-123', '--assignee'])
+        main(["PROJ-123", "--assignee"])
 
         captured = capsys.readouterr()
-        assert 'Notification sent' in captured.out
-        assert 'Assignee' in captured.out
+        assert "Notification sent" in captured.out
+        assert "Assignee" in captured.out
 
-    @patch('send_notification.get_jira_client')
+    @patch("send_notification.get_jira_client")
     def test_main_notify_reporter(self, mock_get_client, mock_jira_client, capsys):
         """Test main with --reporter flag."""
         mock_get_client.return_value = mock_jira_client
@@ -283,13 +283,13 @@ class TestSendNotificationMain:
 
         from send_notification import main
 
-        main(['PROJ-123', '--reporter'])
+        main(["PROJ-123", "--reporter"])
 
         captured = capsys.readouterr()
-        assert 'Notification sent' in captured.out
-        assert 'Reporter' in captured.out
+        assert "Notification sent" in captured.out
+        assert "Reporter" in captured.out
 
-    @patch('send_notification.get_jira_client')
+    @patch("send_notification.get_jira_client")
     def test_main_notify_voters(self, mock_get_client, mock_jira_client, capsys):
         """Test main with --voters flag."""
         mock_get_client.return_value = mock_jira_client
@@ -297,27 +297,29 @@ class TestSendNotificationMain:
 
         from send_notification import main
 
-        main(['PROJ-123', '--voters'])
+        main(["PROJ-123", "--voters"])
 
         captured = capsys.readouterr()
-        assert 'Notification sent' in captured.out
-        assert 'Voters' in captured.out
+        assert "Notification sent" in captured.out
+        assert "Voters" in captured.out
 
-    @patch('send_notification.get_jira_client')
-    def test_main_notify_specific_users(self, mock_get_client, mock_jira_client, capsys):
+    @patch("send_notification.get_jira_client")
+    def test_main_notify_specific_users(
+        self, mock_get_client, mock_jira_client, capsys
+    ):
         """Test main with --user flag."""
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.notify_issue.return_value = None
 
         from send_notification import main
 
-        main(['PROJ-123', '--user', 'user123', '--user', 'user456'])
+        main(["PROJ-123", "--user", "user123", "--user", "user456"])
 
         captured = capsys.readouterr()
-        assert 'Notification sent' in captured.out
-        assert '2 specific user(s)' in captured.out
+        assert "Notification sent" in captured.out
+        assert "2 specific user(s)" in captured.out
 
-    @patch('send_notification.get_jira_client')
+    @patch("send_notification.get_jira_client")
     def test_main_notify_groups(self, mock_get_client, mock_jira_client, capsys):
         """Test main with --group flag."""
         mock_get_client.return_value = mock_jira_client
@@ -325,97 +327,121 @@ class TestSendNotificationMain:
 
         from send_notification import main
 
-        main(['PROJ-123', '--group', 'developers', '--group', 'qa-team'])
+        main(["PROJ-123", "--group", "developers", "--group", "qa-team"])
 
         captured = capsys.readouterr()
-        assert 'Notification sent' in captured.out
-        assert 'Group: developers' in captured.out
-        assert 'Group: qa-team' in captured.out
+        assert "Notification sent" in captured.out
+        assert "Group: developers" in captured.out
+        assert "Group: qa-team" in captured.out
 
-    @patch('send_notification.get_jira_client')
-    def test_main_with_custom_subject_body(self, mock_get_client, mock_jira_client, capsys):
+    @patch("send_notification.get_jira_client")
+    def test_main_with_custom_subject_body(
+        self, mock_get_client, mock_jira_client, capsys
+    ):
         """Test main with custom subject and body."""
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.notify_issue.return_value = None
 
         from send_notification import main
 
-        main(['PROJ-123', '--watchers', '--subject', 'Action Required', '--body', 'Please review'])
+        main(
+            [
+                "PROJ-123",
+                "--watchers",
+                "--subject",
+                "Action Required",
+                "--body",
+                "Please review",
+            ]
+        )
 
         captured = capsys.readouterr()
-        assert 'Subject: Action Required' in captured.out
-        assert 'Body: Please review' in captured.out
+        assert "Subject: Action Required" in captured.out
+        assert "Body: Please review" in captured.out
 
-    @patch('send_notification.get_jira_client')
+    @patch("send_notification.get_jira_client")
     def test_main_dry_run_watchers(self, mock_get_client, mock_jira_client, capsys):
         """Test main with --dry-run and --watchers."""
         mock_get_client.return_value = mock_jira_client
 
         from send_notification import main
 
-        main(['PROJ-123', '--watchers', '--dry-run'])
+        main(["PROJ-123", "--watchers", "--dry-run"])
 
         captured = capsys.readouterr()
-        assert 'DRY RUN' in captured.out
-        assert 'Watchers' in captured.out
-        assert 'No notification sent' in captured.out
+        assert "DRY RUN" in captured.out
+        assert "Watchers" in captured.out
+        assert "No notification sent" in captured.out
         mock_jira_client.notify_issue.assert_not_called()
 
-    @patch('send_notification.get_jira_client')
-    def test_main_dry_run_multiple_recipients(self, mock_get_client, mock_jira_client, capsys):
+    @patch("send_notification.get_jira_client")
+    def test_main_dry_run_multiple_recipients(
+        self, mock_get_client, mock_jira_client, capsys
+    ):
         """Test main with --dry-run and multiple recipient types."""
         mock_get_client.return_value = mock_jira_client
 
         from send_notification import main
 
-        main(['PROJ-123', '--watchers', '--assignee', '--reporter', '--voters', '--dry-run'])
+        main(
+            [
+                "PROJ-123",
+                "--watchers",
+                "--assignee",
+                "--reporter",
+                "--voters",
+                "--dry-run",
+            ]
+        )
 
         captured = capsys.readouterr()
-        assert 'DRY RUN' in captured.out
-        assert 'Watchers' in captured.out
-        assert 'Assignee' in captured.out
-        assert 'Reporter' in captured.out
-        assert 'Voters' in captured.out
+        assert "DRY RUN" in captured.out
+        assert "Watchers" in captured.out
+        assert "Assignee" in captured.out
+        assert "Reporter" in captured.out
+        assert "Voters" in captured.out
 
-    @patch('send_notification.get_jira_client')
+    @patch("send_notification.get_jira_client")
     def test_main_dry_run_users_groups(self, mock_get_client, mock_jira_client, capsys):
         """Test main dry-run with users and groups."""
         mock_get_client.return_value = mock_jira_client
 
         from send_notification import main
 
-        main(['PROJ-123', '--user', 'user1', '--group', 'dev-team', '--dry-run'])
+        main(["PROJ-123", "--user", "user1", "--group", "dev-team", "--dry-run"])
 
         captured = capsys.readouterr()
-        assert 'DRY RUN' in captured.out
-        assert '1 specific user(s)' in captured.out
-        assert 'Group: dev-team' in captured.out
+        assert "DRY RUN" in captured.out
+        assert "1 specific user(s)" in captured.out
+        assert "Group: dev-team" in captured.out
 
     def test_main_no_recipients_error(self, capsys):
         """Test main with no recipients specified."""
         from send_notification import main
 
         with pytest.raises(SystemExit) as exc_info:
-            main(['PROJ-123'])
+            main(["PROJ-123"])
 
         assert exc_info.value.code == 1
 
-    @patch('send_notification.get_jira_client')
+    @patch("send_notification.get_jira_client")
     def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):
         """Test main with JIRA API error."""
         from jira_assistant_skills_lib import JiraError
 
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.notify_issue.side_effect = JiraError("API Error", status_code=500)
+        mock_jira_client.notify_issue.side_effect = JiraError(
+            "API Error", status_code=500
+        )
 
         from send_notification import main
 
         with pytest.raises(SystemExit) as exc_info:
-            main(['PROJ-123', '--watchers'])
+            main(["PROJ-123", "--watchers"])
 
         assert exc_info.value.code == 1
 
-    @patch('send_notification.get_jira_client')
+    @patch("send_notification.get_jira_client")
     def test_main_general_exception(self, mock_get_client, mock_jira_client, capsys):
         """Test main with general exception."""
         mock_get_client.return_value = mock_jira_client
@@ -424,11 +450,11 @@ class TestSendNotificationMain:
         from send_notification import main
 
         with pytest.raises(SystemExit) as exc_info:
-            main(['PROJ-123', '--watchers'])
+            main(["PROJ-123", "--watchers"])
 
         assert exc_info.value.code == 1
 
-    @patch('send_notification.get_jira_client')
+    @patch("send_notification.get_jira_client")
     def test_main_with_profile(self, mock_get_client, mock_jira_client, capsys):
         """Test main with --profile flag."""
         mock_get_client.return_value = mock_jira_client
@@ -436,6 +462,6 @@ class TestSendNotificationMain:
 
         from send_notification import main
 
-        main(['PROJ-123', '--watchers', '--profile', 'development'])
+        main(["PROJ-123", "--watchers", "--profile", "development"])
 
-        mock_get_client.assert_called_with('development')
+        mock_get_client.assert_called_with("development")

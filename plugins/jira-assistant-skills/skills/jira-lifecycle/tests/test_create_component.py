@@ -251,116 +251,146 @@ class TestCreateComponentErrorHandling:
 class TestCreateComponentMain:
     """Tests for main() function."""
 
-    @patch('create_component.get_jira_client')
-    def test_main_basic(self, mock_get_client, mock_jira_client, sample_component, capsys):
+    @patch("create_component.get_jira_client")
+    def test_main_basic(
+        self, mock_get_client, mock_jira_client, sample_component, capsys
+    ):
         """Test main with basic args."""
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.create_component.return_value = copy.deepcopy(sample_component)
 
         from create_component import main
 
-        main(['PROJ', '--name', 'Backend API'])
+        main(["PROJ", "--name", "Backend API"])
 
         captured = capsys.readouterr()
-        assert 'Created component' in captured.out
+        assert "Created component" in captured.out
 
-    @patch('create_component.get_jira_client')
-    def test_main_with_description(self, mock_get_client, mock_jira_client, sample_component, capsys):
+    @patch("create_component.get_jira_client")
+    def test_main_with_description(
+        self, mock_get_client, mock_jira_client, sample_component, capsys
+    ):
         """Test main with --description."""
         mock_get_client.return_value = mock_jira_client
         component = copy.deepcopy(sample_component)
-        component['description'] = 'API backend'
+        component["description"] = "API backend"
         mock_jira_client.create_component.return_value = component
 
         from create_component import main
 
-        main(['PROJ', '--name', 'Backend', '--description', 'API backend'])
+        main(["PROJ", "--name", "Backend", "--description", "API backend"])
 
         captured = capsys.readouterr()
-        assert 'API backend' in captured.out
+        assert "API backend" in captured.out
 
-    @patch('create_component.get_jira_client')
-    def test_main_with_lead(self, mock_get_client, mock_jira_client, sample_component, capsys):
+    @patch("create_component.get_jira_client")
+    def test_main_with_lead(
+        self, mock_get_client, mock_jira_client, sample_component, capsys
+    ):
         """Test main with --lead."""
         mock_get_client.return_value = mock_jira_client
         component = copy.deepcopy(sample_component)
-        component['lead'] = {'displayName': 'Alice', 'accountId': '5b10a2844c20165700ede21g'}
+        component["lead"] = {
+            "displayName": "Alice",
+            "accountId": "5b10a2844c20165700ede21g",
+        }
         mock_jira_client.create_component.return_value = component
 
         from create_component import main
 
-        main(['PROJ', '--name', 'Backend', '--lead', '5b10a2844c20165700ede21g'])
+        main(["PROJ", "--name", "Backend", "--lead", "5b10a2844c20165700ede21g"])
 
         captured = capsys.readouterr()
-        assert 'Lead: Alice' in captured.out
+        assert "Lead: Alice" in captured.out
 
-    @patch('create_component.get_jira_client')
-    def test_main_with_assignee_type(self, mock_get_client, mock_jira_client, sample_component, capsys):
+    @patch("create_component.get_jira_client")
+    def test_main_with_assignee_type(
+        self, mock_get_client, mock_jira_client, sample_component, capsys
+    ):
         """Test main with --assignee-type."""
         mock_get_client.return_value = mock_jira_client
         component = copy.deepcopy(sample_component)
-        component['assigneeType'] = 'COMPONENT_LEAD'
+        component["assigneeType"] = "COMPONENT_LEAD"
         mock_jira_client.create_component.return_value = component
 
         from create_component import main
 
-        main(['PROJ', '--name', 'Backend', '--assignee-type', 'COMPONENT_LEAD'])
+        main(["PROJ", "--name", "Backend", "--assignee-type", "COMPONENT_LEAD"])
 
         captured = capsys.readouterr()
-        assert 'Assignee Type: COMPONENT_LEAD' in captured.out
+        assert "Assignee Type: COMPONENT_LEAD" in captured.out
 
-    @patch('create_component.get_jira_client')
+    @patch("create_component.get_jira_client")
     def test_main_dry_run(self, mock_get_client, mock_jira_client, capsys):
         """Test main with --dry-run."""
         mock_get_client.return_value = mock_jira_client
 
         from create_component import main
 
-        main(['PROJ', '--name', 'Testing', '--dry-run'])
+        main(["PROJ", "--name", "Testing", "--dry-run"])
 
         captured = capsys.readouterr()
-        assert 'DRY RUN' in captured.out
-        assert 'Testing' in captured.out
+        assert "DRY RUN" in captured.out
+        assert "Testing" in captured.out
         mock_jira_client.create_component.assert_not_called()
 
-    @patch('create_component.get_jira_client')
-    def test_main_dry_run_with_all_options(self, mock_get_client, mock_jira_client, capsys):
+    @patch("create_component.get_jira_client")
+    def test_main_dry_run_with_all_options(
+        self, mock_get_client, mock_jira_client, capsys
+    ):
         """Test main dry-run with all options."""
         mock_get_client.return_value = mock_jira_client
 
         from create_component import main
 
-        main(['PROJ', '--name', 'Test', '--description', 'Desc', '--lead', 'abc123',
-              '--assignee-type', 'PROJECT_LEAD', '--dry-run'])
+        main(
+            [
+                "PROJ",
+                "--name",
+                "Test",
+                "--description",
+                "Desc",
+                "--lead",
+                "abc123",
+                "--assignee-type",
+                "PROJECT_LEAD",
+                "--dry-run",
+            ]
+        )
 
         captured = capsys.readouterr()
-        assert 'DRY RUN' in captured.out
-        assert 'Desc' in captured.out
-        assert 'abc123' in captured.out
-        assert 'PROJECT_LEAD' in captured.out
+        assert "DRY RUN" in captured.out
+        assert "Desc" in captured.out
+        assert "abc123" in captured.out
+        assert "PROJECT_LEAD" in captured.out
 
-    @patch('create_component.get_jira_client')
-    def test_main_with_profile(self, mock_get_client, mock_jira_client, sample_component, capsys):
+    @patch("create_component.get_jira_client")
+    def test_main_with_profile(
+        self, mock_get_client, mock_jira_client, sample_component, capsys
+    ):
         """Test main with --profile."""
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.create_component.return_value = copy.deepcopy(sample_component)
 
         from create_component import main
 
-        main(['PROJ', '--name', 'Backend', '--profile', 'dev'])
+        main(["PROJ", "--name", "Backend", "--profile", "dev"])
 
-        mock_get_client.assert_called_with('dev')
+        mock_get_client.assert_called_with("dev")
 
-    @patch('create_component.get_jira_client')
+    @patch("create_component.get_jira_client")
     def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):
         """Test main with JIRA API error."""
         from jira_assistant_skills_lib import JiraError
+
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.create_component.side_effect = JiraError("API Error", status_code=500)
+        mock_jira_client.create_component.side_effect = JiraError(
+            "API Error", status_code=500
+        )
 
         from create_component import main
 
         with pytest.raises(SystemExit) as exc_info:
-            main(['PROJ', '--name', 'Test'])
+            main(["PROJ", "--name", "Test"])
 
         assert exc_info.value.code == 1

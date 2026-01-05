@@ -340,37 +340,40 @@ class TestAddWorklogMain:
         mock_jira_client.add_worklog.return_value = sample_worklog
 
         from unittest.mock import patch
-        with patch('add_worklog.get_jira_client', return_value=mock_jira_client):
+
+        with patch("add_worklog.get_jira_client", return_value=mock_jira_client):
             from add_worklog import main
 
-            main(['PROJ-123', '--time', '2h'])
+            main(["PROJ-123", "--time", "2h"])
 
             captured = capsys.readouterr()
-            assert 'Worklog added' in captured.out
-            assert 'PROJ-123' in captured.out
+            assert "Worklog added" in captured.out
+            assert "PROJ-123" in captured.out
 
     def test_main_with_comment(self, mock_jira_client, sample_worklog, capsys):
         """Test main with comment."""
         mock_jira_client.add_worklog.return_value = sample_worklog
 
         from unittest.mock import patch
-        with patch('add_worklog.get_jira_client', return_value=mock_jira_client):
+
+        with patch("add_worklog.get_jira_client", return_value=mock_jira_client):
             from add_worklog import main
 
-            main(['PROJ-123', '--time', '2h', '--comment', 'Debugging issue'])
+            main(["PROJ-123", "--time", "2h", "--comment", "Debugging issue"])
 
             captured = capsys.readouterr()
-            assert 'Worklog added' in captured.out
+            assert "Worklog added" in captured.out
 
     def test_main_with_started(self, mock_jira_client, sample_worklog, capsys):
         """Test main with --started."""
         mock_jira_client.add_worklog.return_value = sample_worklog
 
         from unittest.mock import patch
-        with patch('add_worklog.get_jira_client', return_value=mock_jira_client):
+
+        with patch("add_worklog.get_jira_client", return_value=mock_jira_client):
             from add_worklog import main
 
-            main(['PROJ-123', '--time', '2h', '--started', 'yesterday'])
+            main(["PROJ-123", "--time", "2h", "--started", "yesterday"])
 
             mock_jira_client.add_worklog.assert_called_once()
 
@@ -379,68 +382,98 @@ class TestAddWorklogMain:
         mock_jira_client.add_worklog.return_value = sample_worklog
 
         from unittest.mock import patch
-        with patch('add_worklog.get_jira_client', return_value=mock_jira_client):
+
+        with patch("add_worklog.get_jira_client", return_value=mock_jira_client):
             from add_worklog import main
 
-            main(['PROJ-123', '--time', '2h', '--adjust-estimate', 'new', '--new-estimate', '4h'])
+            main(
+                [
+                    "PROJ-123",
+                    "--time",
+                    "2h",
+                    "--adjust-estimate",
+                    "new",
+                    "--new-estimate",
+                    "4h",
+                ]
+            )
 
             call_args = mock_jira_client.add_worklog.call_args
-            assert call_args[1]['adjust_estimate'] == 'new'
-            assert call_args[1]['new_estimate'] == '4h'
+            assert call_args[1]["adjust_estimate"] == "new"
+            assert call_args[1]["new_estimate"] == "4h"
 
     def test_main_with_visibility(self, mock_jira_client, sample_worklog, capsys):
         """Test main with visibility options."""
-        sample_worklog['visibility'] = {'type': 'role', 'value': 'Developers'}
+        sample_worklog["visibility"] = {"type": "role", "value": "Developers"}
         mock_jira_client.add_worklog.return_value = sample_worklog
 
         from unittest.mock import patch
-        with patch('add_worklog.get_jira_client', return_value=mock_jira_client):
+
+        with patch("add_worklog.get_jira_client", return_value=mock_jira_client):
             from add_worklog import main
 
-            main(['PROJ-123', '--time', '2h', '--visibility-type', 'role', '--visibility-value', 'Developers'])
+            main(
+                [
+                    "PROJ-123",
+                    "--time",
+                    "2h",
+                    "--visibility-type",
+                    "role",
+                    "--visibility-value",
+                    "Developers",
+                ]
+            )
 
             captured = capsys.readouterr()
-            assert 'Visibility' in captured.out
+            assert "Visibility" in captured.out
 
     def test_main_json_output(self, mock_jira_client, sample_worklog, capsys):
         """Test main with JSON output."""
         import json
+
         mock_jira_client.add_worklog.return_value = sample_worklog
 
         from unittest.mock import patch
-        with patch('add_worklog.get_jira_client', return_value=mock_jira_client):
+
+        with patch("add_worklog.get_jira_client", return_value=mock_jira_client):
             from add_worklog import main
 
-            main(['PROJ-123', '--time', '2h', '--output', 'json'])
+            main(["PROJ-123", "--time", "2h", "--output", "json"])
 
             captured = capsys.readouterr()
             output = json.loads(captured.out)
-            assert output['id'] == '10045'
+            assert output["id"] == "10045"
 
     def test_main_with_profile(self, mock_jira_client, sample_worklog, capsys):
         """Test main with --profile."""
         mock_jira_client.add_worklog.return_value = sample_worklog
 
         from unittest.mock import patch
-        with patch('add_worklog.get_jira_client', return_value=mock_jira_client) as mock_get_client:
+
+        with patch(
+            "add_worklog.get_jira_client", return_value=mock_jira_client
+        ) as mock_get_client:
             from add_worklog import main
 
-            main(['PROJ-123', '--time', '2h', '--profile', 'dev'])
+            main(["PROJ-123", "--time", "2h", "--profile", "dev"])
 
-            mock_get_client.assert_called_with('dev')
+            mock_get_client.assert_called_with("dev")
 
     def test_main_jira_error(self, mock_jira_client, capsys):
         """Test main with JIRA API error."""
         from jira_assistant_skills_lib import JiraError
 
-        mock_jira_client.add_worklog.side_effect = JiraError("API Error", status_code=500)
+        mock_jira_client.add_worklog.side_effect = JiraError(
+            "API Error", status_code=500
+        )
 
         from unittest.mock import patch
-        with patch('add_worklog.get_jira_client', return_value=mock_jira_client):
+
+        with patch("add_worklog.get_jira_client", return_value=mock_jira_client):
             from add_worklog import main
 
             with pytest.raises(SystemExit) as exc_info:
-                main(['PROJ-123', '--time', '2h'])
+                main(["PROJ-123", "--time", "2h"])
 
             assert exc_info.value.code == 1
 
@@ -449,10 +482,11 @@ class TestAddWorklogMain:
         mock_jira_client.add_worklog.side_effect = KeyboardInterrupt()
 
         from unittest.mock import patch
-        with patch('add_worklog.get_jira_client', return_value=mock_jira_client):
+
+        with patch("add_worklog.get_jira_client", return_value=mock_jira_client):
             from add_worklog import main
 
             with pytest.raises(SystemExit) as exc_info:
-                main(['PROJ-123', '--time', '2h'])
+                main(["PROJ-123", "--time", "2h"])
 
             assert exc_info.value.code == 1

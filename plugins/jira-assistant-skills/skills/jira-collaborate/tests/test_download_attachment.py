@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 
 # Add script path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 
 @pytest.fixture
@@ -18,32 +18,32 @@ def sample_attachments():
     """Sample attachments list."""
     return [
         {
-            'id': '10001',
-            'filename': 'screenshot.png',
-            'size': 102400,
-            'mimeType': 'image/png',
-            'created': '2024-01-15T10:00:00.000+0000',
-            'author': {'displayName': 'John Smith'},
-            'content': 'https://test.atlassian.net/secure/attachment/10001/screenshot.png'
+            "id": "10001",
+            "filename": "screenshot.png",
+            "size": 102400,
+            "mimeType": "image/png",
+            "created": "2024-01-15T10:00:00.000+0000",
+            "author": {"displayName": "John Smith"},
+            "content": "https://test.atlassian.net/secure/attachment/10001/screenshot.png",
         },
         {
-            'id': '10002',
-            'filename': 'report.pdf',
-            'size': 5242880,
-            'mimeType': 'application/pdf',
-            'created': '2024-01-14T09:00:00.000+0000',
-            'author': {'displayName': 'Jane Doe'},
-            'content': 'https://test.atlassian.net/secure/attachment/10002/report.pdf'
+            "id": "10002",
+            "filename": "report.pdf",
+            "size": 5242880,
+            "mimeType": "application/pdf",
+            "created": "2024-01-14T09:00:00.000+0000",
+            "author": {"displayName": "Jane Doe"},
+            "content": "https://test.atlassian.net/secure/attachment/10002/report.pdf",
         },
         {
-            'id': '10003',
-            'filename': 'data.csv',
-            'size': 512,
-            'mimeType': 'text/csv',
-            'created': '2024-01-13T08:00:00.000+0000',
-            'author': {'displayName': 'Bob Jones'},
-            'content': 'https://test.atlassian.net/secure/attachment/10003/data.csv'
-        }
+            "id": "10003",
+            "filename": "data.csv",
+            "size": 512,
+            "mimeType": "text/csv",
+            "created": "2024-01-13T08:00:00.000+0000",
+            "author": {"displayName": "Bob Jones"},
+            "content": "https://test.atlassian.net/secure/attachment/10003/data.csv",
+        },
     ]
 
 
@@ -56,23 +56,27 @@ class TestListAttachments:
         """Test listing attachments for an issue."""
         mock_jira_client.get_attachments.return_value = sample_attachments
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import list_attachments
 
-            result = list_attachments('PROJ-123')
+            result = list_attachments("PROJ-123")
 
             assert len(result) == 3
-            assert result[0]['filename'] == 'screenshot.png'
-            mock_jira_client.get_attachments.assert_called_once_with('PROJ-123')
+            assert result[0]["filename"] == "screenshot.png"
+            mock_jira_client.get_attachments.assert_called_once_with("PROJ-123")
 
     def test_list_attachments_empty(self, mock_jira_client):
         """Test listing when no attachments exist."""
         mock_jira_client.get_attachments.return_value = []
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import list_attachments
 
-            result = list_attachments('PROJ-123')
+            result = list_attachments("PROJ-123")
 
             assert result == []
 
@@ -80,12 +84,14 @@ class TestListAttachments:
         """Test listing attachments with a specific profile."""
         mock_jira_client.get_attachments.return_value = sample_attachments
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client) as mock_get_client:
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ) as mock_get_client:
             from download_attachment import list_attachments
 
-            list_attachments('PROJ-123', profile='development')
+            list_attachments("PROJ-123", profile="development")
 
-            mock_get_client.assert_called_with('development')
+            mock_get_client.assert_called_with("development")
 
 
 @pytest.mark.collaborate
@@ -97,78 +103,94 @@ class TestDownloadAttachment:
         """Test downloading attachment by ID."""
         mock_jira_client.get_attachments.return_value = sample_attachments
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import download_attachment
 
-            result = download_attachment('PROJ-123', attachment_id='10001', output_dir=str(tmp_path))
+            result = download_attachment(
+                "PROJ-123", attachment_id="10001", output_dir=str(tmp_path)
+            )
 
-            assert 'screenshot.png' in result
+            assert "screenshot.png" in result
             mock_jira_client.download_file.assert_called_once()
 
     def test_download_by_name(self, mock_jira_client, sample_attachments, tmp_path):
         """Test downloading attachment by name."""
         mock_jira_client.get_attachments.return_value = sample_attachments
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import download_attachment
 
-            result = download_attachment('PROJ-123', attachment_name='report.pdf', output_dir=str(tmp_path))
+            result = download_attachment(
+                "PROJ-123", attachment_name="report.pdf", output_dir=str(tmp_path)
+            )
 
-            assert 'report.pdf' in result
+            assert "report.pdf" in result
 
     def test_download_id_not_found(self, mock_jira_client, sample_attachments):
         """Test error when attachment ID not found."""
         mock_jira_client.get_attachments.return_value = sample_attachments
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import download_attachment
 
             from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:
-                download_attachment('PROJ-123', attachment_id='99999')
-            assert 'not found' in str(exc_info.value)
+                download_attachment("PROJ-123", attachment_id="99999")
+            assert "not found" in str(exc_info.value)
 
     def test_download_name_not_found(self, mock_jira_client, sample_attachments):
         """Test error when attachment name not found."""
         mock_jira_client.get_attachments.return_value = sample_attachments
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import download_attachment
 
             from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:
-                download_attachment('PROJ-123', attachment_name='nonexistent.txt')
-            assert 'not found' in str(exc_info.value)
+                download_attachment("PROJ-123", attachment_name="nonexistent.txt")
+            assert "not found" in str(exc_info.value)
 
     def test_download_no_identifier(self, mock_jira_client, sample_attachments):
         """Test error when neither ID nor name specified."""
         mock_jira_client.get_attachments.return_value = sample_attachments
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import download_attachment
 
             from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:
-                download_attachment('PROJ-123')
-            assert '--id' in str(exc_info.value) or '--name' in str(exc_info.value)
+                download_attachment("PROJ-123")
+            assert "--id" in str(exc_info.value) or "--name" in str(exc_info.value)
 
     def test_download_no_content_url(self, mock_jira_client):
         """Test error when attachment has no content URL."""
         mock_jira_client.get_attachments.return_value = [
-            {'id': '10001', 'filename': 'test.txt', 'content': None}
+            {"id": "10001", "filename": "test.txt", "content": None}
         ]
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import download_attachment
 
             from jira_assistant_skills_lib import ValidationError
 
             with pytest.raises(ValidationError) as exc_info:
-                download_attachment('PROJ-123', attachment_id='10001')
-            assert 'No content URL' in str(exc_info.value)
+                download_attachment("PROJ-123", attachment_id="10001")
+            assert "No content URL" in str(exc_info.value)
 
 
 @pytest.mark.collaborate
@@ -180,10 +202,12 @@ class TestDownloadAllAttachments:
         """Test downloading all attachments."""
         mock_jira_client.get_attachments.return_value = sample_attachments
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import download_all_attachments
 
-            result = download_all_attachments('PROJ-123', output_dir=str(tmp_path))
+            result = download_all_attachments("PROJ-123", output_dir=str(tmp_path))
 
             assert len(result) == 3
             assert mock_jira_client.download_file.call_count == 3
@@ -192,10 +216,12 @@ class TestDownloadAllAttachments:
         """Test downloading when no attachments exist."""
         mock_jira_client.get_attachments.return_value = []
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import download_all_attachments
 
-            result = download_all_attachments('PROJ-123', output_dir=str(tmp_path))
+            result = download_all_attachments("PROJ-123", output_dir=str(tmp_path))
 
             assert result == []
             mock_jira_client.download_file.assert_not_called()
@@ -203,14 +229,20 @@ class TestDownloadAllAttachments:
     def test_download_all_skips_no_content(self, mock_jira_client, tmp_path):
         """Test that attachments without content URL are skipped."""
         mock_jira_client.get_attachments.return_value = [
-            {'id': '10001', 'filename': 'test.txt', 'content': 'https://example.com/test.txt'},
-            {'id': '10002', 'filename': 'no-content.txt', 'content': None}
+            {
+                "id": "10001",
+                "filename": "test.txt",
+                "content": "https://example.com/test.txt",
+            },
+            {"id": "10002", "filename": "no-content.txt", "content": None},
         ]
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import download_all_attachments
 
-            result = download_all_attachments('PROJ-123', output_dir=str(tmp_path))
+            result = download_all_attachments("PROJ-123", output_dir=str(tmp_path))
 
             assert len(result) == 1
             assert mock_jira_client.download_file.call_count == 1
@@ -218,22 +250,24 @@ class TestDownloadAllAttachments:
     def test_download_all_handles_duplicates(self, mock_jira_client, tmp_path):
         """Test handling of duplicate filenames."""
         mock_jira_client.get_attachments.return_value = [
-            {'id': '10001', 'filename': 'test.txt', 'content': 'https://example.com/1'},
-            {'id': '10002', 'filename': 'test.txt', 'content': 'https://example.com/2'}
+            {"id": "10001", "filename": "test.txt", "content": "https://example.com/1"},
+            {"id": "10002", "filename": "test.txt", "content": "https://example.com/2"},
         ]
 
         # Create the first file so the duplicate handling kicks in
-        first_file = tmp_path / 'test.txt'
-        first_file.write_text('first file')
+        first_file = tmp_path / "test.txt"
+        first_file.write_text("first file")
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import download_all_attachments
 
-            result = download_all_attachments('PROJ-123', output_dir=str(tmp_path))
+            result = download_all_attachments("PROJ-123", output_dir=str(tmp_path))
 
             assert len(result) == 2
             # Second file should have _1 suffix
-            assert any('test_1.txt' in path for path in result)
+            assert any("test_1.txt" in path for path in result)
 
 
 @pytest.mark.collaborate
@@ -247,11 +281,11 @@ class TestFormatAttachmentList:
 
         result = format_attachment_list(sample_attachments)
 
-        assert 'screenshot.png' in result
-        assert 'report.pdf' in result
-        assert '100.0 KB' in result  # 102400 bytes
-        assert '5.0 MB' in result    # 5242880 bytes
-        assert '512 B' in result     # 512 bytes
+        assert "screenshot.png" in result
+        assert "report.pdf" in result
+        assert "100.0 KB" in result  # 102400 bytes
+        assert "5.0 MB" in result  # 5242880 bytes
+        assert "512 B" in result  # 512 bytes
 
     def test_format_empty_list(self):
         """Test formatting empty attachment list."""
@@ -259,7 +293,7 @@ class TestFormatAttachmentList:
 
         result = format_attachment_list([])
 
-        assert 'No attachments' in result
+        assert "No attachments" in result
 
 
 @pytest.mark.collaborate
@@ -271,74 +305,94 @@ class TestDownloadAttachmentMain:
         """Test main with --list."""
         mock_jira_client.get_attachments.return_value = sample_attachments
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import main
 
-            main(['PROJ-123', '--list'])
+            main(["PROJ-123", "--list"])
 
             captured = capsys.readouterr()
-            assert 'screenshot.png' in captured.out
+            assert "screenshot.png" in captured.out
 
     def test_main_list_json(self, mock_jira_client, sample_attachments, capsys):
         """Test main with --list --output json."""
         mock_jira_client.get_attachments.return_value = sample_attachments
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import main
 
-            main(['PROJ-123', '--list', '--output', 'json'])
+            main(["PROJ-123", "--list", "--output", "json"])
 
             captured = capsys.readouterr()
             data = json.loads(captured.out)
             assert len(data) == 3
 
-    def test_main_download_by_name(self, mock_jira_client, sample_attachments, tmp_path, capsys):
+    def test_main_download_by_name(
+        self, mock_jira_client, sample_attachments, tmp_path, capsys
+    ):
         """Test main with --name."""
         mock_jira_client.get_attachments.return_value = sample_attachments
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import main
 
-            main(['PROJ-123', '--name', 'screenshot.png', '--output-dir', str(tmp_path)])
+            main(
+                ["PROJ-123", "--name", "screenshot.png", "--output-dir", str(tmp_path)]
+            )
 
             captured = capsys.readouterr()
-            assert 'Downloaded' in captured.out
+            assert "Downloaded" in captured.out
 
-    def test_main_download_by_id(self, mock_jira_client, sample_attachments, tmp_path, capsys):
+    def test_main_download_by_id(
+        self, mock_jira_client, sample_attachments, tmp_path, capsys
+    ):
         """Test main with --id."""
         mock_jira_client.get_attachments.return_value = sample_attachments
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import main
 
-            main(['PROJ-123', '--id', '10001', '--output-dir', str(tmp_path)])
+            main(["PROJ-123", "--id", "10001", "--output-dir", str(tmp_path)])
 
             captured = capsys.readouterr()
-            assert 'Downloaded' in captured.out
+            assert "Downloaded" in captured.out
 
-    def test_main_download_all(self, mock_jira_client, sample_attachments, tmp_path, capsys):
+    def test_main_download_all(
+        self, mock_jira_client, sample_attachments, tmp_path, capsys
+    ):
         """Test main with --all."""
         mock_jira_client.get_attachments.return_value = sample_attachments
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import main
 
-            main(['PROJ-123', '--all', '--output-dir', str(tmp_path)])
+            main(["PROJ-123", "--all", "--output-dir", str(tmp_path)])
 
             captured = capsys.readouterr()
-            assert 'Downloaded 3 attachment' in captured.out
+            assert "Downloaded 3 attachment" in captured.out
 
     def test_main_download_all_empty(self, mock_jira_client, tmp_path, capsys):
         """Test main with --all when no attachments."""
         mock_jira_client.get_attachments.return_value = []
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import main
 
-            main(['PROJ-123', '--all', '--output-dir', str(tmp_path)])
+            main(["PROJ-123", "--all", "--output-dir", str(tmp_path)])
 
             captured = capsys.readouterr()
-            assert 'No attachments' in captured.out
+            assert "No attachments" in captured.out
 
 
 @pytest.mark.collaborate
@@ -349,23 +403,33 @@ class TestDownloadAttachmentErrors:
     def test_jira_error_handling(self, mock_jira_client):
         """Test handling of JIRA API errors."""
         from jira_assistant_skills_lib import JiraError
-        mock_jira_client.get_attachments.side_effect = JiraError("API Error", status_code=500)
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client):
+        mock_jira_client.get_attachments.side_effect = JiraError(
+            "API Error", status_code=500
+        )
+
+        with patch(
+            "download_attachment.get_jira_client", return_value=mock_jira_client
+        ):
             from download_attachment import main
 
             with pytest.raises(SystemExit) as exc_info:
-                main(['PROJ-123', '--list'])
+                main(["PROJ-123", "--list"])
             assert exc_info.value.code == 1
 
     def test_invalid_issue_key(self, mock_jira_client):
         """Test handling of invalid issue key."""
         from jira_assistant_skills_lib import ValidationError
 
-        with patch('download_attachment.get_jira_client', return_value=mock_jira_client), \
-             patch('download_attachment.validate_issue_key', side_effect=ValidationError("Invalid issue key")):
+        with (
+            patch("download_attachment.get_jira_client", return_value=mock_jira_client),
+            patch(
+                "download_attachment.validate_issue_key",
+                side_effect=ValidationError("Invalid issue key"),
+            ),
+        ):
             from download_attachment import main
 
             with pytest.raises(SystemExit) as exc_info:
-                main(['invalid-key', '--list'])
+                main(["invalid-key", "--list"])
             assert exc_info.value.code == 1

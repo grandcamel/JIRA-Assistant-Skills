@@ -206,69 +206,88 @@ class TestResolveIssueErrorHandling:
 class TestResolveIssueMain:
     """Tests for main() function."""
 
-    @patch('resolve_issue.get_jira_client')
-    def test_main_default_resolution(self, mock_get_client, mock_jira_client, sample_transitions, capsys):
+    @patch("resolve_issue.get_jira_client")
+    def test_main_default_resolution(
+        self, mock_get_client, mock_jira_client, sample_transitions, capsys
+    ):
         """Test main with default resolution."""
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_transitions.return_value = copy.deepcopy(sample_transitions)
+        mock_jira_client.get_transitions.return_value = copy.deepcopy(
+            sample_transitions
+        )
 
         from resolve_issue import main
 
-        main(['PROJ-123'])
+        main(["PROJ-123"])
 
         captured = capsys.readouterr()
-        assert 'Resolved' in captured.out
-        assert 'Fixed' in captured.out
+        assert "Resolved" in captured.out
+        assert "Fixed" in captured.out
 
-    @patch('resolve_issue.get_jira_client')
-    def test_main_custom_resolution(self, mock_get_client, mock_jira_client, sample_transitions, capsys):
+    @patch("resolve_issue.get_jira_client")
+    def test_main_custom_resolution(
+        self, mock_get_client, mock_jira_client, sample_transitions, capsys
+    ):
         """Test main with custom resolution."""
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_transitions.return_value = copy.deepcopy(sample_transitions)
+        mock_jira_client.get_transitions.return_value = copy.deepcopy(
+            sample_transitions
+        )
 
         from resolve_issue import main
 
-        main(['PROJ-123', '--resolution', "Won't Fix"])
+        main(["PROJ-123", "--resolution", "Won't Fix"])
 
         captured = capsys.readouterr()
-        assert 'Resolved' in captured.out
+        assert "Resolved" in captured.out
         assert "Won't Fix" in captured.out
 
-    @patch('resolve_issue.get_jira_client')
-    def test_main_with_comment(self, mock_get_client, mock_jira_client, sample_transitions, capsys):
+    @patch("resolve_issue.get_jira_client")
+    def test_main_with_comment(
+        self, mock_get_client, mock_jira_client, sample_transitions, capsys
+    ):
         """Test main with --comment."""
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_transitions.return_value = copy.deepcopy(sample_transitions)
+        mock_jira_client.get_transitions.return_value = copy.deepcopy(
+            sample_transitions
+        )
 
         from resolve_issue import main
 
-        main(['PROJ-123', '--comment', 'Fixed in v1.2.0'])
+        main(["PROJ-123", "--comment", "Fixed in v1.2.0"])
 
         call_args = mock_jira_client.transition_issue.call_args
-        assert 'comment' in call_args[1]['fields']
+        assert "comment" in call_args[1]["fields"]
 
-    @patch('resolve_issue.get_jira_client')
-    def test_main_with_profile(self, mock_get_client, mock_jira_client, sample_transitions, capsys):
+    @patch("resolve_issue.get_jira_client")
+    def test_main_with_profile(
+        self, mock_get_client, mock_jira_client, sample_transitions, capsys
+    ):
         """Test main with --profile."""
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_transitions.return_value = copy.deepcopy(sample_transitions)
+        mock_jira_client.get_transitions.return_value = copy.deepcopy(
+            sample_transitions
+        )
 
         from resolve_issue import main
 
-        main(['PROJ-123', '--profile', 'dev'])
+        main(["PROJ-123", "--profile", "dev"])
 
-        mock_get_client.assert_called_with('dev')
+        mock_get_client.assert_called_with("dev")
 
-    @patch('resolve_issue.get_jira_client')
+    @patch("resolve_issue.get_jira_client")
     def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):
         """Test main with JIRA API error."""
         from jira_assistant_skills_lib import JiraError
+
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_transitions.side_effect = JiraError("API Error", status_code=500)
+        mock_jira_client.get_transitions.side_effect = JiraError(
+            "API Error", status_code=500
+        )
 
         from resolve_issue import main
 
         with pytest.raises(SystemExit) as exc_info:
-            main(['PROJ-123'])
+            main(["PROJ-123"])
 
         assert exc_info.value.code == 1

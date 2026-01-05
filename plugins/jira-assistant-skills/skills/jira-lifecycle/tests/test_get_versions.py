@@ -234,130 +234,160 @@ class TestGetVersionsErrorHandling:
 class TestGetVersionsMain:
     """Tests for main() function."""
 
-    @patch('get_versions.get_jira_client')
-    def test_main_project_table(self, mock_get_client, mock_jira_client, sample_versions_list, capsys):
+    @patch("get_versions.get_jira_client")
+    def test_main_project_table(
+        self, mock_get_client, mock_jira_client, sample_versions_list, capsys
+    ):
         """Test main with project argument."""
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_versions.return_value = copy.deepcopy(sample_versions_list)
 
         from get_versions import main
 
-        main(['PROJ'])
+        main(["PROJ"])
 
         captured = capsys.readouterr()
-        assert 'Versions for project PROJ' in captured.out
-        assert 'v1.0.0' in captured.out
+        assert "Versions for project PROJ" in captured.out
+        assert "v1.0.0" in captured.out
 
-    @patch('get_versions.get_jira_client')
-    def test_main_project_json(self, mock_get_client, mock_jira_client, sample_versions_list, capsys):
+    @patch("get_versions.get_jira_client")
+    def test_main_project_json(
+        self, mock_get_client, mock_jira_client, sample_versions_list, capsys
+    ):
         """Test main with --output json."""
         import json
+
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_versions.return_value = copy.deepcopy(sample_versions_list)
 
         from get_versions import main
 
-        main(['PROJ', '--output', 'json'])
+        main(["PROJ", "--output", "json"])
 
         captured = capsys.readouterr()
         output = json.loads(captured.out)
         assert isinstance(output, list)
         assert len(output) == 4
 
-    @patch('get_versions.get_jira_client')
-    def test_main_released_filter(self, mock_get_client, mock_jira_client, sample_versions_list, capsys):
+    @patch("get_versions.get_jira_client")
+    def test_main_released_filter(
+        self, mock_get_client, mock_jira_client, sample_versions_list, capsys
+    ):
         """Test main with --released filter."""
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_versions.return_value = copy.deepcopy(sample_versions_list)
 
         from get_versions import main
 
-        main(['PROJ', '--released'])
+        main(["PROJ", "--released"])
 
         captured = capsys.readouterr()
-        assert 'Versions for project PROJ' in captured.out
+        assert "Versions for project PROJ" in captured.out
 
-    @patch('get_versions.get_jira_client')
-    def test_main_unreleased_filter(self, mock_get_client, mock_jira_client, sample_versions_list, capsys):
+    @patch("get_versions.get_jira_client")
+    def test_main_unreleased_filter(
+        self, mock_get_client, mock_jira_client, sample_versions_list, capsys
+    ):
         """Test main with --unreleased filter."""
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_versions.return_value = copy.deepcopy(sample_versions_list)
 
         from get_versions import main
 
-        main(['PROJ', '--unreleased'])
+        main(["PROJ", "--unreleased"])
 
         captured = capsys.readouterr()
-        assert 'Versions for project PROJ' in captured.out
+        assert "Versions for project PROJ" in captured.out
 
-    @patch('get_versions.get_jira_client')
-    def test_main_version_by_id(self, mock_get_client, mock_jira_client, sample_version, capsys):
+    @patch("get_versions.get_jira_client")
+    def test_main_version_by_id(
+        self, mock_get_client, mock_jira_client, sample_version, capsys
+    ):
         """Test main with --id."""
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_version.return_value = copy.deepcopy(sample_version)
 
         from get_versions import main
 
-        main(['--id', '10000'])
+        main(["--id", "10000"])
 
         captured = capsys.readouterr()
-        assert 'v1.0.0' in captured.out
-        assert 'ID: 10000' in captured.out
+        assert "v1.0.0" in captured.out
+        assert "ID: 10000" in captured.out
 
-    @patch('get_versions.get_jira_client')
-    def test_main_version_by_id_json(self, mock_get_client, mock_jira_client, sample_version, capsys):
+    @patch("get_versions.get_jira_client")
+    def test_main_version_by_id_json(
+        self, mock_get_client, mock_jira_client, sample_version, capsys
+    ):
         """Test main with --id and --output json."""
         import json
+
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_version.return_value = copy.deepcopy(sample_version)
 
         from get_versions import main
 
-        main(['--id', '10000', '--output', 'json'])
+        main(["--id", "10000", "--output", "json"])
 
         captured = capsys.readouterr()
         output = json.loads(captured.out)
-        assert output['id'] == '10000'
+        assert output["id"] == "10000"
 
-    @patch('get_versions.get_jira_client')
-    def test_main_version_counts(self, mock_get_client, mock_jira_client, sample_version,
-                                  sample_version_issue_counts, sample_version_unresolved_count, capsys):
+    @patch("get_versions.get_jira_client")
+    def test_main_version_counts(
+        self,
+        mock_get_client,
+        mock_jira_client,
+        sample_version,
+        sample_version_issue_counts,
+        sample_version_unresolved_count,
+        capsys,
+    ):
         """Test main with --id and --counts."""
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_version.return_value = copy.deepcopy(sample_version)
-        mock_jira_client.get_version_issue_counts.return_value = copy.deepcopy(sample_version_issue_counts)
-        mock_jira_client.get_version_unresolved_count.return_value = copy.deepcopy(sample_version_unresolved_count)
+        mock_jira_client.get_version_issue_counts.return_value = copy.deepcopy(
+            sample_version_issue_counts
+        )
+        mock_jira_client.get_version_unresolved_count.return_value = copy.deepcopy(
+            sample_version_unresolved_count
+        )
 
         from get_versions import main
 
-        main(['--id', '10000', '--counts'])
+        main(["--id", "10000", "--counts"])
 
         captured = capsys.readouterr()
-        assert 'Issue Counts' in captured.out
-        assert 'Fixed:' in captured.out
+        assert "Issue Counts" in captured.out
+        assert "Fixed:" in captured.out
 
-    @patch('get_versions.get_jira_client')
-    def test_main_with_profile(self, mock_get_client, mock_jira_client, sample_versions_list, capsys):
+    @patch("get_versions.get_jira_client")
+    def test_main_with_profile(
+        self, mock_get_client, mock_jira_client, sample_versions_list, capsys
+    ):
         """Test main with --profile."""
         mock_get_client.return_value = mock_jira_client
         mock_jira_client.get_versions.return_value = copy.deepcopy(sample_versions_list)
 
         from get_versions import main
 
-        main(['PROJ', '--profile', 'dev'])
+        main(["PROJ", "--profile", "dev"])
 
-        mock_get_client.assert_called_with('dev')
+        mock_get_client.assert_called_with("dev")
 
-    @patch('get_versions.get_jira_client')
+    @patch("get_versions.get_jira_client")
     def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):
         """Test main with JIRA API error."""
         from jira_assistant_skills_lib import JiraError
+
         mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_versions.side_effect = JiraError("API Error", status_code=500)
+        mock_jira_client.get_versions.side_effect = JiraError(
+            "API Error", status_code=500
+        )
 
         from get_versions import main
 
         with pytest.raises(SystemExit) as exc_info:
-            main(['PROJ'])
+            main(["PROJ"])
 
         assert exc_info.value.code == 1
