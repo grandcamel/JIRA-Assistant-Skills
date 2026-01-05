@@ -20,9 +20,13 @@ def lifecycle():
 @click.option("--id", "transition_id", help="Transition ID (alternative to --to)")
 @click.option("--comment", "-c", help="Add a comment with the transition")
 @click.option("--resolution", "-r", help="Resolution (for Done transitions)")
-@click.option("--sprint", "-s", type=int, help="Sprint ID to move issue to after transition")
+@click.option(
+    "--sprint", "-s", type=int, help="Sprint ID to move issue to after transition"
+)
 @click.option("--fields", help="Additional fields as JSON string")
-@click.option("--dry-run", "-n", is_flag=True, help="Preview changes without making them")
+@click.option(
+    "--dry-run", "-n", is_flag=True, help="Preview changes without making them"
+)
 @click.pass_context
 def lifecycle_transition(
     ctx,
@@ -47,7 +51,9 @@ def lifecycle_transition(
         jira lifecycle transition PROJ-123 --to "In Progress" --sprint 42
     """
     if not status and not transition_id:
-        raise click.UsageError("Specify either --to (status name) or --id (transition ID)")
+        raise click.UsageError(
+            "Specify either --to (status name) or --id (transition ID)"
+        )
     if status and transition_id:
         raise click.UsageError("Specify only one of --to or --id, not both")
 
@@ -184,7 +190,9 @@ def version_list(ctx, project_key: str, unreleased: bool, archived: bool):
 @click.option("--release-date", help="Release date (YYYY-MM-DD)")
 @click.option("--released", is_flag=True, help="Mark version as released")
 @click.option("--archived", is_flag=True, help="Mark version as archived")
-@click.option("--dry-run", is_flag=True, help="Show what would be created without creating")
+@click.option(
+    "--dry-run", is_flag=True, help="Show what would be created without creating"
+)
 @click.pass_context
 def version_create(
     ctx,
@@ -273,10 +281,14 @@ def component_list(ctx, project_key: str):
 @click.option(
     "--assignee-type",
     "-a",
-    type=click.Choice(["COMPONENT_LEAD", "PROJECT_LEAD", "PROJECT_DEFAULT", "UNASSIGNED"]),
+    type=click.Choice(
+        ["COMPONENT_LEAD", "PROJECT_LEAD", "PROJECT_DEFAULT", "UNASSIGNED"]
+    ),
     help="Default assignee type for issues in this component",
 )
-@click.option("--dry-run", is_flag=True, help="Show what would be created without creating")
+@click.option(
+    "--dry-run", is_flag=True, help="Show what would be created without creating"
+)
 @click.pass_context
 def component_create(
     ctx,
@@ -317,10 +329,14 @@ def component_create(
 @click.option(
     "--assignee-type",
     "-a",
-    type=click.Choice(["COMPONENT_LEAD", "PROJECT_LEAD", "PROJECT_DEFAULT", "UNASSIGNED"]),
+    type=click.Choice(
+        ["COMPONENT_LEAD", "PROJECT_LEAD", "PROJECT_DEFAULT", "UNASSIGNED"]
+    ),
     help="New default assignee type",
 )
-@click.option("--dry-run", is_flag=True, help="Show what would be updated without updating")
+@click.option(
+    "--dry-run", is_flag=True, help="Show what would be updated without updating"
+)
 @click.pass_context
 def component_update(
     ctx,
@@ -366,7 +382,9 @@ def component_update(
 @click.option("--id", "component_id", required=True, help="Component ID to delete")
 @click.option("--move-to", help="Component ID to move issues to before deletion")
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt")
-@click.option("--dry-run", is_flag=True, help="Show what would be deleted without deleting")
+@click.option(
+    "--dry-run", is_flag=True, help="Show what would be deleted without deleting"
+)
 @click.pass_context
 def component_delete(
     ctx,

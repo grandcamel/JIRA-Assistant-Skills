@@ -541,9 +541,7 @@ def approval_pending(ctx, service_desk_id: int):
 @click.argument("issue_key")
 @click.argument("approval_id", type=int)
 @click.option("--comment", "-c", help="Approval comment")
-@click.option(
-    "--yes", "-y", is_flag=True, help="Skip confirmation prompt"
-)
+@click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt")
 @click.option(
     "--dry-run", is_flag=True, help="Show what would be approved without making changes"
 )
@@ -569,9 +567,7 @@ def approval_approve(
 @click.argument("issue_key")
 @click.argument("approval_id", type=int)
 @click.option("--comment", "-c", help="Decline comment")
-@click.option(
-    "--yes", "-y", is_flag=True, help="Skip confirmation prompt"
-)
+@click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt")
 @click.option(
     "--dry-run", is_flag=True, help="Show what would be declined without making changes"
 )

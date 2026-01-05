@@ -60,7 +60,12 @@ def epic_create(
 
 @epic.command(name="get")
 @click.argument("epic_key")
-@click.option("--with-children", "-c", is_flag=True, help="Fetch child issues and calculate progress")
+@click.option(
+    "--with-children",
+    "-c",
+    is_flag=True,
+    help="Fetch child issues and calculate progress",
+)
 @click.pass_context
 def epic_get(ctx, epic_key: str, with_children: bool):
     """Get epic details.
@@ -170,13 +175,24 @@ def sprint_get(ctx, sprint_id: int, include_issues: bool):
 @click.option("--close", is_flag=True, help="Close the sprint")
 @click.option("--name", "-n", help="Update sprint name")
 @click.option("--goal", "-g", help="Update sprint goal")
-@click.option("--move-incomplete-to", type=int, help="Sprint ID to move incomplete issues to (with --close)")
+@click.option(
+    "--move-incomplete-to",
+    type=int,
+    help="Sprint ID to move incomplete issues to (with --close)",
+)
 @click.option("--start-date", help="Start date (YYYY-MM-DD)")
 @click.option("--end-date", help="End date (YYYY-MM-DD)")
 @click.pass_context
 def sprint_manage(
-    ctx, sprint: int, start: bool, close: bool, name: str, goal: str,
-    move_incomplete_to: int, start_date: str, end_date: str
+    ctx,
+    sprint: int,
+    start: bool,
+    close: bool,
+    name: str,
+    goal: str,
+    move_incomplete_to: int,
+    start_date: str,
+    end_date: str,
 ):
     """Manage sprint lifecycle (start, close, update).
 
@@ -373,8 +389,16 @@ def agile_estimates(ctx, sprint: int, project: str, epic: str, group_by: str):
 @click.option("--priority", help="Priority (Highest, High, Medium, Low, Lowest)")
 @click.option("--labels", "-l", help="Comma-separated labels")
 @click.pass_context
-def agile_subtask(ctx, parent: str, summary: str, description: str, assignee: str,
-                  estimate: str, priority: str, labels: str):
+def agile_subtask(
+    ctx,
+    parent: str,
+    summary: str,
+    description: str,
+    assignee: str,
+    estimate: str,
+    priority: str,
+    labels: str,
+):
     """Create a subtask under a parent issue.
 
     Examples:

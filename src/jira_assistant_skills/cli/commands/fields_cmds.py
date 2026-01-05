@@ -12,7 +12,9 @@ def fields():
 @fields.command(name="list")
 @click.option("--filter", "-f", "filter_pattern", help="Filter fields by name pattern")
 @click.option("--agile", "-a", is_flag=True, help="Show only Agile-related fields")
-@click.option("--all", "show_all", is_flag=True, help="Show all fields (not just custom)")
+@click.option(
+    "--all", "show_all", is_flag=True, help="Show all fields (not just custom)"
+)
 @click.pass_context
 def fields_list(ctx, filter_pattern: str, agile: bool, show_all: bool):
     """List all available fields."""
@@ -79,7 +81,10 @@ def fields_check_project(ctx, project_key: str, issue_type: str, check_agile: bo
 @click.option("--story-points", help="Story Points field ID")
 @click.option("--sprint", help="Sprint field ID")
 @click.option(
-    "--dry-run", "-n", is_flag=True, help="Show what would be done without making changes"
+    "--dry-run",
+    "-n",
+    is_flag=True,
+    help="Show what would be done without making changes",
 )
 @click.pass_context
 def fields_configure_agile(

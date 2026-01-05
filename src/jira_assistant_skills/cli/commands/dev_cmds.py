@@ -30,9 +30,7 @@ def dev():
     help="Output format (default: text)",
 )
 @click.pass_context
-def dev_branch_name(
-    ctx, issue_key: str, prefix: str, auto_prefix: bool, output: str
-):
+def dev_branch_name(ctx, issue_key: str, prefix: str, auto_prefix: bool, output: str):
     """Generate a Git branch name from an issue."""
     script_path = SKILLS_ROOT_DIR / "jira-dev" / "scripts" / "create_branch_name.py"
 
@@ -92,9 +90,7 @@ def dev_pr_description(
 
 @dev.command(name="parse-commits")
 @click.argument("message", required=False)
-@click.option(
-    "--from-stdin", is_flag=True, help="Read from stdin (for git log pipe)"
-)
+@click.option("--from-stdin", is_flag=True, help="Read from stdin (for git log pipe)")
 @click.option("--project", "-p", help="Filter by project key")
 @click.option(
     "--output",
@@ -104,9 +100,7 @@ def dev_pr_description(
     help="Output format (default: text)",
 )
 @click.pass_context
-def dev_parse_commits(
-    ctx, message: str, from_stdin: bool, project: str, output: str
-):
+def dev_parse_commits(ctx, message: str, from_stdin: bool, project: str, output: str):
     """Parse commit messages to extract JIRA issue keys.
 
     Examples:
@@ -165,9 +159,7 @@ def dev_link_commit(
 )
 @click.option("--author", "-a", help="PR author")
 @click.pass_context
-def dev_link_pr(
-    ctx, issue_key: str, pr: str, title: str, status: str, author: str
-):
+def dev_link_pr(ctx, issue_key: str, pr: str, title: str, status: str, author: str):
     """Link a Pull Request to a JIRA issue."""
     script_path = SKILLS_ROOT_DIR / "jira-dev" / "scripts" / "link_pr.py"
 
@@ -184,7 +176,9 @@ def dev_link_pr(
 
 @dev.command(name="get-commits")
 @click.argument("issue_key")
-@click.option("--detailed", "-d", is_flag=True, help="Include commit message and author details")
+@click.option(
+    "--detailed", "-d", is_flag=True, help="Include commit message and author details"
+)
 @click.option("--repo", "-r", help="Filter by repository name")
 @click.option(
     "--output",

@@ -1042,3 +1042,120 @@ grep "SubagentStart" ~/.claude/debug/<session-id>.txt
 4. **Specify format** - Define the exact output structure expected
 5. **Limit scope** - Each subagent should have a focused, completable task
 6. **Track with TodoWrite** - Use TodoWrite in the orchestrator to track subagent status
+
+## Coding Subagent Pattern with Git Worktrees
+
+For parallel code changes across multiple skills/components, use git worktrees to isolate each subagent's work. This prevents merge conflicts during development and enables clean sequential rebasing.
+
+### When to Use
+
+- Implementing fixes across multiple skills in parallel
+- Large refactoring tasks that touch many files
+- Any parallel coding work where subagents modify overlapping files
+
+### Pattern: Worktree Isolation
+
+Each coding subagent:
+1. Creates a git worktree in a parallel directory
+2. Works on its own branch
+3. Commits changes independently
+4. Writes a summary file (not committed to main)
+
+```
+# Worktree structure:
+../Jira-Assistant-Skills-fix/
+├── jira-issue-fix/        [fix/jira-issue]
+├── jira-lifecycle-fix/    [fix/jira-lifecycle]
+├── jira-search-fix/       [fix/jira-search]
+└── ...                    [fix/<skill>]
+```
+
+### Coding Subagent Prompt Template
+
+```
+You are implementing fixes for the <skill-name> skill based on SKILL_FIX_PLAN.md.
+
+**Setup (do this first):**
+1. Create worktree: git worktree add ../Jira-Assistant-Skills-fix/<skill>-fix -b fix/<skill>
+2. Change to worktree: cd ../Jira-Assistant-Skills-fix/<skill>-fix
+
+**Your task:**
+1. Read the fix plan at: <path-to-SKILL_FIX_PLAN.md>
+2. Implement the Priority 1 fixes in the CLI wrapper
+3. Update SKILL.md documentation to match
+4. Commit with conventional commit format: fix(<skill>): <description>
+5. Write FIX_SUMMARY.md documenting what you changed (do NOT commit this file)
+
+**Commit message format:**
+fix(<skill>): align CLI wrapper with script interfaces
+
+- List specific changes made
+- Reference the fix plan
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+### Sequential Rebase Process
+
+After all subagents complete, rebase and merge one branch at a time:
+
+```bash
+# 1. Stash any local changes in main
+git stash
+
+# 2. For each skill branch, in order:
+cd /path/to/worktree/<skill>-fix
+git fetch origin main
+git rebase origin/main
+
+# 3. Return to main and merge
+cd /path/to/main/repo
+git merge fix/<skill> --no-edit
+
+# 4. Push main so next rebase picks up changes
+git push origin main
+
+# 5. Clean up worktree and branch
+git worktree remove --force /path/to/worktree/<skill>-fix
+git branch -d fix/<skill>
+
+# 6. Repeat for next skill
+```
+
+### Key Lessons Learned
+
+1. **Push after each merge** - Worktrees track origin/main, so push main after each merge so subsequent rebases pick up the changes
+
+2. **Watch for uncommitted files** - Subagents may write summary files (FIX_SUMMARY.md) that shouldn't be merged. Use `--force` when removing worktrees with untracked files
+
+3. **Check for reverted changes** - If a subagent branch was created before other branches were merged, it may contain changes that revert already-merged work. Rebasing resolves this automatically
+
+4. **Stash before starting** - If main has uncommitted changes from a previous session, stash them before beginning the rebase process
+
+5. **One conflict source** - Conflicts only occur during rebase, not during parallel development. This makes them easier to resolve sequentially
+
+6. **Recreate commits if needed** - If a subagent committed files that shouldn't be merged (like FIX_SUMMARY.md), reset and recreate the commit:
+   ```bash
+   git reset HEAD~1
+   rm FIX_SUMMARY.md
+   git add -A
+   git commit -m "fix(<skill>): <description>"
+   ```
+
+7. **Verify with tests** - After all merges complete, run the full test suite to verify nothing broke:
+   ```bash
+   ./scripts/run_tests.sh
+   ```
+
+### Successful Example: 14-Skill CLI Alignment
+
+This pattern was used to fix CLI wrapper inconsistencies across all 14 skills:
+
+1. **Phase 1 - Analysis:** 14 parallel review subagents wrote SKILL_FIX_PLAN.md files
+2. **Phase 2 - Implementation:** 14 parallel coding subagents created worktrees and implemented fixes
+3. **Phase 3 - Integration:** Sequential rebase of all 14 branches onto main
+4. **Result:** 2,840 unit tests passing, release v2.2.7 published
+
+Total commits merged: 15 (14 skill fixes + 1 documentation update)

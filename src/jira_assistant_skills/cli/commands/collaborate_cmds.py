@@ -60,12 +60,33 @@ def comment_add(
 @comment.command(name="list")
 @click.argument("issue_key")
 @click.option("--id", help="Get specific comment by ID")
-@click.option("--limit", "-l", type=int, default=50, help="Maximum number of comments to return (default: 50)")
-@click.option("--offset", type=int, default=0, help="Starting index for pagination (default: 0)")
-@click.option("--order", type=click.Choice(["asc", "desc"]), default="desc", help="Sort order: asc (oldest first) or desc (newest first)")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--limit",
+    "-l",
+    type=int,
+    default=50,
+    help="Maximum number of comments to return (default: 50)",
+)
+@click.option(
+    "--offset", type=int, default=0, help="Starting index for pagination (default: 0)"
+)
+@click.option(
+    "--order",
+    type=click.Choice(["asc", "desc"]),
+    default="desc",
+    help="Sort order: asc (oldest first) or desc (newest first)",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
-def comment_list(ctx, issue_key: str, id: str, limit: int, offset: int, order: str, output: str):
+def comment_list(
+    ctx, issue_key: str, id: str, limit: int, offset: int, order: str, output: str
+):
     """List comments on an issue.
 
     Examples:
@@ -123,7 +144,9 @@ def comment_update(ctx, issue_key: str, comment_id: str, body: str, body_format:
 @click.argument("issue_key")
 @click.option("--id", "-i", "comment_id", required=True, help="Comment ID to delete")
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt")
-@click.option("--dry-run", is_flag=True, help="Show what would be deleted without deleting")
+@click.option(
+    "--dry-run", is_flag=True, help="Show what would be deleted without deleting"
+)
 @click.pass_context
 def comment_delete(ctx, issue_key: str, comment_id: str, yes: bool, dry_run: bool):
     """Delete a comment.
@@ -196,10 +219,16 @@ def attachment_download(ctx, issue_key: str, attachment_id: str, output: str):
 @collaborate.command(name="watchers")
 @click.argument("issue_key")
 @click.option("--add", "-a", "add_user", help="Add watcher (account ID or email)")
-@click.option("--remove", "-r", "remove_user", help="Remove watcher (account ID or email)")
-@click.option("--list", "-l", "list_watchers", is_flag=True, help="List current watchers")
+@click.option(
+    "--remove", "-r", "remove_user", help="Remove watcher (account ID or email)"
+)
+@click.option(
+    "--list", "-l", "list_watchers", is_flag=True, help="List current watchers"
+)
 @click.pass_context
-def collaborate_watchers(ctx, issue_key: str, add_user: str, remove_user: str, list_watchers: bool):
+def collaborate_watchers(
+    ctx, issue_key: str, add_user: str, remove_user: str, list_watchers: bool
+):
     """Manage watchers on an issue.
 
     Examples:
@@ -228,13 +257,46 @@ def collaborate_watchers(ctx, issue_key: str, add_user: str, remove_user: str, l
 # Activity feed
 @collaborate.command(name="activity")
 @click.argument("issue_key")
-@click.option("--limit", "-l", type=int, default=100, help="Maximum number of changelog entries (default: 100)")
-@click.option("--offset", type=int, default=0, help="Starting position for pagination (default: 0)")
-@click.option("--field", "-f", multiple=True, help="Filter by field name (can be repeated)")
-@click.option("--field-type", "-t", type=click.Choice(["jira", "custom"]), multiple=True, help="Filter by field type: jira (built-in) or custom")
-@click.option("--output", "-o", type=click.Choice(["table", "json"]), default="table", help="Output format")
+@click.option(
+    "--limit",
+    "-l",
+    type=int,
+    default=100,
+    help="Maximum number of changelog entries (default: 100)",
+)
+@click.option(
+    "--offset",
+    type=int,
+    default=0,
+    help="Starting position for pagination (default: 0)",
+)
+@click.option(
+    "--field", "-f", multiple=True, help="Filter by field name (can be repeated)"
+)
+@click.option(
+    "--field-type",
+    "-t",
+    type=click.Choice(["jira", "custom"]),
+    multiple=True,
+    help="Filter by field type: jira (built-in) or custom",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["table", "json"]),
+    default="table",
+    help="Output format",
+)
 @click.pass_context
-def collaborate_activity(ctx, issue_key: str, limit: int, offset: int, field: tuple, field_type: tuple, output: str):
+def collaborate_activity(
+    ctx,
+    issue_key: str,
+    limit: int,
+    offset: int,
+    field: tuple,
+    field_type: tuple,
+    output: str,
+):
     """Get activity feed for an issue.
 
     Examples:
@@ -263,8 +325,15 @@ def collaborate_activity(ctx, issue_key: str, limit: int, offset: int, field: tu
 # Notifications
 @collaborate.command(name="notify")
 @click.argument("issue_key")
-@click.option("--user", "-u", multiple=True, help="Notify specific user by account ID (can be repeated)")
-@click.option("--group", "-g", multiple=True, help="Notify group by name (can be repeated)")
+@click.option(
+    "--user",
+    "-u",
+    multiple=True,
+    help="Notify specific user by account ID (can be repeated)",
+)
+@click.option(
+    "--group", "-g", multiple=True, help="Notify group by name (can be repeated)"
+)
 @click.option("--watchers", is_flag=True, help="Notify all watchers")
 @click.option("--assignee", is_flag=True, help="Notify assignee")
 @click.option("--reporter", is_flag=True, help="Notify reporter")
@@ -274,8 +343,17 @@ def collaborate_activity(ctx, issue_key: str, limit: int, offset: int, field: tu
 @click.option("--dry-run", is_flag=True, help="Show what would be sent without sending")
 @click.pass_context
 def collaborate_notify(
-    ctx, issue_key: str, user: tuple, group: tuple, watchers: bool, assignee: bool,
-    reporter: bool, voters: bool, subject: str, body: str, dry_run: bool
+    ctx,
+    issue_key: str,
+    user: tuple,
+    group: tuple,
+    watchers: bool,
+    assignee: bool,
+    reporter: bool,
+    voters: bool,
+    subject: str,
+    body: str,
+    dry_run: bool,
 ):
     """Send a notification about an issue.
 

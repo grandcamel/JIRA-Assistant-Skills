@@ -83,11 +83,18 @@ def relationships_link(
     "link_type",
     help="Link type to remove (use with --all to remove all of this type)",
 )
-@click.option("--all", "-a", "remove_all", is_flag=True, help="Remove all links of specified type")
+@click.option(
+    "--all", "-a", "remove_all", is_flag=True, help="Remove all links of specified type"
+)
 @click.option("--dry-run", "-n", is_flag=True, help="Preview without deleting")
 @click.pass_context
 def relationships_unlink(
-    ctx, source_issue: str, target_issue: str, link_type: str, remove_all: bool, dry_run: bool
+    ctx,
+    source_issue: str,
+    target_issue: str,
+    link_type: str,
+    remove_all: bool,
+    dry_run: bool,
 ):
     """Remove a link between two issues.
 
@@ -163,7 +170,12 @@ def relationships_get_blockers(
 
 @relationships.command(name="get-dependencies")
 @click.argument("issue_key")
-@click.option("--type", "-t", "link_types", help="Comma-separated link types to include (e.g., blocks,relates)")
+@click.option(
+    "--type",
+    "-t",
+    "link_types",
+    help="Comma-separated link types to include (e.g., blocks,relates)",
+)
 @click.option(
     "--output",
     "-o",
@@ -200,7 +212,12 @@ def relationships_get_dependencies(ctx, issue_key: str, link_types: str, output:
 
 
 @relationships.command(name="link-types")
-@click.option("--filter", "-f", "filter_pattern", help="Filter link types by name pattern (case-insensitive)")
+@click.option(
+    "--filter",
+    "-f",
+    "filter_pattern",
+    help="Filter link types by name pattern (case-insensitive)",
+)
 @click.option(
     "--output",
     "-o",
@@ -231,7 +248,9 @@ def relationships_link_types(ctx, filter_pattern: str, output: str):
 
 @relationships.command(name="clone")
 @click.argument("issue_key")
-@click.option("--to-project", "-p", help="Target project key (defaults to same project)")
+@click.option(
+    "--to-project", "-p", help="Target project key (defaults to same project)"
+)
 @click.option("--summary", "-s", help="Custom summary for cloned issue")
 @click.option("--clone-links", "-l", is_flag=True, help="Clone issue links")
 @click.option("--clone-subtasks", is_flag=True, help="Clone subtasks")
@@ -353,8 +372,20 @@ def relationships_bulk_link(
 @click.argument("key_or_project", required=False)
 @click.option("--project", "-p", help="Project key to analyze all issues")
 @click.option("--jql", "-j", help="JQL query to find issues to analyze")
-@click.option("--top", "-t", type=int, default=10, help="Number of most-connected issues to show (default: 10)")
-@click.option("--max-results", "-m", type=int, default=500, help="Maximum issues to analyze (default: 500)")
+@click.option(
+    "--top",
+    "-t",
+    type=int,
+    default=10,
+    help="Number of most-connected issues to show (default: 10)",
+)
+@click.option(
+    "--max-results",
+    "-m",
+    type=int,
+    default=500,
+    help="Maximum issues to analyze (default: 500)",
+)
 @click.option(
     "--output",
     "-o",
