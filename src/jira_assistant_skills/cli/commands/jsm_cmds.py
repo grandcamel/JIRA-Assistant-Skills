@@ -210,14 +210,32 @@ def request_comment(ctx, issue_key: str, body: str, internal: bool):
 @request.command(name="comments")
 @click.argument("issue_key")
 @click.option("--public-only", "-p", is_flag=True, help="Show only public comments")
+@click.option(
+    "--internal-only", is_flag=True, help="Show only internal (agent-only) comments"
+)
+@click.option("--id", "comment_id", help="Get specific comment by ID")
+@click.option("--all-pages", is_flag=True, help="Fetch all pages (default: first 100)")
 @click.pass_context
-def request_comments(ctx, issue_key: str, public_only: bool):
+def request_comments(
+    ctx,
+    issue_key: str,
+    public_only: bool,
+    internal_only: bool,
+    comment_id: str,
+    all_pages: bool,
+):
     """Get comments for a request."""
     script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "get_request_comments.py"
 
     script_args = [issue_key]
     if public_only:
         script_args.append("--public-only")
+    if internal_only:
+        script_args.append("--internal-only")
+    if comment_id:
+        script_args.extend(["--id", comment_id])
+    if all_pages:
+        script_args.append("--all-pages")
 
     run_skill_script_subprocess(script_path, script_args, ctx)
 
@@ -389,13 +407,15 @@ def queue():
 
 @queue.command(name="list")
 @click.argument("service_desk_id", type=int)
+@click.option("--show-jql", is_flag=True, help="Show JQL queries for each queue")
 @click.pass_context
-def queue_list(ctx, service_desk_id: int):
+def queue_list(ctx, service_desk_id: int, show_jql: bool):
     """List queues for a service desk."""
     script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "list_queues.py"
-    run_skill_script_subprocess(
-        script_path, ["--service-desk", str(service_desk_id)], ctx
-    )
+    script_args = ["--service-desk", str(service_desk_id)]
+    if show_jql:
+        script_args.append("--show-jql")
+    run_skill_script_subprocess(script_path, script_args, ctx)
 
 
 @queue.command(name="get")
@@ -521,14 +541,26 @@ def approval_pending(ctx, service_desk_id: int):
 @click.argument("issue_key")
 @click.argument("approval_id", type=int)
 @click.option("--comment", "-c", help="Approval comment")
+@click.option(
+    "--yes", "-y", is_flag=True, help="Skip confirmation prompt"
+)
+@click.option(
+    "--dry-run", is_flag=True, help="Show what would be approved without making changes"
+)
 @click.pass_context
-def approval_approve(ctx, issue_key: str, approval_id: int, comment: str):
+def approval_approve(
+    ctx, issue_key: str, approval_id: int, comment: str, yes: bool, dry_run: bool
+):
     """Approve a request."""
     script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "approve_request.py"
 
-    script_args = [issue_key, str(approval_id)]
+    script_args = [issue_key, "--approval-id", str(approval_id)]
     if comment:
         script_args.extend(["--comment", comment])
+    if yes:
+        script_args.append("--yes")
+    if dry_run:
+        script_args.append("--dry-run")
 
     run_skill_script_subprocess(script_path, script_args, ctx)
 
@@ -537,14 +569,26 @@ def approval_approve(ctx, issue_key: str, approval_id: int, comment: str):
 @click.argument("issue_key")
 @click.argument("approval_id", type=int)
 @click.option("--comment", "-c", help="Decline comment")
+@click.option(
+    "--yes", "-y", is_flag=True, help="Skip confirmation prompt"
+)
+@click.option(
+    "--dry-run", is_flag=True, help="Show what would be declined without making changes"
+)
 @click.pass_context
-def approval_decline(ctx, issue_key: str, approval_id: int, comment: str):
+def approval_decline(
+    ctx, issue_key: str, approval_id: int, comment: str, yes: bool, dry_run: bool
+):
     """Decline a request."""
     script_path = SKILLS_ROOT_DIR / "jira-jsm" / "scripts" / "decline_request.py"
 
-    script_args = [issue_key, str(approval_id)]
+    script_args = [issue_key, "--approval-id", str(approval_id)]
     if comment:
         script_args.extend(["--comment", comment])
+    if yes:
+        script_args.append("--yes")
+    if dry_run:
+        script_args.append("--dry-run")
 
     run_skill_script_subprocess(script_path, script_args, ctx)
 

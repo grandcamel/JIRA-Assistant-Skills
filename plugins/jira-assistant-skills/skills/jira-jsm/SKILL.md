@@ -65,14 +65,23 @@ jira jsm service-desk list
 # 2. List request types for your service desk
 jira jsm request-type list 1
 
-# 3. Create an incident
-jira jsm request create 1 10 --summary "Email service down"
+# 3. Create an incident (both summary AND description are required)
+jira jsm request create 1 10 --summary "Email service down" --description "Production email server is not responding to connections"
 
 # 4. Check SLA status
 jira jsm sla get SD-123
 
-# 5. Approve a pending request (issue_key, approval_id)
-jira jsm approval approve SD-124 1001 --comment "Approved"
+# 5. Add a comment to a request (body is positional, before flags)
+jira jsm request comment SD-123 "Looking into this issue now"
+
+# 6. Add an internal comment (agent-only, not visible to customers)
+jira jsm request comment SD-123 "Escalating to Tier 2 support" --internal
+
+# 7. Approve a pending request (issue_key, approval_id)
+jira jsm approval approve SD-124 1001 --comment "Approved" --yes
+
+# 8. Preview approval without executing (dry-run)
+jira jsm approval approve SD-124 1001 --dry-run
 ```
 
 For detailed setup instructions, see [docs/QUICK_START.md](docs/QUICK_START.md).
