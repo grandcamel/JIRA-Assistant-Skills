@@ -1,6 +1,6 @@
 ---
 name: "jira-assistant"
-description: "JIRA automation hub routing to 14 specialized skills for any JIRA task: issues, workflows, agile, search, time tracking, service management, and more."
+description: "JIRA automation hub routing to 13 specialized skills for any JIRA task: issues, workflows, agile, search, time tracking, service management, and more."
 version: "2.1.0"
 # Implements: SKILLS_ROUTER_SKILL_PROPOSAL v2.1
 author: "jira-assistant-skills"
@@ -18,17 +18,17 @@ This hub routes requests to specialized JIRA skills. It does not execute JIRA op
 |--------------|----------------|:----:|
 | Create/edit/delete a single issue | jira-issue | ⚠️ |
 | Search with JQL, export results | jira-search | - |
-| Change status, assign, set versions | jira-lifecycle | ⚠️ |
-| Manage sprints, epics, story points | jira-agile | - |
+| Change status, assign, resolve, manage versions/components | jira-lifecycle | ⚠️ |
+| Manage sprints, epics, subtasks, story points | jira-agile | - |
 | Add comments, attachments, watchers | jira-collaborate | - |
-| Link issues, view dependencies | jira-relationships | - |
-| Log time, manage worklogs | jira-time | - |
-| Handle service desk requests | jira-jsm | - |
+| Link issues, view dependencies, blocker chains | jira-relationships | - |
+| Log time, manage worklogs, time reports | jira-time | - |
+| Handle service desk requests, SLAs, queues | jira-jsm | - |
 | Update 10+ issues at once | jira-bulk | ⚠️⚠️ |
-| Generate Git branch names, PR descriptions | jira-dev | - |
+| Git branch names, commits, PR descriptions | jira-dev | - |
 | Find custom field IDs | jira-fields | - |
-| Manage cache, diagnostics | jira-ops | - |
-| Project settings, permissions | jira-admin | ⚠️⚠️ |
+| Project discovery, cache management, diagnostics | jira-ops | - |
+| Project settings, permissions, automation rules | jira-admin | ⚠️⚠️ |
 
 **Risk Legend**: `-` Read-only/safe | `⚠️` Has destructive ops (confirm) | `⚠️⚠️` High-risk (confirm + dry-run)
 
@@ -41,16 +41,16 @@ This hub routes requests to specialized JIRA skills. It does not execute JIRA op
 3. **Quantity determines bulk** - More than 10 issues → jira-bulk
 4. **Keywords drive routing**:
    - "search", "find", "JQL", "filter" → jira-search
-   - "sprint", "epic", "backlog", "story points" → jira-agile
+   - "sprint", "epic", "backlog", "story points", "subtask" → jira-agile
    - "transition", "move to", "assign", "close" → jira-lifecycle
    - "comment", "attach", "watch" → jira-collaborate
-   - "link", "blocks", "depends on", "clone" → jira-relationships
-   - "log time", "worklog", "estimate" → jira-time
-   - "service desk", "SLA", "customer", "request" → jira-jsm
+   - "link", "blocks", "depends on", "clone", "dependency graph", "blocker chain" → jira-relationships
+   - "log time", "worklog", "estimate", "time report", "timesheet" → jira-time
+   - "service desk", "SLA", "customer", "request", "queue", "approval", "knowledge base", "asset" → jira-jsm
    - "branch name", "commit", "PR" → jira-dev
    - "custom field", "field ID" → jira-fields
-   - "cache", "warm cache" → jira-ops
-   - "permissions", "project settings" → jira-admin
+   - "cache", "warm cache", "project discovery" → jira-ops
+   - "permissions", "project settings", "automation", "automation rule" → jira-admin
 
 ---
 
@@ -61,13 +61,13 @@ This hub routes requests to specialized JIRA skills. It does not execute JIRA op
 | jira-issue | Bulk (>10), transitions, comments, sprints, time | jira-bulk, jira-lifecycle, jira-collaborate, jira-agile, jira-time |
 | jira-search | Single issue lookup, issue modifications | jira-issue, jira-bulk |
 | jira-lifecycle | Field updates, bulk transitions | jira-issue, jira-bulk |
-| jira-agile | Issue CRUD (except epic), JQL, time tracking | jira-issue, jira-search, jira-time |
+| jira-agile | Issue CRUD (except epic/subtask), JQL, time tracking | jira-issue, jira-search, jira-time |
 | jira-bulk | Single issue ops, sprint management | jira-issue, jira-agile |
 | jira-collaborate | Field updates, bulk comments | jira-issue, jira-bulk |
 | jira-relationships | Field updates, epic/sprint linking | jira-issue, jira-agile |
 | jira-time | SLA tracking, date-based searches | jira-jsm, jira-search |
 | jira-jsm | Standard project issues, non-service-desk searches | jira-issue, jira-search |
-| jira-dev | Issue field updates, commit searching | jira-issue, jira-search |
+| jira-dev | Issue field updates, JQL searches | jira-issue, jira-search |
 | jira-fields | Field value searching, field value updates | jira-search, jira-issue |
 | jira-ops | Project configuration, issue operations | jira-admin, jira-issue |
 | jira-admin | Issue CRUD, bulk operations | jira-issue, jira-bulk |
@@ -148,7 +148,8 @@ After 5+ messages or 5+ minutes since last reference:
 
 ### Create Epic with Stories
 1. Use jira-agile to create the epic → Note epic key (e.g., TES-100)
-2. Use jira-issue to create each story → Link to TES-100
+2. Use jira-issue to create each story with `--epic TES-100` flag to link during creation
+   - Alternatively: create stories first, then use `jira agile epic add-issues` to link existing issues
 3. Confirm: "Created epic TES-100 with N stories"
 
 ### Bulk Close from Search
