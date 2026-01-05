@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jira-assistant-skills"
-version = "2.2.4"
+version = "2.2.5"
 description = "A collection of CLI-based assistant skills for interacting with Jira."
 readme = "README.md"
 requires-python = ">=3.9"
