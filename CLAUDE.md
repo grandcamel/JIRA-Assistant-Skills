@@ -930,6 +930,124 @@ This script:
 ./scripts/run-e2e-tests.sh --verbose # Verbose
 ```
 
+## Git Workflow
+
+### Branch Strategy
+
+**CRITICAL: Never push directly to `origin/main`.** Local `main` is read-only and should only be updated from GitHub.
+
+| Branch | Purpose | Push to origin? |
+|--------|---------|-----------------|
+| `main` | Read-only mirror of GitHub | **NO** - only pull |
+| `dev` | Default local development | Yes, for backup |
+| `feature/*`, `fix/*`, `docs/*` | PR branches | Yes, for PRs |
+
+### Default Development Flow
+
+1. **Start work on a feature branch or `dev`:**
+   ```bash
+   # Option 1: Use dev branch for ongoing work
+   git checkout dev
+
+   # Option 2: Create feature branch for specific task
+   git checkout -b feature/my-feature
+   ```
+
+2. **Make commits locally** - commit freely to your working branch
+
+3. **When ready to merge to main, create a PR:**
+   - Ask the user what branch name to use for the PR
+   - Create and push the PR branch
+   - Create the PR via `gh pr create`
+
+### Creating Pull Requests
+
+**Only create PRs when explicitly requested by the user.** Do NOT proactively create PRs.
+
+When the user asks for a PR:
+
+1. **Ask for branch name** if not specified:
+   ```
+   "What branch name would you like for the PR? (e.g., feature/add-caching, fix/login-bug)"
+   ```
+
+2. **Create PR branch from current work:**
+   ```bash
+   # If on dev with uncommitted changes
+   git checkout -b <pr-branch-name>
+   git add -A
+   git commit -m "<conventional commit message>"
+
+   # If commits already exist on dev
+   git checkout -b <pr-branch-name>
+   ```
+
+3. **Push and create PR:**
+   ```bash
+   git push -u origin <pr-branch-name>
+   gh pr create --title "<title>" --body "<description>" --base main --head <pr-branch-name>
+   ```
+
+### Pushing Local Commits
+
+When pushing local commits (without a PR request), use `dev` or a feature branch:
+
+```bash
+# Option 1: Push to dev (default for ongoing work)
+git checkout dev
+git add -A
+git commit -m "<conventional commit message>"
+git push origin dev
+
+# Option 2: Push to feature branch (for specific features)
+git checkout -b feature/my-feature
+git add -A
+git commit -m "<conventional commit message>"
+git push -u origin feature/my-feature
+```
+
+**Do NOT** automatically create PRs when pushing - wait for user to request one.
+
+### Keeping Local Main Updated
+
+Local `main` should only receive changes from GitHub after PRs are merged:
+
+```bash
+# Update local main from GitHub (never the reverse)
+git checkout main
+git pull --rebase origin main
+
+# Then rebase your working branch
+git checkout dev
+git rebase main
+```
+
+### What NOT to Do
+
+```bash
+# ❌ NEVER do this
+git checkout main
+git commit -m "some change"
+git push origin main
+
+# ❌ NEVER do this
+git push origin main
+
+# ❌ NEVER commit directly to main
+git checkout main && git add . && git commit
+```
+
+### Quick Reference
+
+| Action | Command |
+|--------|---------|
+| Start new work | `git checkout dev` or `git checkout -b feature/name` |
+| Update from GitHub | `git checkout main && git pull --rebase origin main` |
+| Create PR branch | `git checkout -b <branch-name>` |
+| Push PR branch | `git push -u origin <branch-name>` |
+| After PR merged | `git checkout main && git pull --rebase origin main` |
+| Clean up PR branch | `git branch -d <branch-name>` |
+
 ## Best Practices
 
 - Always use `#!/usr/bin/env bash` shebang for bash scripts
@@ -937,6 +1055,8 @@ This script:
 - Run `./scripts/run_tests.sh` before committing to ensure all tests pass
 - When a force push is required, always use --force-with-lease
 - Always use `--rebase` with git pull
+- **Never push directly to `origin/main`** - always use PR branches
+- **Ask for PR branch names** before creating pull requests
 
 ## Parallel Subagent Pattern
 
