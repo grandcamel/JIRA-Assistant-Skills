@@ -981,6 +981,124 @@ This script:
 ./scripts/run-e2e-tests.sh --verbose # Verbose
 ```
 
+## Git Workflow
+
+### Branch Strategy
+
+**CRITICAL: Never push directly to `origin/main`.** Local `main` is read-only and should only be updated from GitHub.
+
+| Branch | Purpose | Push to origin? |
+|--------|---------|-----------------|
+| `main` | Read-only mirror of GitHub | **NO** - only pull |
+| `dev` | Default local development | Yes, for backup |
+| `feature/*`, `fix/*`, `docs/*` | PR branches | Yes, for PRs |
+
+### Default Development Flow
+
+1. **Start work on a feature branch or `dev`:**
+   ```bash
+   # Option 1: Use dev branch for ongoing work
+   git checkout dev
+
+   # Option 2: Create feature branch for specific task
+   git checkout -b feature/my-feature
+   ```
+
+2. **Make commits locally** - commit freely to your working branch
+
+3. **When ready to merge to main, create a PR:**
+   - Ask the user what branch name to use for the PR
+   - Create and push the PR branch
+   - Create the PR via `gh pr create`
+
+### Creating Pull Requests
+
+**Only create PRs when explicitly requested by the user.** Do NOT proactively create PRs.
+
+When the user asks for a PR:
+
+1. **Ask for branch name** if not specified:
+   ```
+   "What branch name would you like for the PR? (e.g., feature/add-caching, fix/login-bug)"
+   ```
+
+2. **Create PR branch from current work:**
+   ```bash
+   # If on dev with uncommitted changes
+   git checkout -b <pr-branch-name>
+   git add -A
+   git commit -m "<conventional commit message>"
+
+   # If commits already exist on dev
+   git checkout -b <pr-branch-name>
+   ```
+
+3. **Push and create PR:**
+   ```bash
+   git push -u origin <pr-branch-name>
+   gh pr create --title "<title>" --body "<description>" --base main --head <pr-branch-name>
+   ```
+
+### Pushing Local Commits
+
+When pushing local commits (without a PR request), use `dev` or a feature branch:
+
+```bash
+# Option 1: Push to dev (default for ongoing work)
+git checkout dev
+git add -A
+git commit -m "<conventional commit message>"
+git push origin dev
+
+# Option 2: Push to feature branch (for specific features)
+git checkout -b feature/my-feature
+git add -A
+git commit -m "<conventional commit message>"
+git push -u origin feature/my-feature
+```
+
+**Do NOT** automatically create PRs when pushing - wait for user to request one.
+
+### Keeping Local Main Updated
+
+Local `main` should only receive changes from GitHub after PRs are merged:
+
+```bash
+# Update local main from GitHub (never the reverse)
+git checkout main
+git pull --rebase origin main
+
+# Then rebase your working branch
+git checkout dev
+git rebase main
+```
+
+### What NOT to Do
+
+```bash
+# ❌ NEVER do this
+git checkout main
+git commit -m "some change"
+git push origin main
+
+# ❌ NEVER do this
+git push origin main
+
+# ❌ NEVER commit directly to main
+git checkout main && git add . && git commit
+```
+
+### Quick Reference
+
+| Action | Command |
+|--------|---------|
+| Start new work | `git checkout dev` or `git checkout -b feature/name` |
+| Update from GitHub | `git checkout main && git pull --rebase origin main` |
+| Create PR branch | `git checkout -b <branch-name>` |
+| Push PR branch | `git push -u origin <branch-name>` |
+| After PR merged | `git checkout main && git pull --rebase origin main` |
+| Clean up PR branch | `git branch -d <branch-name>` |
+
 ## Best Practices
 
 - Always use `#!/usr/bin/env bash` shebang for bash scripts
@@ -988,10 +1106,18 @@ This script:
 - Run `./scripts/run_tests.sh` before committing to ensure all tests pass
 - When a force push is required, always use --force-with-lease
 - Always use `--rebase` with git pull
+- **Never push directly to `origin/main`** - always use PR branches
+- **Ask for PR branch names** before creating pull requests
 
 ## Parallel Subagent Pattern
 
 For large-scale analysis or review tasks across multiple skills, use parallel subagents to maximize throughput while ensuring results persist even if context is exhausted.
+
+**Mental Model:** Treat subagents as **talented but inexperienced interns**:
+- **Worktrees** are separate cubicles so they don't bump into each other
+- **Context files** are task sheets on their desk explaining exactly what to do
+- **Chunked execution** is checking their work every hour, not waiting until Friday
+- **File-persisted results** ensure their work survives even if they go home early
 
 ### When to Use
 
@@ -1004,9 +1130,19 @@ For large-scale analysis or review tasks across multiple skills, use parallel su
 
 **Key principle:** Each subagent writes its results to a file, so work is preserved even if the orchestrator session ends.
 
+**Structured context files for each subagent:**
+
+| File | Purpose |
+|------|---------|
+| `TASK.md` | Specific task instructions and constraints |
+| `log.md` | Observation-Thought-Action execution trace |
+| `commit.md` | Progress summary (allows "memory" across sessions) |
+| `SKILL_FIX_PLAN.md` | Final output/deliverable |
+
 ```
 # Output files are written to each skill directory:
 plugins/jira-assistant-skills/skills/<skill>/SKILL_FIX_PLAN.md
+plugins/jira-assistant-skills/skills/<skill>/log.md  # Optional execution trace
 ```
 
 ### Example: Skill Review Subagents
@@ -1093,6 +1229,49 @@ grep "SubagentStart" ~/.claude/debug/<session-id>.txt
 4. **Specify format** - Define the exact output structure expected
 5. **Limit scope** - Each subagent should have a focused, completable task
 6. **Track with TodoWrite** - Use TodoWrite in the orchestrator to track subagent status
+7. **Chunked execution** - Don't ask for "the whole feature." Ask for "just step 1," verify, then proceed
+8. **Explicit context injection** - Reference specific filenames, domain terms, and expected behaviors in prompts
+
+### Multi-Agent Coordination
+
+When multiple subagents work on related tasks, use coordination patterns to prevent conflicts.
+
+**Agent Archetypes:** Assign specialized roles to different subagents:
+
+| Archetype | Role | Example Task |
+|-----------|------|--------------|
+| **Architect** | Designs system patterns | "Design the API structure for bulk operations" |
+| **Detective** | Debugging and edge cases | "Find all places where error handling is missing" |
+| **Craftsman** | Code quality and implementation | "Implement the fix according to the plan" |
+| **Reviewer** | Verification and QA | "Review changes for consistency and test coverage" |
+
+**Shared State Coordination:** Use a `WORKTREE_COORDINATION.md` file for multi-agent awareness:
+
+```markdown
+# WORKTREE_COORDINATION.md
+
+## Active Tasks
+| Task | Agent | Status | Worktree |
+|------|-------|--------|----------|
+| fix/jira-issue | agent-1 | in_progress | .worktrees/jira-issue-fix |
+| fix/jira-search | agent-2 | completed | .worktrees/jira-search-fix |
+| fix/jira-agile | unclaimed | pending | - |
+
+## Completed Work
+- [x] jira-search: CLI wrapper aligned (agent-2, 2024-01-05)
+- [ ] jira-issue: In progress (agent-1)
+```
+
+**TODO-Claim Protocol:** Agents should:
+1. Read `WORKTREE_COORDINATION.md` before starting
+2. Claim a task by updating the file (`Status: in_progress`, `Agent: agent-N`)
+3. Mark as completed when done
+4. **Back off** if task is already claimed by another agent
+
+**Observation-Driven Coordination:** Instruct agents to check shared state and skip work if:
+- Another agent has already claimed the task
+- The task is marked as completed
+- Git status shows the target files have already been modified
 
 ## Coding Subagent Pattern with Git Worktrees
 
@@ -1112,13 +1291,44 @@ Each coding subagent:
 3. Commits changes independently
 4. Writes a summary file (not committed to main)
 
+**Worktree Naming Convention:** Use a strict schema to maintain order:
+
 ```
-# Worktree structure:
+# Pattern: .worktrees/<task-type>-<component>--<agent-role>
+.worktrees/fix-jira-issue--craftsman
+.worktrees/fix-jira-search--craftsman
+.worktrees/review-all-skills--detective
+```
+
+**Worktree structure:**
+
+```
 ../Jira-Assistant-Skills-fix/
 ├── jira-issue-fix/        [fix/jira-issue]
 ├── jira-lifecycle-fix/    [fix/jira-lifecycle]
 ├── jira-search-fix/       [fix/jira-search]
 └── ...                    [fix/<skill>]
+```
+
+**Configuration Guards:** Place a `.claude/rules.md` in each worktree to bound agent behavior:
+
+```markdown
+# .claude/rules.md - Constraints for this worktree
+
+## Allowed
+- Modify files in plugins/jira-assistant-skills/skills/jira-issue/
+- Update SKILL.md documentation
+- Run tests with pytest
+
+## Off-Limits
+- Do NOT modify files outside the jira-issue skill
+- Do NOT change shared library code
+- Do NOT commit directly to main branch
+
+## Coding Standards
+- Use Python 3.10+ type hints
+- Follow conventional commit format
+- Run ruff format before committing
 ```
 
 ### Coding Subagent Prompt Template
@@ -1150,40 +1360,52 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### Sequential Rebase Process
 
-After all subagents complete, rebase and merge one branch at a time:
+After all subagents complete, rebase and merge branches to `dev`, then create a PR to `main`:
 
 ```bash
-# 1. Stash any local changes in main
-git stash
+# 1. Start from dev branch
+git checkout dev
+git pull --rebase origin dev 2>/dev/null || true  # OK if dev doesn't exist on origin yet
 
 # 2. For each skill branch, in order:
 cd /path/to/worktree/<skill>-fix
 git fetch origin main
 git rebase origin/main
 
-# 3. Return to main and merge
+# 3. Return to main repo and merge to dev
 cd /path/to/main/repo
+git checkout dev
 git merge fix/<skill> --no-edit
 
-# 4. Push main so next rebase picks up changes
-git push origin main
+# 4. Push dev so next rebase picks up changes
+git push origin dev
 
 # 5. Clean up worktree and branch
 git worktree remove --force /path/to/worktree/<skill>-fix
 git branch -d fix/<skill>
 
-# 6. Repeat for next skill
+# 6. Repeat steps 2-5 for each remaining skill branch
+
+# 7. After ALL merges complete, run tests
+./scripts/run_tests.sh
+
+# 8. Create PR when requested by user
+# (Ask for branch name, or PR directly from dev)
+git push origin dev
+gh pr create --title "<title>" --body "<description>" --base main --head dev
 ```
+
+**Important:** Never merge directly to `main` or push to `origin/main`. All changes go through PRs.
 
 ### Key Lessons Learned
 
-1. **Push after each merge** - Worktrees track origin/main, so push main after each merge so subsequent rebases pick up the changes
+1. **Merge to dev, not main** - Local `main` is read-only. Merge all worktree branches to `dev`, then PR to `main`
 
-2. **Watch for uncommitted files** - Subagents may write summary files (FIX_SUMMARY.md) that shouldn't be merged. Use `--force` when removing worktrees with untracked files
+2. **Push dev after each merge** - So subsequent rebases pick up the changes from previously merged branches
 
-3. **Check for reverted changes** - If a subagent branch was created before other branches were merged, it may contain changes that revert already-merged work. Rebasing resolves this automatically
+3. **Watch for uncommitted files** - Subagents may write summary files (FIX_SUMMARY.md) that shouldn't be merged. Use `--force` when removing worktrees with untracked files
 
-4. **Stash before starting** - If main has uncommitted changes from a previous session, stash them before beginning the rebase process
+4. **Check for reverted changes** - If a subagent branch was created before other branches were merged, it may contain changes that revert already-merged work. Rebasing resolves this automatically
 
 5. **One conflict source** - Conflicts only occur during rebase, not during parallel development. This makes them easier to resolve sequentially
 
@@ -1195,10 +1417,12 @@ git branch -d fix/<skill>
    git commit -m "fix(<skill>): <description>"
    ```
 
-7. **Verify with tests** - After all merges complete, run the full test suite to verify nothing broke:
+7. **Verify with tests before PR** - After all merges to `dev` complete, run the full test suite:
    ```bash
    ./scripts/run_tests.sh
    ```
+
+8. **PR only when requested** - Don't automatically create PRs. Wait for the user to request one, then ask for the branch name
 
 ### Successful Example: 14-Skill CLI Alignment
 
