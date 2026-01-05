@@ -226,15 +226,34 @@ def sprint_move_issues(
 
 # Backlog commands
 @agile.command(name="backlog")
-@click.argument("board_id", type=int)
+@click.option("--board", "-b", type=int, help="Board ID")
+@click.option("--project", "-p", help="Project key (alternative to --board)")
 @click.option("--max-results", "-m", type=int, default=50, help="Maximum results")
 @click.pass_context
-def agile_backlog(ctx, board_id: int, max_results: int):
-    """Get backlog issues for a board."""
+def agile_backlog(ctx, board: int, project: str, max_results: int):
+    """Get backlog issues for a board.
+
+    Specify board using either --board (ID) or --project (key).
+
+    Examples:
+        jira agile backlog --project DEMO
+        jira agile backlog --board 123
+        jira agile backlog --project DEMO --max-results 100
+    """
+    if not board and not project:
+        raise click.UsageError("Either --board or --project is required")
+    if board and project:
+        raise click.UsageError("--board and --project are mutually exclusive")
+
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "get_backlog.py"
-    run_skill_script_subprocess(
-        script_path, [str(board_id), "--max-results", str(max_results)], ctx
-    )
+
+    script_args = ["--max-results", str(max_results)]
+    if board:
+        script_args.extend(["--board", str(board)])
+    if project:
+        script_args.extend(["--project", project])
+
+    run_skill_script_subprocess(script_path, script_args, ctx)
 
 
 # Ranking
@@ -273,16 +292,43 @@ def agile_estimate(ctx, issue_key: str, points: float):
 
 
 @agile.command(name="estimates")
-@click.argument("jql")
-@click.option("--summary", "-s", is_flag=True, help="Show summary statistics")
+@click.option("--sprint", "-s", type=int, help="Sprint ID")
+@click.option("--project", "-p", help="Project key (finds active sprint)")
+@click.option("--epic", "-e", help="Epic key")
+@click.option(
+    "--group-by", "-g", type=click.Choice(["assignee", "status"]), help="Group results"
+)
 @click.pass_context
-def agile_estimates(ctx, jql: str, summary: bool):
-    """Get estimates for issues matching JQL."""
+def agile_estimates(ctx, sprint: int, project: str, epic: str, group_by: str):
+    """Get story point estimates for a sprint, project, or epic.
+
+    Specify source using one of: --sprint, --project, or --epic.
+
+    Examples:
+        jira agile estimates --project DEMO
+        jira agile estimates --sprint 456
+        jira agile estimates --epic PROJ-100
+        jira agile estimates --project DEMO --group-by assignee
+    """
+    if not sprint and not project and not epic:
+        raise click.UsageError("One of --sprint, --project, or --epic is required")
+
+    # Count how many options were provided
+    provided = sum(1 for opt in [sprint, project, epic] if opt)
+    if provided > 1:
+        raise click.UsageError("--sprint, --project, and --epic are mutually exclusive")
+
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "get_estimates.py"
 
-    script_args = [jql]
-    if summary:
-        script_args.append("--summary")
+    script_args = []
+    if sprint:
+        script_args.extend(["--sprint", str(sprint)])
+    if project:
+        script_args.extend(["--project", project])
+    if epic:
+        script_args.extend(["--epic", epic])
+    if group_by:
+        script_args.extend(["--group-by", group_by])
 
     run_skill_script_subprocess(script_path, script_args, ctx)
 
