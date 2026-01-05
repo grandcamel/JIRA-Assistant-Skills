@@ -4,9 +4,10 @@ Get backlog issues for a JIRA board.
 
 Usage:
     python get_backlog.py --board 123
-    python get_backlog.py --board 123 --filter "priority=High"
+    python get_backlog.py --project DEMO
+    python get_backlog.py --project DEMO --filter "priority=High"
     python get_backlog.py --board 123 --group-by epic
-    python get_backlog.py --board 123 --max-results 50
+    python get_backlog.py --project DEMO --max-results 50
 """
 
 import argparse
@@ -24,8 +25,54 @@ from jira_assistant_skills_lib import (
 )
 
 
+def get_board_for_project(
+    project_key: str,
+    profile: str | None = None,
+    client=None,
+) -> int:
+    """
+    Get the board ID for a project.
+
+    Args:
+        project_key: Project key (e.g., DEMO)
+        profile: JIRA profile to use
+        client: JiraClient instance (for testing)
+
+    Returns:
+        Board ID
+
+    Raises:
+        ValidationError: If no boards found for project
+    """
+    if not client:
+        client = get_jira_client(profile)
+        should_close = True
+    else:
+        should_close = False
+
+    try:
+        result = client.get_all_boards(project_key=project_key, max_results=10)
+        boards = result.get("values", [])
+
+        if not boards:
+            raise ValidationError(f"No boards found for project {project_key}")
+
+        # Prefer scrum boards over kanban for backlog
+        scrum_boards = [b for b in boards if b.get("type") == "scrum"]
+        if scrum_boards:
+            return scrum_boards[0]["id"]
+
+        # Fall back to first board
+        return boards[0]["id"]
+
+    finally:
+        if should_close:
+            client.close()
+
+
 def get_backlog(
-    board_id: int,
+    board_id: int | None = None,
+    project_key: str | None = None,
     jql_filter: str | None = None,
     max_results: int = 100,
     group_by_epic: bool = False,
@@ -36,7 +83,8 @@ def get_backlog(
     Get backlog issues for a board.
 
     Args:
-        board_id: Board ID
+        board_id: Board ID (required if project_key not provided)
+        project_key: Project key to look up board (alternative to board_id)
         jql_filter: Additional JQL filter
         max_results: Maximum issues to return
         group_by_epic: Group results by epic
@@ -46,8 +94,8 @@ def get_backlog(
     Returns:
         Backlog data with issues and optional grouping
     """
-    if not board_id:
-        raise ValidationError("Board ID is required")
+    if not board_id and not project_key:
+        raise ValidationError("Either board ID or project key is required")
 
     if not client:
         client = get_jira_client(profile)
@@ -56,6 +104,10 @@ def get_backlog(
         should_close = False
 
     try:
+        # Resolve board_id from project_key if not provided
+        if not board_id and project_key:
+            board_id = get_board_for_project(project_key, profile, client)
+
         # Get Agile field IDs from configuration
         agile_fields = get_agile_fields(profile)
         epic_link_field = agile_fields["epic_link"]
@@ -92,10 +144,11 @@ def get_backlog(
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Get backlog issues for a JIRA board",
-        epilog="Example: python get_backlog.py --board 123",
+        epilog="Example: python get_backlog.py --project DEMO",
     )
 
-    parser.add_argument("--board", "-b", type=int, required=True, help="Board ID")
+    parser.add_argument("--board", "-b", type=int, help="Board ID")
+    parser.add_argument("--project", "-p", help="Project key (alternative to --board)")
     parser.add_argument("--filter", "-f", help="JQL filter")
     parser.add_argument(
         "--max-results",
@@ -112,9 +165,14 @@ def main(argv: list[str] | None = None):
 
     args = parser.parse_args(argv)
 
+    # Validate that at least one of --board or --project is provided
+    if not args.board and not args.project:
+        parser.error("Either --board or --project is required")
+
     try:
         result = get_backlog(
             board_id=args.board,
+            project_key=args.project,
             jql_filter=args.filter,
             max_results=args.max_results,
             group_by_epic=(args.group_by == "epic"),
