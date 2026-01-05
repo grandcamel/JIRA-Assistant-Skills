@@ -96,7 +96,7 @@ See [estimation examples](examples/estimation.md) for detailed usage.
 
 ### Story Points and Estimation
 - `estimate_issue.py` - Set story points on issues (single, bulk, JQL)
-- `get_estimates.py` - Get story point summaries for sprints/epics
+- `get_estimates.py` - Get story point summaries for sprints, projects, or epics
 
 ## Quick examples
 
@@ -112,7 +112,8 @@ jira agile sprint manage 456 --start
 
 # Estimate and track
 jira agile estimate PROJ-101 --points 5
-jira agile estimates "sprint = 456" --summary
+jira agile estimates --project PROJ
+jira agile estimates --sprint 456 --group-by assignee
 ```
 
 See [Quick Start Guide](docs/QUICK_START.md) for essential workflows.
