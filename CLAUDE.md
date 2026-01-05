@@ -1258,7 +1258,7 @@ When multiple subagents work on related tasks, use coordination patterns to prev
 | fix/jira-agile | unclaimed | pending | - |
 
 ## Completed Work
-- [x] jira-search: CLI wrapper aligned (agent-2, 2024-01-05)
+- [x] jira-search: CLI wrapper aligned (agent-2, YYYY-MM-DD)
 - [ ] jira-issue: In progress (agent-1)
 ```
 
