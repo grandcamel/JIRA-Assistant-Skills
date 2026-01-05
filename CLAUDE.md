@@ -1219,40 +1219,52 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### Sequential Rebase Process
 
-After all subagents complete, rebase and merge one branch at a time:
+After all subagents complete, rebase and merge branches to `dev`, then create a PR to `main`:
 
 ```bash
-# 1. Stash any local changes in main
-git stash
+# 1. Start from dev branch
+git checkout dev
+git pull --rebase origin dev 2>/dev/null || true  # OK if dev doesn't exist on origin yet
 
 # 2. For each skill branch, in order:
 cd /path/to/worktree/<skill>-fix
 git fetch origin main
 git rebase origin/main
 
-# 3. Return to main and merge
+# 3. Return to main repo and merge to dev
 cd /path/to/main/repo
+git checkout dev
 git merge fix/<skill> --no-edit
 
-# 4. Push main so next rebase picks up changes
-git push origin main
+# 4. Push dev so next rebase picks up changes
+git push origin dev
 
 # 5. Clean up worktree and branch
 git worktree remove --force /path/to/worktree/<skill>-fix
 git branch -d fix/<skill>
 
-# 6. Repeat for next skill
+# 6. Repeat steps 2-5 for each remaining skill branch
+
+# 7. After ALL merges complete, run tests
+./scripts/run_tests.sh
+
+# 8. Create PR when requested by user
+# (Ask for branch name, or PR directly from dev)
+git push origin dev
+gh pr create --title "<title>" --body "<description>" --base main --head dev
 ```
+
+**Important:** Never merge directly to `main` or push to `origin/main`. All changes go through PRs.
 
 ### Key Lessons Learned
 
-1. **Push after each merge** - Worktrees track origin/main, so push main after each merge so subsequent rebases pick up the changes
+1. **Merge to dev, not main** - Local `main` is read-only. Merge all worktree branches to `dev`, then PR to `main`
 
-2. **Watch for uncommitted files** - Subagents may write summary files (FIX_SUMMARY.md) that shouldn't be merged. Use `--force` when removing worktrees with untracked files
+2. **Push dev after each merge** - So subsequent rebases pick up the changes from previously merged branches
 
-3. **Check for reverted changes** - If a subagent branch was created before other branches were merged, it may contain changes that revert already-merged work. Rebasing resolves this automatically
+3. **Watch for uncommitted files** - Subagents may write summary files (FIX_SUMMARY.md) that shouldn't be merged. Use `--force` when removing worktrees with untracked files
 
-4. **Stash before starting** - If main has uncommitted changes from a previous session, stash them before beginning the rebase process
+4. **Check for reverted changes** - If a subagent branch was created before other branches were merged, it may contain changes that revert already-merged work. Rebasing resolves this automatically
 
 5. **One conflict source** - Conflicts only occur during rebase, not during parallel development. This makes them easier to resolve sequentially
 
@@ -1264,10 +1276,12 @@ git branch -d fix/<skill>
    git commit -m "fix(<skill>): <description>"
    ```
 
-7. **Verify with tests** - After all merges complete, run the full test suite to verify nothing broke:
+7. **Verify with tests before PR** - After all merges to `dev` complete, run the full test suite:
    ```bash
    ./scripts/run_tests.sh
    ```
+
+8. **PR only when requested** - Don't automatically create PRs. Wait for the user to request one, then ask for the branch name
 
 ### Successful Example: 14-Skill CLI Alignment
 
