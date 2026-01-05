@@ -28,7 +28,13 @@ This skill provides the following commands via the `jira issue` CLI:
 - `jira issue update`: Modify issue fields
 - `jira issue delete`: Remove issues
 
-All commands support `--help` for full option documentation and `--profile` for JIRA instance selection. The `get` and `create` commands also support `--output json` for programmatic use.
+All commands support `--help` for full option documentation.
+
+### Global Options
+
+All commands inherit global options from the parent `jira` command:
+- `--profile, -p`: Select JIRA profile (e.g., `jira --profile dev issue get PROJ-123`)
+- `--output, -o`: Output format for `get` and `create` commands (text, json)
 
 ## Templates
 
@@ -45,13 +51,28 @@ Pre-configured templates for common issue types:
 # Basic issue creation
 jira issue create --project PROJ --type Bug --summary "Login fails on mobile"
 
-# With agile fields
+# With agile fields (--points is an alias for --story-points)
 jira issue create --project PROJ --type Story --summary "User login" \
   --epic PROJ-100 --story-points 5
 
-# With relationships
+# With relationships and time estimate
 jira issue create --project PROJ --type Task --summary "Setup database" \
   --blocks PROJ-123 --estimate "2d"
+
+# With labels and components
+jira issue create --project PROJ --type Task --summary "Setup CI pipeline" \
+  --labels "backend,infrastructure" --components "Build,DevOps"
+
+# With custom fields (JSON format)
+jira issue create --project PROJ --type Bug --summary "Critical bug" \
+  --custom-fields '{"customfield_10050": "production"}'
+
+# Assign to sprint
+jira issue create --project PROJ --type Story --summary "Feature X" \
+  --sprint 42
+
+# Create without project context defaults
+jira issue create --project PROJ --type Bug --summary "Bug" --no-defaults
 ```
 
 ### Retrieve Issues
@@ -63,9 +84,14 @@ jira issue get PROJ-123
 # With full details
 jira issue get PROJ-123 --detailed --show-links --show-time
 
+# Retrieve specific fields only
+jira issue get PROJ-123 --fields "summary,status,priority,assignee"
+
 # JSON output for scripting
 jira issue get PROJ-123 --output json
 ```
+
+**Note:** Using `--show-links` or `--show-time` automatically enables detailed view.
 
 ### Update Issues
 
@@ -76,9 +102,19 @@ jira issue update PROJ-123 --priority Critical --assignee self
 # Update without notifications
 jira issue update PROJ-123 --summary "Updated title" --no-notify
 
-# Unassign issue
+# Unassign issue (accepts "none" or "unassigned")
 jira issue update PROJ-123 --assignee none
+
+# Update labels and components (replaces existing)
+jira issue update PROJ-123 --labels "urgent,reviewed" --components "API"
+
+# Update custom fields
+jira issue update PROJ-123 --custom-fields '{"customfield_10050": "staging"}'
 ```
+
+**Assignee special values:**
+- `self`: Assigns to the current authenticated user
+- `none` or `unassigned`: Removes the assignee
 
 ### Delete Issues
 
@@ -134,9 +170,10 @@ Requires JIRA credentials via environment variables (`JIRA_SITE_URL`, `JIRA_EMAI
 
 ## Related Resources
 
-- [Best Practices Guide](docs/BEST_PRACTICES.md) - Issue content and metadata guidance
-- [Field Formats Reference](references/field_formats.md) - ADF and field format details
-- [API Reference](references/api_reference.md) - REST API endpoints
+Resources in the skill directory (`plugins/jira-assistant-skills/skills/jira-issue/`):
+- `docs/BEST_PRACTICES.md` - Issue content and metadata guidance
+- `references/field_formats.md` - ADF and field format details
+- `references/api_reference.md` - REST API endpoints
 
 ## Related Skills
 
