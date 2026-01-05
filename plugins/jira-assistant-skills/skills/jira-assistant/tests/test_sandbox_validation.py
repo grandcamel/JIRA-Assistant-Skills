@@ -28,6 +28,9 @@ import subprocess
 
 import pytest
 
+# Mark all tests in this module as 'live' - they require the Claude CLI
+pytestmark = pytest.mark.live
+
 # Import shared fixtures from conftest
 from conftest import get_test_model
 

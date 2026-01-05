@@ -36,6 +36,9 @@ from typing import NamedTuple
 import pytest
 import yaml
 
+# Mark all tests in this module as 'live' - they require the Claude CLI
+pytestmark = pytest.mark.live
+
 # Add tests directory to path for otel_metrics import
 TESTS_DIR = Path(__file__).parent
 if str(TESTS_DIR) not in sys.path:
