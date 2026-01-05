@@ -295,3 +295,210 @@ class TestTimeReportErrors:
         with pytest.raises(JiraError) as exc_info:
             generate_report(mock_jira_client, project="PROJ")
         assert exc_info.value.status_code == 500
+
+
+@pytest.mark.time
+@pytest.mark.unit
+class TestTimeReportMain:
+    """Tests for main() function."""
+
+    def test_main_text_output(
+        self,
+        mock_jira_client,
+        sample_issues_with_worklogs,
+        sample_worklogs_for_report,
+        capsys,
+    ):
+        """Test main with text output."""
+        mock_jira_client.search_issues.return_value = sample_issues_with_worklogs
+        mock_jira_client.get_worklogs.return_value = {
+            "worklogs": sample_worklogs_for_report
+        }
+
+        from unittest.mock import patch
+
+        with patch("time_report.get_jira_client", return_value=mock_jira_client):
+            from time_report import main
+
+            main(["--project", "PROJ"])
+
+            captured = capsys.readouterr()
+            assert "Time Report" in captured.out
+            assert "Total" in captured.out
+
+    def test_main_json_output(
+        self,
+        mock_jira_client,
+        sample_issues_with_worklogs,
+        sample_worklogs_for_report,
+        capsys,
+    ):
+        """Test main with JSON output."""
+        import json
+
+        mock_jira_client.search_issues.return_value = sample_issues_with_worklogs
+        mock_jira_client.get_worklogs.return_value = {
+            "worklogs": sample_worklogs_for_report
+        }
+
+        from unittest.mock import patch
+
+        with patch("time_report.get_jira_client", return_value=mock_jira_client):
+            from time_report import main
+
+            main(["--project", "PROJ", "--output", "json"])
+
+            captured = capsys.readouterr()
+            output = json.loads(captured.out)
+            assert "entries" in output
+            assert output["entry_count"] == 3
+
+    def test_main_csv_output(
+        self,
+        mock_jira_client,
+        sample_issues_with_worklogs,
+        sample_worklogs_for_report,
+        capsys,
+    ):
+        """Test main with CSV output."""
+        mock_jira_client.search_issues.return_value = sample_issues_with_worklogs
+        mock_jira_client.get_worklogs.return_value = {
+            "worklogs": sample_worklogs_for_report
+        }
+
+        from unittest.mock import patch
+
+        with patch("time_report.get_jira_client", return_value=mock_jira_client):
+            from time_report import main
+
+            main(["--project", "PROJ", "--output", "csv"])
+
+            captured = capsys.readouterr()
+            assert "Issue Key" in captured.out
+            assert "PROJ-123" in captured.out
+
+    def test_main_with_group_by(
+        self,
+        mock_jira_client,
+        sample_issues_with_worklogs,
+        sample_worklogs_for_report,
+        capsys,
+    ):
+        """Test main with --group-by."""
+        mock_jira_client.search_issues.return_value = sample_issues_with_worklogs
+        mock_jira_client.get_worklogs.return_value = {
+            "worklogs": sample_worklogs_for_report
+        }
+
+        from unittest.mock import patch
+
+        with patch("time_report.get_jira_client", return_value=mock_jira_client):
+            from time_report import main
+
+            main(["--project", "PROJ", "--group-by", "day"])
+
+            captured = capsys.readouterr()
+            assert "entries" in captured.out or "2025-01" in captured.out
+
+    def test_main_with_period_today(self, mock_jira_client, capsys):
+        """Test main with --period today."""
+        mock_jira_client.search_issues.return_value = {"issues": []}
+
+        from unittest.mock import patch
+
+        with patch("time_report.get_jira_client", return_value=mock_jira_client):
+            from time_report import main
+
+            main(["--period", "today"])
+
+            captured = capsys.readouterr()
+            assert "Time Report" in captured.out
+
+    def test_main_with_period_this_week(self, mock_jira_client, capsys):
+        """Test main with --period this-week."""
+        mock_jira_client.search_issues.return_value = {"issues": []}
+
+        from unittest.mock import patch
+
+        with patch("time_report.get_jira_client", return_value=mock_jira_client):
+            from time_report import main
+
+            main(["--period", "this-week"])
+
+            captured = capsys.readouterr()
+            assert "Time Report" in captured.out
+
+    def test_main_with_period_last_month(self, mock_jira_client, capsys):
+        """Test main with --period last-month."""
+        mock_jira_client.search_issues.return_value = {"issues": []}
+
+        from unittest.mock import patch
+
+        with patch("time_report.get_jira_client", return_value=mock_jira_client):
+            from time_report import main
+
+            main(["--period", "last-month"])
+
+            captured = capsys.readouterr()
+            assert "Time Report" in captured.out
+
+    def test_main_with_user_filter(self, mock_jira_client, capsys):
+        """Test main with --user filter."""
+        mock_jira_client.search_issues.return_value = {"issues": []}
+
+        from unittest.mock import patch
+
+        with patch("time_report.get_jira_client", return_value=mock_jira_client):
+            from time_report import main
+
+            main(["--user", "alice@company.com"])
+
+            captured = capsys.readouterr()
+            assert "Time Report" in captured.out
+
+    def test_main_with_profile(self, mock_jira_client, capsys):
+        """Test main with --profile."""
+        mock_jira_client.search_issues.return_value = {"issues": []}
+
+        from unittest.mock import patch
+
+        with patch(
+            "time_report.get_jira_client", return_value=mock_jira_client
+        ) as mock_get_client:
+            from time_report import main
+
+            main(["--project", "PROJ", "--profile", "dev"])
+
+            mock_get_client.assert_called_with("dev")
+
+    def test_main_jira_error(self, mock_jira_client, capsys):
+        """Test main with JIRA API error."""
+        from jira_assistant_skills_lib import JiraError
+
+        mock_jira_client.search_issues.side_effect = JiraError(
+            "API Error", status_code=500
+        )
+
+        from unittest.mock import patch
+
+        with patch("time_report.get_jira_client", return_value=mock_jira_client):
+            from time_report import main
+
+            with pytest.raises(SystemExit) as exc_info:
+                main(["--project", "PROJ"])
+
+            assert exc_info.value.code == 1
+
+    def test_main_keyboard_interrupt(self, mock_jira_client, capsys):
+        """Test main with keyboard interrupt."""
+        mock_jira_client.search_issues.side_effect = KeyboardInterrupt()
+
+        from unittest.mock import patch
+
+        with patch("time_report.get_jira_client", return_value=mock_jira_client):
+            from time_report import main
+
+            with pytest.raises(SystemExit) as exc_info:
+                main(["--project", "PROJ"])
+
+            assert exc_info.value.code == 1

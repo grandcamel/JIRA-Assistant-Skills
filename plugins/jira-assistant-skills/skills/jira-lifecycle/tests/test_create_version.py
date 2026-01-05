@@ -236,3 +236,179 @@ class TestCreateVersionErrorHandling:
         with pytest.raises(JiraError) as exc_info:
             create_version(project="PROJ", name="v1.0.0", profile=None)
         assert exc_info.value.status_code == 500
+
+
+@pytest.mark.lifecycle
+@pytest.mark.unit
+class TestCreateVersionMain:
+    """Tests for main() function."""
+
+    @patch("create_version.get_jira_client")
+    def test_main_basic(
+        self, mock_get_client, mock_jira_client, sample_version, capsys
+    ):
+        """Test main with basic args."""
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.create_version.return_value = copy.deepcopy(sample_version)
+
+        from create_version import main
+
+        main(["PROJ", "--name", "v1.0.0"])
+
+        captured = capsys.readouterr()
+        assert "Created version" in captured.out
+
+    @patch("create_version.get_jira_client")
+    def test_main_with_description(
+        self, mock_get_client, mock_jira_client, sample_version, capsys
+    ):
+        """Test main with --description."""
+        mock_get_client.return_value = mock_jira_client
+        version = copy.deepcopy(sample_version)
+        version["description"] = "Major release"
+        mock_jira_client.create_version.return_value = version
+
+        from create_version import main
+
+        main(["PROJ", "--name", "v1.0.0", "--description", "Major release"])
+
+        captured = capsys.readouterr()
+        assert "Major release" in captured.out
+
+    @patch("create_version.get_jira_client")
+    def test_main_with_dates(
+        self, mock_get_client, mock_jira_client, sample_version, capsys
+    ):
+        """Test main with --start-date and --release-date."""
+        mock_get_client.return_value = mock_jira_client
+        version = copy.deepcopy(sample_version)
+        version["startDate"] = "2025-02-01"
+        version["releaseDate"] = "2025-03-01"
+        mock_jira_client.create_version.return_value = version
+
+        from create_version import main
+
+        main(
+            [
+                "PROJ",
+                "--name",
+                "v1.0.0",
+                "--start-date",
+                "2025-02-01",
+                "--release-date",
+                "2025-03-01",
+            ]
+        )
+
+        captured = capsys.readouterr()
+        assert "2025-02-01" in captured.out
+        assert "2025-03-01" in captured.out
+
+    @patch("create_version.get_jira_client")
+    def test_main_released(
+        self, mock_get_client, mock_jira_client, sample_version, capsys
+    ):
+        """Test main with --released."""
+        mock_get_client.return_value = mock_jira_client
+        version = copy.deepcopy(sample_version)
+        version["released"] = True
+        mock_jira_client.create_version.return_value = version
+
+        from create_version import main
+
+        main(["PROJ", "--name", "v1.0.0", "--released"])
+
+        captured = capsys.readouterr()
+        assert "Released" in captured.out
+
+    @patch("create_version.get_jira_client")
+    def test_main_archived(
+        self, mock_get_client, mock_jira_client, sample_version, capsys
+    ):
+        """Test main with --archived."""
+        mock_get_client.return_value = mock_jira_client
+        version = copy.deepcopy(sample_version)
+        version["archived"] = True
+        mock_jira_client.create_version.return_value = version
+
+        from create_version import main
+
+        main(["PROJ", "--name", "v1.0.0", "--archived"])
+
+        captured = capsys.readouterr()
+        assert "Archived" in captured.out
+
+    @patch("create_version.get_jira_client")
+    def test_main_dry_run(self, mock_get_client, mock_jira_client, capsys):
+        """Test main with --dry-run."""
+        mock_get_client.return_value = mock_jira_client
+
+        from create_version import main
+
+        main(["PROJ", "--name", "v2.0.0", "--dry-run"])
+
+        captured = capsys.readouterr()
+        assert "DRY RUN" in captured.out
+        assert "v2.0.0" in captured.out
+        mock_jira_client.create_version.assert_not_called()
+
+    @patch("create_version.get_jira_client")
+    def test_main_dry_run_with_all_options(
+        self, mock_get_client, mock_jira_client, capsys
+    ):
+        """Test main dry-run with all options."""
+        mock_get_client.return_value = mock_jira_client
+
+        from create_version import main
+
+        main(
+            [
+                "PROJ",
+                "--name",
+                "v2.0.0",
+                "--description",
+                "Test",
+                "--start-date",
+                "2025-02-01",
+                "--release-date",
+                "2025-03-01",
+                "--released",
+                "--dry-run",
+            ]
+        )
+
+        captured = capsys.readouterr()
+        assert "DRY RUN" in captured.out
+        assert "Test" in captured.out
+        assert "2025-02-01" in captured.out
+
+    @patch("create_version.get_jira_client")
+    def test_main_with_profile(
+        self, mock_get_client, mock_jira_client, sample_version, capsys
+    ):
+        """Test main with --profile."""
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.create_version.return_value = copy.deepcopy(sample_version)
+
+        from create_version import main
+
+        main(["PROJ", "--name", "v1.0.0", "--profile", "dev"])
+
+        mock_get_client.assert_called_with("dev")
+
+    @patch("create_version.get_jira_client")
+    def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):
+        """Test main with JIRA API error."""
+        from jira_assistant_skills_lib import JiraError
+
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.create_version.side_effect = JiraError(
+            "API Error", status_code=500
+        )
+
+        from create_version import main
+
+        with pytest.raises(SystemExit) as exc_info:
+            main(["PROJ", "--name", "v1.0.0"])
+
+        assert exc_info.value.code == 1

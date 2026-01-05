@@ -198,3 +198,94 @@ class TestAssignIssueErrorHandling:
 
         with pytest.raises(ValidationError, match="User not found"):
             assign_issue("PROJ-123", user="nonexistent-user", profile=None)
+
+
+@pytest.mark.lifecycle
+@pytest.mark.unit
+class TestAssignIssueMain:
+    """Tests for main() function."""
+
+    @patch("assign_issue.get_jira_client")
+    def test_main_assign_by_user(self, mock_get_client, mock_jira_client, capsys):
+        """Test main with --user."""
+        mock_get_client.return_value = mock_jira_client
+
+        from assign_issue import main
+
+        main(["PROJ-123", "--user", "alice@company.com"])
+
+        captured = capsys.readouterr()
+        assert "Assigned" in captured.out
+        assert "alice@company.com" in captured.out
+
+    @patch("assign_issue.get_jira_client")
+    def test_main_assign_self(self, mock_get_client, mock_jira_client, capsys):
+        """Test main with --self."""
+        mock_get_client.return_value = mock_jira_client
+
+        from assign_issue import main
+
+        main(["PROJ-123", "--self"])
+
+        captured = capsys.readouterr()
+        assert "Assigned" in captured.out
+        assert "to you" in captured.out
+
+    @patch("assign_issue.get_jira_client")
+    def test_main_unassign(self, mock_get_client, mock_jira_client, capsys):
+        """Test main with --unassign."""
+        mock_get_client.return_value = mock_jira_client
+
+        from assign_issue import main
+
+        main(["PROJ-123", "--unassign"])
+
+        captured = capsys.readouterr()
+        assert "Unassigned" in captured.out
+
+    @patch("assign_issue.get_jira_client")
+    def test_main_dry_run(self, mock_get_client, mock_jira_client, capsys):
+        """Test main with --dry-run."""
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.get_issue.return_value = {
+            "key": "PROJ-123",
+            "fields": {
+                "assignee": {"displayName": "Current User", "accountId": "abc123"}
+            },
+        }
+
+        from assign_issue import main
+
+        main(["PROJ-123", "--user", "alice@company.com", "--dry-run"])
+
+        captured = capsys.readouterr()
+        assert "DRY RUN" in captured.out
+        mock_jira_client.assign_issue.assert_not_called()
+
+    @patch("assign_issue.get_jira_client")
+    def test_main_with_profile(self, mock_get_client, mock_jira_client, capsys):
+        """Test main with --profile."""
+        mock_get_client.return_value = mock_jira_client
+
+        from assign_issue import main
+
+        main(["PROJ-123", "--user", "alice", "--profile", "dev"])
+
+        mock_get_client.assert_called_with("dev")
+
+    @patch("assign_issue.get_jira_client")
+    def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):
+        """Test main with JIRA API error."""
+        from jira_assistant_skills_lib import JiraError
+
+        mock_get_client.return_value = mock_jira_client
+        mock_jira_client.assign_issue.side_effect = JiraError(
+            "API Error", status_code=500
+        )
+
+        from assign_issue import main
+
+        with pytest.raises(SystemExit) as exc_info:
+            main(["PROJ-123", "--user", "alice"])
+
+        assert exc_info.value.code == 1

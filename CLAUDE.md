@@ -935,3 +935,5 @@ This script:
 - Always use `#!/usr/bin/env bash` shebang for bash scripts
 - Always use `./scripts/sync-version.sh` when bumping versions
 - Run `./scripts/run_tests.sh` before committing to ensure all tests pass
+- When a force push is required, always use --force-with-lease
+- Always use `--rebase` with git pull
