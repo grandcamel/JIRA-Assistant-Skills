@@ -368,9 +368,36 @@ def agile_backlog(ctx, board: int, project: str, max_results: int):
 @click.argument("issue_key")
 @click.option("--before", "-b", help="Rank before this issue")
 @click.option("--after", "-a", help="Rank after this issue")
+@click.option("--top", is_flag=True, help="Move to top of backlog")
+@click.option("--bottom", is_flag=True, help="Move to bottom of backlog")
+@click.option("--board", type=int, help="Board ID (required for --top/--bottom)")
 @click.pass_context
-def agile_rank(ctx, issue_key: str, before: str, after: str):
-    """Rank an issue in the backlog."""
+def agile_rank(
+    ctx, issue_key: str, before: str, after: str, top: bool, bottom: bool, board: int
+):
+    """Rank an issue in the backlog.
+
+    Position the issue using one of: --before, --after, --top, or --bottom.
+
+    Examples:
+        jira agile rank PROJ-1 --before PROJ-2
+        jira agile rank PROJ-1 --after PROJ-3
+        jira agile rank PROJ-1 --top --board 123
+        jira agile rank PROJ-1 --bottom --board 123
+    """
+    # Validate mutually exclusive options
+    position_count = sum([bool(before), bool(after), top, bottom])
+    if position_count == 0:
+        raise click.UsageError(
+            "Must specify one of: --before, --after, --top, or --bottom"
+        )
+    if position_count > 1:
+        raise click.UsageError(
+            "--before, --after, --top, and --bottom are mutually exclusive"
+        )
+    if (top or bottom) and not board:
+        raise click.UsageError("--board is required with --top or --bottom")
+
     script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "rank_issue.py"
 
     script_args = [issue_key]
@@ -378,6 +405,12 @@ def agile_rank(ctx, issue_key: str, before: str, after: str):
         script_args.extend(["--before", before])
     if after:
         script_args.extend(["--after", after])
+    if top:
+        script_args.append("--top")
+    if bottom:
+        script_args.append("--bottom")
+    if board:
+        script_args.extend(["--board", str(board)])
 
     run_skill_script_subprocess(script_path, script_args, ctx)
 
