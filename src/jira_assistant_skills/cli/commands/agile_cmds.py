@@ -440,6 +440,47 @@ def agile_estimates(ctx, sprint: int, project: str, epic: str, group_by: str):
     run_skill_script_subprocess(script_path, script_args, ctx)
 
 
+@agile.command(name="velocity")
+@click.option("--board", "-b", type=int, help="Board ID")
+@click.option("--project", "-p", help="Project key (will find board automatically)")
+@click.option(
+    "--sprints",
+    "-n",
+    type=int,
+    default=3,
+    help="Number of closed sprints to analyze (default: 3)",
+)
+@click.option(
+    "--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format"
+)
+@click.pass_context
+def agile_velocity(ctx, board: int, project: str, sprints: int, output: str):
+    """Calculate velocity from completed sprints.
+
+    Shows average story points completed per sprint based on historical data.
+
+    Examples:
+        jira agile velocity --project DEMO
+        jira agile velocity --project DEMO --sprints 5
+        jira agile velocity --board 123 --sprints 3
+        jira agile velocity --project DEMO --output json
+    """
+    if not board and not project:
+        raise click.UsageError("Either --board or --project is required")
+    if board and project:
+        raise click.UsageError("--board and --project are mutually exclusive")
+
+    script_path = SKILLS_ROOT_DIR / "jira-agile" / "scripts" / "get_velocity.py"
+
+    script_args = ["--sprints", str(sprints), "--output", output]
+    if board:
+        script_args.extend(["--board", str(board)])
+    if project:
+        script_args.extend(["--project", project])
+
+    run_skill_script_subprocess(script_path, script_args, ctx)
+
+
 # Subtasks
 @agile.command(name="subtask")
 @click.option("--parent", "-p", required=True, help="Parent issue key (e.g., PROJ-101)")
