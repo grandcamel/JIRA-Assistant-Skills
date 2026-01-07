@@ -22,6 +22,7 @@ def mock_jira_client():
     client.assign_issue = MagicMock()
     client.update_issue = MagicMock()
     client.create_issue = MagicMock()
+    client.delete_issue = MagicMock()
     client.get_current_user_id = MagicMock(return_value="current-user-account-id")
     client.close = MagicMock()
     client.__enter__ = MagicMock(return_value=client)

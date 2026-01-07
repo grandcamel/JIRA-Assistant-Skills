@@ -26,6 +26,7 @@ Comprehensive administration tools for JIRA Cloud covering 8 major subsystems wi
 | **Project Management** | 14 | Create, configure, archive, restore projects and categories |
 | **Automation Rules** | 12 | Discover, manage, invoke automation rules and templates |
 | **Permission Schemes** | 7 | Control who can do what across projects |
+| **Permission Diagnostics** | 4 | Check permissions, diagnose 403 errors, manage project roles |
 | **User & Group Management** | 8 | Find users, create groups, manage membership |
 | **Notification Schemes** | 7 | Configure who receives what notifications |
 | **Screen Management** | 10 | Control which fields appear in issue workflows |
@@ -65,6 +66,12 @@ Reach for this skill when you need to:
 - Define who can view, create, or edit issues
 - Create and manage permission schemes
 - Assign schemes to projects
+
+**Diagnosing permission issues:**
+- Check which permissions you have on a project
+- Identify why a 403 Forbidden error occurred
+- List project role memberships
+- Add or remove users from project roles
 
 **Automating work:**
 - List, enable, disable, or invoke automation rules
@@ -136,6 +143,22 @@ jira admin permission-scheme get ID        # Get scheme details
 jira admin permission-scheme create        # Create new scheme
 jira admin permission-scheme assign        # Assign scheme to project
 jira admin permission list                 # List available permissions
+```
+
+### Permission Diagnostics
+```bash
+# Check your permissions on a project
+jira admin permissions check --project DEMO
+jira admin permissions check --project DEMO --permission DELETE_ISSUES
+jira admin permissions check --project DEMO --only-missing
+
+# List project role memberships
+jira admin project roles --project DEMO
+jira admin project roles --project DEMO --role Administrators
+
+# Manage project role membership
+jira admin project role add --project DEMO --role Administrators --user user@example.com
+jira admin project role remove --project DEMO --role Administrators --user user@example.com
 ```
 
 ### User & Group Management
@@ -277,6 +300,24 @@ jira admin project get PROJ --profile development
 ---
 
 ## Troubleshooting
+
+### Diagnose 403 Forbidden Errors
+```bash
+# Check what permissions you have on a project
+jira admin permissions check --project DEMO
+
+# Show only permissions you're missing
+jira admin permissions check --project DEMO --only-missing
+
+# Check specific permission (e.g., DELETE_ISSUES)
+jira admin permissions check --project DEMO --permission DELETE_ISSUES
+
+# See who has access via project roles
+jira admin project roles --project DEMO
+
+# Add yourself to Administrators role if needed
+jira admin project role add --project DEMO --role Administrators --user your@email.com
+```
 
 ### Verify Permissions
 ```bash
