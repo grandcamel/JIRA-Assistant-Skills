@@ -52,9 +52,9 @@ Create subtasks linked to parent issues with automatic project inheritance and t
 
 ### 3. Sprint Management
 
-Create sprints with dates and goals, manage sprint lifecycle (start/close), move issues to sprints or backlog, and track sprint progress.
+List and discover sprints for a project, create sprints with dates and goals, manage sprint lifecycle (start/close), move issues to sprints or backlog, and track sprint progress.
 
-**Scripts:** `create_sprint.py`, `manage_sprint.py`, `move_to_sprint.py`, `get_sprint.py`
+**Scripts:** `list_sprints.py`, `create_sprint.py`, `manage_sprint.py`, `move_to_sprint.py`, `get_sprint.py`
 
 See [sprint examples](examples/sprint-lifecycle.md) for detailed usage.
 
@@ -85,10 +85,11 @@ See [estimation examples](examples/estimation.md) for detailed usage.
 - `create_subtask.py` - Create subtasks linked to parent issues
 
 ### Sprint Management
+- `list_sprints.py` - List sprints for a board or project (by state: active, closed, future)
 - `create_sprint.py` - Create new sprints on Scrum boards
 - `manage_sprint.py` - Start, close, and update sprints
 - `move_to_sprint.py` - Move issues to sprints or backlog
-- `get_sprint.py` - Retrieve sprint details with progress tracking
+- `get_sprint.py` - Retrieve sprint details with progress tracking (supports --board --active)
 
 ### Backlog Management
 - `rank_issue.py` - Reorder issues in backlog (before/after/top/bottom)
@@ -110,6 +111,13 @@ jira agile epic add-issues --epic PROJ-100 --issues PROJ-101,PROJ-102
 # Create subtasks
 jira agile subtask --parent PROJ-101 --summary "Implement login API"
 jira agile subtask --parent PROJ-101 --summary "Task" --assignee self --estimate 4h
+
+# List and discover sprints
+jira agile sprint list --project DEMO                    # List all sprints for project
+jira agile sprint list --project DEMO --state active     # Find active sprint
+jira agile sprint list --board 123 --state closed        # List closed sprints
+jira agile sprint get --board 123 --active               # Get active sprint details
+jira agile sprint get 456 --include-issues               # Get sprint with issues
 
 # Create and manage sprints
 jira agile sprint create --board 123 --name "Sprint 42" --goal "Launch MVP"
