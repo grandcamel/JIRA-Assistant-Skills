@@ -63,6 +63,31 @@ jira search query "project = PROJ"
 - Use environment variables (`JIRA_API_TOKEN`, `JIRA_EMAIL`, `JIRA_SITE_URL`)
 - Validate URLs are HTTPS-only (`validators.validate_url`)
 
+## How Claude Code Skills Work
+
+**Fundamental concept**: Claude Code skills are context-loading mechanisms, NOT direct executors.
+
+**The pattern:**
+1. **Skill tool** → Loads SKILL.md content into Claude's context (triggered by YAML frontmatter matching)
+2. **Bash tool** → Claude executes the `jira` CLI commands described in the skill
+
+**Key behaviors:**
+- Once loaded, skill context persists for the entire conversation
+- Subsequent operations use Bash directly WITHOUT re-invoking the Skill tool
+- SKILL.md should document CLI commands that Claude will execute via Bash
+
+**Expected tool sequences:**
+| Scenario | Expected Tools |
+|----------|---------------|
+| First JIRA operation | `['Skill', 'Bash']` |
+| Subsequent operations | `['Bash']` |
+| Knowledge question only | `['Skill']` |
+
+**SKILL.md implications:**
+- "Examples" section should show `jira` CLI commands Claude will run
+- Clear command examples help Claude execute correctly on first try
+- Skill does NOT execute commands itself - it provides instructions for Claude to follow
+
 ## Adding Scripts
 
 1. Place in skill's `scripts/` directory
