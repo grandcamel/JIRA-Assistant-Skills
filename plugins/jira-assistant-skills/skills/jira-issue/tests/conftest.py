@@ -10,7 +10,6 @@ Note: Common markers (unit, integration, slow) are defined in the root pytest.in
 import sys
 from copy import deepcopy
 from pathlib import Path
-from unittest.mock import Mock
 
 import pytest
 
@@ -25,75 +24,8 @@ for path in [_shared_lib_path, _scripts_path]:
         sys.path.insert(0, path)
 
 
-# mock_jira_client and sample_issue are provided by root conftest.py
-
-
-@pytest.fixture
-def sample_issue():
-    """Sample JIRA issue for testing."""
-    return {
-        "id": "10001",
-        "key": "PROJ-123",
-        "self": "https://test.atlassian.net/rest/api/3/issue/10001",
-        "fields": {
-            "summary": "Test Issue Summary",
-            "description": {
-                "type": "doc",
-                "version": 1,
-                "content": [
-                    {
-                        "type": "paragraph",
-                        "content": [
-                            {"type": "text", "text": "This is a test description."}
-                        ],
-                    }
-                ],
-            },
-            "issuetype": {"id": "10001", "name": "Bug", "subtask": False},
-            "status": {
-                "id": "1",
-                "name": "Open",
-                "statusCategory": {"id": 2, "key": "new", "name": "To Do"},
-            },
-            "priority": {"id": "3", "name": "Medium"},
-            "assignee": {
-                "accountId": "557058:test-user-id",
-                "displayName": "Test User",
-                "emailAddress": "test@example.com",
-                "active": True,
-            },
-            "reporter": {
-                "accountId": "557058:reporter-id",
-                "displayName": "Reporter User",
-                "emailAddress": "reporter@example.com",
-                "active": True,
-            },
-            "project": {"id": "10000", "key": "PROJ", "name": "Test Project"},
-            "labels": ["bug", "urgent"],
-            "components": [
-                {"id": "10100", "name": "Backend"},
-                {"id": "10101", "name": "API"},
-            ],
-            "created": "2025-01-15T10:30:00.000+0000",
-            "updated": "2025-01-20T14:45:00.000+0000",
-        },
-    }
-
-
-@pytest.fixture
-def sample_issue_minimal():
-    """Sample JIRA issue with minimal fields."""
-    return {
-        "id": "10002",
-        "key": "PROJ-124",
-        "self": "https://test.atlassian.net/rest/api/3/issue/10002",
-        "fields": {
-            "summary": "Minimal Issue",
-            "issuetype": {"id": "10002", "name": "Task", "subtask": False},
-            "status": {"id": "1", "name": "Open"},
-            "project": {"id": "10000", "key": "PROJ", "name": "Test Project"},
-        },
-    }
+# Shared fixtures from root conftest.py:
+# mock_jira_client, sample_issue, sample_issue_minimal, sample_project
 
 
 @pytest.fixture
