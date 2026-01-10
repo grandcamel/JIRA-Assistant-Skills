@@ -10,7 +10,6 @@ Tests:
 
 import pytest
 
-
 # ========== Fixtures ==========
 
 
@@ -343,10 +342,7 @@ class TestAddUserToProjectRole:
         sample_role_actors_response,
     ):
         """Test adding user by account ID."""
-        from add_user_to_project_role import (
-            add_user_to_project_role,
-            resolve_role_id,
-        )
+        from add_user_to_project_role import add_user_to_project_role
 
         # Setup mocks
         mock_jira_client.get.side_effect = [
@@ -355,7 +351,7 @@ class TestAddUserToProjectRole:
         mock_jira_client.post.return_value = sample_role_actors_response
 
         # Execute
-        result = add_user_to_project_role(
+        add_user_to_project_role(
             mock_jira_client,
             project_key="DEMO",
             role_id=10002,
