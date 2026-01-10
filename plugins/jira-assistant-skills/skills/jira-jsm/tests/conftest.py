@@ -190,44 +190,10 @@ def sample_customers_list_response():
     }
 
 
-@pytest.fixture
-def sample_service_desk_response():
-    """Sample JSM API response for a service desk."""
-    return {
-        "id": "1",
-        "projectId": "10000",
-        "projectKey": "SD",
-        "projectName": "IT Service Desk",
-        "_links": {
-            "self": "https://test.atlassian.net/rest/servicedeskapi/servicedesk/1"
-        },
-    }
 
 
-@pytest.fixture
-def mock_config_manager(mock_jira_client):
-    """Mock config_manager.get_jira_client() to return mock client."""
-
-    def _get_jira_client(profile=None):
-        return mock_jira_client
-
-    return _get_jira_client
 
 
-@pytest.fixture
-def sample_request_type_response():
-    """Sample JSM API response for a request type."""
-    return {
-        "id": "10",
-        "name": "Incident",
-        "description": "Report an incident",
-        "helpText": "Use this for urgent issues",
-        "serviceDeskId": "1",
-        "groupIds": [],
-        "_links": {
-            "self": "https://test.atlassian.net/rest/servicedeskapi/servicedesk/1/requesttype/10"
-        },
-    }
 
 
 @pytest.fixture
@@ -664,20 +630,6 @@ def sample_assets_list():
     ]
 
 
-@pytest.fixture
-def sample_asset_schemas():
-    """Sample asset schemas list response."""
-    return {
-        "objectschemas": [
-            {
-                "id": "1",
-                "name": "IT Infrastructure",
-                "objectSchemaKey": "IT",
-                "status": "Ok",
-            },
-            {"id": "2", "name": "HR Assets", "objectSchemaKey": "HR", "status": "Ok"},
-        ]
-    }
 
 
 @pytest.fixture(autouse=True)

@@ -181,10 +181,6 @@ def default_scheme_response():
     return DEFAULT_SCHEME_RESPONSE.copy()
 
 
-@pytest.fixture
-def software_scheme_response():
-    """Sample JIRA API response for software development scheme."""
-    return SOFTWARE_SCHEME_RESPONSE.copy()
 
 
 @pytest.fixture
@@ -211,14 +207,6 @@ def alternatives_response():
     return ALTERNATIVES_RESPONSE.copy()
 
 
-@pytest.fixture
-def mock_config_manager(mock_jira_client):
-    """Mock config_manager.get_jira_client() to return mock client."""
-
-    def _get_jira_client(profile=None):
-        return mock_jira_client
-
-    return _get_jira_client
 
 
 # ========== User Management Fixtures ==========
@@ -325,26 +313,6 @@ def sample_users():
     ]
 
 
-@pytest.fixture
-def sample_user_groups():
-    """Sample user groups response."""
-    return [
-        {
-            "name": "jira-users",
-            "groupId": "group-id-1",
-            "self": "https://site.atlassian.net/rest/api/3/group?groupId=group-id-1",
-        },
-        {
-            "name": "jira-developers",
-            "groupId": "group-id-2",
-            "self": "https://site.atlassian.net/rest/api/3/group?groupId=group-id-2",
-        },
-        {
-            "name": "jira-administrators",
-            "groupId": "group-id-3",
-            "self": "https://site.atlassian.net/rest/api/3/group?groupId=group-id-3",
-        },
-    ]
 
 
 # ========== Group Management Fixtures ==========
@@ -507,20 +475,8 @@ def empty_scheme():
     return copy.deepcopy(EMPTY_SCHEME)
 
 
-@pytest.fixture
-def sample_notification_events():
-    """Sample notification event types for testing."""
-    import copy
-
-    return copy.deepcopy(NOTIFICATION_EVENTS)
 
 
-@pytest.fixture
-def sample_recipient_types():
-    """Sample valid notification recipient types."""
-    import copy
-
-    return copy.deepcopy(RECIPIENT_TYPES)
 
 
 # ========== Automation Rules Fixtures ==========
@@ -690,25 +646,8 @@ def sample_automation_templates():
     ]
 
 
-@pytest.fixture
-def sample_rules_response(sample_automation_rules):
-    """Sample paginated rules response."""
-    return {
-        "values": sample_automation_rules,
-        "links": {"next": "?cursor=next_page_token"},
-        "hasMore": False,
-    }
 
 
-@pytest.fixture
-def mock_get_automation_client(mock_automation_client):
-    """Patch get_automation_client to return mock client."""
-    from unittest.mock import patch
-
-    with patch(
-        "jira_assistant_skills_lib.get_automation_client", return_value=mock_automation_client
-    ):
-        yield mock_automation_client
 
 
 # ========== Project Management Fixtures ==========
@@ -847,29 +786,6 @@ def sample_categories_list():
     ]
 
 
-@pytest.fixture
-def sample_project_types():
-    """Sample JIRA API response for project types."""
-    return [
-        {
-            "key": "software",
-            "formattedKey": "Software",
-            "descriptionI18nKey": "jira.project.type.software.description",
-            "icon": "https://test.atlassian.net/images/icons/project/software.svg",
-        },
-        {
-            "key": "business",
-            "formattedKey": "Business",
-            "descriptionI18nKey": "jira.project.type.business.description",
-            "icon": "https://test.atlassian.net/images/icons/project/business.svg",
-        },
-        {
-            "key": "service_desk",
-            "formattedKey": "Service Desk",
-            "descriptionI18nKey": "jira.project.type.service_desk.description",
-            "icon": "https://test.atlassian.net/images/icons/project/servicedesk.svg",
-        },
-    ]
 
 
 @pytest.fixture
@@ -979,20 +895,8 @@ def default_screen():
     return copy.deepcopy(DEFAULT_SCREEN)
 
 
-@pytest.fixture
-def bug_create_screen():
-    """Sample bug create screen with project scope."""
-    import copy
-
-    return copy.deepcopy(BUG_CREATE_SCREEN)
 
 
-@pytest.fixture
-def epic_screen():
-    """Sample epic screen for testing."""
-    import copy
-
-    return copy.deepcopy(EPIC_SCREEN)
 
 
 @pytest.fixture
@@ -1067,12 +971,6 @@ def default_screen_scheme():
     return copy.deepcopy(DEFAULT_SCREEN_SCHEME)
 
 
-@pytest.fixture
-def bug_screen_scheme():
-    """Sample bug screen scheme."""
-    import copy
-
-    return copy.deepcopy(BUG_SCREEN_SCHEME)
 
 
 @pytest.fixture
@@ -1091,12 +989,6 @@ def default_issue_type_screen_scheme():
     return copy.deepcopy(DEFAULT_ISSUE_TYPE_SCREEN_SCHEME)
 
 
-@pytest.fixture
-def software_issue_type_screen_scheme():
-    """Sample software issue type screen scheme."""
-    import copy
-
-    return copy.deepcopy(SOFTWARE_ISSUE_TYPE_SCREEN_SCHEME)
 
 
 @pytest.fixture
@@ -1198,12 +1090,6 @@ def permission_scheme_detail():
     return copy.deepcopy(PERMISSION_SCHEME_DETAIL_RESPONSE)
 
 
-@pytest.fixture
-def minimal_permission_scheme():
-    """Sample permission scheme with minimal grants."""
-    import copy
-
-    return copy.deepcopy(MINIMAL_SCHEME_RESPONSE)
 
 
 @pytest.fixture
@@ -1230,12 +1116,6 @@ def updated_permission_scheme():
     return copy.deepcopy(UPDATED_SCHEME_RESPONSE)
 
 
-@pytest.fixture
-def permission_grants():
-    """Sample permission grants response."""
-    import copy
-
-    return copy.deepcopy(PERMISSION_GRANTS_RESPONSE)
 
 
 @pytest.fixture
@@ -1297,12 +1177,6 @@ def software_workflow():
     return copy.deepcopy(SOFTWARE_WORKFLOW)
 
 
-@pytest.fixture
-def bug_workflow():
-    """Sample Bug Workflow for testing."""
-    import copy
-
-    return copy.deepcopy(BUG_WORKFLOW)
 
 
 @pytest.fixture
@@ -1385,12 +1259,6 @@ def status_search_response():
     return copy.deepcopy(STATUS_SEARCH_RESPONSE)
 
 
-@pytest.fixture
-def single_status():
-    """Sample single status object."""
-    import copy
-
-    return copy.deepcopy(SINGLE_STATUS)
 
 
 @pytest.fixture
@@ -1457,31 +1325,13 @@ def workflows_page_2():
     return copy.deepcopy(WORKFLOWS_PAGE_2)
 
 
-@pytest.fixture
-def workflow_task_failed_response():
-    """Sample failed task response for workflow scheme assignment."""
-    import copy
-
-    return copy.deepcopy(TASK_FAILED_RESPONSE)
 
 
 # ========== Permission Scheme Error Fixtures ==========
 
 
-@pytest.fixture
-def scheme_not_found_error():
-    """Sample error response when permission scheme is not found."""
-    import copy
-
-    return copy.deepcopy(SCHEME_NOT_FOUND_ERROR)
 
 
-@pytest.fixture
-def scheme_in_use_error():
-    """Sample error response when permission scheme is in use by projects."""
-    import copy
-
-    return copy.deepcopy(SCHEME_IN_USE_ERROR)
 
 
 @pytest.fixture
