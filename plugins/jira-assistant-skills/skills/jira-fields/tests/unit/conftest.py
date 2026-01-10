@@ -278,11 +278,3 @@ def sample_all_screens():
     return copy.deepcopy(SAMPLE_ALL_SCREENS)
 
 
-@pytest.fixture
-def mock_config_manager(mock_jira_client):
-    """Mock config_manager.get_jira_client() to return mock client."""
-
-    def _get_jira_client(profile=None):
-        return mock_jira_client
-
-    return _get_jira_client
