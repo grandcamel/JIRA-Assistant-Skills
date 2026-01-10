@@ -1,5 +1,30 @@
 # Changelog
 
+## [3.0.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v2.2.7...v3.0.0) (2026-01-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* Major version bump to 3.0.0
+* Major version bump to 3.0.0
+
+### Features
+
+* bump to v3.0.0 and add automated PyPI publishing ([adf99fb](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/adf99fba64e40ab7d95cb8dc23e90b26fa214a3b))
+* bump to v3.0.0 and add automated PyPI publishing ([8b89497](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/8b89497f52c03ad661492762cb7c72d2d2586fc8))
+* **jira-agile:** add sprint discovery commands ([791e2b2](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/791e2b2e4fba622883169fa521adbbcded331a1c))
+* **jira-agile:** add sprint discovery commands ([b7f0efa](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/b7f0efae46b9d2f7022d431a342a2780944d6dd6))
+* **jira-agile:** add velocity command and fix get_estimates bug ([54716e1](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/54716e1fca26d0812f37ab277fc4fcdd1c21622b))
+* **jira-agile:** add velocity command for sprint metrics ([e483b4b](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/e483b4b2f25a5124cd24bd384ca35fbb8888ad11))
+* **jira-bulk,jira-admin:** add bulk delete and permission diagnostics ([353598a](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/353598a7e7ab83d8fae3c88395bd6dc9ebeff124))
+
+
+### Bug Fixes
+
+* **jira-agile:** add --top, --bottom, --board options to rank command ([e348047](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/e348047d23b0c7b1a0c1fa6b4d7e17a83ebadc10))
+* **jira-agile:** add --top, --bottom, --board options to rank command ([42c9c06](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/42c9c06975b976b21e7f3a7a3fca4b51a8041736))
+* **jira-agile:** use correct get_board_sprints method in get_estimates ([4f96df0](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/4f96df0d4134ca4c3a92116ee6a55bc16c49fcd0))
+
 ## [2.2.7](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v2.2.6...v2.2.7) (2026-01-05)
 
 
