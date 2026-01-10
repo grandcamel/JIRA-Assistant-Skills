@@ -216,7 +216,7 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`
 ## Gotchas
 
 - **Mock mode for testing**: Set `JIRA_MOCK_MODE=true` to use mock client instead of real JIRA API. Useful for skill testing without credentials.
-- **Library embedding**: Plugin has embedded lib copy at `skills/shared/scripts/lib/`. This is SEPARATE from pip-installed `jira-assistant-skills-lib`. Changes to standalone lib don't affect plugin until manually synced.
+- **Shared test fixtures**: Common fixtures in `skills/shared/tests/conftest.py`. Import with `from shared.tests.conftest import *` in skill conftest.py files.
 - **Skill routing**: The `jira-assistant` hub skill routes to specific skills based on descriptions. If routing fails (goes to setup instead of skill), check SKILL.md "When to use" sections.
 - **Script imports**: Scripts must use `from jira_assistant_skills_lib import ...` not relative imports. The library is installed separately.
 - **SKILL.md discovery**: Claude reads SKILL.md files to understand capabilities. Keep "When to use this skill" section accurate and specific.

@@ -1,14 +1,3 @@
-# JIRA Assistant Skills - Python Dependencies
-
-# Shared library for JIRA API interaction
-# Includes: requests, tabulate, colorama, python-dotenv, tqdm
-jira-assistant-skills-lib>=0.1.0
-
-# Secure credential storage (system keychain)
-# Optional: graceful fallback to JSON if unavailable
-keyring>=24.0.0
-
-# Testing dependencies
-pytest>=7.4.0
-pytest-cov>=4.1.0
-responses>=0.24.0
+# JIRA Assistant Skills Library
+# Install with: pip install jira-assistant-skills-lib
+jira-assistant-skills-lib>=0.2.1
