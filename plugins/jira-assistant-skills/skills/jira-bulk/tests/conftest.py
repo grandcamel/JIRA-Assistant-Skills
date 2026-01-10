@@ -7,63 +7,8 @@ Note: Common markers (unit, integration, bulk) are defined in the root pytest.in
 import pytest
 
 
-# mock_jira_client and sample_issues are provided by root conftest.py
-
-
-@pytest.fixture
-def sample_issues():
-    """Sample issue data for testing."""
-    return [
-        {
-            "key": "PROJ-1",
-            "id": "10001",
-            "fields": {
-                "summary": "First issue",
-                "status": {"name": "To Do", "id": "1"},
-                "priority": {"name": "Medium", "id": "3"},
-                "issuetype": {"name": "Task", "id": "10001"},
-                "assignee": None,
-                "project": {"key": "PROJ", "id": "10000"},
-                "labels": [],
-            },
-        },
-        {
-            "key": "PROJ-2",
-            "id": "10002",
-            "fields": {
-                "summary": "Second issue",
-                "status": {"name": "In Progress", "id": "2"},
-                "priority": {"name": "High", "id": "2"},
-                "issuetype": {"name": "Bug", "id": "10002"},
-                "assignee": {"accountId": "user-123", "displayName": "John Doe"},
-                "project": {"key": "PROJ", "id": "10000"},
-                "labels": ["bug"],
-            },
-        },
-        {
-            "key": "PROJ-3",
-            "id": "10003",
-            "fields": {
-                "summary": "Third issue",
-                "status": {"name": "To Do", "id": "1"},
-                "priority": {"name": "Low", "id": "4"},
-                "issuetype": {"name": "Task", "id": "10001"},
-                "assignee": {"accountId": "user-456", "displayName": "Jane Smith"},
-                "project": {"key": "PROJ", "id": "10000"},
-                "labels": ["feature"],
-            },
-        },
-    ]
-
-
-@pytest.fixture
-def sample_transitions():
-    """Sample transition data for testing."""
-    return [
-        {"id": "21", "name": "In Progress", "to": {"name": "In Progress", "id": "3"}},
-        {"id": "31", "name": "Done", "to": {"name": "Done", "id": "4"}},
-        {"id": "41", "name": "In Review", "to": {"name": "In Review", "id": "5"}},
-    ]
+# Shared fixtures from root conftest.py:
+# mock_jira_client, sample_issues, sample_transitions, sample_issue, sample_project
 
 
 @pytest.fixture
