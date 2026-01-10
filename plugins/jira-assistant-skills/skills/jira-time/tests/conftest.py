@@ -207,11 +207,3 @@ def sample_empty_worklogs():
     return {"startAt": 0, "maxResults": 20, "total": 0, "worklogs": []}
 
 
-@pytest.fixture
-def mock_config_manager(mock_jira_client):
-    """Mock config_manager.get_jira_client() to return mock client."""
-
-    def _get_jira_client(profile=None):
-        return mock_jira_client
-
-    return _get_jira_client

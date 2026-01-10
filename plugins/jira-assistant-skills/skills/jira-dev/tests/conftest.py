@@ -144,13 +144,6 @@ def sample_dev_info():
     return copy.deepcopy(_sample_dev_info)
 
 
-@pytest.fixture
-def mock_config_manager():
-    """Mock ConfigManager for tests."""
-    with patch("config_manager.ConfigManager") as mock_cm:
-        mock_instance = MagicMock()
-        mock_cm.return_value = mock_instance
-        yield mock_instance
 
 
 @pytest.fixture

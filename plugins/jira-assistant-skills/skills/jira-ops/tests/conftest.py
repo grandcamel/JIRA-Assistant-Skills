@@ -79,25 +79,5 @@ def sample_project_data():
     return copy.deepcopy(data)
 
 
-@pytest.fixture
-def sample_user_data():
-    """Sample JIRA user data for cache testing."""
-    data = {
-        "accountId": "557058:test-user-id",
-        "displayName": "Test User",
-        "emailAddress": "test@example.com",
-        "active": True,
-    }
-    return copy.deepcopy(data)
 
 
-@pytest.fixture
-def sample_field_data():
-    """Sample JIRA field data for cache testing."""
-    data = {
-        "id": "customfield_10016",
-        "name": "Story Points",
-        "custom": True,
-        "clauseNames": ["cf[10016]", "Story Points"],
-    }
-    return copy.deepcopy(data)

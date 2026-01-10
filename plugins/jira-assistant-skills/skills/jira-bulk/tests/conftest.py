@@ -131,8 +131,3 @@ def sample_issue_with_subtasks():
     }
 
 
-@pytest.fixture
-def mock_get_jira_client(mock_jira_client):
-    """Patch get_jira_client to return mock client."""
-    with patch("config_manager.get_jira_client", return_value=mock_jira_client):
-        yield mock_jira_client

@@ -293,40 +293,5 @@ def sample_changelog():
     }
 
 
-@pytest.fixture
-def sample_notification_request():
-    """Sample notification request."""
-    return {
-        "subject": "Action Required on PROJ-123",
-        "textBody": "Please review this issue and provide feedback.",
-        "htmlBody": "<p>Please review this issue and provide feedback.</p>",
-        "to": {
-            "reporter": True,
-            "assignee": True,
-            "watchers": True,
-            "voters": False,
-            "users": [],
-            "groups": [],
-        },
-        "restrict": {"permissions": [], "groups": []},
-    }
 
 
-@pytest.fixture
-def sample_notification_with_users():
-    """Sample notification request with specific users."""
-    return {
-        "subject": "Critical Issue Update",
-        "textBody": "This issue requires immediate attention.",
-        "to": {
-            "reporter": False,
-            "assignee": False,
-            "watchers": False,
-            "voters": False,
-            "users": [
-                {"accountId": "5b10a2844c20165700ede21g"},
-                {"accountId": "5b10a2844c20165700ede22h"},
-            ],
-            "groups": [{"name": "developers"}],
-        },
-    }
