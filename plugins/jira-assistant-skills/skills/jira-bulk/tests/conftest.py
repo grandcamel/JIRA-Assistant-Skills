@@ -4,30 +4,10 @@ Pytest fixtures for jira-bulk tests.
 Note: Common markers (unit, integration, bulk) are defined in the root pytest.ini.
 """
 
-from unittest.mock import patch
-
 import pytest
 
 
-@pytest.fixture
-def mock_jira_client():
-    """Create a mock JiraClient with common methods."""
-    from unittest.mock import MagicMock
-
-    client = MagicMock()
-    client.search_issues = MagicMock()
-    client.get_issue = MagicMock()
-    client.get_transitions = MagicMock()
-    client.transition_issue = MagicMock()
-    client.assign_issue = MagicMock()
-    client.update_issue = MagicMock()
-    client.create_issue = MagicMock()
-    client.delete_issue = MagicMock()
-    client.get_current_user_id = MagicMock(return_value="current-user-account-id")
-    client.close = MagicMock()
-    client.__enter__ = MagicMock(return_value=client)
-    client.__exit__ = MagicMock(return_value=False)
-    return client
+# mock_jira_client and sample_issues are provided by root conftest.py
 
 
 @pytest.fixture

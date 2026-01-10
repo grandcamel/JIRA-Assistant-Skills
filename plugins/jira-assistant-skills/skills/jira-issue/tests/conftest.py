@@ -25,15 +25,7 @@ for path in [_shared_lib_path, _scripts_path]:
         sys.path.insert(0, path)
 
 
-@pytest.fixture
-def mock_jira_client():
-    """Mock JiraClient for testing without API calls."""
-    client = Mock()
-    client.base_url = "https://test.atlassian.net"
-    client.email = "test@example.com"
-    client.close = Mock()
-    client.get_current_user_id = Mock(return_value="557058:test-user-id")
-    return client
+# mock_jira_client and sample_issue are provided by root conftest.py
 
 
 @pytest.fixture

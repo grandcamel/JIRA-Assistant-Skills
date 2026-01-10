@@ -38,14 +38,7 @@ def temp_cache_dir():
     shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-@pytest.fixture
-def mock_jira_client():
-    """Mock JiraClient for testing without API calls."""
-    client = Mock()
-    client.base_url = "https://test.atlassian.net"
-    client.email = "test@example.com"
-    client.close = Mock()
-    return client
+# mock_jira_client is provided by root conftest.py
 
 
 @pytest.fixture

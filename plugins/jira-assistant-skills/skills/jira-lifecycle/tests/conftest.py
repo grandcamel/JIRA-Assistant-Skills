@@ -26,14 +26,7 @@ if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
 
-@pytest.fixture
-def mock_jira_client():
-    """Mock JiraClient for testing without API calls."""
-    client = Mock()
-    client.base_url = "https://test.atlassian.net"
-    client.email = "test@example.com"
-    client.close = Mock()
-    return client
+# mock_jira_client is provided by root conftest.py
 
 
 @pytest.fixture
