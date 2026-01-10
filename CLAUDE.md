@@ -225,6 +225,7 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`
 
 ## Best Practices
 
+- **Bump version before merging PRs**: Always bump the version per [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and run `./scripts/sync-version.sh` before merging any PR
 - Always use `#!/usr/bin/env bash` shebang for bash scripts
 - Always use `./scripts/sync-version.sh` when bumping versions
 - Run `./scripts/run_tests.sh` before committing
