@@ -6,7 +6,6 @@ Note: Common markers (unit, integration, bulk) are defined in the root pytest.in
 
 import pytest
 
-
 # Shared fixtures from root conftest.py:
 # mock_jira_client, sample_issues, sample_transitions, sample_issue, sample_project
 

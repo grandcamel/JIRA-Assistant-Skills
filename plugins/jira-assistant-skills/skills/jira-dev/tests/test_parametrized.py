@@ -397,8 +397,9 @@ class TestErrorHandlingParametrized:
         self, mock_jira_client, error_type, error_class_name
     ):
         """Test error handling in create_branch_name."""
-        import jira_assistant_skills_lib
         from create_branch_name import create_branch_name
+
+        import jira_assistant_skills_lib
 
         # Get the actual error class
         error_class = getattr(jira_assistant_skills_lib, error_class_name)
