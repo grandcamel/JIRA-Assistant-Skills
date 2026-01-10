@@ -6,7 +6,6 @@ Note: Common markers (unit, integration, collaborate) are defined in the root py
 
 import pytest
 
-
 # mock_jira_client is provided by root conftest.py
 
 

@@ -7,7 +7,7 @@ Note: Common markers (unit, integration, dev) are defined in the root pytest.ini
 import copy
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 

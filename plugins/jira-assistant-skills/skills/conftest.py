@@ -14,11 +14,9 @@ Shared fixtures:
 - sample_project: Sample project data
 """
 
-from copy import deepcopy
 from unittest.mock import MagicMock, Mock
 
 import pytest
-
 
 # =============================================================================
 # Mock JIRA Client Fixtures
