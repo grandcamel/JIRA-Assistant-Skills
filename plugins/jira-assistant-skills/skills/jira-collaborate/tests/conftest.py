@@ -4,17 +4,10 @@ Pytest fixtures for jira-collaborate comment, notification, and activity tests.
 Note: Common markers (unit, integration, collaborate) are defined in the root pytest.ini.
 """
 
-from unittest.mock import MagicMock
-
 import pytest
 
 
-@pytest.fixture
-def mock_jira_client():
-    """Create a mock JIRA client."""
-    client = MagicMock()
-    client.base_url = "https://test.atlassian.net"
-    return client
+# mock_jira_client is provided by root conftest.py
 
 
 @pytest.fixture

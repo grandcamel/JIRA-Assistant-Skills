@@ -20,12 +20,7 @@ scripts_path = Path(__file__).parent.parent / "scripts"
 sys.path.insert(0, str(scripts_path))
 
 
-@pytest.fixture
-def mock_jira_client():
-    """Create a mock JIRA client."""
-    client = Mock()
-    client.close = Mock()
-    return client
+# mock_jira_client is provided by root conftest.py
 
 
 @pytest.fixture
