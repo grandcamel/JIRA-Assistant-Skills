@@ -92,34 +92,42 @@ jira-as search query "project = PROJ"
 
 1. Place in skill's `scripts/` directory
 2. Import: `from jira_assistant_skills_lib import ...`
-3. Use argparse for script arguments
-4. Catch `JiraError`, call `print_error()`, `sys.exit(1)`
-5. Add shebang `#!/usr/bin/env python3`, make executable
-6. Update skill's SKILL.md
+3. Use shared utilities from `shared/scripts/script_utils.py`
+4. Add shebang `#!/usr/bin/env python3`, make executable
+5. Update skill's SKILL.md
+
+**Script utilities** (`shared/scripts/script_utils.py`):
+- `add_common_args(parser)` - Adds `--profile` and `--output` args
+- `add_bulk_args(parser)` - Adds `--dry-run`, `--max-issues`, `--yes` for bulk ops
+- `parse_comma_list(value)` - Parse "a,b,c" → ["a", "b", "c"]
+- `parse_json_arg(value)` - Parse JSON string args
+- `format_output(result, format)` - Handle text vs JSON output
+- `run_script(main_func)` - Wrapper with standard error handling
+- `@script_main` - Decorator version of `run_script`
+- `ScriptResult` - Helper for building structured results
 
 **Script template**:
 ```python
 #!/usr/bin/env python3
 import argparse
 import sys
+sys.path.insert(0, str(__file__).replace("/scripts/my_script.py", "/../shared/scripts"))
 
-from jira_assistant_skills_lib import get_jira_client, print_error, JiraError
+from jira_assistant_skills_lib import get_jira_client, JiraError
 from jira_assistant_skills_lib.validators import validate_issue_key
+from script_utils import add_common_args, format_output, run_script
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(...)
-    # Add script-specific arguments here
+    add_common_args(parser)  # Adds --profile, --output
     args = parser.parse_args(argv)
 
-    try:
-        client = get_jira_client()
-        # Perform operation
-    except JiraError as e:
-        print_error(e)
-        sys.exit(1)
+    client = get_jira_client(args.profile)
+    result = client.get_issue(args.issue_key)
+    format_output(result, args.output, success_message=f"Found: {result['key']}")
 
 if __name__ == '__main__':
-    main()
+    run_script(main)  # Handles JiraError, KeyboardInterrupt, etc.
 ```
 
 ## Adding Skills
