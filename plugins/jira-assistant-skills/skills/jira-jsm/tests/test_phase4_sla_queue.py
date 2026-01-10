@@ -648,7 +648,7 @@ def test_format_queue_issues_json(mock_queue_issues):
 
 def test_sla_utils_integration():
     """Test JSM utils integration with SLA data."""
-    from jsm_utils import (
+    from jira_assistant_skills_lib import (
         calculate_sla_percentage,
         format_duration,
         format_sla_time,

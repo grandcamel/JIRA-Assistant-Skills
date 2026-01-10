@@ -32,7 +32,7 @@ class TestGetGroupMembersByName:
         """Test getting members by group name."""
         mock_jira_client.get_group_members.return_value = sample_group_members
 
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from get_group_members import get_members
 
             results = get_members(mock_jira_client, group_name="jira-developers")
@@ -48,7 +48,7 @@ class TestGetGroupMembersById:
         """Test getting members by group ID."""
         mock_jira_client.get_group_members.return_value = sample_group_members
 
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from get_group_members import get_members
 
             get_members(
@@ -66,7 +66,7 @@ class TestGetGroupMembersIncludeInactive:
         """Test including inactive users in results."""
         mock_jira_client.get_group_members.return_value = sample_group_members
 
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from get_group_members import get_members
 
             get_members(
@@ -84,7 +84,7 @@ class TestGetGroupMembersPagination:
         """Test pagination parameters."""
         mock_jira_client.get_group_members.return_value = sample_group_members
 
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from get_group_members import get_members
 
             get_members(
@@ -108,7 +108,7 @@ class TestGetGroupMembersEmpty:
         """Test handling group with no members."""
         mock_jira_client.get_group_members.return_value = sample_empty_group_members
 
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from get_group_members import get_members
 
             results = get_members(mock_jira_client, group_name="empty-group")
@@ -124,7 +124,7 @@ class TestGetGroupMembersPrivacy:
     ):
         """Test handling privacy-restricted fields in output."""
         # Jane Smith in sample_group_members has no email
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from get_group_members import format_members_table
 
             output = format_members_table(sample_group_members["values"])
@@ -139,7 +139,7 @@ class TestGetGroupMembersOutputFormats:
 
     def test_format_members_table(self, mock_jira_client, sample_group_members):
         """Test table output format."""
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from get_group_members import format_members_table
 
             output = format_members_table(sample_group_members["values"])
@@ -149,7 +149,7 @@ class TestGetGroupMembersOutputFormats:
 
     def test_format_members_json(self, mock_jira_client, sample_group_members):
         """Test JSON output format."""
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from get_group_members import format_members_json
 
             output = format_members_json(sample_group_members["values"])
@@ -159,7 +159,7 @@ class TestGetGroupMembersOutputFormats:
 
     def test_format_members_csv(self, mock_jira_client, sample_group_members):
         """Test CSV output format."""
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from get_group_members import format_members_csv
 
             output = format_members_csv(sample_group_members["values"])
@@ -180,7 +180,7 @@ class TestGetGroupMembersNotFound:
             "Group", "nonexistent-group"
         )
 
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from get_group_members import get_members
 
             with pytest.raises(NotFoundError):
@@ -198,7 +198,7 @@ class TestGetGroupMembersPermissionError:
             "Browse users and groups permission required"
         )
 
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from get_group_members import get_members
 
             with pytest.raises(PermissionError) as exc_info:

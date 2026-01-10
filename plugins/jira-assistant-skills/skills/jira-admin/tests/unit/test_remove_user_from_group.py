@@ -29,7 +29,7 @@ class TestRemoveUserByAccountId:
         """Test removing user from group by account ID."""
         mock_jira_client.remove_user_from_group.return_value = None
 
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from remove_user_from_group import remove_user_from_group
 
             remove_user_from_group(
@@ -54,7 +54,7 @@ class TestRemoveUserByEmail:
         mock_jira_client.search_users.return_value = [sample_user]
         mock_jira_client.remove_user_from_group.return_value = None
 
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from remove_user_from_group import remove_user_by_email
 
             remove_user_by_email(
@@ -72,7 +72,7 @@ class TestRemoveUserByEmail:
         """Test error when email lookup returns no results."""
         mock_jira_client.search_users.return_value = []
 
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from remove_user_from_group import remove_user_by_email
 
             from jira_assistant_skills_lib import NotFoundError
@@ -96,7 +96,7 @@ class TestRemoveUserIdempotent:
         # JIRA API returns success even if user is not a member
         mock_jira_client.remove_user_from_group.return_value = None
 
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from remove_user_from_group import remove_user_from_group
 
             # Should not raise
@@ -113,7 +113,7 @@ class TestRemoveUserConfirmation:
 
     def test_remove_user_requires_confirmation(self, mock_jira_client):
         """Test that removal requires confirmation."""
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from assistant_skills_lib.error_handler import ValidationError
             from remove_user_from_group import remove_user_from_group
 
@@ -131,7 +131,7 @@ class TestRemoveUserConfirmation:
         """Test that confirmed removal proceeds."""
         mock_jira_client.remove_user_from_group.return_value = None
 
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from remove_user_from_group import remove_user_from_group
 
             remove_user_from_group(
@@ -149,7 +149,7 @@ class TestRemoveUserDryRun:
 
     def test_remove_user_dry_run_no_api_call(self, mock_jira_client):
         """Test that dry-run mode does not make API call."""
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from remove_user_from_group import remove_user_from_group
 
             remove_user_from_group(
@@ -163,7 +163,7 @@ class TestRemoveUserDryRun:
 
     def test_remove_user_dry_run_preview(self, mock_jira_client):
         """Test that dry-run shows preview message."""
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from remove_user_from_group import format_dry_run_preview
 
             preview = format_dry_run_preview(
@@ -185,7 +185,7 @@ class TestRemoveUserPermissionError:
             "Site administration permission required"
         )
 
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from remove_user_from_group import remove_user_from_group
 
             with pytest.raises(PermissionError) as exc_info:
@@ -206,7 +206,7 @@ class TestRemoveUserGroupById:
         """Test removing user from group by group ID."""
         mock_jira_client.remove_user_from_group.return_value = None
 
-        with patch("config_manager.get_jira_client", return_value=mock_jira_client):
+        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
             from remove_user_from_group import remove_user_from_group
 
             remove_user_from_group(

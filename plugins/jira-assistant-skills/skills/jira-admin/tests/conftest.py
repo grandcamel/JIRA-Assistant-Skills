@@ -706,7 +706,7 @@ def mock_get_automation_client(mock_automation_client):
     from unittest.mock import patch
 
     with patch(
-        "config_manager.get_automation_client", return_value=mock_automation_client
+        "jira_assistant_skills_lib.get_automation_client", return_value=mock_automation_client
     ):
         yield mock_automation_client
 
