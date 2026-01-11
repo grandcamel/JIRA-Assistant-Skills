@@ -88,15 +88,10 @@ class TestKeychainAvailability:
 class TestCredentialManagerInit:
     """Test CredentialManager initialization."""
 
-    def test_default_profile(self):
-        """Test default profile is production."""
+    def test_initialization(self):
+        """Test CredentialManager initializes correctly."""
         manager = CredentialManager()
-        assert manager.profile == "production"
-
-    def test_custom_profile(self):
-        """Test custom profile."""
-        manager = CredentialManager("development")
-        assert manager.profile == "development"
+        assert manager is not None
 
 
 class TestEnvironmentCredentials:
@@ -120,25 +115,8 @@ class TestEnvironmentCredentials:
             assert email == "test@example.com"
             assert token == "test-token-123"
 
-    def test_get_credentials_from_env_profile_specific_token(self):
-        """Test profile-specific token takes precedence."""
-        with patch.dict(
-            os.environ,
-            {
-                "JIRA_SITE_URL": "https://test.atlassian.net",
-                "JIRA_EMAIL": "test@example.com",
-                "JIRA_API_TOKEN": "generic-token",
-                "JIRA_API_TOKEN_PRODUCTION": "production-token",
-            },
-            clear=False,
-        ):
-            manager = CredentialManager("production")
-            _url, _email, token = manager.get_credentials_from_env("production")
-
-            assert token == "production-token"
-
-    def test_get_credentials_from_env_fallback_to_generic_token(self):
-        """Test fallback to generic token when profile-specific not set."""
+    def test_get_credentials_from_env_uses_generic_token(self):
+        """Test credentials use JIRA_API_TOKEN environment variable."""
         with patch.dict(
             os.environ,
             {
@@ -148,8 +126,8 @@ class TestEnvironmentCredentials:
             },
             clear=False,
         ):
-            manager = CredentialManager("development")
-            _url, _email, token = manager.get_credentials_from_env("development")
+            manager = CredentialManager()
+            _url, _email, token = manager.get_credentials_from_env()
 
             assert token == "generic-token"
 
@@ -191,7 +169,7 @@ class TestKeychainCredentials:
                     }
                 )
 
-                manager = CredentialManager("production")
+                manager = CredentialManager()
                 url, email, token = manager.get_credentials_from_keychain()
 
                 assert url == "https://keychain.atlassian.net"
@@ -199,7 +177,7 @@ class TestKeychainCredentials:
                 assert token == "keychain-token"
 
                 mock_keyring.get_password.assert_called_once_with(
-                    "jira-assistant-production", "credentials"
+                    "jira-assistant", "credentials"
                 )
         finally:
             cm.KEYRING_AVAILABLE = original_available
@@ -254,13 +232,11 @@ class TestJsonCredentials:
 
         settings = {
             "jira": {
-                "profiles": {"production": {"url": "https://json.atlassian.net"}},
                 "credentials": {
-                    "production": {
-                        "email": "json@example.com",
-                        "api_token": "json-token",
-                    }
-                },
+                    "url": "https://json.atlassian.net",
+                    "email": "json@example.com",
+                    "api_token": "json-token",
+                }
             }
         }
 
@@ -268,7 +244,7 @@ class TestJsonCredentials:
         settings_file.write_text(json.dumps(settings))
 
         # Patch _find_claude_dir to return our temp directory
-        manager = CredentialManager("production")
+        manager = CredentialManager()
         manager._claude_dir = claude_dir
 
         url, email, token = manager.get_credentials_from_json()
@@ -314,12 +290,10 @@ class TestGetCredentials:
 
         settings = {
             "jira": {
-                "profiles": {"production": {"url": "https://json.atlassian.net"}},
+                "url": "https://json.atlassian.net",
                 "credentials": {
-                    "production": {
-                        "email": "json@example.com",
-                        "api_token": "json-token",
-                    }
+                    "email": "json@example.com",
+                    "api_token": "json-token",
                 },
             }
         }
@@ -335,7 +309,7 @@ class TestGetCredentials:
             },
             clear=False,
         ):
-            manager = CredentialManager("production")
+            manager = CredentialManager()
             manager._claude_dir = claude_dir
 
             url, email, token = manager.get_credentials()
@@ -352,7 +326,7 @@ class TestGetCredentials:
             for var in env_vars:
                 os.environ.pop(var, None)
 
-            manager = CredentialManager("nonexistent")
+            manager = CredentialManager()
             manager._claude_dir = None
 
             with pytest.raises(CredentialNotFoundError):
@@ -373,7 +347,7 @@ class TestStoreCredentials:
             with patch.object(cm, "keyring", create=True) as mock_keyring:
                 mock_keyring.get_keyring.return_value = MagicMock()
 
-                manager = CredentialManager("production")
+                manager = CredentialManager()
                 backend = manager.store_credentials(
                     "https://test.atlassian.net",
                     "test@example.com",
@@ -386,7 +360,7 @@ class TestStoreCredentials:
 
                 # Verify the call arguments
                 call_args = mock_keyring.set_password.call_args
-                assert call_args[0][0] == "jira-assistant-production"
+                assert call_args[0][0] == "jira-assistant"
                 assert call_args[0][1] == "credentials"
 
                 # Verify JSON content
@@ -402,7 +376,7 @@ class TestStoreCredentials:
         claude_dir = tmp_path / ".claude"
         claude_dir.mkdir()
 
-        manager = CredentialManager("production")
+        manager = CredentialManager()
         manager._claude_dir = claude_dir
 
         backend = manager.store_credentials(
@@ -420,14 +394,9 @@ class TestStoreCredentials:
 
         # Verify content
         content = json.loads(settings_file.read_text())
-        assert (
-            content["jira"]["profiles"]["production"]["url"]
-            == "https://test.atlassian.net"
-        )
-        assert (
-            content["jira"]["credentials"]["production"]["email"] == "test@example.com"
-        )
-        assert content["jira"]["credentials"]["production"]["api_token"] == "test-token"
+        assert content["jira"]["credentials"]["url"] == "https://test.atlassian.net"
+        assert content["jira"]["credentials"]["email"] == "test@example.com"
+        assert content["jira"]["credentials"]["api_token"] == "test-token"
 
     def test_store_validates_url(self):
         """Test store validates URL format - rejects HTTP (requires HTTPS)."""
@@ -473,12 +442,12 @@ class TestDeleteCredentials:
             with patch.object(cm, "keyring", create=True) as mock_keyring:
                 mock_keyring.get_keyring.return_value = MagicMock()
 
-                manager = CredentialManager("production")
+                manager = CredentialManager()
                 result = manager.delete_credentials()
 
                 assert result is True
                 mock_keyring.delete_password.assert_called_once_with(
-                    "jira-assistant-production", "credentials"
+                    "jira-assistant", "credentials"
                 )
         finally:
             cm.KEYRING_AVAILABLE = original_available
@@ -492,17 +461,15 @@ class TestDeleteCredentials:
         settings = {
             "jira": {
                 "credentials": {
-                    "production": {
-                        "email": "test@example.com",
-                        "api_token": "test-token",
-                    }
+                    "email": "test@example.com",
+                    "api_token": "test-token",
                 }
             }
         }
         settings_file = claude_dir / "settings.local.json"
         settings_file.write_text(json.dumps(settings))
 
-        manager = CredentialManager("production")
+        manager = CredentialManager()
         manager._claude_dir = claude_dir
 
         # Mock keychain as unavailable
@@ -513,7 +480,7 @@ class TestDeleteCredentials:
 
         # Verify credentials removed
         content = json.loads(settings_file.read_text())
-        assert "production" not in content["jira"]["credentials"]
+        assert "credentials" not in content.get("jira", {})
 
 
 class TestValidateCredentials:
@@ -601,7 +568,7 @@ class TestConvenienceFunctions:
             },
             clear=False,
         ):
-            url, email, token = get_credentials("production")
+            url, email, token = get_credentials()
 
             assert url == "https://test.atlassian.net"
             assert email == "test@example.com"
