@@ -86,7 +86,6 @@ class TestLinkIssueCLI:
                         pytest.fail(f"--type {link_type} --to should be valid")
 
 
-
 @pytest.mark.relationships
 @pytest.mark.unit
 class TestBulkLinkCLI:

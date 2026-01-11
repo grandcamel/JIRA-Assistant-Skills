@@ -277,6 +277,7 @@ class TestDeleteIssueErrors:
 class TestDeleteIssueProfile:
     """Tests for profile handling."""
 
+
 @pytest.mark.unit
 class TestDeleteIssueCleanup:
     """Tests for client cleanup."""

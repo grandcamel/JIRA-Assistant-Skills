@@ -15,9 +15,7 @@ from typing import Any
 from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-def get_queue(
-    service_desk_id: int, queue_id: int
-) -> dict[str, Any]:
+def get_queue(service_desk_id: int, queue_id: int) -> dict[str, Any]:
     """Get queue details."""
     with get_jira_client() as client:
         return client.get_queue(service_desk_id, queue_id)

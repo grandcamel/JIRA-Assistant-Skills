@@ -30,7 +30,9 @@ class TestDeleteGroupByName:
         """Test deleting a group by name."""
         mock_jira_client.delete_group.return_value = None
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from delete_group import delete_group
 
             delete_group(mock_jira_client, group_name="old-team", confirmed=True)
@@ -47,7 +49,9 @@ class TestDeleteGroupById:
         """Test deleting a group by group ID."""
         mock_jira_client.delete_group.return_value = None
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from delete_group import delete_group
 
             delete_group(mock_jira_client, group_id="abc-123-def", confirmed=True)
@@ -61,7 +65,9 @@ class TestDeleteGroupConfirmation:
 
     def test_delete_group_requires_confirmation(self, mock_jira_client):
         """Test that deletion requires confirmation."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from assistant_skills_lib.error_handler import ValidationError
             from delete_group import delete_group
 
@@ -74,7 +80,9 @@ class TestDeleteGroupConfirmation:
         """Test that confirmed deletion proceeds."""
         mock_jira_client.delete_group.return_value = None
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from delete_group import delete_group
 
             delete_group(mock_jira_client, group_name="my-group", confirmed=True)
@@ -87,7 +95,9 @@ class TestDeleteGroupDryRun:
 
     def test_delete_group_dry_run_no_api_call(self, mock_jira_client):
         """Test that dry-run mode does not make API call."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from delete_group import delete_group
 
             delete_group(mock_jira_client, group_name="my-group", dry_run=True)
@@ -96,7 +106,9 @@ class TestDeleteGroupDryRun:
 
     def test_delete_group_dry_run_shows_preview(self, mock_jira_client):
         """Test that dry-run shows preview message."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from delete_group import format_dry_run_preview
 
             preview = format_dry_run_preview("my-group")
@@ -110,7 +122,9 @@ class TestDeleteGroupSystemProtection:
 
     def test_delete_system_group_fails(self, mock_jira_client, system_groups):
         """Test that system groups cannot be deleted."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from assistant_skills_lib.error_handler import ValidationError
             from delete_group import check_system_group_protection
 
@@ -125,7 +139,9 @@ class TestDeleteGroupSystemProtection:
 
     def test_delete_custom_group_allowed(self, mock_jira_client):
         """Test that custom groups can be deleted."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from delete_group import check_system_group_protection
 
             # Should not raise for custom groups
@@ -140,7 +156,9 @@ class TestDeleteGroupSwap:
         """Test deleting group and moving members to swap group."""
         mock_jira_client.delete_group.return_value = None
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from delete_group import delete_group
 
             delete_group(
@@ -165,7 +183,9 @@ class TestDeleteGroupNotFound:
             "Group", "nonexistent-group"
         )
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from delete_group import delete_group
 
             with pytest.raises(NotFoundError):
@@ -185,7 +205,9 @@ class TestDeleteGroupPermissionError:
             "Site administration permission required"
         )
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from delete_group import delete_group
 
             with pytest.raises(PermissionError) as exc_info:

@@ -27,9 +27,7 @@ from jira_assistant_skills_lib import (
 )
 
 
-def list_attachments(
-    issue_key: str
-) -> list[dict[str, Any]]:
+def list_attachments(issue_key: str) -> list[dict[str, Any]]:
     """
     List all attachments for an issue.
 

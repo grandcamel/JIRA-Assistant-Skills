@@ -190,12 +190,6 @@ def sample_customers_list_response():
     }
 
 
-
-
-
-
-
-
 @pytest.fixture
 def sample_request_response():
     """Sample JSM API response for a created request."""
@@ -628,8 +622,6 @@ def sample_assets_list():
             ],
         },
     ]
-
-
 
 
 @pytest.fixture(autouse=True)

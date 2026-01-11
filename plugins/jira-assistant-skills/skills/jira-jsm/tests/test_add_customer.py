@@ -87,5 +87,3 @@ def test_add_customer_validation(mock_jira_client):
         # Invalid IDs (empty)
         assert not validate_account_ids([])
         assert not validate_account_ids([""])
-
-

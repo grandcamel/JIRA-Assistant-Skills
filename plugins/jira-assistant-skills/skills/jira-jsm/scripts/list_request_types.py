@@ -20,9 +20,7 @@ from jira_assistant_skills_lib import (
 )
 
 
-def list_request_types(
-    service_desk_id: str, start: int = 0, limit: int = 50
-) -> dict:
+def list_request_types(service_desk_id: str, start: int = 0, limit: int = 50) -> dict:
     """
     List request types for a service desk.
 

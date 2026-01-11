@@ -127,7 +127,7 @@ class TestCreateEpic:
                 project="PROJ",
                 summary="Mobile App MVP",
                 color="invalid-color",
-                )
+            )
 
         assert "color" in str(exc_info.value).lower()
 

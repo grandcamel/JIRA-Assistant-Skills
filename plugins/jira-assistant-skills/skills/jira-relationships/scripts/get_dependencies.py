@@ -410,9 +410,7 @@ Export formats:
     try:
         link_types = args.link_types.split(",") if args.link_types else None
 
-        result = get_dependencies(
-            issue_key=args.issue_key, link_types=link_types
-        )
+        result = get_dependencies(issue_key=args.issue_key, link_types=link_types)
         output = format_dependencies(result, output_format=args.output)
         print(output)
 

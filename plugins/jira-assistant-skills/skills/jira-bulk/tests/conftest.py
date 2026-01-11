@@ -53,5 +53,3 @@ def sample_issue_with_subtasks():
             ],
         },
     }
-
-

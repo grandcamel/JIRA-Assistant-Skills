@@ -53,7 +53,7 @@ class TestCreateComponent:
             project="PROJ",
             name="Frontend UI",
             description="User interface components",
-                )
+        )
 
         assert result["description"] == "User interface components"
 
@@ -78,7 +78,7 @@ class TestCreateComponent:
             project="PROJ",
             name="Database",
             lead_account_id="5b10a2844c20165700ede21g",
-                )
+        )
 
         assert result["lead"]["accountId"] == "5b10a2844c20165700ede21g"
 
@@ -102,7 +102,7 @@ class TestCreateComponent:
             project="PROJ",
             name="Infrastructure",
             assignee_type="COMPONENT_LEAD",
-                )
+        )
 
         assert result["assigneeType"] == "COMPONENT_LEAD"
 
@@ -131,7 +131,7 @@ class TestCreateComponent:
             description="Security and authentication",
             lead_account_id="5b10a2844c20165700ede22h",
             assignee_type="PROJECT_LEAD",
-                )
+        )
 
         assert result["name"] == "Security"
         assert result["description"] == "Security and authentication"

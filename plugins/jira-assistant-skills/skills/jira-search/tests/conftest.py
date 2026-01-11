@@ -338,11 +338,3 @@ def sample_filter_with_subscriptions():
             ],
         },
     }
-
-
-
-
-
-
-
-

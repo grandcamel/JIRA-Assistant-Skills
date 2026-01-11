@@ -19,9 +19,7 @@ from jira_assistant_skills_lib import (
 )
 
 
-def delete_issue(
-    issue_key: str, force: bool = False
-) -> None:
+def delete_issue(issue_key: str, force: bool = False) -> None:
     """
     Delete a JIRA issue.
 

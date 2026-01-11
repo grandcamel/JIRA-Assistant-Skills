@@ -168,8 +168,6 @@ def default_scheme_response():
     return DEFAULT_SCHEME_RESPONSE.copy()
 
 
-
-
 @pytest.fixture
 def created_scheme_response():
     """Sample JIRA API response for newly created scheme."""
@@ -192,8 +190,6 @@ def scheme_mappings_response():
 def alternatives_response():
     """Sample JIRA API response for alternative issue types."""
     return ALTERNATIVES_RESPONSE.copy()
-
-
 
 
 # ========== User Management Fixtures ==========
@@ -298,8 +294,6 @@ def sample_users():
             "active": False,
         },
     ]
-
-
 
 
 # ========== Group Management Fixtures ==========
@@ -460,10 +454,6 @@ def empty_scheme():
     import copy
 
     return copy.deepcopy(EMPTY_SCHEME)
-
-
-
-
 
 
 # ========== Automation Rules Fixtures ==========
@@ -633,10 +623,6 @@ def sample_automation_templates():
     ]
 
 
-
-
-
-
 # ========== Project Management Fixtures ==========
 
 
@@ -773,8 +759,6 @@ def sample_categories_list():
     ]
 
 
-
-
 @pytest.fixture
 def sample_avatars_response():
     """Sample JIRA API response for project avatars."""
@@ -882,10 +866,6 @@ def default_screen():
     return copy.deepcopy(DEFAULT_SCREEN)
 
 
-
-
-
-
 @pytest.fixture
 def default_screen_tabs():
     """Sample screen tabs for default screen."""
@@ -958,8 +938,6 @@ def default_screen_scheme():
     return copy.deepcopy(DEFAULT_SCREEN_SCHEME)
 
 
-
-
 @pytest.fixture
 def issue_type_screen_schemes_response():
     """Sample JIRA API response for issue type screen schemes."""
@@ -974,8 +952,6 @@ def default_issue_type_screen_scheme():
     import copy
 
     return copy.deepcopy(DEFAULT_ISSUE_TYPE_SCREEN_SCHEME)
-
-
 
 
 @pytest.fixture
@@ -1077,8 +1053,6 @@ def permission_scheme_detail():
     return copy.deepcopy(PERMISSION_SCHEME_DETAIL_RESPONSE)
 
 
-
-
 @pytest.fixture
 def created_permission_scheme():
     """Sample JIRA API response for newly created permission scheme."""
@@ -1101,8 +1075,6 @@ def updated_permission_scheme():
     import copy
 
     return copy.deepcopy(UPDATED_SCHEME_RESPONSE)
-
-
 
 
 @pytest.fixture
@@ -1162,8 +1134,6 @@ def software_workflow():
     import copy
 
     return copy.deepcopy(SOFTWARE_WORKFLOW)
-
-
 
 
 @pytest.fixture
@@ -1246,8 +1216,6 @@ def status_search_response():
     return copy.deepcopy(STATUS_SEARCH_RESPONSE)
 
 
-
-
 @pytest.fixture
 def issue_transitions():
     """Sample issue transitions response."""
@@ -1312,13 +1280,7 @@ def workflows_page_2():
     return copy.deepcopy(WORKFLOWS_PAGE_2)
 
 
-
-
 # ========== Permission Scheme Error Fixtures ==========
-
-
-
-
 
 
 @pytest.fixture

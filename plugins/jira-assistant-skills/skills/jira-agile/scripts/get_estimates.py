@@ -108,9 +108,7 @@ def get_estimates(
     # Resolve project_key to sprint_id
     sprint_name = None
     if project_key and not sprint_id:
-        sprint_id, sprint_name = get_active_sprint_for_project(
-            project_key, client
-        )
+        sprint_id, sprint_name = get_active_sprint_for_project(project_key, client)
 
     # Initialize client
     if not client:

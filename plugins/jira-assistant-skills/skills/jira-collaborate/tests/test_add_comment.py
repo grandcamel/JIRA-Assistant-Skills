@@ -97,6 +97,7 @@ class TestAddComment:
             assert result["id"] == "10001"
             mock_jira_client.add_comment.assert_called_once()
 
+
 @pytest.mark.collaborate
 @pytest.mark.unit
 class TestAddCommentWithVisibility:

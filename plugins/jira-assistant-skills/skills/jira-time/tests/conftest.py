@@ -197,5 +197,3 @@ def sample_issue_no_time_tracking():
 def sample_empty_worklogs():
     """Sample empty worklogs response."""
     return {"startAt": 0, "maxResults": 20, "total": 0, "worklogs": []}
-
-

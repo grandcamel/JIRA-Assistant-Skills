@@ -236,7 +236,10 @@ def sample_issue_with_links(sample_issue):
             "inwardIssue": {
                 "id": "10006",
                 "key": "PROJ-128",
-                "fields": {"summary": "Related Issue", "status": {"name": "In Progress"}},
+                "fields": {
+                    "summary": "Related Issue",
+                    "status": {"name": "In Progress"},
+                },
             },
         },
     ]
@@ -312,7 +315,9 @@ def permission_denied_error():
 def not_found_error():
     """Sample not found error response."""
     return {
-        "errorMessages": ["Issue does not exist or you do not have permission to see it."],
+        "errorMessages": [
+            "Issue does not exist or you do not have permission to see it."
+        ],
         "errors": {},
     }
 

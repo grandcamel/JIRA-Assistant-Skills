@@ -499,11 +499,7 @@ class TestSaveToSettingsLocal:
 
             # Settings.local.json is at .claude/settings.local.json (skills.parent)
             settings_path = claude_dir / "settings.local.json"
-            existing = {
-                "jira": {
-                    "projects": {"EXISTING": {"defaults": {}}}
-                }
-            }
+            existing = {"jira": {"projects": {"EXISTING": {"defaults": {}}}}}
             settings_path.write_text(json.dumps(existing))
 
             defaults = {"project_key": "TESTPROJ", "by_issue_type": {}, "global": {}}

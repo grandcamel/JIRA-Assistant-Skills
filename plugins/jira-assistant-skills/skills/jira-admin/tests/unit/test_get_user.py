@@ -33,7 +33,9 @@ class TestGetUserByAccountId:
         """Test getting user details by accountId."""
         mock_jira_client.get_user.return_value = sample_user
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from get_user import get_user_by_id
 
             result = get_user_by_id(
@@ -52,7 +54,9 @@ class TestGetUserByEmail:
         """Test getting user by email address."""
         mock_jira_client.get_user.return_value = sample_user
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from get_user import get_user_by_email
 
             result = get_user_by_email(mock_jira_client, email="john.doe@example.com")
@@ -67,7 +71,9 @@ class TestGetCurrentUser:
         """Test getting current user calls /myself endpoint."""
         mock_jira_client.get_current_user.return_value = sample_user
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from get_user import get_current_user
 
             result = get_current_user(mock_jira_client)
@@ -85,7 +91,9 @@ class TestGetUserWithGroups:
         """Test including group membership in user details."""
         mock_jira_client.get_user.return_value = sample_user_with_groups
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from get_user import get_user_by_id
 
             result = get_user_by_id(
@@ -107,7 +115,9 @@ class TestGetUserWithApplicationRoles:
         """Test including application roles in user details."""
         mock_jira_client.get_user.return_value = sample_user_with_groups
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from get_user import get_user_by_id
 
             result = get_user_by_id(
@@ -124,7 +134,9 @@ class TestGetUserTextFormat:
 
     def test_format_user_text_shows_details(self, mock_jira_client, sample_user):
         """Test formatted user profile output."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from get_user import format_user_text
 
             output = format_user_text(sample_user)
@@ -139,7 +151,9 @@ class TestGetUserJsonOutput:
 
     def test_format_user_json_complete(self, mock_jira_client, sample_user):
         """Test JSON output returns complete user object."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from get_user import format_user_json
 
             output = format_user_json(sample_user)
@@ -158,7 +172,9 @@ class TestGetUserNotFound:
 
         mock_jira_client.get_user.side_effect = NotFoundError("User", "unknown-id")
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from get_user import get_user_by_id
 
             with pytest.raises(NotFoundError):
@@ -172,7 +188,9 @@ class TestGetUserPrivacyRestricted:
         self, mock_jira_client, privacy_restricted_user
     ):
         """Test handling privacy-restricted fields."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from get_user import format_user_text
 
             output = format_user_text(privacy_restricted_user)
@@ -189,7 +207,9 @@ class TestGetUserInactive:
         self, mock_jira_client, sample_inactive_user
     ):
         """Test that inactive status is clearly displayed."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from get_user import format_user_text
 
             output = format_user_text(sample_inactive_user)
@@ -202,7 +222,9 @@ class TestGetUserUnknownAccount:
 
     def test_format_user_unknown_account(self, mock_jira_client, deleted_user):
         """Test handling 'unknown' accountId for deleted/anonymized users."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from get_user import format_user_text
 
             output = format_user_text(deleted_user)
@@ -222,7 +244,9 @@ class TestGetUserPermissionError:
             "Browse users and groups permission required"
         )
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from get_user import get_user_by_id
 
             with pytest.raises(PermissionError) as exc_info:

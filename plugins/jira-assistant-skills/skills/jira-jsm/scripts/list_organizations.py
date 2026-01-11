@@ -15,9 +15,7 @@ import sys
 from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-def list_organizations_func(
-    start: int = 0, limit: int = 50
-) -> dict:
+def list_organizations_func(start: int = 0, limit: int = 50) -> dict:
     """
     List all organizations.
 
@@ -70,9 +68,7 @@ Examples:
     args = parser.parse_args(argv)
 
     try:
-        data = list_organizations_func(
-            start=args.start, limit=args.limit
-        )
+        data = list_organizations_func(start=args.start, limit=args.limit)
 
         organizations = data.get("values", [])
 

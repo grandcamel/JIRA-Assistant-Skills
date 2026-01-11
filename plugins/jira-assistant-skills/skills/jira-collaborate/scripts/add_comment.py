@@ -22,9 +22,7 @@ from jira_assistant_skills_lib import (
 )
 
 
-def add_comment(
-    issue_key: str, body: str, format_type: str = "text"
-) -> dict:
+def add_comment(issue_key: str, body: str, format_type: str = "text") -> dict:
     """
     Add a public comment to an issue.
 

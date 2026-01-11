@@ -25,9 +25,7 @@ class TestUpdateCustomFields:
 
         from update_custom_fields import update_custom_fields
 
-        update_custom_fields(
-            "PROJ-123", field="customfield_10001", value="Production"
-        )
+        update_custom_fields("PROJ-123", field="customfield_10001", value="Production")
 
         mock_jira_client.update_issue.assert_called_once()
         call_args = mock_jira_client.update_issue.call_args
@@ -67,7 +65,7 @@ class TestUpdateCustomFields:
             "PROJ-123",
             field="customfield_10001",
             value='{"value": "Option A"}',
-                )
+        )
 
         call_args = mock_jira_client.update_issue.call_args
         assert call_args[0][1]["customfield_10001"] == {"value": "Option A"}
@@ -86,9 +84,7 @@ class TestUpdateCustomFields:
         from update_custom_fields import update_custom_fields
 
         with pytest.raises(ValidationError):
-            update_custom_fields(
-                "invalid", field="customfield_10001", value="test"
-            )
+            update_custom_fields("invalid", field="customfield_10001", value="test")
 
 
 @pytest.mark.collaborate
@@ -109,9 +105,7 @@ class TestUpdateCustomFieldsErrorHandling:
         from update_custom_fields import update_custom_fields
 
         with pytest.raises(AuthenticationError):
-            update_custom_fields(
-                "PROJ-123", field="customfield_10001", value="test"
-            )
+            update_custom_fields("PROJ-123", field="customfield_10001", value="test")
 
     @patch("update_custom_fields.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client):
@@ -126,9 +120,7 @@ class TestUpdateCustomFieldsErrorHandling:
         from update_custom_fields import update_custom_fields
 
         with pytest.raises(PermissionError):
-            update_custom_fields(
-                "PROJ-123", field="customfield_10001", value="test"
-            )
+            update_custom_fields("PROJ-123", field="customfield_10001", value="test")
 
     @patch("update_custom_fields.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -143,9 +135,7 @@ class TestUpdateCustomFieldsErrorHandling:
         from update_custom_fields import update_custom_fields
 
         with pytest.raises(NotFoundError):
-            update_custom_fields(
-                "PROJ-999", field="customfield_10001", value="test"
-            )
+            update_custom_fields("PROJ-999", field="customfield_10001", value="test")
 
     @patch("update_custom_fields.get_jira_client")
     def test_field_not_found(self, mock_get_client, mock_jira_client):
@@ -160,9 +150,7 @@ class TestUpdateCustomFieldsErrorHandling:
         from update_custom_fields import update_custom_fields
 
         with pytest.raises(JiraError):
-            update_custom_fields(
-                "PROJ-123", field="customfield_99999", value="test"
-            )
+            update_custom_fields("PROJ-123", field="customfield_99999", value="test")
 
     @patch("update_custom_fields.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -177,9 +165,7 @@ class TestUpdateCustomFieldsErrorHandling:
         from update_custom_fields import update_custom_fields
 
         with pytest.raises(JiraError) as exc_info:
-            update_custom_fields(
-                "PROJ-123", field="customfield_10001", value="test"
-            )
+            update_custom_fields("PROJ-123", field="customfield_10001", value="test")
         assert exc_info.value.status_code == 429
 
     @patch("update_custom_fields.get_jira_client")
@@ -195,7 +181,5 @@ class TestUpdateCustomFieldsErrorHandling:
         from update_custom_fields import update_custom_fields
 
         with pytest.raises(JiraError) as exc_info:
-            update_custom_fields(
-                "PROJ-123", field="customfield_10001", value="test"
-            )
+            update_custom_fields("PROJ-123", field="customfield_10001", value="test")
         assert exc_info.value.status_code == 500

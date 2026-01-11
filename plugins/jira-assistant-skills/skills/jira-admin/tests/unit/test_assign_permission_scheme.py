@@ -435,4 +435,3 @@ class TestAssignPermissionSchemeCLI:
                 main()
 
         assert exc_info.value.code == 1
-

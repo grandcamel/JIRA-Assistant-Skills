@@ -20,9 +20,7 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_request_type_fields(
-    service_desk_id: str, request_type_id: str
-) -> dict:
+def get_request_type_fields(service_desk_id: str, request_type_id: str) -> dict:
     """
     Get fields for a request type.
 

@@ -157,5 +157,3 @@ def sample_subtask_response():
             "status": {"name": "In Progress"},
         },
     }
-
-

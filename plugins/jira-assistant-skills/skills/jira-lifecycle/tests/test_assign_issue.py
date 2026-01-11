@@ -87,7 +87,7 @@ class TestAssignIssue:
                 user="test",
                 assign_to_self=True,
                 unassign=True,
-                )
+            )
 
     def test_assign_invalid_issue_key(self):
         """Test error on invalid issue key."""

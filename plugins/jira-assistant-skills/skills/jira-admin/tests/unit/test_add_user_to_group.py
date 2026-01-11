@@ -30,7 +30,9 @@ class TestAddUserByAccountId:
         """Test adding user to group by account ID."""
         mock_jira_client.add_user_to_group.return_value = sample_group
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from add_user_to_group import add_user_to_group
 
             result = add_user_to_group(
@@ -57,7 +59,9 @@ class TestAddUserByEmail:
         mock_jira_client.search_users.return_value = [sample_user]
         mock_jira_client.add_user_to_group.return_value = sample_group
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from add_user_to_group import add_user_by_email
 
             add_user_by_email(
@@ -74,7 +78,9 @@ class TestAddUserByEmail:
         """Test error when email lookup returns no results."""
         mock_jira_client.search_users.return_value = []
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from add_user_to_group import add_user_by_email
 
             from jira_assistant_skills_lib import NotFoundError
@@ -97,7 +103,9 @@ class TestAddUserIdempotent:
         # JIRA API returns success even if user is already a member
         mock_jira_client.add_user_to_group.return_value = sample_group
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from add_user_to_group import add_user_to_group
 
             result = add_user_to_group(
@@ -121,7 +129,9 @@ class TestAddUserGroupNotFound:
             "Group", "nonexistent-group"
         )
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from add_user_to_group import add_user_to_group
 
             with pytest.raises(NotFoundError):
@@ -143,7 +153,9 @@ class TestAddUserNotFound:
             "User", "invalid-account-id"
         )
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from add_user_to_group import add_user_to_group
 
             with pytest.raises(NotFoundError):
@@ -165,7 +177,9 @@ class TestAddUserPermissionError:
             "Site administration permission required"
         )
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from add_user_to_group import add_user_to_group
 
             with pytest.raises(PermissionError) as exc_info:
@@ -183,7 +197,9 @@ class TestAddUserDryRun:
 
     def test_add_user_dry_run_no_api_call(self, mock_jira_client):
         """Test that dry-run mode does not make API call."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from add_user_to_group import add_user_to_group
 
             result = add_user_to_group(
@@ -198,7 +214,9 @@ class TestAddUserDryRun:
 
     def test_add_user_dry_run_preview(self, mock_jira_client):
         """Test that dry-run shows preview message."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from add_user_to_group import format_dry_run_preview
 
             preview = format_dry_run_preview(
@@ -216,7 +234,9 @@ class TestAddUserGroupById:
         """Test adding user to group by group ID."""
         mock_jira_client.add_user_to_group.return_value = sample_group
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from add_user_to_group import add_user_to_group
 
             add_user_to_group(

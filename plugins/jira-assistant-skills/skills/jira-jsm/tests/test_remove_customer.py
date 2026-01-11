@@ -97,5 +97,3 @@ def test_remove_customer_confirmation_yes_flag(mock_jira_client):
 
         # Should call API when --yes provided
         mock_jira_client.remove_customers_from_service_desk.assert_called_once()
-
-

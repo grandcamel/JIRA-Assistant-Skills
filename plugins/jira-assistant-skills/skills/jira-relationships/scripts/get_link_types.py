@@ -15,9 +15,7 @@ import sys
 from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-def get_link_types(
-    filter_pattern: str | None = None
-) -> list:
+def get_link_types(filter_pattern: str | None = None) -> list:
     """
     Get all available issue link types.
 

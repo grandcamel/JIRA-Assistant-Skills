@@ -26,9 +26,7 @@ from jira_assistant_skills_lib import (
 REOPEN_KEYWORDS = ["reopen", "to do", "todo", "open", "backlog"]
 
 
-def reopen_issue(
-    issue_key: str, comment: str | None = None
-) -> None:
+def reopen_issue(issue_key: str, comment: str | None = None) -> None:
     """
     Reopen a closed or resolved issue.
 
@@ -89,9 +87,7 @@ def main(argv: list[str] | None = None):
     args = parser.parse_args(argv)
 
     try:
-        reopen_issue(
-            issue_key=args.issue_key, comment=args.comment
-        )
+        reopen_issue(issue_key=args.issue_key, comment=args.comment)
 
         print_success(f"Reopened {args.issue_key}")
 

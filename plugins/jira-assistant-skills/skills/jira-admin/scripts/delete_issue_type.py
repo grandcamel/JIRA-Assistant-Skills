@@ -19,9 +19,7 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_alternatives_for_type(
-    issue_type_id: str, client=None
-) -> list[dict[str, Any]]:
+def get_alternatives_for_type(issue_type_id: str, client=None) -> list[dict[str, Any]]:
     """
     Get alternative issue types for migration.
 
@@ -148,9 +146,7 @@ Note:
     try:
         # Show alternatives only
         if args.show_alternatives:
-            alternatives = get_alternatives_for_type(
-                issue_type_id=args.issue_type_id
-            )
+            alternatives = get_alternatives_for_type(issue_type_id=args.issue_type_id)
             print(f"Alternative issue types for ID {args.issue_type_id}:")
             print(format_alternatives(alternatives))
             return

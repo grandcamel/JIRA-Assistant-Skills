@@ -779,9 +779,7 @@ def discover_project(
             print_success(f"Saved skill directory: {skill_path}")
 
         if save_personal:
-            settings_path = save_to_settings_local(
-                project_key, defaults
-            )
+            settings_path = save_to_settings_local(project_key, defaults)
             print_success(f"Saved to settings: {settings_path}")
 
         return context

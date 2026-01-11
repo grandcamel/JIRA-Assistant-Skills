@@ -23,9 +23,7 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_issue(
-    issue_key: str, fields: list | None = None
-) -> dict:
+def get_issue(issue_key: str, fields: list | None = None) -> dict:
     """
     Get a JIRA issue.
 

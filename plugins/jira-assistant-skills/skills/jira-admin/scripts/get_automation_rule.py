@@ -217,9 +217,7 @@ Examples:
         parser.error("Either rule_id or --name must be provided")
 
     try:
-        rule = get_automation_rule(
-            rule_id=args.rule_id, name=args.name
-        )
+        rule = get_automation_rule(rule_id=args.rule_id, name=args.name)
 
         if args.output == "json":
             print(json.dumps(rule, indent=2))

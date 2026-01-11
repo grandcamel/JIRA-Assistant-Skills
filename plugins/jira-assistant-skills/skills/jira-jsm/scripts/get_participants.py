@@ -14,9 +14,7 @@ import sys
 from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-def get_participants_func(
-    issue_key: str, start: int = 0, limit: int = 50
-) -> dict:
+def get_participants_func(issue_key: str, start: int = 0, limit: int = 50) -> dict:
     """
     Get participants for a request.
 

@@ -145,5 +145,3 @@ def test_add_users_multiple_batches(mock_jira_client):
             exit_code = main()
 
     assert exit_code == 0
-
-

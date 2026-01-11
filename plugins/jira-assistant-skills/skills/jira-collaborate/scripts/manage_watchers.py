@@ -88,7 +88,6 @@ def main(argv: list[str] | None = None):
         "--list", "-l", action="store_true", help="List current watchers"
     )
 
-
     args = parser.parse_args(argv)
 
     try:

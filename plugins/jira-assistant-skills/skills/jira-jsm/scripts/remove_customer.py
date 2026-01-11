@@ -32,9 +32,7 @@ def parse_account_ids(account_id_string: str) -> list:
     return [id.strip() for id in account_id_string.split(",") if id.strip()]
 
 
-def remove_customer_from_service_desk(
-    service_desk_id: str, account_ids: list
-) -> None:
+def remove_customer_from_service_desk(service_desk_id: str, account_ids: list) -> None:
     """
     Remove customers from a service desk.
 
