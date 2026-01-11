@@ -151,7 +151,7 @@ skips = [
 [tool.pytest.ini_options]
 minversion = "7.0"
 pythonpath = ["."]
-testpaths = ["plugins/jira-assistant-skills/skills"]
+testpaths = ["src/jira_assistant_skills/tests", "plugins/jira-assistant-skills/skills"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -178,7 +178,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["plugins/jira-assistant-skills/skills"]
+source = ["src/jira_assistant_skills", "plugins/jira-assistant-skills/skills"]
 omit = ["*/tests/*", "*/conftest.py", "*/__init__.py"]
 
 [tool.coverage.report]
