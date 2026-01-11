@@ -279,7 +279,9 @@ class TestCreateFieldImpl:
         assert call_args[1]["data"]["name"] == "Custom Text Field"
         mock_jira_client.close.assert_called_once()
 
-    def test_create_field_with_description(self, mock_jira_client, sample_created_field):
+    def test_create_field_with_description(
+        self, mock_jira_client, sample_created_field
+    ):
         """Test creating a field with description."""
         mock_jira_client.post.return_value = deepcopy(sample_created_field)
 
@@ -301,10 +303,13 @@ class TestCreateFieldImpl:
         """Test that invalid field type raises ValidationError."""
         from jira_assistant_skills_lib import ValidationError
 
-        with patch(
-            "jira_assistant_skills.cli.commands.fields_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), pytest.raises(ValidationError, match="Invalid field type"):
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.fields_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            pytest.raises(ValidationError, match="Invalid field type"),
+        ):
             _create_field_impl(name="Test Field", field_type="invalid_type")
 
         mock_jira_client.post.assert_not_called()
@@ -439,10 +444,13 @@ class TestConfigureAgileFieldsImpl:
 
         mock_jira_client.get.return_value = deepcopy(sample_project_nextgen)
 
-        with patch(
-            "jira_assistant_skills.cli.commands.fields_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), pytest.raises(ValidationError, match="team-managed"):
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.fields_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            pytest.raises(ValidationError, match="team-managed"),
+        ):
             _configure_agile_fields_impl(project_key="TEAM")
 
     def test_configure_agile_fields_no_agile_fields_error(
@@ -456,10 +464,13 @@ class TestConfigureAgileFieldsImpl:
             [],  # No fields
         ]
 
-        with patch(
-            "jira_assistant_skills.cli.commands.fields_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), pytest.raises(ValidationError, match="No Agile fields found"):
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.fields_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            pytest.raises(ValidationError, match="No Agile fields found"),
+        ):
             _configure_agile_fields_impl(project_key="PROJ")
 
     def test_configure_agile_fields_with_explicit_ids(
@@ -685,7 +696,9 @@ class TestFieldsListCommand:
 class TestFieldsCreateCommand:
     """Tests for the fields create CLI command."""
 
-    def test_fields_create_cli(self, cli_runner, mock_jira_client, sample_created_field):
+    def test_fields_create_cli(
+        self, cli_runner, mock_jira_client, sample_created_field
+    ):
         """Test CLI fields create command."""
         mock_jira_client.post.return_value = deepcopy(sample_created_field)
 
@@ -712,7 +725,15 @@ class TestFieldsCreateCommand:
         ):
             result = cli_runner.invoke(
                 fields,
-                ["create", "--name", "Test Field", "--type", "text", "--output", "json"],
+                [
+                    "create",
+                    "--name",
+                    "Test Field",
+                    "--type",
+                    "text",
+                    "--output",
+                    "json",
+                ],
             )
 
         assert result.exit_code == 0
@@ -754,7 +775,9 @@ class TestFieldsCheckProjectCommand:
             "jira_assistant_skills.cli.commands.fields_cmds.get_jira_client",
             return_value=mock_jira_client,
         ):
-            result = cli_runner.invoke(fields, ["check-project", "PROJ", "--check-agile"])
+            result = cli_runner.invoke(
+                fields, ["check-project", "PROJ", "--check-agile"]
+            )
 
         assert result.exit_code == 0
         assert "Agile Field Availability" in result.output
@@ -785,9 +808,7 @@ class TestFieldsConfigureAgileCommand:
             "jira_assistant_skills.cli.commands.fields_cmds.get_jira_client",
             return_value=mock_jira_client,
         ):
-            result = cli_runner.invoke(
-                fields, ["configure-agile", "PROJ", "--dry-run"]
-            )
+            result = cli_runner.invoke(fields, ["configure-agile", "PROJ", "--dry-run"])
 
         assert result.exit_code == 0
         assert "[DRY RUN]" in result.output

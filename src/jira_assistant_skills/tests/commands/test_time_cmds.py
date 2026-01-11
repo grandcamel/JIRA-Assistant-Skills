@@ -152,33 +152,41 @@ class TestCalculateProgress:
 
     def test_with_progress(self):
         """Test progress calculation with time logged."""
-        result = _calculate_progress({
-            "originalEstimateSeconds": 100,
-            "timeSpentSeconds": 50,
-        })
+        result = _calculate_progress(
+            {
+                "originalEstimateSeconds": 100,
+                "timeSpentSeconds": 50,
+            }
+        )
         assert result == 50
 
     def test_no_estimate(self):
         """Test with no original estimate."""
-        result = _calculate_progress({
-            "timeSpentSeconds": 50,
-        })
+        result = _calculate_progress(
+            {
+                "timeSpentSeconds": 50,
+            }
+        )
         assert result is None
 
     def test_no_time_spent(self):
         """Test with no time spent."""
-        result = _calculate_progress({
-            "originalEstimateSeconds": 100,
-            "timeSpentSeconds": 0,
-        })
+        result = _calculate_progress(
+            {
+                "originalEstimateSeconds": 100,
+                "timeSpentSeconds": 0,
+            }
+        )
         assert result == 0
 
     def test_over_100_percent(self):
         """Test capping at 100%."""
-        result = _calculate_progress({
-            "originalEstimateSeconds": 100,
-            "timeSpentSeconds": 150,
-        })
+        result = _calculate_progress(
+            {
+                "originalEstimateSeconds": 100,
+                "timeSpentSeconds": 150,
+            }
+        )
         assert result == 100
 
 
@@ -471,7 +479,11 @@ class TestFormatReportText:
             "entry_count": 2,
             "total_seconds": 21600,
             "total_formatted": "6h",
-            "filters": {"project": "PROJ", "since": "2025-01-01", "until": "2025-01-31"},
+            "filters": {
+                "project": "PROJ",
+                "since": "2025-01-01",
+                "until": "2025-01-31",
+            },
         }
         result = _format_report_text(report)
         assert "Time Report: Project PROJ" in result
@@ -537,26 +549,30 @@ class TestFormatBulkLogResult:
 
     def test_dry_run(self):
         """Test dry-run formatting."""
-        result = _format_bulk_log_result({
-            "dry_run": True,
-            "would_log_count": 3,
-            "would_log_formatted": "1h 30m",
-            "preview": [
-                {"issue": "PROJ-1", "summary": "Task 1", "time_to_log": "30m"},
-            ],
-        })
+        result = _format_bulk_log_result(
+            {
+                "dry_run": True,
+                "would_log_count": 3,
+                "would_log_formatted": "1h 30m",
+                "preview": [
+                    {"issue": "PROJ-1", "summary": "Task 1", "time_to_log": "30m"},
+                ],
+            }
+        )
         assert "Preview (dry-run)" in result
         assert "Would log 1h 30m" in result
 
     def test_completed(self):
         """Test completed formatting."""
-        result = _format_bulk_log_result({
-            "dry_run": False,
-            "success_count": 3,
-            "failure_count": 1,
-            "total_formatted": "1h 30m",
-            "failures": [{"issue": "PROJ-4", "error": "Not found"}],
-        })
+        result = _format_bulk_log_result(
+            {
+                "dry_run": False,
+                "success_count": 3,
+                "failure_count": 1,
+                "total_formatted": "1h 30m",
+                "failures": [{"issue": "PROJ-4", "error": "Not found"}],
+            }
+        )
         assert "Bulk Time Logging Complete" in result
         assert "Successful: 3" in result
         assert "Failed: 1" in result
@@ -575,7 +591,10 @@ class TestAddWorklogImpl:
         """Test successful worklog addition."""
         mock_client.add_worklog.return_value = sample_worklog
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             result = _add_worklog_impl("PROJ-123", "2h")
 
         assert result == sample_worklog
@@ -586,8 +605,13 @@ class TestAddWorklogImpl:
         """Test worklog with all options."""
         mock_client.add_worklog.return_value = sample_worklog
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
-            with patch("jira_assistant_skills.cli.commands.time_cmds.parse_relative_date") as mock_parse:
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
+            with patch(
+                "jira_assistant_skills.cli.commands.time_cmds.parse_relative_date"
+            ) as mock_parse:
                 mock_parse.return_value = datetime(2025, 1, 15, 9, 0)
                 result = _add_worklog_impl(
                     "PROJ-123",
@@ -629,7 +653,10 @@ class TestGetWorklogsImpl:
         """Test successful worklogs retrieval."""
         mock_client.get_worklogs.return_value = sample_worklogs_response
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             result = _get_worklogs_impl("PROJ-123")
 
         assert result["total"] == 2
@@ -639,7 +666,10 @@ class TestGetWorklogsImpl:
         """Test filtering by author."""
         mock_client.get_worklogs.return_value = sample_worklogs_response
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             result = _get_worklogs_impl("PROJ-123", author_filter="john@example.com")
 
         assert result["total"] == 1
@@ -652,7 +682,10 @@ class TestUpdateWorklogImpl:
         """Test successful worklog update."""
         mock_client.update_worklog.return_value = sample_worklog
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             result = _update_worklog_impl("PROJ-123", "12345", time_spent="3h")
 
         assert result == sample_worklog
@@ -671,7 +704,10 @@ class TestDeleteWorklogImpl:
         """Test dry-run deletion."""
         mock_client.get_worklog.return_value = sample_worklog
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             result = _delete_worklog_impl("PROJ-123", "12345", dry_run=True)
 
         assert result["dry_run"] is True
@@ -683,7 +719,10 @@ class TestDeleteWorklogImpl:
         mock_client.get_worklog.return_value = sample_worklog
         mock_client.delete_worklog.return_value = None
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             result = _delete_worklog_impl("PROJ-123", "12345")
 
         assert result["dry_run"] is False
@@ -698,7 +737,10 @@ class TestSetEstimateImpl:
         """Test successful estimate setting."""
         mock_client.get_time_tracking.return_value = sample_time_tracking
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             result = _set_estimate_impl("PROJ-123", original_estimate="2d")
 
         assert "previous" in result
@@ -718,7 +760,10 @@ class TestGetTimeTrackingImpl:
         """Test getting time tracking info."""
         mock_client.get_time_tracking.return_value = sample_time_tracking
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             result = _get_time_tracking_impl("PROJ-123")
 
         assert "progress" in result
@@ -731,15 +776,16 @@ class TestGenerateReportImpl:
     def test_generate_report(self, mock_client):
         """Test report generation."""
         mock_client.search_issues.return_value = {
-            "issues": [
-                {"key": "PROJ-123", "fields": {"summary": "Test issue"}}
-            ]
+            "issues": [{"key": "PROJ-123", "fields": {"summary": "Test issue"}}]
         }
         mock_client.get_worklogs.return_value = {
             "worklogs": [
                 {
                     "id": "12345",
-                    "author": {"displayName": "John", "emailAddress": "john@example.com"},
+                    "author": {
+                        "displayName": "John",
+                        "emailAddress": "john@example.com",
+                    },
                     "started": "2025-01-15T09:00:00.000+0000",
                     "timeSpent": "2h",
                     "timeSpentSeconds": 7200,
@@ -747,7 +793,10 @@ class TestGenerateReportImpl:
             ]
         }
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             result = _generate_report_impl(project="PROJ")
 
         assert result["entry_count"] == 1
@@ -760,15 +809,16 @@ class TestExportTimesheetsImpl:
     def test_export_timesheets(self, mock_client):
         """Test timesheet export."""
         mock_client.search_issues.return_value = {
-            "issues": [
-                {"key": "PROJ-123", "fields": {"summary": "Test issue"}}
-            ]
+            "issues": [{"key": "PROJ-123", "fields": {"summary": "Test issue"}}]
         }
         mock_client.get_worklogs.return_value = {
             "worklogs": [
                 {
                     "id": "12345",
-                    "author": {"displayName": "John", "emailAddress": "john@example.com"},
+                    "author": {
+                        "displayName": "John",
+                        "emailAddress": "john@example.com",
+                    },
                     "started": "2025-01-15T09:00:00.000+0000",
                     "timeSpent": "2h",
                     "timeSpentSeconds": 7200,
@@ -776,7 +826,10 @@ class TestExportTimesheetsImpl:
             ]
         }
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             result = _export_timesheets_impl(project="PROJ")
 
         assert "generated_at" in result
@@ -793,7 +846,10 @@ class TestBulkLogTimeImpl:
             "fields": {"summary": "Test"},
         }
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             result = _bulk_log_time_impl(
                 issues=["PROJ-1", "PROJ-2"],
                 time_spent="30m",
@@ -808,7 +864,10 @@ class TestBulkLogTimeImpl:
         """Test actual bulk logging."""
         mock_client.add_worklog.return_value = sample_worklog
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             result = _bulk_log_time_impl(
                 issues=["PROJ-1", "PROJ-2"],
                 time_spent="30m",
@@ -835,7 +894,10 @@ class TestTimeLogCommand:
         """Test logging time."""
         mock_client.add_worklog.return_value = sample_worklog
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             runner = CliRunner()
             result = runner.invoke(time, ["log", "PROJ-123", "--time", "2h"])
 
@@ -846,9 +908,14 @@ class TestTimeLogCommand:
         """Test logging time with JSON output."""
         mock_client.add_worklog.return_value = sample_worklog
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             runner = CliRunner()
-            result = runner.invoke(time, ["log", "PROJ-123", "--time", "2h", "-o", "json"])
+            result = runner.invoke(
+                time, ["log", "PROJ-123", "--time", "2h", "-o", "json"]
+            )
 
         assert result.exit_code == 0
         assert '"id": "12345"' in result.output
@@ -861,7 +928,10 @@ class TestTimeWorklogsCommand:
         """Test getting worklogs."""
         mock_client.get_worklogs.return_value = sample_worklogs_response
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             runner = CliRunner()
             result = runner.invoke(time, ["worklogs", "PROJ-123"])
 
@@ -876,7 +946,10 @@ class TestTimeUpdateWorklogCommand:
         """Test updating worklog."""
         mock_client.update_worklog.return_value = sample_worklog
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             runner = CliRunner()
             result = runner.invoke(
                 time, ["update-worklog", "PROJ-123", "-w", "12345", "-t", "3h"]
@@ -893,7 +966,10 @@ class TestTimeDeleteWorklogCommand:
         """Test dry-run deletion."""
         mock_client.get_worklog.return_value = sample_worklog
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             runner = CliRunner()
             result = runner.invoke(
                 time, ["delete-worklog", "PROJ-123", "-w", "12345", "--dry-run"]
@@ -910,7 +986,10 @@ class TestTimeEstimateCommand:
         """Test setting estimate."""
         mock_client.get_time_tracking.return_value = sample_time_tracking
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             runner = CliRunner()
             result = runner.invoke(time, ["estimate", "PROJ-123", "--original", "2d"])
 
@@ -932,7 +1011,10 @@ class TestTimeTrackingCommand:
         """Test getting time tracking."""
         mock_client.get_time_tracking.return_value = sample_time_tracking
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             runner = CliRunner()
             result = runner.invoke(time, ["tracking", "PROJ-123"])
 
@@ -947,7 +1029,10 @@ class TestTimeReportCommand:
         """Test generating report."""
         mock_client.search_issues.return_value = {"issues": []}
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             runner = CliRunner()
             result = runner.invoke(time, ["report", "--project", "PROJ"])
 
@@ -962,7 +1047,10 @@ class TestTimeExportCommand:
         """Test exporting CSV."""
         mock_client.search_issues.return_value = {"issues": []}
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             runner = CliRunner()
             result = runner.invoke(time, ["export", "--project", "PROJ"])
 
@@ -980,7 +1068,10 @@ class TestTimeBulkLogCommand:
             "fields": {"summary": "Test"},
         }
 
-        with patch("jira_assistant_skills.cli.commands.time_cmds.get_jira_client", return_value=mock_client):
+        with patch(
+            "jira_assistant_skills.cli.commands.time_cmds.get_jira_client",
+            return_value=mock_client,
+        ):
             runner = CliRunner()
             result = runner.invoke(
                 time, ["bulk-log", "-i", "PROJ-1,PROJ-2", "-t", "30m", "--dry-run"]

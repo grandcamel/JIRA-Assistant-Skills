@@ -367,7 +367,9 @@ def _delete_issue_impl(issue_key: str, force: bool = False) -> dict | None:
                 return {
                     "key": issue_key,
                     "summary": issue.get("fields", {}).get("summary", ""),
-                    "type": issue.get("fields", {}).get("issuetype", {}).get("name", ""),
+                    "type": issue.get("fields", {})
+                    .get("issuetype", {})
+                    .get("name", ""),
                     "status": issue.get("fields", {}).get("status", {}).get("name", ""),
                 }
             except JiraError:
@@ -453,7 +455,9 @@ def get_issue(
         issue = _get_issue_impl(issue_key=issue_key, fields=field_list)
 
         # Output formatting
-        output_format = output if output else (ctx.obj.get("OUTPUT", "text") if ctx.obj else "text")
+        output_format = (
+            output if output else (ctx.obj.get("OUTPUT", "text") if ctx.obj else "text")
+        )
         if output_format == "json":
             click.echo(format_json(issue))
         else:
@@ -465,9 +469,13 @@ def get_issue(
                 if tt:
                     click.echo("\nTime Tracking:")
                     if tt.get("originalEstimate"):
-                        click.echo(f"  Original Estimate:  {tt.get('originalEstimate')}")
+                        click.echo(
+                            f"  Original Estimate:  {tt.get('originalEstimate')}"
+                        )
                     if tt.get("remainingEstimate"):
-                        click.echo(f"  Remaining Estimate: {tt.get('remainingEstimate')}")
+                        click.echo(
+                            f"  Remaining Estimate: {tt.get('remainingEstimate')}"
+                        )
                     if tt.get("timeSpent"):
                         click.echo(f"  Time Spent:         {tt.get('timeSpent')}")
                 else:
@@ -488,14 +496,24 @@ def get_issue(
 
 @issue.command(name="create")
 @click.option("--project", "-p", required=True, help="Project key (e.g., PROJ, DEV)")
-@click.option("--type", "-t", "issue_type", required=True, help="Issue type (Bug, Task, Story, etc.)")
+@click.option(
+    "--type",
+    "-t",
+    "issue_type",
+    required=True,
+    help="Issue type (Bug, Task, Story, etc.)",
+)
 @click.option("--summary", "-s", required=True, help="Issue summary (title)")
 @click.option("--description", "-d", help="Issue description (supports markdown)")
 @click.option("--priority", help="Priority (Highest, High, Medium, Low, Lowest)")
 @click.option("--assignee", "-a", help='Assignee (account ID, email, or "self")')
 @click.option("--labels", "-l", help="Comma-separated labels")
 @click.option("--components", "-c", help="Comma-separated component names")
-@click.option("--template", type=click.Choice(["bug", "task", "story"]), help="Use a predefined template")
+@click.option(
+    "--template",
+    type=click.Choice(["bug", "task", "story"]),
+    help="Use a predefined template",
+)
 @click.option("--custom-fields", help="Custom fields as JSON string")
 @click.option("--epic", "-e", help="Epic key to link this issue to (e.g., PROJ-100)")
 @click.option("--sprint", type=int, help="Sprint ID to add this issue to")
@@ -564,7 +582,9 @@ def create_issue(
         issue_key = result.get("key")
 
         # Output formatting
-        output_format = output if output else (ctx.obj.get("OUTPUT", "text") if ctx.obj else "text")
+        output_format = (
+            output if output else (ctx.obj.get("OUTPUT", "text") if ctx.obj else "text")
+        )
         if output_format == "json":
             click.echo(json.dumps(result, indent=2))
         else:

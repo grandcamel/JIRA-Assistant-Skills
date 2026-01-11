@@ -56,8 +56,17 @@ from ..cli_utils import (
 # =============================================================================
 
 VALID_EPIC_COLORS = [
-    "blue", "cyan", "green", "yellow", "orange",
-    "red", "magenta", "purple", "lime", "pink", "teal",
+    "blue",
+    "cyan",
+    "green",
+    "yellow",
+    "orange",
+    "red",
+    "magenta",
+    "purple",
+    "lime",
+    "pink",
+    "teal",
 ]
 
 FIBONACCI_SEQUENCE = [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]
@@ -116,7 +125,9 @@ def _convert_description_to_adf(description: str) -> dict:
     """Convert description to ADF format."""
     if description.strip().startswith("{"):
         return json.loads(description)
-    elif "\n" in description or any(md in description for md in ["**", "*", "#", "`", "["]):
+    elif "\n" in description or any(
+        md in description for md in ["**", "*", "#", "`", "["]
+    ):
         return markdown_to_adf(description)
     else:
         return text_to_adf(description)
@@ -223,14 +234,18 @@ def _get_epic_impl(epic_key: str, with_children: bool = False) -> dict[str, Any]
 
             total_issues = len(children)
             done_issues = sum(
-                1 for issue in children
-                if issue["fields"]["status"]["name"].lower() in ["done", "closed", "resolved"]
+                1
+                for issue in children
+                if issue["fields"]["status"]["name"].lower()
+                in ["done", "closed", "resolved"]
             )
 
             result["progress"] = {
                 "total": total_issues,
                 "done": done_issues,
-                "percentage": int((done_issues / total_issues * 100) if total_issues > 0 else 0),
+                "percentage": int(
+                    (done_issues / total_issues * 100) if total_issues > 0 else 0
+                ),
             }
 
             total_points = 0
@@ -240,7 +255,11 @@ def _get_epic_impl(epic_key: str, with_children: bool = False) -> dict[str, Any]
                 points = issue["fields"].get(story_points_field)
                 if points is not None:
                     total_points += points
-                    if issue["fields"]["status"]["name"].lower() in ["done", "closed", "resolved"]:
+                    if issue["fields"]["status"]["name"].lower() in [
+                        "done",
+                        "closed",
+                        "resolved",
+                    ]:
                         done_points += points
 
             if total_points > 0:
@@ -337,7 +356,9 @@ def _list_sprints_impl(
                 )
             actual_board_id = board["id"]
 
-        result = client.get_board_sprints(actual_board_id, state=state, max_results=max_results)
+        result = client.get_board_sprints(
+            actual_board_id, state=state, max_results=max_results
+        )
         sprints = result.get("values", [])
 
         return {
@@ -405,14 +426,18 @@ def _get_sprint_impl(sprint_id: int, with_issues: bool = False) -> dict[str, Any
 
             total_issues = len(issues)
             done_issues = sum(
-                1 for issue in issues
-                if issue["fields"]["status"]["name"].lower() in ["done", "closed", "resolved"]
+                1
+                for issue in issues
+                if issue["fields"]["status"]["name"].lower()
+                in ["done", "closed", "resolved"]
             )
 
             result["progress"] = {
                 "total": total_issues,
                 "done": done_issues,
-                "percentage": int((done_issues / total_issues * 100) if total_issues > 0 else 0),
+                "percentage": int(
+                    (done_issues / total_issues * 100) if total_issues > 0 else 0
+                ),
             }
 
             total_points = 0
@@ -422,7 +447,11 @@ def _get_sprint_impl(sprint_id: int, with_issues: bool = False) -> dict[str, Any
                 points = issue["fields"].get(story_points_field)
                 if points is not None:
                     total_points += points
-                    if issue["fields"]["status"]["name"].lower() in ["done", "closed", "resolved"]:
+                    if issue["fields"]["status"]["name"].lower() in [
+                        "done",
+                        "closed",
+                        "resolved",
+                    ]:
                         done_points += points
 
             if total_points > 0:
@@ -593,7 +622,10 @@ def _move_to_backlog_impl(
             return {"moved_to_backlog": 0, "message": "No issues to move"}
 
         if dry_run:
-            return {"would_move_to_backlog": len(issues_to_move), "issues": issues_to_move}
+            return {
+                "would_move_to_backlog": len(issues_to_move),
+                "issues": issues_to_move,
+            }
 
         client.move_issues_to_backlog(issues_to_move)
 
@@ -626,7 +658,9 @@ def _get_backlog_impl(
         agile_fields = get_agile_fields()
         epic_link_field = agile_fields["epic_link"]
 
-        result = client.get_board_backlog(board_id, jql=jql_filter, max_results=max_results)
+        result = client.get_board_backlog(
+            board_id, jql=jql_filter, max_results=max_results
+        )
         result["_agile_fields"] = agile_fields
 
         if group_by_epic:
@@ -660,7 +694,9 @@ def _rank_issue_impl(
         raise ValidationError("At least one issue key is required")
 
     if not before_key and not after_key and not position:
-        raise ValidationError("Must specify before_key, after_key, or position (top/bottom)")
+        raise ValidationError(
+            "Must specify before_key, after_key, or position (top/bottom)"
+        )
 
     issue_keys = [validate_issue_key(k) for k in issue_keys]
 
@@ -676,7 +712,9 @@ def _rank_issue_impl(
         elif after_key:
             client.rank_issues(issue_keys, rank_after=after_key)
         elif position in ("top", "bottom"):
-            raise ValidationError("Top/bottom ranking requires implementation with board context")
+            raise ValidationError(
+                "Top/bottom ranking requires implementation with board context"
+            )
 
         return {"ranked": len(issue_keys), "issues": issue_keys}
     finally:
@@ -756,7 +794,9 @@ def _get_estimates_impl(
             sprints_result = client.get_board_sprints(board_id, state="active")
             sprints = sprints_result.get("values", [])
             if not sprints:
-                raise ValidationError(f"No active sprints found for project {project_key}")
+                raise ValidationError(
+                    f"No active sprints found for project {project_key}"
+                )
 
             sprint = sprints[0]
             sprint_id = sprint["id"]
@@ -789,7 +829,9 @@ def _get_estimates_impl(
             by_status[status] += pts
 
             assignee = fields.get("assignee")
-            assignee_name = assignee.get("displayName", "Unknown") if assignee else "Unassigned"
+            assignee_name = (
+                assignee.get("displayName", "Unknown") if assignee else "Unassigned"
+            )
             by_assignee[assignee_name] += pts
 
         response = {
@@ -838,7 +880,9 @@ def _get_velocity_impl(
             actual_board_id = board["id"]
             board_name = board.get("name")
 
-        result = client.get_board_sprints(actual_board_id, state="closed", max_results=num_sprints)
+        result = client.get_board_sprints(
+            actual_board_id, state="closed", max_results=num_sprints
+        )
         sprints = result.get("values", [])
 
         if not sprints:
@@ -846,7 +890,9 @@ def _get_velocity_impl(
                 "No closed sprints found. Velocity requires completed sprints."
             )
 
-        sprints = sorted(sprints, key=lambda s: s.get("endDate", ""), reverse=True)[:num_sprints]
+        sprints = sorted(sprints, key=lambda s: s.get("endDate", ""), reverse=True)[
+            :num_sprints
+        ]
 
         agile_fields = get_agile_fields()
         story_points_field = agile_fields["story_points"]
@@ -870,14 +916,20 @@ def _get_velocity_impl(
                 completed_points += points
                 completed_count += 1
 
-            sprint_data.append({
-                "sprint_id": sprint_id,
-                "sprint_name": sprint_name_val,
-                "completed_points": completed_points,
-                "completed_issues": completed_count,
-                "start_date": sprint.get("startDate", "")[:10] if sprint.get("startDate") else None,
-                "end_date": sprint.get("endDate", "")[:10] if sprint.get("endDate") else None,
-            })
+            sprint_data.append(
+                {
+                    "sprint_id": sprint_id,
+                    "sprint_name": sprint_name_val,
+                    "completed_points": completed_points,
+                    "completed_issues": completed_count,
+                    "start_date": sprint.get("startDate", "")[:10]
+                    if sprint.get("startDate")
+                    else None,
+                    "end_date": sprint.get("endDate", "")[:10]
+                    if sprint.get("endDate")
+                    else None,
+                }
+            )
 
         velocities = [s["completed_points"] for s in sprint_data]
         avg_velocity = mean(velocities) if velocities else 0
@@ -1008,7 +1060,9 @@ def _format_epic_details(epic_data: dict) -> str:
 
     if "progress" in epic_data:
         prog = epic_data["progress"]
-        lines.append(f"Progress: {prog['done']}/{prog['total']} issues ({prog['percentage']}%)")
+        lines.append(
+            f"Progress: {prog['done']}/{prog['total']} issues ({prog['percentage']}%)"
+        )
 
     if "story_points" in epic_data:
         sp = epic_data["story_points"]
@@ -1093,7 +1147,9 @@ def _format_sprint_details(sprint_data: dict) -> str:
                     f"Dates: {start.strftime('%Y-%m-%d')} -> {end.strftime('%Y-%m-%d')} ({days_remaining} days remaining)"
                 )
             else:
-                lines.append(f"Dates: {start.strftime('%Y-%m-%d')} -> {end.strftime('%Y-%m-%d')}")
+                lines.append(
+                    f"Dates: {start.strftime('%Y-%m-%d')} -> {end.strftime('%Y-%m-%d')}"
+                )
         except (ValueError, TypeError):
             lines.append(f"Dates: {start_date} -> {end_date}")
 
@@ -1103,7 +1159,9 @@ def _format_sprint_details(sprint_data: dict) -> str:
 
     if "progress" in sprint_data:
         prog = sprint_data["progress"]
-        lines.append(f"Progress: {prog['done']}/{prog['total']} issues ({prog['percentage']}%)")
+        lines.append(
+            f"Progress: {prog['done']}/{prog['total']} issues ({prog['percentage']}%)"
+        )
 
     if "story_points" in sprint_data:
         sp = sprint_data["story_points"]
@@ -1172,6 +1230,7 @@ def agile():
 
 # --- Epic Commands ---
 
+
 @agile.group()
 def epic():
     """Manage epics."""
@@ -1188,10 +1247,28 @@ def epic():
 @click.option("--labels", "-l", help="Comma-separated labels")
 @click.option("--color", "-c", type=click.Choice(VALID_EPIC_COLORS), help="Epic color")
 @click.option("--custom-fields", help="Custom fields as JSON string")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
-def epic_create(ctx, project, summary, epic_name, description, priority, assignee, labels, color, custom_fields, output):
+def epic_create(
+    ctx,
+    project,
+    summary,
+    epic_name,
+    description,
+    priority,
+    assignee,
+    labels,
+    color,
+    custom_fields,
+    output,
+):
     """Create a new epic."""
     labels_list = parse_comma_list(labels)
     custom = parse_json_arg(custom_fields)
@@ -1216,8 +1293,19 @@ def epic_create(ctx, project, summary, epic_name, description, priority, assigne
 
 @epic.command(name="get")
 @click.argument("epic_key")
-@click.option("--with-children", "-c", is_flag=True, help="Fetch child issues and calculate progress")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--with-children",
+    "-c",
+    is_flag=True,
+    help="Fetch child issues and calculate progress",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def epic_get(ctx, epic_key, with_children, output):
@@ -1232,11 +1320,19 @@ def epic_get(ctx, epic_key, with_children, output):
 
 
 @epic.command(name="add-issues")
-@click.option("--epic", "-e", "epic_key", required=True, help="Epic key (e.g., PROJ-100)")
+@click.option(
+    "--epic", "-e", "epic_key", required=True, help="Epic key (e.g., PROJ-100)"
+)
 @click.option("--issues", "-i", help="Comma-separated issue keys")
 @click.option("--jql", "-j", help="JQL query to find issues")
 @click.option("--dry-run", "-n", is_flag=True, help="Preview without making changes")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def epic_add_issues(ctx, epic_key, issues, jql, dry_run, output):
@@ -1257,7 +1353,9 @@ def epic_add_issues(ctx, epic_key, issues, jql, dry_run, output):
         finally:
             client.close()
 
-    result = _add_to_epic_impl(epic_key=epic_key, issue_keys=issue_list, dry_run=dry_run)
+    result = _add_to_epic_impl(
+        epic_key=epic_key, issue_keys=issue_list, dry_run=dry_run
+    )
 
     if output == "json":
         click.echo(format_json(result))
@@ -1273,6 +1371,7 @@ def epic_add_issues(ctx, epic_key, issues, jql, dry_run, output):
 
 # --- Sprint Commands ---
 
+
 @agile.group()
 def sprint():
     """Manage sprints."""
@@ -1282,9 +1381,20 @@ def sprint():
 @sprint.command(name="list")
 @click.option("--board", "-b", type=int, help="Board ID")
 @click.option("--project", "-p", help="Project key (will find board automatically)")
-@click.option("--state", "-s", type=click.Choice(["active", "closed", "future"]), help="Filter by sprint state")
+@click.option(
+    "--state",
+    "-s",
+    type=click.Choice(["active", "closed", "future"]),
+    help="Filter by sprint state",
+)
 @click.option("--max-results", "-m", type=int, default=50, help="Maximum sprints")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def sprint_list(ctx, board, project, state, max_results, output):
@@ -1294,7 +1404,9 @@ def sprint_list(ctx, board, project, state, max_results, output):
     if board and project:
         raise click.UsageError("--board and --project are mutually exclusive")
 
-    result = _list_sprints_impl(board_id=board, project_key=project, state=state, max_results=max_results)
+    result = _list_sprints_impl(
+        board_id=board, project_key=project, state=state, max_results=max_results
+    )
 
     if output == "json":
         click.echo(format_json(result))
@@ -1308,12 +1420,24 @@ def sprint_list(ctx, board, project, state, max_results, output):
 @click.option("--goal", "-g", help="Sprint goal")
 @click.option("--start-date", "-s", help="Start date (YYYY-MM-DD)")
 @click.option("--end-date", "-e", help="End date (YYYY-MM-DD)")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def sprint_create(ctx, board_id, name, goal, start_date, end_date, output):
     """Create a new sprint."""
-    result = _create_sprint_impl(board_id=board_id, name=name, goal=goal, start_date=start_date, end_date=end_date)
+    result = _create_sprint_impl(
+        board_id=board_id,
+        name=name,
+        goal=goal,
+        start_date=start_date,
+        end_date=end_date,
+    )
 
     if output == "json":
         click.echo(format_json(result))
@@ -1331,7 +1455,13 @@ def sprint_create(ctx, board_id, name, goal, start_date, end_date, output):
 @click.option("--board", "-b", type=int, help="Board ID (use with --active)")
 @click.option("--active", "-a", is_flag=True, help="Get active sprint for board")
 @click.option("--include-issues", "-i", is_flag=True, help="Include issues in sprint")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def sprint_get(ctx, sprint_id, board, active, include_issues, output):
@@ -1358,18 +1488,41 @@ def sprint_get(ctx, sprint_id, board, active, include_issues, output):
 
 
 @sprint.command(name="manage")
-@click.option("--sprint", "-s", "sprint_id", type=int, required=True, help="Sprint ID to manage")
+@click.option(
+    "--sprint", "-s", "sprint_id", type=int, required=True, help="Sprint ID to manage"
+)
 @click.option("--start", "do_start", is_flag=True, help="Start the sprint")
 @click.option("--close", "do_close", is_flag=True, help="Close the sprint")
 @click.option("--name", "-n", help="Update sprint name")
 @click.option("--goal", "-g", help="Update sprint goal")
-@click.option("--move-incomplete-to", type=int, help="Sprint ID to move incomplete issues to (with --close)")
+@click.option(
+    "--move-incomplete-to",
+    type=int,
+    help="Sprint ID to move incomplete issues to (with --close)",
+)
 @click.option("--start-date", help="Start date (YYYY-MM-DD)")
 @click.option("--end-date", help="End date (YYYY-MM-DD)")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
-def sprint_manage(ctx, sprint_id, do_start, do_close, name, goal, move_incomplete_to, start_date, end_date, output):
+def sprint_manage(
+    ctx,
+    sprint_id,
+    do_start,
+    do_close,
+    name,
+    goal,
+    move_incomplete_to,
+    start_date,
+    end_date,
+    output,
+):
     """Manage sprint lifecycle (start, close, update)."""
     if do_start:
         result = _start_sprint_impl(sprint_id, start_date=start_date, end_date=end_date)
@@ -1384,15 +1537,21 @@ def sprint_manage(ctx, sprint_id, do_start, do_close, name, goal, move_incomplet
         else:
             click.echo(f"Closed sprint: {result['name']}")
             if "moved_issues" in result:
-                click.echo(f"Moved {result['moved_issues']} incomplete issues to next sprint")
+                click.echo(
+                    f"Moved {result['moved_issues']} incomplete issues to next sprint"
+                )
     elif name or goal or start_date or end_date:
-        result = _update_sprint_impl(sprint_id, name=name, goal=goal, start_date=start_date, end_date=end_date)
+        result = _update_sprint_impl(
+            sprint_id, name=name, goal=goal, start_date=start_date, end_date=end_date
+        )
         if output == "json":
             click.echo(format_json(result))
         else:
             click.echo(f"Updated sprint: {result['name']}")
     else:
-        raise click.UsageError("No action specified. Use --start, --close, or update options.")
+        raise click.UsageError(
+            "No action specified. Use --start, --close, or update options."
+        )
 
 
 @sprint.command(name="move-issues")
@@ -1401,7 +1560,13 @@ def sprint_manage(ctx, sprint_id, do_start, do_close, name, goal, move_incomplet
 @click.option("--issues", "-i", help="Comma-separated issue keys")
 @click.option("--jql", "-j", help="JQL query to find issues")
 @click.option("--dry-run", "-n", is_flag=True, help="Preview without making changes")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def sprint_move_issues(ctx, sprint, backlog, issues, jql, dry_run, output):
@@ -1422,20 +1587,27 @@ def sprint_move_issues(ctx, sprint, backlog, issues, jql, dry_run, output):
         if output == "json":
             click.echo(format_json(result))
         elif dry_run:
-            click.echo(f"Would move {result.get('would_move_to_backlog', 0)} issues to backlog")
+            click.echo(
+                f"Would move {result.get('would_move_to_backlog', 0)} issues to backlog"
+            )
         else:
             click.echo(f"Moved {result['moved_to_backlog']} issues to backlog")
     else:
-        result = _move_to_sprint_impl(sprint_id=sprint, issue_keys=issue_list, jql=jql, dry_run=dry_run)
+        result = _move_to_sprint_impl(
+            sprint_id=sprint, issue_keys=issue_list, jql=jql, dry_run=dry_run
+        )
         if output == "json":
             click.echo(format_json(result))
         elif dry_run:
-            click.echo(f"Would move {result.get('would_move', 0)} issues to sprint {sprint}")
+            click.echo(
+                f"Would move {result.get('would_move', 0)} issues to sprint {sprint}"
+            )
         else:
             click.echo(f"Moved {result['moved']} issues to sprint {sprint}")
 
 
 # --- Other Agile Commands ---
+
 
 @agile.command(name="backlog")
 @click.option("--board", "-b", type=int, help="Board ID")
@@ -1443,7 +1615,13 @@ def sprint_move_issues(ctx, sprint, backlog, issues, jql, dry_run, output):
 @click.option("--filter", "-f", "jql_filter", help="JQL filter")
 @click.option("--max-results", "-m", type=int, default=100, help="Maximum results")
 @click.option("--group-by", type=click.Choice(["epic"]), help="Group results")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def agile_backlog(ctx, board, project, jql_filter, max_results, group_by, output):
@@ -1466,7 +1644,9 @@ def agile_backlog(ctx, board, project, jql_filter, max_results, group_by, output
         click.echo(format_json(output_data))
     else:
         issues = result.get("issues", [])
-        story_points_field = result.get("_agile_fields", {}).get("story_points", "customfield_10016")
+        story_points_field = result.get("_agile_fields", {}).get(
+            "story_points", "customfield_10016"
+        )
         click.echo(f"Backlog: {len(issues)}/{result.get('total', len(issues))} issues")
 
         if group_by == "epic" and "by_epic" in result:
@@ -1475,7 +1655,9 @@ def agile_backlog(ctx, board, project, jql_filter, max_results, group_by, output
                 for issue in epic_issues:
                     points = issue["fields"].get(story_points_field, "")
                     pts_str = f" ({points} pts)" if points else ""
-                    click.echo(f"  {issue['key']} - {issue['fields']['summary']}{pts_str}")
+                    click.echo(
+                        f"  {issue['key']} - {issue['fields']['summary']}{pts_str}"
+                    )
             if result.get("no_epic"):
                 click.echo(f"\n[No Epic] ({len(result['no_epic'])} issues)")
                 for issue in result["no_epic"]:
@@ -1496,16 +1678,26 @@ def agile_backlog(ctx, board, project, jql_filter, max_results, group_by, output
 @click.option("--top", is_flag=True, help="Move to top of backlog")
 @click.option("--bottom", is_flag=True, help="Move to bottom of backlog")
 @click.option("--board", type=int, help="Board ID (required for --top/--bottom)")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def agile_rank(ctx, issue_key, before, after, top, bottom, board, output):
     """Rank an issue in the backlog."""
     position_count = sum([bool(before), bool(after), top, bottom])
     if position_count == 0:
-        raise click.UsageError("Must specify one of: --before, --after, --top, or --bottom")
+        raise click.UsageError(
+            "Must specify one of: --before, --after, --top, or --bottom"
+        )
     if position_count > 1:
-        raise click.UsageError("--before, --after, --top, and --bottom are mutually exclusive")
+        raise click.UsageError(
+            "--before, --after, --top, and --bottom are mutually exclusive"
+        )
     if (top or bottom) and not board:
         raise click.UsageError("--board is required with --top or --bottom")
 
@@ -1532,7 +1724,13 @@ def agile_rank(ctx, issue_key, before, after, top, bottom, board, output):
 @agile.command(name="estimate")
 @click.argument("issue_key")
 @click.option("--points", "-p", type=float, required=True, help="Story points value")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def agile_estimate(ctx, issue_key, points, output):
@@ -1551,8 +1749,16 @@ def agile_estimate(ctx, issue_key, points, output):
 @click.option("--sprint", "-s", type=int, help="Sprint ID")
 @click.option("--project", "-p", help="Project key (finds active sprint)")
 @click.option("--epic", "-e", help="Epic key")
-@click.option("--group-by", "-g", type=click.Choice(["assignee", "status"]), help="Group results")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--group-by", "-g", type=click.Choice(["assignee", "status"]), help="Group results"
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def agile_estimates(ctx, sprint, project, epic, group_by, output):
@@ -1564,7 +1770,9 @@ def agile_estimates(ctx, sprint, project, epic, group_by, output):
     if provided > 1:
         raise click.UsageError("--sprint, --project, and --epic are mutually exclusive")
 
-    result = _get_estimates_impl(sprint_id=sprint, project_key=project, epic_key=epic, group_by=group_by)
+    result = _get_estimates_impl(
+        sprint_id=sprint, project_key=project, epic_key=epic, group_by=group_by
+    )
 
     if output == "json":
         click.echo(format_json(result))
@@ -1577,7 +1785,9 @@ def agile_estimates(ctx, sprint, project, epic, group_by, output):
         else:
             click.echo(f"Epic {epic} Estimates")
 
-        click.echo(f"Total: {result['total_points']} points ({result['issue_count']} issues)")
+        click.echo(
+            f"Total: {result['total_points']} points ({result['issue_count']} issues)"
+        )
 
         if result["by_status"]:
             total = result["total_points"] or 1
@@ -1589,7 +1799,9 @@ def agile_estimates(ctx, sprint, project, epic, group_by, output):
         if group_by == "assignee" and result["by_assignee"]:
             total = result["total_points"] or 1
             click.echo("\nBy Assignee:")
-            for assignee, points in sorted(result["by_assignee"].items(), key=lambda x: -x[1]):
+            for assignee, points in sorted(
+                result["by_assignee"].items(), key=lambda x: -x[1]
+            ):
                 pct = (points / total) * 100 if total > 0 else 0
                 click.echo(f"  {assignee}: {points} points ({pct:.0f}%)")
 
@@ -1597,8 +1809,20 @@ def agile_estimates(ctx, sprint, project, epic, group_by, output):
 @agile.command(name="velocity")
 @click.option("--board", "-b", type=int, help="Board ID")
 @click.option("--project", "-p", help="Project key (will find board automatically)")
-@click.option("--sprints", "-n", type=int, default=3, help="Number of closed sprints to analyze (default: 3)")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--sprints",
+    "-n",
+    type=int,
+    default=3,
+    help="Number of closed sprints to analyze (default: 3)",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def agile_velocity(ctx, board, project, sprints, output):
@@ -1608,13 +1832,17 @@ def agile_velocity(ctx, board, project, sprints, output):
     if board and project:
         raise click.UsageError("--board and --project are mutually exclusive")
 
-    result = _get_velocity_impl(board_id=board, project_key=project, num_sprints=sprints)
+    result = _get_velocity_impl(
+        board_id=board, project_key=project, num_sprints=sprints
+    )
 
     if output == "json":
         click.echo(format_json(result))
     else:
         click.echo(_format_velocity(result))
-        click.echo(f"\nVelocity: {result['average_velocity']} points/sprint (based on {result['sprints_analyzed']} sprints)")
+        click.echo(
+            f"\nVelocity: {result['average_velocity']} points/sprint (based on {result['sprints_analyzed']} sprints)"
+        )
 
 
 @agile.command(name="subtask")
@@ -1626,10 +1854,27 @@ def agile_velocity(ctx, board, project, sprints, output):
 @click.option("--priority", help="Priority (Highest, High, Medium, Low, Lowest)")
 @click.option("--labels", "-l", help="Comma-separated labels")
 @click.option("--custom-fields", help="Custom fields as JSON string")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
-def agile_subtask(ctx, parent, summary, description, assignee, estimate, priority, labels, custom_fields, output):
+def agile_subtask(
+    ctx,
+    parent,
+    summary,
+    description,
+    assignee,
+    estimate,
+    priority,
+    labels,
+    custom_fields,
+    output,
+):
     """Create a subtask under a parent issue."""
     labels_list = parse_comma_list(labels)
     custom = parse_json_arg(custom_fields)

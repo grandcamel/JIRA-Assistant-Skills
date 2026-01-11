@@ -111,10 +111,14 @@ def _transition_issue_impl(
     try:
         # Get issue details first for context hints
         issue = client.get_issue(issue_key, fields=["status", "issuetype", "project"])
-        current_status = issue.get("fields", {}).get("status", {}).get("name", "Unknown")
+        current_status = (
+            issue.get("fields", {}).get("status", {}).get("name", "Unknown")
+        )
         issue_type = issue.get("fields", {}).get("issuetype", {}).get("name", "Unknown")
         project_key = (
-            issue.get("fields", {}).get("project", {}).get("key", issue_key.split("-")[0])
+            issue.get("fields", {})
+            .get("project", {})
+            .get("key", issue_key.split("-")[0])
         )
 
         transitions = client.get_transitions(issue_key)
@@ -179,7 +183,9 @@ def _transition_issue_impl(
             if sprint_id:
                 click.echo(f"  Sprint: Would move to sprint {sprint_id}")
 
-            context_hint = _get_context_workflow_hint(project_key, issue_type, target_status)
+            context_hint = _get_context_workflow_hint(
+                project_key, issue_type, target_status
+            )
             if context_hint:
                 click.echo(
                     f"\n  After transition, expected options:{context_hint.replace(chr(10), chr(10) + '  ')}"
@@ -511,7 +517,9 @@ def _release_version_impl(
             )
 
         release_date = datetime.now().strftime("%Y-%m-%d")
-        result = client.update_version(version_id, released=True, releaseDate=release_date)
+        result = client.update_version(
+            version_id, released=True, releaseDate=release_date
+        )
 
         # Handle move_unfixed if specified
         if move_unfixed:
@@ -956,20 +964,38 @@ def version_list(ctx, project_key: str, unreleased: bool, archived: bool, output
 
         table_data = []
         for v in versions:
-            table_data.append({
-                "id": v.get("id", ""),
-                "name": v.get("name", ""),
-                "description": (v.get("description", "") or "")[:40],
-                "released": "Yes" if v.get("released") else "No",
-                "archived": "Yes" if v.get("archived") else "No",
-                "release_date": v.get("releaseDate", ""),
-            })
+            table_data.append(
+                {
+                    "id": v.get("id", ""),
+                    "name": v.get("name", ""),
+                    "description": (v.get("description", "") or "")[:40],
+                    "released": "Yes" if v.get("released") else "No",
+                    "archived": "Yes" if v.get("archived") else "No",
+                    "release_date": v.get("releaseDate", ""),
+                }
+            )
 
-        click.echo(format_table(
-            table_data,
-            columns=["id", "name", "description", "released", "archived", "release_date"],
-            headers=["ID", "Name", "Description", "Released", "Archived", "Release Date"],
-        ))
+        click.echo(
+            format_table(
+                table_data,
+                columns=[
+                    "id",
+                    "name",
+                    "description",
+                    "released",
+                    "archived",
+                    "release_date",
+                ],
+                headers=[
+                    "ID",
+                    "Name",
+                    "Description",
+                    "Released",
+                    "Archived",
+                    "Release Date",
+                ],
+            )
+        )
         click.echo(f"\nTotal: {len(versions)} version(s)")
 
 
@@ -1017,7 +1043,9 @@ def version_create(
 
     if result:
         version_id = result.get("id", "")
-        print_success(f"Created version '{name}' in project {project_key} (ID: {version_id})")
+        print_success(
+            f"Created version '{name}' in project {project_key} (ID: {version_id})"
+        )
 
 
 @version.command(name="release")
@@ -1087,18 +1115,22 @@ def component_list(ctx, project_key: str, output: str):
         table_data = []
         for c in components:
             lead = c.get("lead", {})
-            table_data.append({
-                "id": c.get("id", ""),
-                "name": c.get("name", ""),
-                "description": (c.get("description", "") or "")[:40],
-                "lead": lead.get("displayName", "") if lead else "",
-            })
+            table_data.append(
+                {
+                    "id": c.get("id", ""),
+                    "name": c.get("name", ""),
+                    "description": (c.get("description", "") or "")[:40],
+                    "lead": lead.get("displayName", "") if lead else "",
+                }
+            )
 
-        click.echo(format_table(
-            table_data,
-            columns=["id", "name", "description", "lead"],
-            headers=["ID", "Name", "Description", "Lead"],
-        ))
+        click.echo(
+            format_table(
+                table_data,
+                columns=["id", "name", "description", "lead"],
+                headers=["ID", "Name", "Description", "Lead"],
+            )
+        )
         click.echo(f"\nTotal: {len(components)} component(s)")
 
 
@@ -1147,7 +1179,9 @@ def component_create(
 
     if result:
         component_id = result.get("id", "")
-        print_success(f"Created component '{name}' in project {project_key} (ID: {component_id})")
+        print_success(
+            f"Created component '{name}' in project {project_key} (ID: {component_id})"
+        )
 
 
 @component.command(name="update")

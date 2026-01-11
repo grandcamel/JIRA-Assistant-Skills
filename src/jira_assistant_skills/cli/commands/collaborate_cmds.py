@@ -236,12 +236,14 @@ def _format_comments_table(comments: list[dict[str, Any]]) -> str:
             vis_value = visibility.get("value", "")
             body_preview += f" [{vis_type}: {vis_value}]"
 
-        rows.append({
-            "id": comment_id,
-            "author": author,
-            "date": date_str,
-            "body": body_preview,
-        })
+        rows.append(
+            {
+                "id": comment_id,
+                "author": author,
+                "date": date_str,
+                "body": body_preview,
+            }
+        )
 
     return format_table(
         rows,
@@ -352,7 +354,9 @@ def _download_attachment_impl(
 
         content_url = target.get("content")
         if not content_url:
-            raise ValidationError(f"No content URL found for attachment {target.get('id')}")
+            raise ValidationError(
+                f"No content URL found for attachment {target.get('id')}"
+            )
 
         client.download_file(
             content_url, output_path, operation=f"download attachment {filename}"
@@ -423,14 +427,16 @@ def _format_attachment_list(attachments: list[dict[str, Any]]) -> str:
         else:
             size_str = f"{size_bytes} B"
 
-        table_data.append({
-            "id": att.get("id", ""),
-            "filename": att.get("filename", ""),
-            "size": size_str,
-            "mime_type": att.get("mimeType", ""),
-            "created": att.get("created", "")[:10] if att.get("created") else "",
-            "author": att.get("author", {}).get("displayName", ""),
-        })
+        table_data.append(
+            {
+                "id": att.get("id", ""),
+                "filename": att.get("filename", ""),
+                "size": size_str,
+                "mime_type": att.get("mimeType", ""),
+                "created": att.get("created", "")[:10] if att.get("created") else "",
+                "author": att.get("author", {}).get("displayName", ""),
+            }
+        )
 
     return format_table(
         table_data,
@@ -542,15 +548,17 @@ def _parse_changelog(
                 if field_type.lower() not in [ft.lower() for ft in field_type_filter]:
                     continue
 
-            parsed.append({
-                "type": field,
-                "field": field,
-                "field_type": field_type,
-                "from": from_string,
-                "to": to_string,
-                "author": author,
-                "created": created,
-            })
+            parsed.append(
+                {
+                    "type": field,
+                    "field": field,
+                    "field_type": field_type,
+                    "from": from_string,
+                    "to": to_string,
+                    "author": author,
+                    "created": created,
+                }
+            )
 
     return parsed
 
@@ -562,13 +570,15 @@ def _display_activity_table(changes: list[dict[str, Any]]) -> str:
 
     table_data = []
     for change in changes:
-        table_data.append({
-            "date": change.get("created", "")[:16],
-            "author": change.get("author", ""),
-            "field": change.get("field", ""),
-            "from": change.get("from", "") or "(none)",
-            "to": change.get("to", "") or "(none)",
-        })
+        table_data.append(
+            {
+                "date": change.get("created", "")[:16],
+                "author": change.get("author", ""),
+                "field": change.get("field", ""),
+                "from": change.get("from", "") or "(none)",
+                "to": change.get("to", "") or "(none)",
+            }
+        )
 
     return format_table(
         table_data,
@@ -825,7 +835,9 @@ def comment_list(
 
             visibility = result.get("visibility")
             if visibility:
-                click.echo(f"  Visibility: {visibility.get('type')} - {visibility.get('value')}")
+                click.echo(
+                    f"  Visibility: {visibility.get('type')} - {visibility.get('value')}"
+                )
             else:
                 click.echo("  Visibility: Public")
 
@@ -887,9 +899,7 @@ def comment_update(ctx, issue_key: str, comment_id: str, body: str, body_format:
 @click.option("--dry-run", is_flag=True, help="Show what would be deleted")
 @click.pass_context
 @handle_jira_errors
-def comment_delete(
-    ctx, issue_key: str, comment_id: str, yes: bool, dry_run: bool
-):
+def comment_delete(ctx, issue_key: str, comment_id: str, yes: bool, dry_run: bool):
     """Delete a comment."""
     result = _delete_comment_impl(
         issue_key=issue_key,

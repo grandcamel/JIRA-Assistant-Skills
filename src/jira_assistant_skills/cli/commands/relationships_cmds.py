@@ -107,20 +107,28 @@ def _extract_blockers(links: list, direction: str = "inward") -> list:
 
         if direction == "inward" and "outwardIssue" in link:
             issue = link["outwardIssue"]
-            blockers.append({
-                "key": issue["key"],
-                "summary": issue.get("fields", {}).get("summary", ""),
-                "status": issue.get("fields", {}).get("status", {}).get("name", "Unknown"),
-                "link_id": link["id"],
-            })
+            blockers.append(
+                {
+                    "key": issue["key"],
+                    "summary": issue.get("fields", {}).get("summary", ""),
+                    "status": issue.get("fields", {})
+                    .get("status", {})
+                    .get("name", "Unknown"),
+                    "link_id": link["id"],
+                }
+            )
         elif direction == "outward" and "inwardIssue" in link:
             issue = link["inwardIssue"]
-            blockers.append({
-                "key": issue["key"],
-                "summary": issue.get("fields", {}).get("summary", ""),
-                "status": issue.get("fields", {}).get("status", {}).get("name", "Unknown"),
-                "link_id": link["id"],
-            })
+            blockers.append(
+                {
+                    "key": issue["key"],
+                    "summary": issue.get("fields", {}).get("summary", ""),
+                    "status": issue.get("fields", {})
+                    .get("status", {})
+                    .get("name", "Unknown"),
+                    "link_id": link["id"],
+                }
+            )
 
     return blockers
 
@@ -163,12 +171,14 @@ def _flatten_blockers(tree: dict[str, Any], all_blockers: list[dict], seen: set[
     for blocker in tree.get("blockers", []):
         if blocker["key"] not in seen:
             seen.add(blocker["key"])
-            all_blockers.append({
-                "key": blocker["key"],
-                "summary": blocker.get("summary", ""),
-                "status": blocker.get("status", "Unknown"),
-                "circular": blocker.get("circular", False),
-            })
+            all_blockers.append(
+                {
+                    "key": blocker["key"],
+                    "summary": blocker.get("summary", ""),
+                    "status": blocker.get("status", "Unknown"),
+                    "circular": blocker.get("circular", False),
+                }
+            )
             _flatten_blockers(blocker, all_blockers, seen)
 
 
@@ -234,14 +244,20 @@ def _format_mermaid(issue_key: str, dependencies: list) -> str:
         dep_key = dep["key"]
         if dep_key not in seen_nodes:
             seen_nodes.add(dep_key)
-            summary = dep["summary"][:30].replace('"', "'") if dep["summary"] else dep_key
+            summary = (
+                dep["summary"][:30].replace('"', "'") if dep["summary"] else dep_key
+            )
             lines.append(f'    {_sanitize_key(dep_key)}["{dep_key}: {summary}"]')
 
         label = dep["direction_label"]
         if dep["direction"] == "outward":
-            lines.append(f"    {_sanitize_key(issue_key)} -->|{label}| {_sanitize_key(dep_key)}")
+            lines.append(
+                f"    {_sanitize_key(issue_key)} -->|{label}| {_sanitize_key(dep_key)}"
+            )
         else:
-            lines.append(f"    {_sanitize_key(dep_key)} -->|{label}| {_sanitize_key(issue_key)}")
+            lines.append(
+                f"    {_sanitize_key(dep_key)} -->|{label}| {_sanitize_key(issue_key)}"
+            )
 
     return "\n".join(lines)
 
@@ -259,8 +275,10 @@ def _format_dot(issue_key: str, dependencies: list) -> str:
         dep_key = dep["key"]
         status = dep["status"]
         color = (
-            "lightgreen" if status == "Done"
-            else "lightyellow" if status == "In Progress"
+            "lightgreen"
+            if status == "Done"
+            else "lightyellow"
+            if status == "In Progress"
             else "white"
         )
         lines.append(f'    "{dep_key}" [style=filled, fillcolor={color}];')
@@ -297,7 +315,9 @@ def _format_plantuml(issue_key: str, dependencies: list) -> str:
         if dep_key not in seen_nodes:
             seen_nodes.add(dep_key)
             status = dep["status"].lower().replace(" ", "")
-            summary = dep["summary"][:40].replace('"', "'") if dep["summary"] else dep_key
+            summary = (
+                dep["summary"][:40].replace('"', "'") if dep["summary"] else dep_key
+            )
 
             if "done" in status or "closed" in status or "resolved" in status:
                 stereotype = "<<done>>"
@@ -306,7 +326,9 @@ def _format_plantuml(issue_key: str, dependencies: list) -> str:
             else:
                 stereotype = "<<open>>"
 
-            lines.append(f'rectangle "{dep_key}\\n{summary}" as {_sanitize_key(dep_key)} {stereotype}')
+            lines.append(
+                f'rectangle "{dep_key}\\n{summary}" as {_sanitize_key(dep_key)} {stereotype}'
+            )
 
     lines.append("")
 
@@ -315,9 +337,13 @@ def _format_plantuml(issue_key: str, dependencies: list) -> str:
         label = dep["direction_label"]
 
         if dep["direction"] == "outward":
-            lines.append(f"{_sanitize_key(issue_key)} --> {_sanitize_key(dep_key)} : {label}")
+            lines.append(
+                f"{_sanitize_key(issue_key)} --> {_sanitize_key(dep_key)} : {label}"
+            )
         else:
-            lines.append(f"{_sanitize_key(dep_key)} --> {_sanitize_key(issue_key)} : {label}")
+            lines.append(
+                f"{_sanitize_key(dep_key)} --> {_sanitize_key(issue_key)} : {label}"
+            )
 
     lines.append("")
     lines.append("@enduml")
@@ -349,7 +375,11 @@ def _format_d2(issue_key: str, dependencies: list) -> str:
             summary = dep["summary"][:35].replace('"', "'") if dep["summary"] else ""
 
             status_lower = status.lower()
-            if "done" in status_lower or "closed" in status_lower or "resolved" in status_lower:
+            if (
+                "done" in status_lower
+                or "closed" in status_lower
+                or "resolved" in status_lower
+            ):
                 fill_color = "#90EE90"
             elif "progress" in status_lower:
                 fill_color = "#FFFACD"
@@ -522,12 +552,14 @@ def _unlink_issue_impl(
                 else:
                     target = link["inwardIssue"]["key"]
                     direction = link["type"]["inward"]
-                result["links_to_delete"].append({
-                    "id": link["id"],
-                    "target": target,
-                    "type": link["type"]["name"],
-                    "direction": direction,
-                })
+                result["links_to_delete"].append(
+                    {
+                        "id": link["id"],
+                        "target": target,
+                        "type": link["type"]["name"],
+                        "direction": direction,
+                    }
+                )
             return result
 
         for link in links_to_delete:
@@ -648,15 +680,17 @@ def _get_dependencies_impl(
         status = issue.get("fields", {}).get("status", {}).get("name", "Unknown")
         status_counts[status] += 1
 
-        dependencies.append({
-            "key": issue["key"],
-            "summary": issue.get("fields", {}).get("summary", ""),
-            "status": status,
-            "link_type": lt,
-            "direction": direction,
-            "direction_label": direction_label,
-            "link_id": link["id"],
-        })
+        dependencies.append(
+            {
+                "key": issue["key"],
+                "summary": issue.get("fields", {}).get("summary", ""),
+                "status": status,
+                "link_type": lt,
+                "direction": direction,
+                "direction_label": direction_label,
+                "link_id": link["id"],
+            }
+        )
 
     return {
         "issue_key": issue_key,
@@ -677,7 +711,8 @@ def _get_link_types_impl(filter_pattern: str | None = None) -> list:
     if filter_pattern:
         pattern_lower = filter_pattern.lower()
         link_types = [
-            lt for lt in link_types
+            lt
+            for lt in link_types
             if pattern_lower in lt["name"].lower()
             or pattern_lower in lt.get("inward", "").lower()
             or pattern_lower in lt.get("outward", "").lower()
@@ -899,11 +934,13 @@ def _get_single_issue_stats(issue_key: str) -> dict[str, Any]:
 
         status = issue.get("fields", {}).get("status", {}).get("name", "Unknown")
         stats["by_status"][status] += 1
-        stats["linked_issues"].append({
-            "key": issue["key"],
-            "status": status,
-            "link_type": link_type,
-        })
+        stats["linked_issues"].append(
+            {
+                "key": issue["key"],
+                "status": status,
+                "link_type": link_type,
+            }
+        )
 
     stats["by_type"] = dict(stats["by_type"])
     stats["by_status"] = dict(stats["by_status"])
@@ -917,7 +954,9 @@ def _get_project_stats(jql: str, max_results: int = 500) -> dict[str, Any]:
 
     try:
         results = client.search_issues(
-            jql, fields=["key", "summary", "issuelinks", "status"], max_results=max_results
+            jql,
+            fields=["key", "summary", "issuelinks", "status"],
+            max_results=max_results,
         )
 
         issues = results.get("issues", [])
@@ -947,16 +986,20 @@ def _get_project_stats(jql: str, max_results: int = 500) -> dict[str, Any]:
 
             if link_count == 0:
                 stats["orphaned_count"] += 1
-                stats["orphaned_issues"].append({
-                    "key": issue_key,
-                    "summary": issue.get("fields", {}).get("summary", "")[:50],
-                })
+                stats["orphaned_issues"].append(
+                    {
+                        "key": issue_key,
+                        "summary": issue.get("fields", {}).get("summary", "")[:50],
+                    }
+                )
             else:
-                issue_link_counts.append({
-                    "key": issue_key,
-                    "summary": issue.get("fields", {}).get("summary", "")[:50],
-                    "link_count": link_count,
-                })
+                issue_link_counts.append(
+                    {
+                        "key": issue_key,
+                        "summary": issue.get("fields", {}).get("summary", "")[:50],
+                        "link_count": link_count,
+                    }
+                )
 
             for link in links:
                 link_type = link["type"]["name"]
@@ -969,7 +1012,11 @@ def _get_project_stats(jql: str, max_results: int = 500) -> dict[str, Any]:
                     stats["by_direction"]["outward"] += 1
                     linked_issue = link["inwardIssue"]
 
-                status = linked_issue.get("fields", {}).get("status", {}).get("name", "Unknown")
+                status = (
+                    linked_issue.get("fields", {})
+                    .get("status", {})
+                    .get("name", "Unknown")
+                )
                 stats["by_status"][status] += 1
 
         issue_link_counts.sort(key=lambda x: x["link_count"], reverse=True)
@@ -1010,7 +1057,9 @@ def _format_links(links: list, issue_key: str) -> str:
             summary = target.get("fields", {}).get("summary", "")
             if len(summary) > 50:
                 summary = summary[:47] + "..."
-            lines.append(f"  {link_type['outward']} -> {target['key']} [{status}] {summary}")
+            lines.append(
+                f"  {link_type['outward']} -> {target['key']} [{status}] {summary}"
+            )
         lines.append("")
 
     if inward_links:
@@ -1022,7 +1071,9 @@ def _format_links(links: list, issue_key: str) -> str:
             summary = source.get("fields", {}).get("summary", "")
             if len(summary) > 50:
                 summary = summary[:47] + "..."
-            lines.append(f"  {link_type['inward']} <- {source['key']} [{status}] {summary}")
+            lines.append(
+                f"  {link_type['inward']} <- {source['key']} [{status}] {summary}"
+            )
         lines.append("")
 
     lines.append(f"Total: {len(links)} link(s)")
@@ -1063,7 +1114,9 @@ def _format_blockers(result: dict[str, Any]) -> str:
     if result.get("recursive"):
         all_blockers = result.get("all_blockers", [])
         done_count = sum(1 for b in all_blockers if b.get("status") == "Done")
-        lines.append(f"Total: {total} blocker(s) ({done_count} resolved, {total - done_count} unresolved)")
+        lines.append(
+            f"Total: {total} blocker(s) ({done_count} resolved, {total - done_count} unresolved)"
+        )
 
         if result.get("circular"):
             lines.append("Warning: Circular dependency detected!")
@@ -1140,7 +1193,9 @@ def _format_link_types(link_types: list) -> str:
     lines.append("")
     header = f"{'Name':<{name_width}}  {'Outward':<{outward_width}}  {'Inward':<{inward_width}}"
     lines.append(header)
-    lines.append("─" * name_width + "  " + "─" * outward_width + "  " + "─" * inward_width)
+    lines.append(
+        "─" * name_width + "  " + "─" * outward_width + "  " + "─" * inward_width
+    )
 
     for lt in link_types:
         row = f"{lt['name']:<{name_width}}  {lt.get('outward', ''):<{outward_width}}  {lt.get('inward', ''):<{inward_width}}"
@@ -1229,7 +1284,9 @@ def _format_single_issue_stats(stats: dict[str, Any]) -> str:
     if stats["linked_issues"]:
         lines.append("Linked Issues:")
         for linked in stats["linked_issues"]:
-            lines.append(f"  {linked['key']} [{linked['status']}] ({linked['link_type']})")
+            lines.append(
+                f"  {linked['key']} [{linked['status']}] ({linked['link_type']})"
+            )
 
     return "\n".join(lines)
 
@@ -1242,7 +1299,9 @@ def _format_project_stats(stats: dict[str, Any], top: int = 10) -> str:
     lines.append("")
 
     lines.append(f"Query: {stats['jql']}")
-    lines.append(f"Issues Analyzed: {stats['issues_analyzed']} of {stats['total_matching']}")
+    lines.append(
+        f"Issues Analyzed: {stats['issues_analyzed']} of {stats['total_matching']}"
+    )
     lines.append(f"Total Links: {stats['total_links']}")
     lines.append("")
 
@@ -1266,9 +1325,13 @@ def _format_project_stats(stats: dict[str, Any], top: int = 10) -> str:
     lines.append("")
 
     if stats["most_connected"]:
-        lines.append(f"Most Connected Issues (top {min(top, len(stats['most_connected']))}):")
+        lines.append(
+            f"Most Connected Issues (top {min(top, len(stats['most_connected']))}):"
+        )
         for issue in stats["most_connected"][:top]:
-            lines.append(f"  {issue['key']} ({issue['link_count']} links): {issue['summary']}")
+            lines.append(
+                f"  {issue['key']} ({issue['link_count']} links): {issue['summary']}"
+            )
         lines.append("")
 
     if stats["by_status"]:
@@ -1340,7 +1403,9 @@ def relationships_link(
     if dry_run and result:
         click.echo(f"[DRY RUN] Would create link: {result['preview']}")
     else:
-        actual_target = blocks or is_blocked_by or relates_to or duplicates or clones or target
+        actual_target = (
+            blocks or is_blocked_by or relates_to or duplicates or clones or target
+        )
         click.echo(f"Linked {source_issue} to {actual_target}")
 
 
@@ -1348,7 +1413,9 @@ def relationships_link(
 @click.argument("source_issue")
 @click.argument("target_issue", required=False)
 @click.option("--type", "-t", "link_type", help="Link type to remove (use with --all)")
-@click.option("--all", "-a", "remove_all", is_flag=True, help="Remove all links of specified type")
+@click.option(
+    "--all", "-a", "remove_all", is_flag=True, help="Remove all links of specified type"
+)
 @click.option("--dry-run", "-n", is_flag=True, help="Preview without deleting")
 @click.pass_context
 @handle_jira_errors
@@ -1390,7 +1457,8 @@ def relationships_unlink(
 @click.argument("issue_key")
 @click.option("--type", "-t", "link_type", help="Filter by link type")
 @click.option(
-    "--direction", "-d",
+    "--direction",
+    "-d",
     type=click.Choice(["inward", "outward", "both"]),
     default="both",
     help="Link direction",
@@ -1398,7 +1466,9 @@ def relationships_unlink(
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors
-def relationships_get_links(ctx, issue_key: str, link_type: str, direction: str, output: str):
+def relationships_get_links(
+    ctx, issue_key: str, link_type: str, direction: str, output: str
+):
     """Get all links for an issue."""
     dir_filter = None if direction == "both" else direction
     links = _get_links_impl(issue_key, direction=dir_filter, link_type=link_type)
@@ -1414,12 +1484,20 @@ def relationships_get_links(ctx, issue_key: str, link_type: str, direction: str,
 @click.option("--recursive", "-r", is_flag=True, help="Show full blocker chain")
 @click.option("--include-done", is_flag=True, help="Include completed blockers")
 @click.option("--depth", type=int, default=0, help="Max recursion depth (0=unlimited)")
-@click.option("--direction", "-d", type=click.Choice(["inward", "outward"]), default="inward")
+@click.option(
+    "--direction", "-d", type=click.Choice(["inward", "outward"]), default="inward"
+)
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors
 def relationships_get_blockers(
-    ctx, issue_key: str, recursive: bool, include_done: bool, depth: int, direction: str, output: str
+    ctx,
+    issue_key: str,
+    recursive: bool,
+    include_done: bool,
+    depth: int,
+    direction: str,
+    output: str,
 ):
     """Get issues blocking this issue."""
     result = _get_blockers_impl(
@@ -1437,9 +1515,12 @@ def relationships_get_blockers(
 
 @relationships.command(name="get-dependencies")
 @click.argument("issue_key")
-@click.option("--type", "-t", "link_types", help="Comma-separated link types to include")
 @click.option(
-    "--output", "-o",
+    "--type", "-t", "link_types", help="Comma-separated link types to include"
+)
+@click.option(
+    "--output",
+    "-o",
     type=click.Choice(["text", "json", "mermaid", "dot", "plantuml", "d2"]),
     default="text",
     help="Output format",
@@ -1455,7 +1536,9 @@ def relationships_get_dependencies(ctx, issue_key: str, link_types: str, output:
 
 
 @relationships.command(name="link-types")
-@click.option("--filter", "-f", "filter_pattern", help="Filter link types by name pattern")
+@click.option(
+    "--filter", "-f", "filter_pattern", help="Filter link types by name pattern"
+)
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors
@@ -1592,8 +1675,12 @@ def relationships_bulk_link(
 @click.argument("key_or_project", required=False)
 @click.option("--project", "-p", help="Project key to analyze all issues")
 @click.option("--jql", "-j", help="JQL query to find issues to analyze")
-@click.option("--top", "-t", type=int, default=10, help="Number of most-connected issues to show")
-@click.option("--max-results", "-m", type=int, default=500, help="Maximum issues to analyze")
+@click.option(
+    "--top", "-t", type=int, default=10, help="Number of most-connected issues to show"
+)
+@click.option(
+    "--max-results", "-m", type=int, default=500, help="Maximum issues to analyze"
+)
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors
@@ -1622,7 +1709,9 @@ def relationships_stats(
             else:
                 click.echo(_format_single_issue_stats(stats))
         else:
-            stats = _get_link_stats_impl(project=key_or_project, max_results=max_results)
+            stats = _get_link_stats_impl(
+                project=key_or_project, max_results=max_results
+            )
             if output == "json":
                 click.echo(format_json(stats))
             else:

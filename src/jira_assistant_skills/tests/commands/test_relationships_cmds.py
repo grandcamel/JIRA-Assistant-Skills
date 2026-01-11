@@ -111,16 +111,21 @@ class TestLinkIssueImpl:
         call_args = mock_jira_client.create_link.call_args
         assert call_args[0][3] is not None  # ADF comment
 
-    def test_link_issue_self_reference_raises_error(self, mock_jira_client, sample_link_types):
+    def test_link_issue_self_reference_raises_error(
+        self, mock_jira_client, sample_link_types
+    ):
         """Test that self-reference raises error."""
         from jira_assistant_skills_lib import ValidationError
 
         mock_jira_client.get_link_types.return_value = deepcopy(sample_link_types)
 
-        with patch(
-            "jira_assistant_skills.cli.commands.relationships_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), pytest.raises(ValidationError, match="Cannot link an issue to itself"):
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.relationships_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            pytest.raises(ValidationError, match="Cannot link an issue to itself"),
+        ):
             _link_issue_impl(
                 issue_key="PROJ-123",
                 blocks="PROJ-123",
@@ -279,7 +284,9 @@ class TestGetDependenciesImpl:
         assert len(result["dependencies"]) == 2
         assert "status_summary" in result
 
-    def test_get_dependencies_filter_by_type(self, mock_jira_client, sample_issue_links):
+    def test_get_dependencies_filter_by_type(
+        self, mock_jira_client, sample_issue_links
+    ):
         """Test filtering dependencies by type."""
         mock_jira_client.get_issue_links.return_value = deepcopy(sample_issue_links)
 
@@ -337,7 +344,9 @@ class TestGetLinkTypesImpl:
 class TestCloneIssueImpl:
     """Tests for the _clone_issue_impl implementation function."""
 
-    def test_clone_issue_basic(self, mock_jira_client, sample_issue, sample_cloned_issue):
+    def test_clone_issue_basic(
+        self, mock_jira_client, sample_issue, sample_cloned_issue
+    ):
         """Test basic issue cloning."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
         mock_jira_client.create_issue.return_value = deepcopy(sample_cloned_issue)
@@ -353,7 +362,9 @@ class TestCloneIssueImpl:
         mock_jira_client.create_issue.assert_called_once()
         mock_jira_client.create_link.assert_called_once()  # Clone link
 
-    def test_clone_issue_no_link(self, mock_jira_client, sample_issue, sample_cloned_issue):
+    def test_clone_issue_no_link(
+        self, mock_jira_client, sample_issue, sample_cloned_issue
+    ):
         """Test cloning without clone link."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
         mock_jira_client.create_issue.return_value = deepcopy(sample_cloned_issue)
@@ -367,7 +378,9 @@ class TestCloneIssueImpl:
         assert result["original_key"] == "PROJ-123"
         mock_jira_client.create_link.assert_not_called()
 
-    def test_clone_issue_to_project(self, mock_jira_client, sample_issue, sample_cloned_issue):
+    def test_clone_issue_to_project(
+        self, mock_jira_client, sample_issue, sample_cloned_issue
+    ):
         """Test cloning to different project."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
         mock_jira_client.create_issue.return_value = deepcopy(sample_cloned_issue)
@@ -573,7 +586,9 @@ class TestLinkTypesCommand:
 class TestCloneCommand:
     """Tests for the clone CLI command."""
 
-    def test_clone_cli(self, cli_runner, mock_jira_client, sample_issue, sample_cloned_issue):
+    def test_clone_cli(
+        self, cli_runner, mock_jira_client, sample_issue, sample_cloned_issue
+    ):
         """Test CLI clone command."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
         mock_jira_client.create_issue.return_value = deepcopy(sample_cloned_issue)

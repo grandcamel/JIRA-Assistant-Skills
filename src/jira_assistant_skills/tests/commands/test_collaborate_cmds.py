@@ -216,12 +216,15 @@ class TestWatchersImpl:
 
     def test_add_watcher(self, mock_jira_client):
         """Test adding a watcher."""
-        with patch(
-            "jira_assistant_skills.cli.commands.collaborate_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.collaborate_cmds.resolve_user_to_account_id",
-            return_value="user-123",
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.collaborate_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.collaborate_cmds.resolve_user_to_account_id",
+                return_value="user-123",
+            ),
         ):
             _add_watcher_impl(issue_key="PROJ-123", user="user@example.com")
 
@@ -229,12 +232,15 @@ class TestWatchersImpl:
 
     def test_remove_watcher(self, mock_jira_client):
         """Test removing a watcher."""
-        with patch(
-            "jira_assistant_skills.cli.commands.collaborate_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.collaborate_cmds.resolve_user_to_account_id",
-            return_value="user-123",
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.collaborate_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.collaborate_cmds.resolve_user_to_account_id",
+                return_value="user-123",
+            ),
         ):
             _remove_watcher_impl(issue_key="PROJ-123", user="user@example.com")
 
@@ -351,10 +357,13 @@ class TestUpdateCustomFieldsImpl:
         """Test that no fields raises error."""
         from jira_assistant_skills_lib import ValidationError
 
-        with patch(
-            "jira_assistant_skills.cli.commands.collaborate_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), pytest.raises(ValidationError, match="Either --field"):
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.collaborate_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            pytest.raises(ValidationError, match="Either --field"),
+        ):
             _update_custom_fields_impl(issue_key="PROJ-123")
 
 
@@ -383,7 +392,9 @@ class TestCommentCommands:
         assert result.exit_code == 0
         assert "Added comment" in result.output
 
-    def test_comment_list_cli(self, cli_runner, mock_jira_client, sample_comments_response):
+    def test_comment_list_cli(
+        self, cli_runner, mock_jira_client, sample_comments_response
+    ):
         """Test CLI comment list command."""
         mock_jira_client.get_comments.return_value = deepcopy(sample_comments_response)
 

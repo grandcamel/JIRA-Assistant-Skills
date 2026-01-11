@@ -861,7 +861,9 @@ class TestServiceDeskListCommand:
     """Tests for service-desk list command."""
 
     @patch("jira_assistant_skills.cli.commands.jsm_cmds.get_jira_client")
-    def test_list_service_desks(self, mock_get_client, runner, mock_client, sample_service_desks):
+    def test_list_service_desks(
+        self, mock_get_client, runner, mock_client, sample_service_desks
+    ):
         """Test listing service desks."""
         mock_get_client.return_value = mock_client
         mock_client.get_service_desks.return_value = sample_service_desks
@@ -871,7 +873,9 @@ class TestServiceDeskListCommand:
         assert "SD" in result.output
 
     @patch("jira_assistant_skills.cli.commands.jsm_cmds.get_jira_client")
-    def test_list_service_desks_json(self, mock_get_client, runner, mock_client, sample_service_desks):
+    def test_list_service_desks_json(
+        self, mock_get_client, runner, mock_client, sample_service_desks
+    ):
         """Test listing service desks in JSON format."""
         mock_get_client.return_value = mock_client
         mock_client.get_service_desks.return_value = sample_service_desks
@@ -918,7 +922,9 @@ class TestRequestTypeListCommand:
     """Tests for request-type list command."""
 
     @patch("jira_assistant_skills.cli.commands.jsm_cmds.get_jira_client")
-    def test_list_request_types(self, mock_get_client, runner, mock_client, sample_request_types):
+    def test_list_request_types(
+        self, mock_get_client, runner, mock_client, sample_request_types
+    ):
         """Test listing request types."""
         mock_get_client.return_value = mock_client
         mock_client.get_request_types.return_value = sample_request_types
@@ -981,7 +987,9 @@ class TestRequestTransitionCommand:
             {"id": "11", "name": "Start Progress", "to": {"name": "In Progress"}}
         ]
 
-        result = runner.invoke(jsm, ["request", "transition", "SD-123", "--show-transitions"])
+        result = runner.invoke(
+            jsm, ["request", "transition", "SD-123", "--show-transitions"]
+        )
         assert result.exit_code == 0
         assert "Start Progress" in result.output
 
@@ -999,7 +1007,9 @@ class TestCustomerListCommand:
     """Tests for customer list command."""
 
     @patch("jira_assistant_skills.cli.commands.jsm_cmds.get_jira_client")
-    def test_list_customers(self, mock_get_client, runner, mock_client, sample_customers):
+    def test_list_customers(
+        self, mock_get_client, runner, mock_client, sample_customers
+    ):
         """Test listing customers."""
         mock_get_client.return_value.__enter__.return_value = mock_client
         mock_get_client.return_value.__exit__.return_value = None
@@ -1014,7 +1024,9 @@ class TestOrganizationListCommand:
     """Tests for organization list command."""
 
     @patch("jira_assistant_skills.cli.commands.jsm_cmds.get_jira_client")
-    def test_list_organizations(self, mock_get_client, runner, mock_client, sample_organizations):
+    def test_list_organizations(
+        self, mock_get_client, runner, mock_client, sample_organizations
+    ):
         """Test listing organizations."""
         mock_get_client.return_value.__enter__.return_value = mock_client
         mock_get_client.return_value.__exit__.return_value = None
@@ -1082,7 +1094,9 @@ class TestApprovalListCommand:
     """Tests for approval list command."""
 
     @patch("jira_assistant_skills.cli.commands.jsm_cmds.get_jira_client")
-    def test_list_approvals(self, mock_get_client, runner, mock_client, sample_approvals):
+    def test_list_approvals(
+        self, mock_get_client, runner, mock_client, sample_approvals
+    ):
         """Test listing approvals."""
         mock_get_client.return_value.__enter__.return_value = mock_client
         mock_get_client.return_value.__exit__.return_value = None
@@ -1103,7 +1117,9 @@ class TestKbSearchCommand:
         mock_get_client.return_value.__exit__.return_value = None
         mock_client.search_kb_articles.return_value = sample_kb_articles
 
-        result = runner.invoke(jsm, ["kb", "search", "--service-desk", "1", "--query", "password"])
+        result = runner.invoke(
+            jsm, ["kb", "search", "--service-desk", "1", "--query", "password"]
+        )
         assert result.exit_code == 0
         assert "How to reset password" in result.output
 

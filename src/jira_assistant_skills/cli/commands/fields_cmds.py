@@ -152,11 +152,13 @@ def _find_project_screens(client, project_key: str) -> list[dict[str, Any]]:
                     if screen_id:
                         try:
                             screen = client.get(f"/rest/api/3/screens/{screen_id}")
-                            screens.append({
-                                "id": screen.get("id"),
-                                "name": screen.get("name"),
-                                "operation": operation,
-                            })
+                            screens.append(
+                                {
+                                    "id": screen.get("id"),
+                                    "name": screen.get("name"),
+                                    "operation": operation,
+                                }
+                            )
                         except JiraError:
                             pass
 
@@ -234,14 +236,16 @@ def _list_fields_impl(
                     continue
 
             schema = field.get("schema", {})
-            result.append({
-                "id": field_id,
-                "name": name,
-                "type": schema.get("type", "unknown"),
-                "custom": field.get("custom", False),
-                "searchable": field.get("searchable", False),
-                "navigable": field.get("navigable", False),
-            })
+            result.append(
+                {
+                    "id": field_id,
+                    "name": name,
+                    "type": schema.get("type", "unknown"),
+                    "custom": field.get("custom", False),
+                    "searchable": field.get("searchable", False),
+                    "navigable": field.get("navigable", False),
+                }
+            )
 
         result.sort(key=lambda x: x["name"].lower())
         return result
@@ -452,12 +456,14 @@ def _configure_agile_fields_impl(
                 if field_id:
                     success = _add_field_to_screen(client, screen_id, field_id, dry_run)
                     if success:
-                        result["fields_added"].append({
-                            "field": field_type,
-                            "field_id": field_id,
-                            "screen": screen_name,
-                            "screen_id": screen_id,
-                        })
+                        result["fields_added"].append(
+                            {
+                                "field": field_type,
+                                "field_id": field_id,
+                                "screen": screen_name,
+                                "screen_id": screen_id,
+                            }
+                        )
 
         return result
 
@@ -515,7 +521,11 @@ def _format_project_fields(result: dict, check_agile: bool) -> str:
     proj = result["project"]
     lines.append(f"Project: {proj['key']} ({proj['name']})")
     lines.append(f"Type: {proj['project_type']}")
-    style = "Team-managed (next-gen)" if result["is_team_managed"] else "Company-managed (classic)"
+    style = (
+        "Team-managed (next-gen)"
+        if result["is_team_managed"]
+        else "Company-managed (classic)"
+    )
     lines.append(f"Style: {style}")
     lines.append("")
 
@@ -528,7 +538,9 @@ def _format_project_fields(result: dict, check_agile: bool) -> str:
         lines.append("Agile Field Availability:")
         for field_type, field_info in result.get("agile_fields", {}).items():
             if field_info:
-                lines.append(f"  ✓ {field_type}: {field_info['name']} ({field_info['id']})")
+                lines.append(
+                    f"  ✓ {field_type}: {field_info['name']} ({field_info['id']})"
+                )
             else:
                 lines.append(f"  ✗ {field_type}: NOT AVAILABLE")
 
@@ -538,7 +550,9 @@ def _format_project_fields(result: dict, check_agile: bool) -> str:
             lines.append("  - Field configuration is done in project settings UI")
         else:
             lines.append("Note: This is a company-managed project.")
-            lines.append("  - Use 'jira-as fields configure-agile' to add missing fields")
+            lines.append(
+                "  - Use 'jira-as fields configure-agile' to add missing fields"
+            )
 
     return "\n".join(lines)
 
@@ -593,7 +607,9 @@ def fields():
 @fields.command(name="list")
 @click.option("--filter", "-f", "filter_pattern", help="Filter fields by name pattern")
 @click.option("--agile", "-a", is_flag=True, help="Show only Agile-related fields")
-@click.option("--all", "show_all", is_flag=True, help="Show all fields (not just custom)")
+@click.option(
+    "--all", "show_all", is_flag=True, help="Show all fields (not just custom)"
+)
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors
@@ -614,7 +630,10 @@ def fields_list(ctx, filter_pattern: str, agile: bool, show_all: bool, output: s
 @fields.command(name="create")
 @click.option("--name", "-n", required=True, help="Field name")
 @click.option(
-    "--type", "-t", "field_type", required=True,
+    "--type",
+    "-t",
+    "field_type",
+    required=True,
     type=click.Choice(list(FIELD_TYPES.keys())),
     help="Field type",
 )
@@ -639,11 +658,15 @@ def fields_create(ctx, name: str, field_type: str, description: str, output: str
 @fields.command(name="check-project")
 @click.argument("project_key")
 @click.option("--type", "-t", "issue_type", help="Specific issue type to check")
-@click.option("--check-agile", "-a", is_flag=True, help="Check Agile field availability")
+@click.option(
+    "--check-agile", "-a", is_flag=True, help="Check Agile field availability"
+)
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors
-def fields_check_project(ctx, project_key: str, issue_type: str, check_agile: bool, output: str):
+def fields_check_project(
+    ctx, project_key: str, issue_type: str, check_agile: bool, output: str
+):
     """Check which fields are available for a project."""
     result = _check_project_fields_impl(
         project_key=project_key,
@@ -662,7 +685,12 @@ def fields_check_project(ctx, project_key: str, issue_type: str, check_agile: bo
 @click.option("--epic-link", help="Epic Link field ID")
 @click.option("--story-points", help="Story Points field ID")
 @click.option("--sprint", help="Sprint field ID")
-@click.option("--dry-run", "-n", is_flag=True, help="Show what would be done without making changes")
+@click.option(
+    "--dry-run",
+    "-n",
+    is_flag=True,
+    help="Show what would be done without making changes",
+)
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors

@@ -143,8 +143,12 @@ def _get_worklogs_impl(
     try:
         # Handle currentUser() filter
         if author_filter == "currentUser()":
-            current_user = client.get("/rest/api/3/myself", operation="get current user")
-            author_filter = current_user.get("emailAddress") or current_user.get("accountId")
+            current_user = client.get(
+                "/rest/api/3/myself", operation="get current user"
+            )
+            author_filter = current_user.get("emailAddress") or current_user.get(
+                "accountId"
+            )
 
         # Convert date strings to JIRA datetime format
         if since:
@@ -216,7 +220,9 @@ def _update_worklog_impl(
     validate_issue_key(issue_key)
 
     if not any([time_spent, started, comment]):
-        raise ValidationError("At least one of --time, --started, or --comment must be specified")
+        raise ValidationError(
+            "At least one of --time, --started, or --comment must be specified"
+        )
 
     if time_spent and not validate_time_format(time_spent):
         raise ValidationError(
@@ -445,17 +451,19 @@ def _generate_report_impl(
                 if author and author not in (author_email, author_id):
                     continue
 
-                entries.append({
-                    "issue_key": issue_key,
-                    "issue_summary": issue_summary,
-                    "worklog_id": worklog.get("id"),
-                    "author": worklog_author.get("displayName", author_email),
-                    "author_email": author_email,
-                    "started": started_str,
-                    "started_date": started_dt.strftime("%Y-%m-%d"),
-                    "time_spent": worklog.get("timeSpent", ""),
-                    "time_seconds": worklog.get("timeSpentSeconds", 0),
-                })
+                entries.append(
+                    {
+                        "issue_key": issue_key,
+                        "issue_summary": issue_summary,
+                        "worklog_id": worklog.get("id"),
+                        "author": worklog_author.get("displayName", author_email),
+                        "author_email": author_email,
+                        "started": started_str,
+                        "started_date": started_dt.strftime("%Y-%m-%d"),
+                        "time_spent": worklog.get("timeSpent", ""),
+                        "time_seconds": worklog.get("timeSpentSeconds", 0),
+                    }
+                )
 
         total_seconds = sum(e["time_seconds"] for e in entries)
 
@@ -556,18 +564,20 @@ def _export_timesheets_impl(
                             if child.get("type") == "text":
                                 comment_text += child.get("text", "")
 
-                entries.append({
-                    "issue_key": issue_key,
-                    "issue_summary": issue_summary,
-                    "worklog_id": worklog.get("id"),
-                    "author": worklog_author.get("displayName", author_email),
-                    "author_email": author_email,
-                    "started": started_str,
-                    "started_date": started_dt.strftime("%Y-%m-%d"),
-                    "time_spent": worklog.get("timeSpent", ""),
-                    "time_seconds": worklog.get("timeSpentSeconds", 0),
-                    "comment": comment_text,
-                })
+                entries.append(
+                    {
+                        "issue_key": issue_key,
+                        "issue_summary": issue_summary,
+                        "worklog_id": worklog.get("id"),
+                        "author": worklog_author.get("displayName", author_email),
+                        "author_email": author_email,
+                        "started": started_str,
+                        "started_date": started_dt.strftime("%Y-%m-%d"),
+                        "time_spent": worklog.get("timeSpent", ""),
+                        "time_seconds": worklog.get("timeSpentSeconds", 0),
+                        "comment": comment_text,
+                    }
+                )
 
         total_seconds = sum(e["time_seconds"] for e in entries)
 
@@ -620,7 +630,9 @@ def _bulk_log_time_impl(
     client = get_jira_client()
     try:
         if jql:
-            search_result = client.search_issues(jql, fields=["summary"], max_results=100)
+            search_result = client.search_issues(
+                jql, fields=["summary"], max_results=100
+            )
             issues = [issue["key"] for issue in search_result.get("issues", [])]
 
         if not issues:
@@ -643,17 +655,21 @@ def _bulk_log_time_impl(
             for issue_key in issues:
                 try:
                     issue = client.get_issue(issue_key)
-                    preview.append({
-                        "issue": issue_key,
-                        "summary": issue.get("fields", {}).get("summary", ""),
-                        "time_to_log": time_spent,
-                    })
+                    preview.append(
+                        {
+                            "issue": issue_key,
+                            "summary": issue.get("fields", {}).get("summary", ""),
+                            "time_to_log": time_spent,
+                        }
+                    )
                 except JiraError:
-                    preview.append({
-                        "issue": issue_key,
-                        "summary": "(unable to fetch)",
-                        "time_to_log": time_spent,
-                    })
+                    preview.append(
+                        {
+                            "issue": issue_key,
+                            "summary": "(unable to fetch)",
+                            "time_to_log": time_spent,
+                        }
+                    )
 
             return {
                 "dry_run": True,
@@ -674,11 +690,13 @@ def _bulk_log_time_impl(
                     started=started,
                     comment=comment_adf,
                 )
-                successes.append({
-                    "issue": issue_key,
-                    "worklog_id": worklog.get("id"),
-                    "time_spent": time_spent,
-                })
+                successes.append(
+                    {
+                        "issue": issue_key,
+                        "worklog_id": worklog.get("id"),
+                        "time_spent": time_spent,
+                    }
+                )
             except (JiraError, AuthenticationError) as e:
                 failures.append({"issue": issue_key, "error": str(e)})
 
@@ -805,7 +823,9 @@ def _format_worklog_added(result: dict[str, Any], issue_key: str) -> str:
     """Format worklog added result for text output."""
     lines = [f"Worklog added to {issue_key}:"]
     lines.append(f"  Worklog ID: {result.get('id')}")
-    lines.append(f"  Time logged: {result.get('timeSpent')} ({result.get('timeSpentSeconds')} seconds)")
+    lines.append(
+        f"  Time logged: {result.get('timeSpent')} ({result.get('timeSpentSeconds')} seconds)"
+    )
 
     if result.get("started"):
         lines.append(f"  Started: {result.get('started')}")
@@ -851,7 +871,9 @@ def _format_worklogs(result: dict[str, Any], issue_key: str) -> str:
                         comment_text = content.get("text", "")[:30]
                         break
 
-        lines.append(f"{worklog_id:<10} {author:<20} {started:<20} {time_spent:<10} {comment_text}")
+        lines.append(
+            f"{worklog_id:<10} {author:<20} {started:<20} {time_spent:<10} {comment_text}"
+        )
 
     lines.append("-" * 80)
     lines.append(f"Total: {format_seconds(total_seconds)} ({len(worklogs)} entries)")
@@ -859,17 +881,23 @@ def _format_worklogs(result: dict[str, Any], issue_key: str) -> str:
     return "\n".join(lines)
 
 
-def _format_worklog_updated(result: dict[str, Any], worklog_id: str, issue_key: str) -> str:
+def _format_worklog_updated(
+    result: dict[str, Any], worklog_id: str, issue_key: str
+) -> str:
     """Format worklog updated result for text output."""
     lines = [f"Worklog {worklog_id} updated on {issue_key}:"]
-    lines.append(f"  Time logged: {result.get('timeSpent')} ({result.get('timeSpentSeconds')} seconds)")
+    lines.append(
+        f"  Time logged: {result.get('timeSpent')} ({result.get('timeSpentSeconds')} seconds)"
+    )
     if result.get("started"):
         lines.append(f"  Started: {result.get('started')}")
     lines.append(f"  Updated: {result.get('updated')}")
     return "\n".join(lines)
 
 
-def _format_worklog_deleted(result: dict[str, Any], worklog_id: str, issue_key: str) -> str:
+def _format_worklog_deleted(
+    result: dict[str, Any], worklog_id: str, issue_key: str
+) -> str:
     """Format worklog deleted result for text output."""
     worklog = result.get("worklog", {})
     time_spent = worklog.get("timeSpent", "Unknown")
@@ -893,7 +921,12 @@ def _format_worklog_deleted(result: dict[str, Any], worklog_id: str, issue_key: 
     return "\n".join(lines)
 
 
-def _format_estimate_updated(result: dict[str, Any], issue_key: str, updated_original: bool, updated_remaining: bool) -> str:
+def _format_estimate_updated(
+    result: dict[str, Any],
+    issue_key: str,
+    updated_original: bool,
+    updated_remaining: bool,
+) -> str:
     """Format estimate updated result for text output."""
     lines = [f"Time estimates updated for {issue_key}:"]
 
@@ -923,14 +956,18 @@ def _format_time_tracking(result: dict[str, Any], issue_key: str) -> str:
     original = result.get("originalEstimate", "Not set")
     original_sec = result.get("originalEstimateSeconds")
     if original_sec:
-        lines.append(f"Original Estimate:    {original} ({format_seconds(original_sec)})")
+        lines.append(
+            f"Original Estimate:    {original} ({format_seconds(original_sec)})"
+        )
     else:
         lines.append(f"Original Estimate:    {original}")
 
     remaining = result.get("remainingEstimate", "Not set")
     remaining_sec = result.get("remainingEstimateSeconds")
     if remaining_sec:
-        lines.append(f"Remaining Estimate:   {remaining} ({format_seconds(remaining_sec)})")
+        lines.append(
+            f"Remaining Estimate:   {remaining} ({format_seconds(remaining_sec)})"
+        )
     else:
         lines.append(f"Remaining Estimate:   {remaining}")
 
@@ -947,7 +984,9 @@ def _format_time_tracking(result: dict[str, Any], issue_key: str) -> str:
         bar = _generate_progress_bar(progress)
         lines.append(f"Progress: {bar} {progress}% complete")
         if spent_sec and original_sec:
-            lines.append(f"          {format_seconds(spent_sec)} logged of {format_seconds(original_sec)} estimated")
+            lines.append(
+                f"          {format_seconds(spent_sec)} logged of {format_seconds(original_sec)} estimated"
+            )
 
     return "\n".join(lines)
 
@@ -972,7 +1011,9 @@ def _format_report_text(report: dict[str, Any]) -> str:
 
     if "grouped" in report:
         for key, data in sorted(report["grouped"].items()):
-            lines.append(f"{key}: {data['total_formatted']} ({data['entry_count']} entries)")
+            lines.append(
+                f"{key}: {data['total_formatted']} ({data['entry_count']} entries)"
+            )
     elif report["entries"]:
         lines.append(f"{'Issue':<12} {'Author':<15} {'Date':<12} {'Time':<8}")
         lines.append("-" * 50)
@@ -985,7 +1026,9 @@ def _format_report_text(report: dict[str, Any]) -> str:
             )
 
     lines.append("")
-    lines.append(f"Total: {report['total_formatted']} ({report['entry_count']} entries)")
+    lines.append(
+        f"Total: {report['total_formatted']} ({report['entry_count']} entries)"
+    )
 
     return "\n".join(lines)
 
@@ -1018,16 +1061,18 @@ def _format_export_csv(data: dict[str, Any]) -> str:
     writer.writeheader()
 
     for entry in data.get("entries", []):
-        writer.writerow({
-            "Issue Key": entry.get("issue_key", ""),
-            "Issue Summary": entry.get("issue_summary", ""),
-            "Author": entry.get("author", ""),
-            "Email": entry.get("author_email", ""),
-            "Date": entry.get("started_date", ""),
-            "Time Spent": entry.get("time_spent", ""),
-            "Seconds": entry.get("time_seconds", 0),
-            "Comment": entry.get("comment", ""),
-        })
+        writer.writerow(
+            {
+                "Issue Key": entry.get("issue_key", ""),
+                "Issue Summary": entry.get("issue_summary", ""),
+                "Author": entry.get("author", ""),
+                "Email": entry.get("author_email", ""),
+                "Date": entry.get("started_date", ""),
+                "Time Spent": entry.get("time_spent", ""),
+                "Seconds": entry.get("time_seconds", 0),
+                "Comment": entry.get("comment", ""),
+            }
+        )
 
     return output.getvalue()
 
@@ -1039,9 +1084,13 @@ def _format_bulk_log_result(result: dict[str, Any]) -> str:
     if result.get("dry_run"):
         lines.append("Bulk Time Logging Preview (dry-run):")
         for item in result.get("preview", []):
-            lines.append(f"  {item['issue']}: +{item['time_to_log']} ({item['summary'][:40]})")
+            lines.append(
+                f"  {item['issue']}: +{item['time_to_log']} ({item['summary'][:40]})"
+            )
         lines.append("")
-        lines.append(f"Would log {result['would_log_formatted']} total to {result['would_log_count']} issues.")
+        lines.append(
+            f"Would log {result['would_log_formatted']} total to {result['would_log_count']} issues."
+        )
         lines.append("Run without --dry-run to apply.")
     else:
         lines.append("Bulk Time Logging Complete:")
@@ -1084,14 +1133,18 @@ def time():
     default="auto",
     help="How to adjust remaining estimate",
 )
-@click.option("--new-estimate", help="New remaining estimate (when adjust=new or manual)")
+@click.option(
+    "--new-estimate", help="New remaining estimate (when adjust=new or manual)"
+)
 @click.option("--reduce-by", help="Amount to reduce estimate (when adjust=manual)")
 @click.option(
     "--visibility-type",
     type=click.Choice(["role", "group"]),
     help="Restrict visibility to role or group",
 )
-@click.option("--visibility-value", help="Role or group name for visibility restriction")
+@click.option(
+    "--visibility-value", help="Role or group name for visibility restriction"
+)
 @click.option(
     "--output",
     "-o",
@@ -1152,9 +1205,13 @@ def time_log(
 )
 @click.pass_context
 @handle_jira_errors
-def time_worklogs(ctx, issue_key: str, since: str, until: str, author: str, output: str):
+def time_worklogs(
+    ctx, issue_key: str, since: str, until: str, author: str, output: str
+):
     """Get worklogs for an issue."""
-    result = _get_worklogs_impl(issue_key, author_filter=author, since=since, until=until)
+    result = _get_worklogs_impl(
+        issue_key, author_filter=author, since=since, until=until
+    )
 
     if output == "json":
         click.echo(format_json(result))
@@ -1312,12 +1369,16 @@ def time_estimate(ctx, issue_key: str, original: str, remaining: str, output: st
     if not original and not remaining:
         raise click.UsageError("At least one of --original or --remaining is required")
 
-    result = _set_estimate_impl(issue_key, original_estimate=original, remaining_estimate=remaining)
+    result = _set_estimate_impl(
+        issue_key, original_estimate=original, remaining_estimate=remaining
+    )
 
     if output == "json":
         click.echo(format_json(result))
     else:
-        click.echo(_format_estimate_updated(result, issue_key, bool(original), bool(remaining)))
+        click.echo(
+            _format_estimate_updated(result, issue_key, bool(original), bool(remaining))
+        )
 
 
 @time.command(name="tracking")
@@ -1348,7 +1409,9 @@ def time_tracking(ctx, issue_key: str, output: str):
 @click.option("--until", help="End date (YYYY-MM-DD)")
 @click.option(
     "--period",
-    type=click.Choice(["today", "yesterday", "this-week", "last-week", "this-month", "last-month"]),
+    type=click.Choice(
+        ["today", "yesterday", "this-week", "last-week", "this-month", "last-month"]
+    ),
     help="Predefined time period",
 )
 @click.option(

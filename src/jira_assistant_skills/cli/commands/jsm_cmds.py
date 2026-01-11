@@ -182,12 +182,17 @@ def _format_service_desk(service_desk: dict[str, Any]) -> str:
 
 
 def _list_request_types_impl(
-    service_desk_id: str, start: int = 0, limit: int = 50, name_filter: str | None = None
+    service_desk_id: str,
+    start: int = 0,
+    limit: int = 50,
+    name_filter: str | None = None,
 ) -> dict[str, Any]:
     """List request types for a service desk."""
     client = get_jira_client()
     try:
-        request_types = client.get_request_types(service_desk_id, start=start, limit=limit)
+        request_types = client.get_request_types(
+            service_desk_id, start=start, limit=limit
+        )
 
         if name_filter:
             filtered = [
@@ -206,7 +211,9 @@ def _list_request_types_impl(
         client.close()
 
 
-def _get_request_type_impl(service_desk_id: str, request_type_id: str) -> dict[str, Any]:
+def _get_request_type_impl(
+    service_desk_id: str, request_type_id: str
+) -> dict[str, Any]:
     """Get request type details."""
     client = get_jira_client()
     try:
@@ -235,9 +242,7 @@ def _format_request_types(
     lines = ["Request Types:", ""]
 
     if show_issue_types:
-        lines.append(
-            f"{'ID':<4} {'Name':<30} {'Description':<40} {'Issue Type':<15}"
-        )
+        lines.append(f"{'ID':<4} {'Name':<30} {'Description':<40} {'Issue Type':<15}")
         lines.append(f"{'--':<4} {'----':<30} {'-----------':<40} {'----------':<15}")
 
         for rt in values:
@@ -328,7 +333,9 @@ def _list_requests_impl(
     final_jql = " AND ".join(jql_parts)
 
     with get_jira_client() as client:
-        return client.search_issues(jql=final_jql, max_results=max_results, start_at=start_at)
+        return client.search_issues(
+            jql=final_jql, max_results=max_results, start_at=start_at
+        )
 
 
 def _create_request_impl(
@@ -396,7 +403,9 @@ def _transition_request_impl(
         if not transition_id:
             raise ValueError("Either transition_id or transition_name must be provided")
 
-        client.transition_request(issue_key, transition_id, comment=comment, public=public)
+        client.transition_request(
+            issue_key, transition_id, comment=comment, public=public
+        )
 
 
 def _list_request_transitions_impl(issue_key: str) -> list[dict[str, Any]]:
@@ -693,7 +702,9 @@ def _add_to_organization_impl(organization_id: int, account_ids: list[str]) -> N
         client.add_users_to_organization(organization_id, account_ids)
 
 
-def _remove_from_organization_impl(organization_id: int, account_ids: list[str]) -> None:
+def _remove_from_organization_impl(
+    organization_id: int, account_ids: list[str]
+) -> None:
     """Remove users from an organization."""
     with get_jira_client() as client:
         client.remove_users_from_organization(organization_id, account_ids)
@@ -989,7 +1000,9 @@ def _get_approvals_impl(issue_key: str) -> list[dict[str, Any]]:
         return client.get_request_approvals(issue_key)
 
 
-def _list_pending_approvals_impl(service_desk_id: int | None = None) -> list[dict[str, Any]]:
+def _list_pending_approvals_impl(
+    service_desk_id: int | None = None,
+) -> list[dict[str, Any]]:
     """List pending approvals."""
     with get_jira_client() as client:
         return client.get_pending_approvals(service_desk_id=service_desk_id)
@@ -1158,9 +1171,7 @@ def _update_asset_impl(asset_id: int, attributes: dict[str, str]) -> dict[str, A
         return client.update_asset(asset_id, attributes)
 
 
-def _link_asset_impl(
-    asset_id: int, issue_key: str, comment: str | None = None
-) -> None:
+def _link_asset_impl(asset_id: int, issue_key: str, comment: str | None = None) -> None:
     """Link an asset to an issue."""
     with get_jira_client() as client:
         _check_assets_license(client)
@@ -1206,7 +1217,10 @@ def _format_assets(assets: list[dict[str, Any]]) -> str:
 
 def _format_asset(asset: dict[str, Any]) -> str:
     """Format a single asset as text."""
-    lines = [f"Asset: {asset.get('objectKey', 'N/A')} ({asset.get('label', 'N/A')})", ""]
+    lines = [
+        f"Asset: {asset.get('objectKey', 'N/A')} ({asset.get('label', 'N/A')})",
+        "",
+    ]
 
     if "objectType" in asset:
         lines.append(f"Object Type: {asset['objectType'].get('name', 'N/A')}")
@@ -1251,7 +1265,9 @@ def service_desk():
 @service_desk.command(name="list")
 @click.option("--filter", "-f", "project_filter", help="Filter by project key/name")
 @click.option("--start", "-s", type=int, default=0, help="Starting index (default: 0)")
-@click.option("--limit", "-l", type=int, default=50, help="Maximum results (default: 50)")
+@click.option(
+    "--limit", "-l", type=int, default=50, help="Maximum results (default: 50)"
+)
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors
@@ -1330,7 +1346,9 @@ def request_type():
     "--show-issue-types", "-i", is_flag=True, help="Show underlying JIRA issue types"
 )
 @click.option("--start", "-s", type=int, default=0, help="Starting index (default: 0)")
-@click.option("--limit", "-l", type=int, default=50, help="Maximum results (default: 50)")
+@click.option(
+    "--limit", "-l", type=int, default=50, help="Maximum results (default: 50)"
+)
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors
@@ -1417,7 +1435,11 @@ def request_list(
 ):
     """List requests for a service desk."""
     result = _list_requests_impl(
-        service_desk_id, status=status, jql=jql, max_results=max_results, start_at=start_at
+        service_desk_id,
+        status=status,
+        jql=jql,
+        max_results=max_results,
+        start_at=start_at,
     )
 
     issues = result.get("issues", [])
@@ -1511,7 +1533,9 @@ def request_get(
     show_sla = show_sla or full
     show_participants = show_participants or full
 
-    result = _get_request_impl(issue_key, show_sla=show_sla, show_participants=show_participants)
+    result = _get_request_impl(
+        issue_key, show_sla=show_sla, show_participants=show_participants
+    )
 
     if output == "json":
         click.echo(format_json(result))
@@ -1724,10 +1748,18 @@ def customer():
 @click.pass_context
 @handle_jira_errors
 def customer_list(
-    ctx, service_desk_id: str, query: str, start: int, limit: int, count: bool, output: str
+    ctx,
+    service_desk_id: str,
+    query: str,
+    start: int,
+    limit: int,
+    count: bool,
+    output: str,
 ):
     """List customers for a service desk."""
-    result = _list_customers_impl(service_desk_id, query=query, start=start, limit=limit)
+    result = _list_customers_impl(
+        service_desk_id, query=query, start=start, limit=limit
+    )
 
     if count:
         click.echo(result.get("size", len(result.get("values", []))))
@@ -1792,7 +1824,9 @@ def customer_add(ctx, service_desk_id: str, account_id: str, dry_run: bool):
         return
 
     _add_customer_impl(service_desk_id, account_ids)
-    print_success(f"Added {len(account_ids)} customer(s) to service desk {service_desk_id}")
+    print_success(
+        f"Added {len(account_ids)} customer(s) to service desk {service_desk_id}"
+    )
 
 
 @customer.command(name="remove")
@@ -1811,13 +1845,17 @@ def customer_remove(ctx, service_desk_id: str, account_id: str, dry_run: bool):
 
     if dry_run:
         click.echo("DRY RUN MODE - No changes will be made\n")
-        click.echo(f"Would remove {len(account_ids)} customer(s) from {service_desk_id}:")
+        click.echo(
+            f"Would remove {len(account_ids)} customer(s) from {service_desk_id}:"
+        )
         for aid in account_ids:
             click.echo(f"  - {aid}")
         return
 
     _remove_customer_impl(service_desk_id, account_ids)
-    print_success(f"Removed {len(account_ids)} customer(s) from service desk {service_desk_id}")
+    print_success(
+        f"Removed {len(account_ids)} customer(s) from service desk {service_desk_id}"
+    )
 
 
 # -----------------------------------------------------------------------------
@@ -1835,7 +1873,9 @@ def organization():
 @click.option("--start", type=int, default=0, help="Starting index (default: 0)")
 @click.option("--limit", type=int, default=50, help="Maximum results (default: 50)")
 @click.option("--count", is_flag=True, help="Show count only")
-@click.option("--output", "-o", type=click.Choice(["text", "json", "csv"]), default="text")
+@click.option(
+    "--output", "-o", type=click.Choice(["text", "json", "csv"]), default="text"
+)
 @click.pass_context
 @handle_jira_errors
 def organization_list(ctx, start: int, limit: int, count: bool, output: str):
@@ -1927,7 +1967,9 @@ def organization_delete(ctx, organization_id: int, force: bool, dry_run: bool):
 @click.option("--dry-run", is_flag=True, help="Show what would be added")
 @click.pass_context
 @handle_jira_errors
-def organization_add_customer(ctx, organization_id: int, account_id: str, dry_run: bool):
+def organization_add_customer(
+    ctx, organization_id: int, account_id: str, dry_run: bool
+):
     """Add customers to an organization."""
     account_ids = _parse_comma_list(account_id)
 
@@ -1937,13 +1979,17 @@ def organization_add_customer(ctx, organization_id: int, account_id: str, dry_ru
 
     if dry_run:
         click.echo("DRY RUN MODE - No changes will be made\n")
-        click.echo(f"Would add {len(account_ids)} customer(s) to organization {organization_id}:")
+        click.echo(
+            f"Would add {len(account_ids)} customer(s) to organization {organization_id}:"
+        )
         for aid in account_ids:
             click.echo(f"  - {aid}")
         return
 
     _add_to_organization_impl(organization_id, account_ids)
-    print_success(f"Added {len(account_ids)} customer(s) to organization {organization_id}")
+    print_success(
+        f"Added {len(account_ids)} customer(s) to organization {organization_id}"
+    )
 
 
 @organization.command(name="remove-customer")
@@ -1952,7 +1998,9 @@ def organization_add_customer(ctx, organization_id: int, account_id: str, dry_ru
 @click.option("--dry-run", is_flag=True, help="Show what would be removed")
 @click.pass_context
 @handle_jira_errors
-def organization_remove_customer(ctx, organization_id: int, account_id: str, dry_run: bool):
+def organization_remove_customer(
+    ctx, organization_id: int, account_id: str, dry_run: bool
+):
     """Remove customers from an organization."""
     account_ids = _parse_comma_list(account_id)
 
@@ -1962,13 +2010,17 @@ def organization_remove_customer(ctx, organization_id: int, account_id: str, dry
 
     if dry_run:
         click.echo("DRY RUN MODE - No changes will be made\n")
-        click.echo(f"Would remove {len(account_ids)} customer(s) from organization {organization_id}:")
+        click.echo(
+            f"Would remove {len(account_ids)} customer(s) from organization {organization_id}:"
+        )
         for aid in account_ids:
             click.echo(f"  - {aid}")
         return
 
     _remove_from_organization_impl(organization_id, account_ids)
-    print_success(f"Removed {len(account_ids)} customer(s) from organization {organization_id}")
+    print_success(
+        f"Removed {len(account_ids)} customer(s) from organization {organization_id}"
+    )
 
 
 # -----------------------------------------------------------------------------
@@ -2021,7 +2073,9 @@ def queue_get(ctx, service_desk_id: int, queue_id: int, output: str):
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors
-def queue_issues(ctx, service_desk_id: int, queue_id: int, max_results: int, output: str):
+def queue_issues(
+    ctx, service_desk_id: int, queue_id: int, max_results: int, output: str
+):
     """Get issues in a queue."""
     result = _get_queue_issues_impl(service_desk_id, queue_id, max_results)
 
@@ -2164,9 +2218,7 @@ def approval_pending(ctx, service_desk_id: int, output: str):
 @click.option("--dry-run", is_flag=True, help="Show what would be approved")
 @click.pass_context
 @handle_jira_errors
-def approval_approve(
-    ctx, issue_key: str, approval_id: tuple, yes: bool, dry_run: bool
-):
+def approval_approve(ctx, issue_key: str, approval_id: tuple, yes: bool, dry_run: bool):
     """Approve approval request(s)."""
     for aid in approval_id:
         # Get approval details
@@ -2209,9 +2261,7 @@ def approval_approve(
 @click.option("--dry-run", is_flag=True, help="Show what would be declined")
 @click.pass_context
 @handle_jira_errors
-def approval_decline(
-    ctx, issue_key: str, approval_id: tuple, yes: bool, dry_run: bool
-):
+def approval_decline(ctx, issue_key: str, approval_id: tuple, yes: bool, dry_run: bool):
     """Decline approval request(s)."""
     for aid in approval_id:
         # Get approval details
@@ -2230,7 +2280,9 @@ def approval_decline(
         click.echo(f"Name:          {approval_name}")
         click.echo(f"Approvers:     {approvers_str}")
         click.echo(f"Created:       {created}")
-        click.echo("\nWarning: Declining this approval may prevent the change from proceeding.")
+        click.echo(
+            "\nWarning: Declining this approval may prevent the change from proceeding."
+        )
 
         if dry_run:
             click.echo(f"\n[DRY RUN] Would decline approval {aid} for {issue_key}")

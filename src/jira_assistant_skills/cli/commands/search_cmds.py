@@ -49,11 +49,34 @@ STORY_POINTS_FIELD = "customfield_10016"
 
 # Common JQL fields for suggestions
 COMMON_FIELDS = [
-    "project", "status", "type", "issuetype", "priority", "assignee",
-    "reporter", "creator", "created", "updated", "resolved", "duedate",
-    "summary", "description", "labels", "component", "components",
-    "fixVersion", "affectedVersion", "sprint", "epic", "parent",
-    "resolution", "watchers", "voter", "comment", "key", "id",
+    "project",
+    "status",
+    "type",
+    "issuetype",
+    "priority",
+    "assignee",
+    "reporter",
+    "creator",
+    "created",
+    "updated",
+    "resolved",
+    "duedate",
+    "summary",
+    "description",
+    "labels",
+    "component",
+    "components",
+    "fixVersion",
+    "affectedVersion",
+    "sprint",
+    "epic",
+    "parent",
+    "resolution",
+    "watchers",
+    "voter",
+    "comment",
+    "key",
+    "id",
 ]
 
 # Predefined JQL templates
@@ -93,7 +116,9 @@ FUNCTION_EXAMPLES = {
 # =============================================================================
 
 
-def _suggest_correction(invalid_field: str, known_fields: list[str] | None = None) -> str | None:
+def _suggest_correction(
+    invalid_field: str, known_fields: list[str] | None = None
+) -> str | None:
     """Suggest a correction for an invalid field name."""
     if known_fields is None:
         known_fields = COMMON_FIELDS
@@ -178,8 +203,13 @@ def _search_issues_impl(
 
         if fields is None:
             fields = [
-                "key", "summary", "status", "priority",
-                "issuetype", "assignee", "reporter",
+                "key",
+                "summary",
+                "status",
+                "priority",
+                "issuetype",
+                "assignee",
+                "reporter",
             ]
             if include_agile:
                 fields.extend([EPIC_LINK_FIELD, STORY_POINTS_FIELD, "sprint"])
@@ -189,14 +219,17 @@ def _search_issues_impl(
                 fields.append("timetracking")
 
         results = client.search_issues(
-            actual_jql, fields=fields, max_results=max_results,
+            actual_jql,
+            fields=fields,
+            max_results=max_results,
             next_page_token=page_token,
         )
 
         saved_filter = None
         if save_as:
             saved_filter = client.create_filter(
-                save_as, actual_jql,
+                save_as,
+                actual_jql,
                 description=save_description,
                 favourite=save_favourite,
             )
@@ -222,13 +255,22 @@ def _export_results_impl(
 
     if fields is None:
         fields = [
-            "key", "summary", "status", "priority", "issuetype",
-            "assignee", "reporter", "created", "updated",
+            "key",
+            "summary",
+            "status",
+            "priority",
+            "issuetype",
+            "assignee",
+            "reporter",
+            "created",
+            "updated",
         ]
 
     client = get_jira_client()
     try:
-        results = client.search_issues(jql, fields=fields, max_results=max_results, start_at=0)
+        results = client.search_issues(
+            jql, fields=fields, max_results=max_results, start_at=0
+        )
         issues = results.get("issues", [])
 
         if not issues:
@@ -254,7 +296,9 @@ def _export_results_impl(
                         value = str(value)
                 elif isinstance(value, list):
                     value = ", ".join(
-                        item.get("name", str(item)) if isinstance(item, dict) else str(item)
+                        item.get("name", str(item))
+                        if isinstance(item, dict)
+                        else str(item)
                         for item in value
                     )
 
@@ -270,14 +314,22 @@ def _export_results_impl(
             )
         else:
             with open(output_file, "w") as f:
-                json.dump({"issues": export_data, "total": len(export_data)}, f, indent=2)
+                json.dump(
+                    {"issues": export_data, "total": len(export_data)}, f, indent=2
+                )
 
-        return {"exported": len(export_data), "output_file": output_file, "format": format_type}
+        return {
+            "exported": len(export_data),
+            "output_file": output_file,
+            "format": format_type,
+        }
     finally:
         client.close()
 
 
-def _validate_jql_impl(queries: list[str], show_structure: bool = False) -> list[dict[str, Any]]:
+def _validate_jql_impl(
+    queries: list[str], show_structure: bool = False
+) -> list[dict[str, Any]]:
     """Validate JQL queries."""
     if not queries:
         raise ValidationError("At least one query is required")
@@ -292,12 +344,14 @@ def _validate_jql_impl(queries: list[str], show_structure: bool = False) -> list
             errors = parsed.get("errors", [])
             structure = parsed.get("structure") if show_structure else None
 
-            results.append({
-                "valid": len(errors) == 0,
-                "query": query,
-                "errors": errors,
-                "structure": structure,
-            })
+            results.append(
+                {
+                    "valid": len(errors) == 0,
+                    "query": query,
+                    "errors": errors,
+                    "structure": structure,
+                }
+            )
 
         return results
     finally:
@@ -354,7 +408,9 @@ def _get_suggestions_impl(
     try:
         if use_cache:
             cache = get_autocomplete_cache()
-            return cache.get_suggestions(field_name, prefix, client, force_refresh=refresh_cache)
+            return cache.get_suggestions(
+                field_name, prefix, client, force_refresh=refresh_cache
+            )
         else:
             result = client.get_jql_suggestions(field_name, prefix)
             return result.get("results", [])
@@ -382,7 +438,8 @@ def _get_fields_impl(
         if name_filter:
             name_lower = name_filter.lower()
             fields = [
-                f for f in fields
+                f
+                for f in fields
                 if name_lower in f.get("value", "").lower()
                 or name_lower in f.get("displayName", "").lower()
             ]
@@ -411,7 +468,8 @@ def _get_functions_impl(
         if name_filter:
             name_lower = name_filter.lower()
             functions = [
-                f for f in functions
+                f
+                for f in functions
                 if name_lower in f.get("value", "").lower()
                 or name_lower in f.get("displayName", "").lower()
             ]
@@ -422,7 +480,8 @@ def _get_functions_impl(
         if type_filter:
             type_lower = type_filter.lower()
             functions = [
-                f for f in functions
+                f
+                for f in functions
                 if any(type_lower in str(t).lower() for t in f.get("types", []))
             ]
 
@@ -598,7 +657,9 @@ def _run_filter_impl(
             filters = client.get("/rest/api/3/filter/my", operation="get filters")
             if isinstance(filters, list):
                 matching = [
-                    f for f in filters if f.get("name", "").lower() == filter_name.lower()
+                    f
+                    for f in filters
+                    if f.get("name", "").lower() == filter_name.lower()
                 ]
                 if not matching:
                     raise ValidationError(f"Filter '{filter_name}' not found")
@@ -693,8 +754,14 @@ def _share_filter_impl(
                         role_id = url.split("/")[-1]
                         break
                 if not role_id:
-                    raise ValidationError(f"Role '{role}' not found in project {project}")
-                permission = {"type": "projectRole", "projectId": project, "projectRoleId": role_id}
+                    raise ValidationError(
+                        f"Role '{role}' not found in project {project}"
+                    )
+                permission = {
+                    "type": "projectRole",
+                    "projectId": project,
+                    "projectRoleId": role_id,
+                }
             else:
                 permission = {"type": "project", "projectId": project}
             result = client.add_filter_permission(filter_id, permission)
@@ -715,7 +782,9 @@ def _share_filter_impl(
             result = client.add_filter_permission(filter_id, permission)
             return {"action": "shared", "type": "user", "permission": result}
 
-        raise ValidationError("Specify --project, --group, --global, --user, --list, or --unshare")
+        raise ValidationError(
+            "Specify --project, --group, --global, --user, --list, or --unshare"
+        )
     finally:
         client.close()
 
@@ -756,7 +825,9 @@ def _favourite_filter_impl(
 # =============================================================================
 
 
-def _format_search_output(results: dict, show_agile: bool, show_links: bool, show_time: bool) -> str:
+def _format_search_output(
+    results: dict, show_agile: bool, show_links: bool, show_time: bool
+) -> str:
     """Format search results for text output."""
     lines = []
     issues = results.get("issues", [])
@@ -779,9 +850,14 @@ def _format_search_output(results: dict, show_agile: bool, show_links: bool, sho
 
     if issues:
         lines.append("")
-        lines.append(format_search_results(
-            issues, show_agile=show_agile, show_links=show_links, show_time=show_time
-        ))
+        lines.append(
+            format_search_results(
+                issues,
+                show_agile=show_agile,
+                show_links=show_links,
+                show_time=show_time,
+            )
+        )
 
         next_token = results.get("nextPageToken")
         if next_token:
@@ -796,7 +872,9 @@ def _format_search_output(results: dict, show_agile: bool, show_links: bool, sho
     saved_filter = results.get("savedFilter")
     if saved_filter:
         lines.append("")
-        lines.append(f"Saved as filter: {saved_filter.get('name')} (ID: {saved_filter.get('id')})")
+        lines.append(
+            f"Saved as filter: {saved_filter.get('name')} (ID: {saved_filter.get('id')})"
+        )
 
     return "\n".join(lines)
 
@@ -836,6 +914,7 @@ def _format_validation_result(result: dict) -> str:
 
             if "does not exist" in error.lower() and "'" in error:
                 import re
+
                 match = re.search(r"'(\w+)'", error)
                 if match:
                     invalid_field = match.group(1)
@@ -878,12 +957,14 @@ def _format_fields(fields: list) -> str:
         if len(ops_str) > 40:
             ops_str = ops_str[:37] + "..."
 
-        data.append({
-            "Field": field.get("value", ""),
-            "Display Name": field.get("displayName", ""),
-            "Type": "Custom" if field.get("cfid") else "System",
-            "Operators": ops_str,
-        })
+        data.append(
+            {
+                "Field": field.get("value", ""),
+                "Display Name": field.get("displayName", ""),
+                "Type": "Custom" if field.get("cfid") else "System",
+                "Operators": ops_str,
+            }
+        )
 
     data.sort(key=lambda x: x["Display Name"].lower())
 
@@ -904,11 +985,13 @@ def _format_functions(functions: list, show_examples: bool = False) -> str:
         is_list = func.get("isList") == "true"
         return_type = _get_return_type(func)
 
-        data.append({
-            "Function": func.get("value", ""),
-            "Returns List": "Yes" if is_list else "No",
-            "Type": return_type,
-        })
+        data.append(
+            {
+                "Function": func.get("value", ""),
+                "Returns List": "Yes" if is_list else "No",
+                "Type": return_type,
+            }
+        )
 
     data.sort(key=lambda x: x["Function"].lower())
     table = format_table(data, columns=["Function", "Returns List", "Type"])
@@ -940,13 +1023,15 @@ def _format_filters(filters: list) -> str:
         if len(jql) > 40:
             jql = jql[:37] + "..."
 
-        data.append({
-            "ID": f.get("id", ""),
-            "Name": f.get("name", ""),
-            "Favourite": "Yes" if f.get("favourite") else "No",
-            "Owner": f.get("owner", {}).get("displayName", ""),
-            "JQL": jql,
-        })
+        data.append(
+            {
+                "ID": f.get("id", ""),
+                "Name": f.get("name", ""),
+                "Favourite": "Yes" if f.get("favourite") else "No",
+                "Owner": f.get("owner", {}).get("displayName", ""),
+                "JQL": jql,
+            }
+        )
 
     data.sort(key=lambda x: x["Name"].lower())
     table = format_table(data, columns=["ID", "Name", "Favourite", "Owner", "JQL"])
@@ -1010,16 +1095,38 @@ def search():
 @click.argument("jql", required=False)
 @click.option("--filter", "-f", "filter_id", help="Run a saved filter by ID")
 @click.option("--fields", help="Comma-separated list of fields to retrieve")
-@click.option("--max-results", "-m", type=int, default=50, help="Maximum results (default: 50)")
+@click.option(
+    "--max-results", "-m", type=int, default=50, help="Maximum results (default: 50)"
+)
 @click.option("--page-token", "-p", help="Page token for pagination")
 @click.option("--show-links", "-l", is_flag=True, help="Show issue links")
 @click.option("--show-time", "-t", is_flag=True, help="Show time tracking info")
-@click.option("--show-agile", "-a", is_flag=True, help="Show agile fields (epic, points)")
+@click.option(
+    "--show-agile", "-a", is_flag=True, help="Show agile fields (epic, points)"
+)
 @click.option("--save-as", help="Save search as a new filter with this name")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
-def search_query(ctx, jql, filter_id, fields, max_results, page_token, show_links, show_time, show_agile, save_as, output):
+def search_query(
+    ctx,
+    jql,
+    filter_id,
+    fields,
+    max_results,
+    page_token,
+    show_links,
+    show_time,
+    show_agile,
+    save_as,
+    output,
+):
     """Search for issues using JQL query."""
     if not jql and not filter_id:
         raise click.UsageError("Either JQL query or --filter is required")
@@ -1047,10 +1154,19 @@ def search_query(ctx, jql, filter_id, fields, max_results, page_token, show_link
 
 @search.command(name="export")
 @click.argument("jql")
-@click.option("--format", "-f", "output_format", type=click.Choice(["csv", "json"]), default="csv", help="Export format")
+@click.option(
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["csv", "json"]),
+    default="csv",
+    help="Export format",
+)
 @click.option("--output", "-o", "output_file", required=True, help="Output file path")
 @click.option("--fields", help="Comma-separated list of fields to export")
-@click.option("--max-results", "-m", type=int, default=1000, help="Maximum results to export")
+@click.option(
+    "--max-results", "-m", type=int, default=1000, help="Maximum results to export"
+)
 @click.pass_context
 @handle_jira_errors
 def search_export(ctx, jql, output_format, output_file, fields, max_results):
@@ -1070,8 +1186,16 @@ def search_export(ctx, jql, output_format, output_file, fields, max_results):
 
 @search.command(name="validate")
 @click.argument("jql", nargs=-1, required=True)
-@click.option("--show-structure", "-s", is_flag=True, help="Show parsed query structure")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--show-structure", "-s", is_flag=True, help="Show parsed query structure"
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def search_validate(ctx, jql, show_structure, output):
@@ -1095,15 +1219,28 @@ def search_validate(ctx, jql, show_structure, output):
 @search.command(name="build")
 @click.option("--clause", "-c", multiple=True, help="JQL clause (can be repeated)")
 @click.option("--template", "-t", help="Use predefined template")
-@click.option("--operator", "-op", type=click.Choice(["AND", "OR"]), default="AND", help="Clause join operator")
+@click.option(
+    "--operator",
+    "-op",
+    type=click.Choice(["AND", "OR"]),
+    default="AND",
+    help="Clause join operator",
+)
 @click.option("--order-by", "-o", help="Field to order by")
 @click.option("--desc", is_flag=True, help="Use descending order")
 @click.option("--validate", "-v", is_flag=True, help="Validate the built query")
 @click.option("--list-templates", "-l", is_flag=True, help="List available templates")
-@click.option("--output", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
-def search_build(ctx, clause, template, operator, order_by, desc, validate, list_templates, output):
+def search_build(
+    ctx, clause, template, operator, order_by, desc, validate, list_templates, output
+):
     """Build a JQL query from components."""
     if list_templates:
         lines = ["Available Templates:", ""]
@@ -1149,7 +1286,13 @@ def search_build(ctx, clause, template, operator, order_by, desc, validate, list
 @click.option("--prefix", "-x", default="", help="Filter suggestions by prefix")
 @click.option("--no-cache", is_flag=True, help="Bypass cache and fetch from API")
 @click.option("--refresh", is_flag=True, help="Force refresh cache from API")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def search_suggest(ctx, field, prefix, no_cache, refresh, output):
@@ -1173,10 +1316,18 @@ def search_suggest(ctx, field, prefix, no_cache, refresh, output):
 @click.option("--system-only", is_flag=True, help="Show only system fields")
 @click.option("--no-cache", is_flag=True, help="Bypass cache")
 @click.option("--refresh", is_flag=True, help="Refresh cache")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
-def search_fields(ctx, name_filter, custom_only, system_only, no_cache, refresh, output):
+def search_fields(
+    ctx, name_filter, custom_only, system_only, no_cache, refresh, output
+):
     """List available JQL fields and operators."""
     if custom_only and system_only:
         raise click.UsageError("--custom-only and --system-only are mutually exclusive")
@@ -1200,7 +1351,13 @@ def search_fields(ctx, name_filter, custom_only, system_only, no_cache, refresh,
 @click.option("--list-only", is_flag=True, help="Show only functions returning lists")
 @click.option("--type", "-t", "type_filter", help="Filter by return type")
 @click.option("--with-examples", is_flag=True, help="Include usage examples")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def search_functions(ctx, name_filter, list_only, type_filter, with_examples, output):
@@ -1225,13 +1382,23 @@ def search_functions(ctx, name_filter, list_only, type_filter, with_examples, ou
 @click.option("--max-issues", type=int, default=100, help="Maximum issues to update")
 @click.option("--dry-run", "-n", is_flag=True, help="Preview without making changes")
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmation")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
-def search_bulk_update(ctx, jql, add_labels, remove_labels, priority, max_issues, dry_run, yes, output):
+def search_bulk_update(
+    ctx, jql, add_labels, remove_labels, priority, max_issues, dry_run, yes, output
+):
     """Bulk update issues from JQL search results."""
     if not add_labels and not remove_labels and not priority:
-        raise click.UsageError("At least one of --add-labels, --remove-labels, or --priority is required")
+        raise click.UsageError(
+            "At least one of --add-labels, --remove-labels, or --priority is required"
+        )
 
     add_list = parse_comma_list(add_labels)
     remove_list = parse_comma_list(remove_labels)
@@ -1262,6 +1429,7 @@ def search_bulk_update(ctx, jql, add_labels, remove_labels, priority, max_issues
 
 # --- Filter Subgroup ---
 
+
 @search.group()
 def filter():
     """Manage saved filters."""
@@ -1275,7 +1443,13 @@ def filter():
 @click.option("--id", "-i", "filter_id", help="Get specific filter by ID")
 @click.option("--owner", help='Filter by owner (account ID or "self")')
 @click.option("--project", help="Filter by project key")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def filter_list(ctx, my_filters, favourites, search, filter_id, owner, project, output):
@@ -1302,7 +1476,11 @@ def filter_list(ctx, my_filters, favourites, search, filter_id, owner, project, 
             click.echo("Filter Details:\n")
             click.echo(_format_filter_detail(result["filter"]))
         else:
-            title = {"my": "My Filters", "favourites": "Favourite Filters", "search": "Search Results"}
+            title = {
+                "my": "My Filters",
+                "favourites": "Favourite Filters",
+                "search": "Search Results",
+            }
             click.echo(f"{title.get(result['type'], 'Filters')}:\n")
             click.echo(_format_filters(result["filters"]))
 
@@ -1315,10 +1493,26 @@ def filter_list(ctx, my_filters, favourites, search, filter_id, owner, project, 
 @click.option("--share-project", help="Share with project (ID or key)")
 @click.option("--share-group", help="Share with group")
 @click.option("--share-global", is_flag=True, help="Share with all users")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
-def filter_create(ctx, name, jql, description, favourite, share_project, share_group, share_global, output):
+def filter_create(
+    ctx,
+    name,
+    jql,
+    description,
+    favourite,
+    share_project,
+    share_group,
+    share_global,
+    output,
+):
     """Create a new saved filter."""
     result = _create_filter_impl(
         name=name,
@@ -1345,7 +1539,13 @@ def filter_create(ctx, name, jql, description, favourite, share_project, share_g
 @click.option("--id", "-i", "filter_id", help="Filter ID")
 @click.option("--name", "-n", "filter_name", help="Filter name")
 @click.option("--max-results", "-m", type=int, default=50, help="Maximum results")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def filter_run(ctx, filter_id, filter_name, max_results, output):
@@ -1379,13 +1579,21 @@ def filter_run(ctx, filter_id, filter_name, max_results, output):
 @click.option("--name", "-n", help="New filter name")
 @click.option("--jql", "-j", help="New JQL query")
 @click.option("--description", "-d", help="New description")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def filter_update(ctx, filter_id, name, jql, description, output):
     """Update a saved filter."""
     if not any([name, jql, description]):
-        raise click.UsageError("At least one of --name, --jql, or --description is required")
+        raise click.UsageError(
+            "At least one of --name, --jql, or --description is required"
+        )
 
     result = _update_filter_impl(
         filter_id=filter_id,
@@ -1407,7 +1615,13 @@ def filter_update(ctx, filter_id, name, jql, description, output):
 @click.argument("filter_id")
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmation")
 @click.option("--dry-run", "-n", is_flag=True, help="Preview without deleting")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def filter_delete(ctx, filter_id, yes, dry_run, output):
@@ -1432,15 +1646,36 @@ def filter_delete(ctx, filter_id, yes, dry_run, output):
 @click.option("--group", "-g", help="Share with group")
 @click.option("--global", "share_global", is_flag=True, help="Share with all users")
 @click.option("--user", "-u", help="Share with user (account ID)")
-@click.option("--list", "-l", "list_perms", is_flag=True, help="List current permissions")
+@click.option(
+    "--list", "-l", "list_perms", is_flag=True, help="List current permissions"
+)
 @click.option("--unshare", help="Remove permission (permission ID)")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
-def filter_share(ctx, filter_id, project, role, group, share_global, user, list_perms, unshare, output):
+def filter_share(
+    ctx,
+    filter_id,
+    project,
+    role,
+    group,
+    share_global,
+    user,
+    list_perms,
+    unshare,
+    output,
+):
     """Share a filter with users, groups, or projects."""
     if not any([project, group, share_global, user, list_perms, unshare]):
-        raise click.UsageError("Specify --project, --group, --global, --user, --list, or --unshare")
+        raise click.UsageError(
+            "Specify --project, --group, --global, --user, --list, or --unshare"
+        )
 
     result = _share_filter_impl(
         filter_id=filter_id,
@@ -1470,7 +1705,9 @@ def filter_share(ctx, filter_id, project, role, group, share_global, user, list_
                     shared_with = perm_type  # Simplified
                     click.echo(f"{perm_id:<10} {perm_type:<15} {shared_with:<40}")
         elif result["action"] == "removed":
-            click.echo(f"Permission {result.get('permission_id')} removed from filter {filter_id}.")
+            click.echo(
+                f"Permission {result.get('permission_id')} removed from filter {filter_id}."
+            )
         else:
             click.echo(f"Filter {filter_id} shared with {result.get('type')}.")
 
@@ -1479,7 +1716,13 @@ def filter_share(ctx, filter_id, project, role, group, share_global, user, list_
 @click.argument("filter_id")
 @click.option("--add", "-a", is_flag=True, help="Add to favourites")
 @click.option("--remove", "-r", is_flag=True, help="Remove from favourites")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def filter_favourite(ctx, filter_id, add, remove, output):
@@ -1492,7 +1735,9 @@ def filter_favourite(ctx, filter_id, add, remove, output):
     if output == "json":
         click.echo(format_json(result))
     else:
-        filter_name = result.get("filter", {}).get("name") or result.get("filter_name", filter_id)
+        filter_name = result.get("filter", {}).get("name") or result.get(
+            "filter_name", filter_id
+        )
         if result["action"] == "added":
             click.echo(f'Filter {filter_id} "{filter_name}" added to favourites.')
         else:

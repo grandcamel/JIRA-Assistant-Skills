@@ -277,12 +277,15 @@ class TestCacheWarmImpl:
             {"key": "PROJ2", "name": "Project 2"},
         ]
 
-        with patch(
-            "jira_assistant_skills.cli.commands.ops_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.ops_cmds.JiraCache",
-            return_value=mock_cache,
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.ops_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.ops_cmds.JiraCache",
+                return_value=mock_cache,
+            ),
         ):
             result = _cache_warm_impl(projects=True)
 
@@ -300,12 +303,15 @@ class TestCacheWarmImpl:
             {"id": "field2", "name": "Field 2"},
         ]
 
-        with patch(
-            "jira_assistant_skills.cli.commands.ops_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.ops_cmds.JiraCache",
-            return_value=mock_cache,
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.ops_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.ops_cmds.JiraCache",
+                return_value=mock_cache,
+            ),
         ):
             result = _cache_warm_impl(fields=True)
 
@@ -320,12 +326,15 @@ class TestCacheWarmImpl:
 
         mock_jira_client.get.return_value = []
 
-        with patch(
-            "jira_assistant_skills.cli.commands.ops_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.ops_cmds.JiraCache",
-            return_value=mock_cache,
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.ops_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.ops_cmds.JiraCache",
+                return_value=mock_cache,
+            ),
         ):
             result = _cache_warm_impl(warm_all=True)
 
@@ -381,7 +390,11 @@ class TestDiscoverProjectImpl:
         """Test discovering a project."""
         mock_jira_client.get_project.return_value = deepcopy(sample_project)
         mock_jira_client.get_project_statuses.return_value = [
-            {"id": "1", "name": "Task", "statuses": [{"name": "Open"}, {"name": "Done"}]}
+            {
+                "id": "1",
+                "name": "Task",
+                "statuses": [{"name": "Open"}, {"name": "Done"}],
+            }
         ]
         mock_jira_client.get_project_components.return_value = []
         mock_jira_client.get_project_versions.return_value = []
@@ -528,12 +541,15 @@ class TestCacheWarmCommand:
         mock_cache.get_stats.return_value = MockCacheStats()
         mock_jira_client.get.return_value = [{"key": "PROJ"}]
 
-        with patch(
-            "jira_assistant_skills.cli.commands.ops_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.ops_cmds.JiraCache",
-            return_value=mock_cache,
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.ops_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.ops_cmds.JiraCache",
+                return_value=mock_cache,
+            ),
         ):
             result = cli_runner.invoke(ops, ["cache-warm", "--projects"])
 
@@ -563,7 +579,9 @@ class TestDiscoverProjectCommand:
         assert result.exit_code == 0
         assert "Project: PROJ" in result.output
 
-    def test_discover_project_cli_json(self, cli_runner, mock_jira_client, sample_project):
+    def test_discover_project_cli_json(
+        self, cli_runner, mock_jira_client, sample_project
+    ):
         """Test CLI discover-project with JSON output."""
         mock_jira_client.get_project.return_value = deepcopy(sample_project)
         mock_jira_client.get_project_statuses.return_value = []

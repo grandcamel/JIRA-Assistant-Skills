@@ -534,8 +534,16 @@ def sample_attachments():
 def sample_watchers():
     """Sample watchers."""
     return [
-        {"accountId": "user-123", "displayName": "John Doe", "emailAddress": "john@example.com"},
-        {"accountId": "user-456", "displayName": "Jane Smith", "emailAddress": "jane@example.com"},
+        {
+            "accountId": "user-123",
+            "displayName": "John Doe",
+            "emailAddress": "john@example.com",
+        },
+        {
+            "accountId": "user-456",
+            "displayName": "Jane Smith",
+            "emailAddress": "jane@example.com",
+        },
     ]
 
 
@@ -795,8 +803,14 @@ def sample_project_meta():
                         "fields": {
                             "summary": {"name": "Summary", "required": True},
                             "description": {"name": "Description", "required": False},
-                            "customfield_10001": {"name": "Story Points", "required": False},
-                            "customfield_10002": {"name": "Epic Link", "required": False},
+                            "customfield_10001": {
+                                "name": "Story Points",
+                                "required": False,
+                            },
+                            "customfield_10002": {
+                                "name": "Epic Link",
+                                "required": False,
+                            },
                         },
                     },
                     {

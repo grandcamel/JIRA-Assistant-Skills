@@ -59,11 +59,21 @@ ISSUE_KEY_PATTERN = re.compile(r"\b([A-Z][A-Z0-9]+-[0-9]+)\b", re.IGNORECASE)
 
 # Commit prefixes (for documentation)
 COMMIT_PREFIXES = [
-    "fixes", "fixed", "fix",
-    "closes", "closed", "close",
-    "resolves", "resolved", "resolve",
-    "refs", "ref", "references",
-    "related to", "relates to", "see",
+    "fixes",
+    "fixed",
+    "fix",
+    "closes",
+    "closed",
+    "close",
+    "resolves",
+    "resolved",
+    "resolve",
+    "refs",
+    "ref",
+    "references",
+    "related to",
+    "relates to",
+    "see",
 ]
 
 
@@ -343,8 +353,12 @@ def _create_pr_description_impl(
         issue = client.get_issue(
             issue_key,
             fields=[
-                "summary", "description", "issuetype",
-                "labels", "components", "priority",
+                "summary",
+                "description",
+                "issuetype",
+                "labels",
+                "components",
+                "priority",
             ],
         )
     finally:
@@ -681,12 +695,16 @@ def _get_commits_impl(
                     }
 
                     if detailed:
-                        commit_data.update({
-                            "message": commit.get("message", ""),
-                            "author": commit.get("author", {}).get("name", ""),
-                            "author_email": commit.get("author", {}).get("email", ""),
-                            "timestamp": commit.get("authorTimestamp", ""),
-                        })
+                        commit_data.update(
+                            {
+                                "message": commit.get("message", ""),
+                                "author": commit.get("author", {}).get("name", ""),
+                                "author_email": commit.get("author", {}).get(
+                                    "email", ""
+                                ),
+                                "timestamp": commit.get("authorTimestamp", ""),
+                            }
+                        )
 
                     commits.append(commit_data)
 
@@ -760,13 +778,19 @@ def dev():
 @dev.command(name="branch-name")
 @click.argument("issue_key")
 @click.option(
-    "--prefix", "-p",
-    type=click.Choice(["feature", "bugfix", "hotfix", "task", "epic", "spike", "chore", "docs"]),
+    "--prefix",
+    "-p",
+    type=click.Choice(
+        ["feature", "bugfix", "hotfix", "task", "epic", "spike", "chore", "docs"]
+    ),
     help="Branch prefix (default: feature)",
 )
-@click.option("--auto-prefix", "-a", is_flag=True, help="Auto-detect prefix from issue type")
 @click.option(
-    "--output", "-o",
+    "--auto-prefix", "-a", is_flag=True, help="Auto-detect prefix from issue type"
+)
+@click.option(
+    "--output",
+    "-o",
     type=click.Choice(["text", "json", "git"]),
     default="text",
     help="Output format (default: text)",
@@ -789,11 +813,14 @@ def dev_branch_name(ctx, issue_key: str, prefix: str, auto_prefix: bool, output:
 
 @dev.command(name="pr-description")
 @click.argument("issue_key")
-@click.option("--include-checklist", "-c", is_flag=True, help="Include testing checklist")
+@click.option(
+    "--include-checklist", "-c", is_flag=True, help="Include testing checklist"
+)
 @click.option("--include-labels", "-l", is_flag=True, help="Include issue labels")
 @click.option("--include-components", is_flag=True, help="Include components")
 @click.option(
-    "--output", "-o",
+    "--output",
+    "-o",
     type=click.Choice(["text", "json"]),
     default="text",
     help="Output format",
@@ -821,19 +848,26 @@ def dev_pr_description(
     if copy:
         try:
             import pyperclip
+
             pyperclip.copy(result["markdown"])
             click.echo("PR description copied to clipboard!", err=True)
         except ImportError:
-            click.echo("Warning: pyperclip not installed. Cannot copy to clipboard.", err=True)
+            click.echo(
+                "Warning: pyperclip not installed. Cannot copy to clipboard.", err=True
+            )
 
     if output == "json":
-        click.echo(format_json({
-            "description": result["markdown"],
-            "issue_key": result["issue_key"],
-            "summary": result["summary"],
-            "issue_type": result["issue_type"],
-            "priority": result["priority"],
-        }))
+        click.echo(
+            format_json(
+                {
+                    "description": result["markdown"],
+                    "issue_key": result["issue_key"],
+                    "summary": result["summary"],
+                    "issue_type": result["issue_type"],
+                    "priority": result["priority"],
+                }
+            )
+        )
     else:
         click.echo(result["markdown"])
 
@@ -843,7 +877,8 @@ def dev_pr_description(
 @click.option("--from-stdin", is_flag=True, help="Read from stdin (for git log pipe)")
 @click.option("--project", "-p", help="Filter by project key")
 @click.option(
-    "--output", "-o",
+    "--output",
+    "-o",
     type=click.Choice(["text", "json", "csv"]),
     default="text",
     help="Output format (default: text)",
@@ -885,7 +920,8 @@ def dev_parse_commits(ctx, message: str, from_stdin: bool, project: str, output:
 @click.option("--author", "-a", help="Commit author")
 @click.option("--branch", "-b", help="Branch name")
 @click.option(
-    "--output", "-o",
+    "--output",
+    "-o",
     type=click.Choice(["text", "json"]),
     default="text",
     help="Output format",
@@ -922,10 +958,13 @@ def dev_link_commit(
 @click.argument("issue_key")
 @click.option("--pr", "-p", required=True, help="Pull request URL (required)")
 @click.option("--title", "-t", help="PR title")
-@click.option("--status", "-s", type=click.Choice(["open", "merged", "closed"]), help="PR status")
+@click.option(
+    "--status", "-s", type=click.Choice(["open", "merged", "closed"]), help="PR status"
+)
 @click.option("--author", "-a", help="PR author")
 @click.option(
-    "--output", "-o",
+    "--output",
+    "-o",
     type=click.Choice(["text", "json"]),
     default="text",
     help="Output format",
@@ -959,10 +998,13 @@ def dev_link_pr(
 
 @dev.command(name="get-commits")
 @click.argument("issue_key")
-@click.option("--detailed", "-d", is_flag=True, help="Include commit message and author details")
+@click.option(
+    "--detailed", "-d", is_flag=True, help="Include commit message and author details"
+)
 @click.option("--repo", "-r", help="Filter by repository name")
 @click.option(
-    "--output", "-o",
+    "--output",
+    "-o",
     type=click.Choice(["text", "json", "table"]),
     default="text",
     help="Output format (default: text)",

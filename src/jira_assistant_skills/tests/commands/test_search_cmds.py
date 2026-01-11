@@ -355,7 +355,9 @@ class TestSearchImplementation:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.validate_jql")
-    def test_search_issues_basic(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_search_issues_basic(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test basic issue search."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -373,7 +375,9 @@ class TestSearchImplementation:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.validate_jql")
-    def test_search_issues_with_filter(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_search_issues_with_filter(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test search using saved filter."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -417,7 +421,9 @@ class TestSearchImplementation:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.validate_jql")
-    def test_export_results_csv(self, mock_validate, mock_get_client, mock_client, sample_issues, tmp_path):
+    def test_export_results_csv(
+        self, mock_validate, mock_get_client, mock_client, sample_issues, tmp_path
+    ):
         """Test exporting results to CSV."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -425,7 +431,9 @@ class TestSearchImplementation:
 
         output_file = str(tmp_path / "export.csv")
 
-        with patch("jira_assistant_skills.cli.commands.search_cmds.export_csv") as mock_export:
+        with patch(
+            "jira_assistant_skills.cli.commands.search_cmds.export_csv"
+        ) as mock_export:
             result = _export_results_impl(
                 jql="project = TEST",
                 output_file=output_file,
@@ -438,7 +446,9 @@ class TestSearchImplementation:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.validate_jql")
-    def test_export_results_json(self, mock_validate, mock_get_client, mock_client, sample_issues, tmp_path):
+    def test_export_results_json(
+        self, mock_validate, mock_get_client, mock_client, sample_issues, tmp_path
+    ):
         """Test exporting results to JSON."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -461,7 +471,9 @@ class TestSearchImplementation:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.validate_jql")
-    def test_export_results_no_issues(self, mock_validate, mock_get_client, mock_client, tmp_path):
+    def test_export_results_no_issues(
+        self, mock_validate, mock_get_client, mock_client, tmp_path
+    ):
         """Test export with no matching issues."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = EMPTY"
@@ -569,9 +581,7 @@ class TestSearchImplementation:
     def test_build_jql_with_validation(self, mock_get_client, mock_client):
         """Test building JQL with validation."""
         mock_get_client.return_value = mock_client
-        mock_client.parse_jql.return_value = {
-            "queries": [{"errors": []}]
-        }
+        mock_client.parse_jql.return_value = {"queries": [{"errors": []}]}
 
         result = _build_jql_impl(
             clauses=["project = TEST"],
@@ -583,7 +593,9 @@ class TestSearchImplementation:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_autocomplete_cache")
-    def test_get_suggestions_cached(self, mock_get_cache, mock_get_client, mock_client, sample_suggestions):
+    def test_get_suggestions_cached(
+        self, mock_get_cache, mock_get_client, mock_client, sample_suggestions
+    ):
         """Test getting suggestions with cache."""
         mock_get_client.return_value = mock_client
         mock_cache = MagicMock()
@@ -596,7 +608,9 @@ class TestSearchImplementation:
         mock_cache.get_suggestions.assert_called_once()
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
-    def test_get_suggestions_no_cache(self, mock_get_client, mock_client, sample_suggestions):
+    def test_get_suggestions_no_cache(
+        self, mock_get_client, mock_client, sample_suggestions
+    ):
         """Test getting suggestions without cache."""
         mock_get_client.return_value = mock_client
         mock_client.get_jql_suggestions.return_value = {"results": sample_suggestions}
@@ -608,7 +622,9 @@ class TestSearchImplementation:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_autocomplete_cache")
-    def test_get_fields_all(self, mock_get_cache, mock_get_client, mock_client, sample_fields):
+    def test_get_fields_all(
+        self, mock_get_cache, mock_get_client, mock_client, sample_fields
+    ):
         """Test getting all fields."""
         mock_get_client.return_value = mock_client
         mock_cache = MagicMock()
@@ -621,7 +637,9 @@ class TestSearchImplementation:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_autocomplete_cache")
-    def test_get_fields_custom_only(self, mock_get_cache, mock_get_client, mock_client, sample_fields):
+    def test_get_fields_custom_only(
+        self, mock_get_cache, mock_get_client, mock_client, sample_fields
+    ):
         """Test getting custom fields only."""
         mock_get_client.return_value = mock_client
         mock_cache = MagicMock()
@@ -635,7 +653,9 @@ class TestSearchImplementation:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_autocomplete_cache")
-    def test_get_fields_system_only(self, mock_get_cache, mock_get_client, mock_client, sample_fields):
+    def test_get_fields_system_only(
+        self, mock_get_cache, mock_get_client, mock_client, sample_fields
+    ):
         """Test getting system fields only."""
         mock_get_client.return_value = mock_client
         mock_cache = MagicMock()
@@ -649,7 +669,9 @@ class TestSearchImplementation:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_autocomplete_cache")
-    def test_get_fields_filtered(self, mock_get_cache, mock_get_client, mock_client, sample_fields):
+    def test_get_fields_filtered(
+        self, mock_get_cache, mock_get_client, mock_client, sample_fields
+    ):
         """Test getting fields filtered by name."""
         mock_get_client.return_value = mock_client
         mock_cache = MagicMock()
@@ -674,7 +696,9 @@ class TestSearchImplementation:
         assert len(result) == 4
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
-    def test_get_functions_list_only(self, mock_get_client, mock_client, sample_functions):
+    def test_get_functions_list_only(
+        self, mock_get_client, mock_client, sample_functions
+    ):
         """Test getting list-returning functions only."""
         mock_get_client.return_value = mock_client
         mock_client.get_jql_autocomplete.return_value = {
@@ -687,7 +711,9 @@ class TestSearchImplementation:
         assert all(f.get("isList") == "true" for f in result)
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
-    def test_get_functions_filtered(self, mock_get_client, mock_client, sample_functions):
+    def test_get_functions_filtered(
+        self, mock_get_client, mock_client, sample_functions
+    ):
         """Test getting functions filtered by name."""
         mock_get_client.return_value = mock_client
         mock_client.get_jql_autocomplete.return_value = {
@@ -701,7 +727,9 @@ class TestSearchImplementation:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.validate_jql")
-    def test_bulk_update_dry_run(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_update_dry_run(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk update dry run."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -719,7 +747,9 @@ class TestSearchImplementation:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.validate_jql")
-    def test_bulk_update_execute(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_update_execute(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk update execution."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -775,7 +805,9 @@ class TestFilterImplementation:
     def test_get_filters_favourites(self, mock_get_client, mock_client, sample_filters):
         """Test getting favourite filters."""
         mock_get_client.return_value = mock_client
-        mock_client.get_favourite_filters.return_value = [f for f in sample_filters if f["favourite"]]
+        mock_client.get_favourite_filters.return_value = [
+            f for f in sample_filters if f["favourite"]
+        ]
 
         result = _get_filters_impl(favourites=True)
 
@@ -859,7 +891,9 @@ class TestFilterImplementation:
             _create_filter_impl(name="Test", jql="")
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
-    def test_run_filter_by_id(self, mock_get_client, mock_client, sample_issues, sample_filter):
+    def test_run_filter_by_id(
+        self, mock_get_client, mock_client, sample_issues, sample_filter
+    ):
         """Test running filter by ID."""
         mock_get_client.return_value = mock_client
         mock_client.get_filter.return_value = sample_filter
@@ -871,7 +905,9 @@ class TestFilterImplementation:
         assert result["_filter"]["name"] == "My Open Issues"
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
-    def test_run_filter_by_name(self, mock_get_client, mock_client, sample_issues, sample_filter):
+    def test_run_filter_by_name(
+        self, mock_get_client, mock_client, sample_issues, sample_filter
+    ):
         """Test running filter by name."""
         mock_get_client.return_value = mock_client
         mock_client.get.return_value = [sample_filter]
@@ -973,7 +1009,10 @@ class TestFilterImplementation:
             "Developers": "https://jira/role/10002",
             "Users": "https://jira/role/10003",
         }
-        mock_client.add_filter_permission.return_value = {"id": "5", "type": "projectRole"}
+        mock_client.add_filter_permission.return_value = {
+            "id": "5",
+            "type": "projectRole",
+        }
 
         result = _share_filter_impl("10001", project="TEST", role="Developers")
 
@@ -1044,7 +1083,10 @@ class TestFilterImplementation:
         """Test toggling favourite adds when not favourite."""
         mock_get_client.return_value = mock_client
         mock_client.get_filter.return_value = {"id": "10001", "favourite": False}
-        mock_client.add_filter_favourite.return_value = {"id": "10001", "favourite": True}
+        mock_client.add_filter_favourite.return_value = {
+            "id": "10001",
+            "favourite": True,
+        }
 
         result = _favourite_filter_impl("10001")
 
@@ -1271,7 +1313,9 @@ class TestSearchCLICommands:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.validate_jql")
-    def test_query_command(self, mock_validate, mock_get_client, runner, mock_client, sample_issues):
+    def test_query_command(
+        self, mock_validate, mock_get_client, runner, mock_client, sample_issues
+    ):
         """Test search query command."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -1284,7 +1328,9 @@ class TestSearchCLICommands:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.validate_jql")
-    def test_query_command_json(self, mock_validate, mock_get_client, runner, mock_client, sample_issues):
+    def test_query_command_json(
+        self, mock_validate, mock_get_client, runner, mock_client, sample_issues
+    ):
         """Test search query with JSON output."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -1339,11 +1385,16 @@ class TestSearchCLICommands:
 
     def test_build_command_with_clauses(self, runner):
         """Test build command with clauses."""
-        result = runner.invoke(search, [
-            "build",
-            "-c", "project = TEST",
-            "-c", "status = Open",
-        ])
+        result = runner.invoke(
+            search,
+            [
+                "build",
+                "-c",
+                "project = TEST",
+                "-c",
+                "status = Open",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "project = TEST AND status = Open" in result.output
@@ -1357,7 +1408,9 @@ class TestSearchCLICommands:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_autocomplete_cache")
-    def test_suggest_command(self, mock_cache, mock_get_client, runner, mock_client, sample_suggestions):
+    def test_suggest_command(
+        self, mock_cache, mock_get_client, runner, mock_client, sample_suggestions
+    ):
         """Test suggest command."""
         mock_get_client.return_value = mock_client
         cache = MagicMock()
@@ -1371,7 +1424,9 @@ class TestSearchCLICommands:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_autocomplete_cache")
-    def test_fields_command(self, mock_cache, mock_get_client, runner, mock_client, sample_fields):
+    def test_fields_command(
+        self, mock_cache, mock_get_client, runner, mock_client, sample_fields
+    ):
         """Test fields command."""
         mock_get_client.return_value = mock_client
         cache = MagicMock()
@@ -1385,7 +1440,9 @@ class TestSearchCLICommands:
         assert "JQL Fields:" in result.output
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
-    def test_functions_command(self, mock_get_client, runner, mock_client, sample_functions):
+    def test_functions_command(
+        self, mock_get_client, runner, mock_client, sample_functions
+    ):
         """Test functions command."""
         mock_get_client.return_value = mock_client
         mock_client.get_jql_autocomplete.return_value = {
@@ -1399,17 +1456,24 @@ class TestSearchCLICommands:
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.search_cmds.validate_jql")
-    def test_bulk_update_dry_run(self, mock_validate, mock_get_client, runner, mock_client, sample_issues):
+    def test_bulk_update_dry_run(
+        self, mock_validate, mock_get_client, runner, mock_client, sample_issues
+    ):
         """Test bulk-update command dry run."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
         mock_client.search_issues.return_value = {"issues": sample_issues, "total": 3}
 
-        result = runner.invoke(search, [
-            "bulk-update", "project = TEST",
-            "--add-labels", "newlabel",
-            "--dry-run",
-        ])
+        result = runner.invoke(
+            search,
+            [
+                "bulk-update",
+                "project = TEST",
+                "--add-labels",
+                "newlabel",
+                "--dry-run",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Would update" in result.output
@@ -1435,10 +1499,14 @@ class TestFilterCLICommands:
         assert "My Open Issues" in result.output
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
-    def test_filter_list_favourites(self, mock_get_client, runner, mock_client, sample_filters):
+    def test_filter_list_favourites(
+        self, mock_get_client, runner, mock_client, sample_filters
+    ):
         """Test filter list --favourites command."""
         mock_get_client.return_value = mock_client
-        mock_client.get_favourite_filters.return_value = [f for f in sample_filters if f["favourite"]]
+        mock_client.get_favourite_filters.return_value = [
+            f for f in sample_filters if f["favourite"]
+        ]
 
         result = runner.invoke(search, ["filter", "list", "--favourites"])
 
@@ -1446,7 +1514,9 @@ class TestFilterCLICommands:
         assert "My Open Issues" in result.output
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
-    def test_filter_list_by_id(self, mock_get_client, runner, mock_client, sample_filter):
+    def test_filter_list_by_id(
+        self, mock_get_client, runner, mock_client, sample_filter
+    ):
         """Test filter list --id command."""
         mock_get_client.return_value = mock_client
         mock_client.get_filter.return_value = sample_filter
@@ -1467,18 +1537,26 @@ class TestFilterCLICommands:
             "jql": "project = TEST",
         }
 
-        result = runner.invoke(search, [
-            "filter", "create",
-            "-n", "New Filter",
-            "-j", "project = TEST",
-        ])
+        result = runner.invoke(
+            search,
+            [
+                "filter",
+                "create",
+                "-n",
+                "New Filter",
+                "-j",
+                "project = TEST",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Filter created" in result.output
         assert "10010" in result.output
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
-    def test_filter_run(self, mock_get_client, runner, mock_client, sample_issues, sample_filter):
+    def test_filter_run(
+        self, mock_get_client, runner, mock_client, sample_issues, sample_filter
+    ):
         """Test filter run command."""
         mock_get_client.return_value = mock_client
         mock_client.get_filter.return_value = sample_filter
@@ -1499,10 +1577,16 @@ class TestFilterCLICommands:
             "jql": "project = TEST",
         }
 
-        result = runner.invoke(search, [
-            "filter", "update", "10001",
-            "-n", "Updated Name",
-        ])
+        result = runner.invoke(
+            search,
+            [
+                "filter",
+                "update",
+                "10001",
+                "-n",
+                "Updated Name",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Filter updated" in result.output
@@ -1516,7 +1600,9 @@ class TestFilterCLICommands:
         assert "required" in result.output.lower()
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
-    def test_filter_delete_dry_run(self, mock_get_client, runner, mock_client, sample_filter):
+    def test_filter_delete_dry_run(
+        self, mock_get_client, runner, mock_client, sample_filter
+    ):
         """Test filter delete dry run."""
         mock_get_client.return_value = mock_client
         mock_client.get_filter.return_value = sample_filter
@@ -1528,7 +1614,9 @@ class TestFilterCLICommands:
         mock_client.delete_filter.assert_not_called()
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
-    def test_filter_delete_confirmed(self, mock_get_client, runner, mock_client, sample_filter):
+    def test_filter_delete_confirmed(
+        self, mock_get_client, runner, mock_client, sample_filter
+    ):
         """Test filter delete with confirmation."""
         mock_get_client.return_value = mock_client
         mock_client.get_filter.return_value = sample_filter
@@ -1558,13 +1646,17 @@ class TestFilterCLICommands:
         mock_get_client.return_value = mock_client
         mock_client.add_filter_permission.return_value = {"id": "5", "type": "project"}
 
-        result = runner.invoke(search, ["filter", "share", "10001", "--project", "TEST"])
+        result = runner.invoke(
+            search, ["filter", "share", "10001", "--project", "TEST"]
+        )
 
         assert result.exit_code == 0
         assert "shared" in result.output.lower()
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
-    def test_filter_favourite_add(self, mock_get_client, runner, mock_client, sample_filter):
+    def test_filter_favourite_add(
+        self, mock_get_client, runner, mock_client, sample_filter
+    ):
         """Test filter favourite --add command."""
         mock_get_client.return_value = mock_client
         mock_client.add_filter_favourite.return_value = sample_filter
@@ -1575,7 +1667,9 @@ class TestFilterCLICommands:
         assert "added" in result.output.lower()
 
     @patch("jira_assistant_skills.cli.commands.search_cmds.get_jira_client")
-    def test_filter_favourite_remove(self, mock_get_client, runner, mock_client, sample_filter):
+    def test_filter_favourite_remove(
+        self, mock_get_client, runner, mock_client, sample_filter
+    ):
         """Test filter favourite --remove command."""
         mock_get_client.return_value = mock_client
         mock_client.get_filter.return_value = sample_filter
@@ -1642,7 +1736,10 @@ class TestErrorHandling:
         # First succeeds, second fails
         mock_client.update_issue.side_effect = [None, JiraError("Update failed")]
 
-        with patch("jira_assistant_skills.cli.commands.search_cmds.validate_jql", return_value="jql"):
+        with patch(
+            "jira_assistant_skills.cli.commands.search_cmds.validate_jql",
+            return_value="jql",
+        ):
             result = _bulk_update_impl(
                 jql="project = TEST",
                 add_labels=["label"],

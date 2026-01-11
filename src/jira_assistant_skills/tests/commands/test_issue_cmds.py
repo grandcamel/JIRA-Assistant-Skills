@@ -150,12 +150,15 @@ class TestCreateIssueImpl:
         """Test creating a basic issue."""
         mock_jira_client.create_issue.return_value = deepcopy(sample_created_issue)
 
-        with patch(
-            "jira_assistant_skills.cli.commands.issue_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.issue_cmds.has_project_context",
-            return_value=False,
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.issue_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.issue_cmds.has_project_context",
+                return_value=False,
+            ),
         ):
             result = _create_issue_impl(
                 project="PROJ",
@@ -166,16 +169,21 @@ class TestCreateIssueImpl:
         assert result["key"] == "PROJ-130"
         mock_jira_client.create_issue.assert_called_once()
 
-    def test_create_issue_with_description(self, mock_jira_client, sample_created_issue):
+    def test_create_issue_with_description(
+        self, mock_jira_client, sample_created_issue
+    ):
         """Test creating an issue with description."""
         mock_jira_client.create_issue.return_value = deepcopy(sample_created_issue)
 
-        with patch(
-            "jira_assistant_skills.cli.commands.issue_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.issue_cmds.has_project_context",
-            return_value=False,
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.issue_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.issue_cmds.has_project_context",
+                return_value=False,
+            ),
         ):
             result = _create_issue_impl(
                 project="PROJ",
@@ -192,12 +200,15 @@ class TestCreateIssueImpl:
         """Test creating an issue with labels."""
         mock_jira_client.create_issue.return_value = deepcopy(sample_created_issue)
 
-        with patch(
-            "jira_assistant_skills.cli.commands.issue_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.issue_cmds.has_project_context",
-            return_value=False,
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.issue_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.issue_cmds.has_project_context",
+                return_value=False,
+            ),
         ):
             result = _create_issue_impl(
                 project="PROJ",
@@ -214,12 +225,15 @@ class TestCreateIssueImpl:
         """Test that client is closed after operation."""
         mock_jira_client.create_issue.return_value = deepcopy(sample_created_issue)
 
-        with patch(
-            "jira_assistant_skills.cli.commands.issue_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.issue_cmds.has_project_context",
-            return_value=False,
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.issue_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.issue_cmds.has_project_context",
+                return_value=False,
+            ),
         ):
             _create_issue_impl(
                 project="PROJ",
@@ -276,10 +290,13 @@ class TestUpdateIssueImpl:
 
     def test_update_issue_no_fields_raises_error(self, mock_jira_client):
         """Test that updating with no fields raises ValueError."""
-        with patch(
-            "jira_assistant_skills.cli.commands.issue_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), pytest.raises(ValueError, match="No fields specified"):
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.issue_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            pytest.raises(ValueError, match="No fields specified"),
+        ):
             _update_issue_impl(issue_key="PROJ-123")
 
     def test_update_issue_closes_client(self, mock_jira_client):
@@ -361,7 +378,9 @@ class TestGetIssueCommand:
         assert result.exit_code == 0
         assert "PROJ-123" in result.output
 
-    def test_get_issue_cli_json_output(self, cli_runner, mock_jira_client, sample_issue):
+    def test_get_issue_cli_json_output(
+        self, cli_runner, mock_jira_client, sample_issue
+    ):
         """Test CLI get issue command with JSON output."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
 
@@ -386,20 +405,26 @@ class TestCreateIssueCommand:
         """Test CLI create issue command success."""
         mock_jira_client.create_issue.return_value = deepcopy(sample_created_issue)
 
-        with patch(
-            "jira_assistant_skills.cli.commands.issue_cmds.get_jira_client",
-            return_value=mock_jira_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.issue_cmds.has_project_context",
-            return_value=False,
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.issue_cmds.get_jira_client",
+                return_value=mock_jira_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.issue_cmds.has_project_context",
+                return_value=False,
+            ),
         ):
             result = cli_runner.invoke(
                 issue,
                 [
                     "create",
-                    "--project", "PROJ",
-                    "--type", "Bug",
-                    "--summary", "Test bug",
+                    "--project",
+                    "PROJ",
+                    "--type",
+                    "Bug",
+                    "--summary",
+                    "Test bug",
                 ],
             )
 

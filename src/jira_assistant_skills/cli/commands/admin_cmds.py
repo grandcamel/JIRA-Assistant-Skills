@@ -106,7 +106,9 @@ def _list_trash_projects_impl(
         client.close()
 
 
-def _get_project_impl(project_key: str, expand: list[str] | None = None) -> dict[str, Any]:
+def _get_project_impl(
+    project_key: str, expand: list[str] | None = None
+) -> dict[str, Any]:
     """Get project details."""
     client = get_jira_client()
     try:
@@ -257,8 +259,8 @@ def _get_project_config_impl(
             except JiraError:
                 config["schemes"]["permission"] = None
             try:
-                config["schemes"]["notification"] = client.get_project_notification_scheme(
-                    project_key
+                config["schemes"]["notification"] = (
+                    client.get_project_notification_scheme(project_key)
                 )
             except JiraError:
                 config["schemes"]["notification"] = None
@@ -282,9 +284,7 @@ def _list_categories_impl() -> list[dict[str, Any]]:
         client.close()
 
 
-def _create_category_impl(
-    name: str, description: str | None = None
-) -> dict[str, Any]:
+def _create_category_impl(name: str, description: str | None = None) -> dict[str, Any]:
     """Create a project category."""
     client = get_jira_client()
     try:
@@ -321,7 +321,10 @@ def _search_users_impl(
     try:
         if assignable and project:
             users = client.find_assignable_users(
-                query=query, project_key=project, start_at=start_at, max_results=max_results
+                query=query,
+                project_key=project,
+                start_at=start_at,
+                max_results=max_results,
             )
         else:
             users = client.search_users(
@@ -385,9 +388,7 @@ def _list_groups_impl(
         client.close()
 
 
-def _get_group_members_impl(
-    group_name: str, max_results: int = 50
-) -> dict[str, Any]:
+def _get_group_members_impl(group_name: str, max_results: int = 50) -> dict[str, Any]:
     """Get members of a group."""
     client = get_jira_client()
     try:
@@ -544,7 +545,9 @@ def _toggle_automation_rule_impl(rule_id: str) -> dict[str, Any]:
         return client.enable_rule(rule_id)
 
 
-def _invoke_manual_rule_impl(rule_id: str, issue_key: str | None = None) -> dict[str, Any]:
+def _invoke_manual_rule_impl(
+    rule_id: str, issue_key: str | None = None
+) -> dict[str, Any]:
     """Invoke a manual automation rule."""
     client = get_automation_client()
     return client.invoke_rule(rule_id, issue_key=issue_key)
@@ -632,7 +635,12 @@ def _assign_permission_scheme_impl(
             }
 
         result = client.assign_permission_scheme(project_key, scheme_id)
-        return {"action": "assigned", "project_key": project_key, "scheme_id": scheme_id, "result": result}
+        return {
+            "action": "assigned",
+            "project_key": project_key,
+            "scheme_id": scheme_id,
+            "result": result,
+        }
     finally:
         client.close()
 
@@ -688,7 +696,9 @@ def _add_notification_impl(
     """Add a notification to a scheme."""
     client = get_jira_client()
     try:
-        return client.add_notification(scheme_id, event_type=event, notification_type=recipient)
+        return client.add_notification(
+            scheme_id, event_type=event, notification_type=recipient
+        )
     finally:
         client.close()
 
@@ -698,7 +708,11 @@ def _remove_notification_impl(scheme_id: str, notification_id: str) -> dict[str,
     client = get_jira_client()
     try:
         client.remove_notification(scheme_id, notification_id)
-        return {"action": "removed", "scheme_id": scheme_id, "notification_id": notification_id}
+        return {
+            "action": "removed",
+            "scheme_id": scheme_id,
+            "notification_id": notification_id,
+        }
     finally:
         client.close()
 
@@ -742,7 +756,9 @@ def _list_screens_impl(
 
         if filter_pattern:
             screens = [
-                s for s in screens if filter_pattern.lower() in s.get("name", "").lower()
+                s
+                for s in screens
+                if filter_pattern.lower() in s.get("name", "").lower()
             ]
 
         return screens
@@ -961,9 +977,7 @@ def _create_issue_type_scheme_impl(
         client.close()
 
 
-def _assign_issue_type_scheme_impl(
-    project_key: str, scheme_id: str
-) -> dict[str, Any]:
+def _assign_issue_type_scheme_impl(project_key: str, scheme_id: str) -> dict[str, Any]:
     """Assign an issue type scheme to a project."""
     client = get_jira_client()
     try:
@@ -1013,7 +1027,9 @@ def _list_workflows_impl(
                 workflows_data = response.get("values", [])
                 is_paginated = True
             else:
-                response = client.get_workflows(start_at=start_at, max_results=max_results)
+                response = client.get_workflows(
+                    start_at=start_at, max_results=max_results
+                )
                 if isinstance(response, list):
                     workflows_data = response
                     is_paginated = False
@@ -1073,7 +1089,9 @@ def _list_workflows_impl(
         client.close()
 
 
-def _parse_workflow(wf_data: dict[str, Any], include_details: bool = False) -> dict[str, Any]:
+def _parse_workflow(
+    wf_data: dict[str, Any], include_details: bool = False
+) -> dict[str, Any]:
     """Parse workflow data from API response."""
     if "id" in wf_data and isinstance(wf_data["id"], dict):
         workflow = {
@@ -1085,7 +1103,9 @@ def _parse_workflow(wf_data: dict[str, Any], include_details: bool = False) -> d
     else:
         workflow = {
             "name": wf_data.get("name", wf_data.get("id", {}).get("name", "Unknown")),
-            "entity_id": wf_data.get("entityId", wf_data.get("id", {}).get("entityId", "")),
+            "entity_id": wf_data.get(
+                "entityId", wf_data.get("id", {}).get("entityId", "")
+            ),
             "description": wf_data.get("description", ""),
             "is_default": wf_data.get("isDefault", False),
         }
@@ -1191,9 +1211,7 @@ def _get_workflow_scheme_impl(
         client.close()
 
 
-def _assign_workflow_scheme_impl(
-    project_key: str, scheme_id: str
-) -> dict[str, Any]:
+def _assign_workflow_scheme_impl(project_key: str, scheme_id: str) -> dict[str, Any]:
     """Assign a workflow scheme to a project."""
     client = get_jira_client()
     try:
@@ -1234,13 +1252,15 @@ def _format_projects(result: dict[str, Any]) -> str:
         lead = proj.get("lead", {})
         lead_name = lead.get("displayName", "-") if lead else "-"
 
-        data.append({
-            "Key": proj.get("key", "-"),
-            "Name": proj.get("name", "-")[:40],
-            "Type": proj.get("projectTypeKey", "-"),
-            "Category": category_name,
-            "Lead": lead_name[:20],
-        })
+        data.append(
+            {
+                "Key": proj.get("key", "-"),
+                "Name": proj.get("name", "-")[:40],
+                "Type": proj.get("projectTypeKey", "-"),
+                "Category": category_name,
+                "Lead": lead_name[:20],
+            }
+        )
 
     output = format_table(data, columns=["Key", "Name", "Type", "Category", "Lead"])
 
@@ -1248,7 +1268,9 @@ def _format_projects(result: dict[str, Any]) -> str:
     start_at = result.get("startAt", 0)
 
     if total > len(projects):
-        output += f"\n\nShowing {start_at + 1}-{start_at + len(projects)} of {total} projects"
+        output += (
+            f"\n\nShowing {start_at + 1}-{start_at + len(projects)} of {total} projects"
+        )
         if not result.get("isLast", True):
             output += f"\nUse --start-at {start_at + len(projects)} to see more"
 
@@ -1263,12 +1285,14 @@ def _format_trash_projects(result: dict[str, Any]) -> str:
 
     data = []
     for proj in projects:
-        data.append({
-            "Key": proj.get("key", "-"),
-            "Name": proj.get("name", "-")[:30],
-            "Deleted": proj.get("deletedDate", "-")[:10],
-            "Restore By": proj.get("retentionTillDate", "-")[:10],
-        })
+        data.append(
+            {
+                "Key": proj.get("key", "-"),
+                "Name": proj.get("name", "-")[:30],
+                "Deleted": proj.get("deletedDate", "-")[:10],
+                "Restore By": proj.get("retentionTillDate", "-")[:10],
+            }
+        )
 
     return format_table(data, columns=["Key", "Name", "Deleted", "Restore By"])
 
@@ -1301,11 +1325,13 @@ def _format_categories(categories: list[dict[str, Any]]) -> str:
 
     data = []
     for cat in categories:
-        data.append({
-            "ID": cat.get("id", ""),
-            "Name": cat.get("name", ""),
-            "Description": (cat.get("description", "") or "")[:50],
-        })
+        data.append(
+            {
+                "ID": cat.get("id", ""),
+                "Name": cat.get("name", ""),
+                "Description": (cat.get("description", "") or "")[:50],
+            }
+        )
 
     return format_table(data, columns=["ID", "Name", "Description"])
 
@@ -1374,14 +1400,18 @@ def _format_group_members(result: dict[str, Any], group_name: str) -> str:
 
     data = []
     for member in members:
-        data.append({
-            "Account ID": member.get("accountId", "N/A"),
-            "Name": member.get("displayName", "N/A"),
-            "Email": member.get("emailAddress", "[hidden]") or "[hidden]",
-            "Active": "Yes" if member.get("active", True) else "No",
-        })
+        data.append(
+            {
+                "Account ID": member.get("accountId", "N/A"),
+                "Name": member.get("displayName", "N/A"),
+                "Email": member.get("emailAddress", "[hidden]") or "[hidden]",
+                "Active": "Yes" if member.get("active", True) else "No",
+            }
+        )
 
-    output = f"Members of '{group_name}' ({result.get('total', len(members))} total):\n\n"
+    output = (
+        f"Members of '{group_name}' ({result.get('total', len(members))} total):\n\n"
+    )
     output += format_table(data, columns=["Account ID", "Name", "Email", "Active"])
     return output
 
@@ -1407,13 +1437,15 @@ def _format_automation_rules(rules: list[dict[str, Any]]) -> str:
         if len(rule_id) > 20:
             rule_id = rule_id[:20] + "..."
 
-        data.append({
-            "ID": rule_id,
-            "Name": rule.get("name", "Unnamed"),
-            "State": rule.get("state", "UNKNOWN"),
-            "Scope": scope,
-            "Trigger": trigger_display,
-        })
+        data.append(
+            {
+                "ID": rule_id,
+                "Name": rule.get("name", "Unnamed"),
+                "State": rule.get("state", "UNKNOWN"),
+                "Scope": scope,
+                "Trigger": trigger_display,
+            }
+        )
 
     output = f"Automation Rules ({len(rules)} found)\n"
     output += "=" * 60 + "\n\n"
@@ -1454,11 +1486,13 @@ def _format_notification_schemes(schemes: list[dict[str, Any]]) -> str:
 
     data = []
     for scheme in schemes:
-        data.append({
-            "ID": scheme.get("id", ""),
-            "Name": scheme.get("name", ""),
-            "Description": (scheme.get("description", "") or "")[:50],
-        })
+        data.append(
+            {
+                "ID": scheme.get("id", ""),
+                "Name": scheme.get("name", ""),
+                "Description": (scheme.get("description", "") or "")[:50],
+            }
+        )
 
     return format_table(data, columns=["ID", "Name", "Description"])
 
@@ -1479,12 +1513,14 @@ def _format_screens(screens: list[dict[str, Any]]) -> str:
             else:
                 scope_info = scope_type
 
-        data.append({
-            "ID": screen.get("id", ""),
-            "Name": screen.get("name", ""),
-            "Description": (screen.get("description", "") or "")[:50],
-            "Scope": scope_info,
-        })
+        data.append(
+            {
+                "ID": screen.get("id", ""),
+                "Name": screen.get("name", ""),
+                "Description": (screen.get("description", "") or "")[:50],
+                "Scope": scope_info,
+            }
+        )
 
     return format_table(data, columns=["ID", "Name", "Description", "Scope"])
 
@@ -1501,14 +1537,16 @@ def _format_issue_types(issue_types: list[dict[str, Any]]) -> str:
             if issue_type.get("scope")
             else "GLOBAL"
         )
-        data.append({
-            "ID": issue_type.get("id", ""),
-            "Name": issue_type.get("name", ""),
-            "Description": (issue_type.get("description", "") or "")[:50],
-            "Subtask": "Yes" if issue_type.get("subtask") else "No",
-            "Hierarchy": str(issue_type.get("hierarchyLevel", 0)),
-            "Scope": scope_type,
-        })
+        data.append(
+            {
+                "ID": issue_type.get("id", ""),
+                "Name": issue_type.get("name", ""),
+                "Description": (issue_type.get("description", "") or "")[:50],
+                "Subtask": "Yes" if issue_type.get("subtask") else "No",
+                "Hierarchy": str(issue_type.get("hierarchyLevel", 0)),
+                "Scope": scope_type,
+            }
+        )
 
     return format_table(
         data, columns=["ID", "Name", "Description", "Subtask", "Hierarchy", "Scope"]
@@ -1558,12 +1596,14 @@ def _format_statuses(statuses: list[dict[str, Any]]) -> str:
     data = []
     for status in statuses:
         category = status.get("statusCategory", {})
-        data.append({
-            "ID": status.get("id", ""),
-            "Name": status.get("name", ""),
-            "Category": category.get("name", "Unknown"),
-            "Description": (status.get("description", "") or "")[:50],
-        })
+        data.append(
+            {
+                "ID": status.get("id", ""),
+                "Name": status.get("name", ""),
+                "Category": category.get("name", "Unknown"),
+                "Description": (status.get("description", "") or "")[:50],
+            }
+        )
 
     return format_table(data, columns=["ID", "Name", "Category", "Description"])
 
@@ -1593,7 +1633,9 @@ def project_group():
 @project_group.command(name="list")
 @click.option("--search", "-s", help="Search projects by name or key")
 @click.option(
-    "--type", "-t", "project_type",
+    "--type",
+    "-t",
+    "project_type",
     type=click.Choice(["software", "business", "service_desk"]),
     help="Filter by project type",
 )
@@ -1606,7 +1648,18 @@ def project_group():
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors
-def project_list(ctx, search, project_type, category, include_archived, trash, expand, start_at, max_results, output):
+def project_list(
+    ctx,
+    search,
+    project_type,
+    category,
+    include_archived,
+    trash,
+    expand,
+    start_at,
+    max_results,
+    output,
+):
     """List and search JIRA projects."""
     if trash:
         result = _list_trash_projects_impl(start_at=start_at, max_results=max_results)
@@ -1648,10 +1701,15 @@ def project_get(ctx, project_key, expand, output):
 
 
 @project_group.command(name="create")
-@click.option("--key", "-k", required=True, help="Project key (2-10 uppercase letters/numbers)")
+@click.option(
+    "--key", "-k", required=True, help="Project key (2-10 uppercase letters/numbers)"
+)
 @click.option("--name", "-n", required=True, help="Project name")
 @click.option(
-    "--type", "-t", "project_type", required=True,
+    "--type",
+    "-t",
+    "project_type",
+    required=True,
     type=click.Choice(["software", "business", "service_desk"]),
     help="Project type",
 )
@@ -1662,7 +1720,9 @@ def project_get(ctx, project_key, expand, output):
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors
-def project_create(ctx, key, name, project_type, template, lead, description, category, output):
+def project_create(
+    ctx, key, name, project_type, template, lead, description, category, output
+):
     """Create a new JIRA project."""
     result = _create_project_impl(
         key=key,
@@ -1712,7 +1772,9 @@ def project_update(ctx, project_key, name, description, lead, category, output):
 def project_delete(ctx, project_key, yes, dry_run, output):
     """Delete a JIRA project."""
     if not dry_run and not yes:
-        click.confirm(f"Are you sure you want to delete project {project_key}?", abort=True)
+        click.confirm(
+            f"Are you sure you want to delete project {project_key}?", abort=True
+        )
 
     result = _delete_project_impl(project_key, dry_run=dry_run)
     if output == "json":
@@ -1847,13 +1909,27 @@ def user_group():
 @click.argument("query")
 @click.option("--include-groups", "-g", is_flag=True, help="Include group memberships")
 @click.option("--project", "-p", help="Project key for assignable users")
-@click.option("--assignable", "-a", is_flag=True, help="Search assignable users (requires --project)")
+@click.option(
+    "--assignable",
+    "-a",
+    is_flag=True,
+    help="Search assignable users (requires --project)",
+)
 @click.option("--all", "include_inactive", is_flag=True, help="Include inactive users")
 @click.option("--max-results", type=int, default=50, help="Maximum results")
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors
-def user_search(ctx, query, include_groups, project, assignable, include_inactive, max_results, output):
+def user_search(
+    ctx,
+    query,
+    include_groups,
+    project,
+    assignable,
+    include_inactive,
+    max_results,
+    output,
+):
     """Search for users by name or email."""
     if assignable and not project:
         raise click.UsageError("--assignable requires --project")
@@ -1904,7 +1980,9 @@ def group_group():
 
 @group_group.command(name="list")
 @click.option("--query", "-q", help="Filter groups by name")
-@click.option("--include-members", "-m", is_flag=True, help="Include member counts (slower)")
+@click.option(
+    "--include-members", "-m", is_flag=True, help="Include member counts (slower)"
+)
 @click.option("--show-system", "-s", is_flag=True, help="Highlight system groups")
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
@@ -1919,7 +1997,11 @@ def group_list(ctx, query, include_members, show_system, output):
             click.echo("No groups found.")
         else:
             click.echo(f"Found {len(result)} group(s)\n")
-            click.echo(_format_groups(result, show_member_count=include_members, show_system=show_system))
+            click.echo(
+                _format_groups(
+                    result, show_member_count=include_members, show_system=show_system
+                )
+            )
 
 
 @group_group.command(name="members")
@@ -2020,14 +2102,18 @@ def automation_group():
 
 @automation_group.command(name="list")
 @click.option("--project", "-p", help="Filter by project key")
-@click.option("--state", "-s", type=click.Choice(["enabled", "disabled"]), help="Filter by state")
+@click.option(
+    "--state", "-s", type=click.Choice(["enabled", "disabled"]), help="Filter by state"
+)
 @click.option("--all", "fetch_all", is_flag=True, help="Fetch all pages")
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors
 def automation_list(ctx, project, state, fetch_all, output):
     """List automation rules."""
-    result = _list_automation_rules_impl(project=project, state=state, fetch_all=fetch_all)
+    result = _list_automation_rules_impl(
+        project=project, state=state, fetch_all=fetch_all
+    )
     if output == "json":
         click.echo(format_json(result))
     else:
@@ -2143,7 +2229,9 @@ def automation_template_list(ctx, output):
             click.echo("No automation templates found.")
         else:
             for template in result:
-                click.echo(f"- {template.get('name', 'N/A')} ({template.get('id', 'N/A')})")
+                click.echo(
+                    f"- {template.get('name', 'N/A')} ({template.get('id', 'N/A')})"
+                )
 
 
 @automation_template_group.command(name="get")
@@ -2181,7 +2269,9 @@ def permission_scheme_group():
 @handle_jira_errors
 def permission_scheme_list(ctx, name_filter, show_grants, output):
     """List permission schemes."""
-    result = _list_permission_schemes_impl(name_filter=name_filter, show_grants=show_grants)
+    result = _list_permission_schemes_impl(
+        name_filter=name_filter, show_grants=show_grants
+    )
     if output == "json":
         click.echo(format_json(result))
     else:
@@ -2371,7 +2461,13 @@ def screen_group():
 
 @screen_group.command(name="list")
 @click.option("--filter", "-f", "filter_pattern", help="Filter by name pattern")
-@click.option("--scope", "-s", multiple=True, type=click.Choice(["PROJECT", "TEMPLATE", "GLOBAL"]), help="Filter by scope")
+@click.option(
+    "--scope",
+    "-s",
+    multiple=True,
+    type=click.Choice(["PROJECT", "TEMPLATE", "GLOBAL"]),
+    help="Filter by scope",
+)
 @click.option("--all", "fetch_all", is_flag=True, help="Fetch all pages")
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
@@ -2439,7 +2535,9 @@ def screen_fields(ctx, screen_id, tab, output):
             click.echo("No fields found.")
         else:
             for field in result:
-                tab_info = f" (Tab: {field.get('tab', 'N/A')})" if "tab" in field else ""
+                tab_info = (
+                    f" (Tab: {field.get('tab', 'N/A')})" if "tab" in field else ""
+                )
                 click.echo(f"- {field.get('name', field.get('id', 'N/A'))}{tab_info}")
 
 
@@ -2496,11 +2594,13 @@ def screen_scheme_list(ctx, output):
         else:
             data = []
             for scheme in result:
-                data.append({
-                    "ID": scheme.get("id", ""),
-                    "Name": scheme.get("name", ""),
-                    "Description": (scheme.get("description", "") or "")[:50],
-                })
+                data.append(
+                    {
+                        "ID": scheme.get("id", ""),
+                        "Name": scheme.get("name", ""),
+                        "Description": (scheme.get("description", "") or "")[:50],
+                    }
+                )
             click.echo(format_table(data, columns=["ID", "Name", "Description"]))
 
 
@@ -2572,13 +2672,22 @@ def issue_type_get(ctx, issue_type_id, output):
 @issue_type_group.command(name="create")
 @click.option("--name", "-n", required=True, help="Issue type name")
 @click.option("--description", "-d", help="Description")
-@click.option("--type", "-t", "issue_type", type=click.Choice(["standard", "subtask"]), default="standard", help="Issue type category")
+@click.option(
+    "--type",
+    "-t",
+    "issue_type",
+    type=click.Choice(["standard", "subtask"]),
+    default="standard",
+    help="Issue type category",
+)
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
 @click.pass_context
 @handle_jira_errors
 def issue_type_create(ctx, name, description, issue_type, output):
     """Create an issue type."""
-    result = _create_issue_type_impl(name=name, description=description, issue_type=issue_type)
+    result = _create_issue_type_impl(
+        name=name, description=description, issue_type=issue_type
+    )
     if output == "json":
         click.echo(format_json(result))
     else:
@@ -2610,7 +2719,9 @@ def issue_type_update(ctx, issue_type_id, name, description, output):
 def issue_type_delete(ctx, issue_type_id, force, output):
     """Delete an issue type."""
     if not force:
-        click.confirm(f"Are you sure you want to delete issue type {issue_type_id}?", abort=True)
+        click.confirm(
+            f"Are you sure you want to delete issue type {issue_type_id}?", abort=True
+        )
 
     result = _delete_issue_type_impl(issue_type_id)
     if output == "json":
@@ -2645,11 +2756,13 @@ def issue_type_scheme_list(ctx, output):
         else:
             data = []
             for scheme in result:
-                data.append({
-                    "ID": scheme.get("id", ""),
-                    "Name": scheme.get("name", ""),
-                    "Description": (scheme.get("description", "") or "")[:50],
-                })
+                data.append(
+                    {
+                        "ID": scheme.get("id", ""),
+                        "Name": scheme.get("name", ""),
+                        "Description": (scheme.get("description", "") or "")[:50],
+                    }
+                )
             click.echo(format_table(data, columns=["ID", "Name", "Description"]))
 
 
@@ -2710,7 +2823,9 @@ def issue_type_scheme_project(ctx, project_id, output):
     if output == "json":
         click.echo(format_json(result))
     else:
-        click.echo(f"Project {project_id} uses scheme: {result.get('name', result.get('id', 'N/A'))}")
+        click.echo(
+            f"Project {project_id} uses scheme: {result.get('name', result.get('id', 'N/A'))}"
+        )
 
 
 # =============================================================================
@@ -2727,7 +2842,9 @@ def workflow_group():
 @workflow_group.command(name="list")
 @click.option("--details", "-d", is_flag=True, help="Include statuses and transitions")
 @click.option("--filter", "-f", "name_filter", help="Filter by name")
-@click.option("--scope", "-s", type=click.Choice(["global", "project"]), help="Filter by scope")
+@click.option(
+    "--scope", "-s", type=click.Choice(["global", "project"]), help="Filter by scope"
+)
 @click.option("--show-usage", "-u", is_flag=True, help="Show scheme usage")
 @click.option("--all", "fetch_all", is_flag=True, help="Fetch all pages")
 @click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text")
@@ -2817,11 +2934,13 @@ def workflow_scheme_list(ctx, output):
         else:
             data = []
             for scheme in result:
-                data.append({
-                    "ID": scheme.get("id", ""),
-                    "Name": scheme.get("name", ""),
-                    "Description": (scheme.get("description", "") or "")[:50],
-                })
+                data.append(
+                    {
+                        "ID": scheme.get("id", ""),
+                        "Name": scheme.get("name", ""),
+                        "Description": (scheme.get("description", "") or "")[:50],
+                    }
+                )
             click.echo(format_table(data, columns=["ID", "Name", "Description"]))
 
 

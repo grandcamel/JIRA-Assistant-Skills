@@ -42,6 +42,7 @@ def _is_critical_error(e: Exception) -> bool:
             RateLimitError,
             ServerError,
         )
+
         if isinstance(e, (AuthenticationError, RateLimitError, ServerError)):
             return True
     except ImportError:
@@ -49,7 +50,10 @@ def _is_critical_error(e: Exception) -> bool:
 
     try:
         import requests
-        if isinstance(e, (requests.exceptions.Timeout, requests.exceptions.ConnectionError)):
+
+        if isinstance(
+            e, (requests.exceptions.Timeout, requests.exceptions.ConnectionError)
+        ):
             return True
     except ImportError:
         pass
@@ -173,7 +177,9 @@ def _cache_clear_impl(
 # =============================================================================
 
 
-def _warm_projects(client, cache, verbose: bool = False) -> tuple[int, Exception | None]:
+def _warm_projects(
+    client, cache, verbose: bool = False
+) -> tuple[int, Exception | None]:
     """Fetch and cache project list."""
     if verbose:
         click.echo("Fetching projects...")
@@ -225,7 +231,9 @@ def _warm_fields(client, cache, verbose: bool = False) -> tuple[int, Exception |
         return 0, None
 
 
-def _warm_issue_types(client, cache, verbose: bool = False) -> tuple[int, Exception | None]:
+def _warm_issue_types(
+    client, cache, verbose: bool = False
+) -> tuple[int, Exception | None]:
     """Fetch and cache issue type definitions."""
     if verbose:
         click.echo("Fetching issue types...")
@@ -253,7 +261,9 @@ def _warm_issue_types(client, cache, verbose: bool = False) -> tuple[int, Except
         return 0, None
 
 
-def _warm_priorities(client, cache, verbose: bool = False) -> tuple[int, Exception | None]:
+def _warm_priorities(
+    client, cache, verbose: bool = False
+) -> tuple[int, Exception | None]:
     """Fetch and cache priority definitions."""
     if verbose:
         click.echo("Fetching priorities...")
@@ -281,7 +291,9 @@ def _warm_priorities(client, cache, verbose: bool = False) -> tuple[int, Excepti
         return 0, None
 
 
-def _warm_statuses(client, cache, verbose: bool = False) -> tuple[int, Exception | None]:
+def _warm_statuses(
+    client, cache, verbose: bool = False
+) -> tuple[int, Exception | None]:
     """Fetch and cache status definitions."""
     if verbose:
         click.echo("Fetching statuses...")
@@ -401,7 +413,9 @@ def _cache_warm_impl(
 # =============================================================================
 
 
-def _discover_metadata(client, project_key: str, verbose: bool = False) -> dict[str, Any]:
+def _discover_metadata(
+    client, project_key: str, verbose: bool = False
+) -> dict[str, Any]:
     """Fetch project metadata from JIRA."""
     if verbose:
         click.echo(f"Discovering metadata for {project_key}...")
@@ -503,7 +517,9 @@ def _discover_metadata(client, project_key: str, verbose: bool = False) -> dict[
             for u in users
         ]
         if verbose:
-            click.echo(f"    Found {len(metadata['assignable_users'])} assignable users")
+            click.echo(
+                f"    Found {len(metadata['assignable_users'])} assignable users"
+            )
     except Exception:
         metadata["assignable_users"] = []
 
@@ -519,7 +535,9 @@ def _discover_patterns(
 ) -> dict[str, Any]:
     """Analyze recent issues to discover usage patterns."""
     if verbose:
-        click.echo(f"Discovering patterns (last {sample_period_days} days, up to {sample_size} issues)...")
+        click.echo(
+            f"Discovering patterns (last {sample_period_days} days, up to {sample_size} issues)..."
+        )
 
     patterns = {
         "project_key": project_key,
@@ -532,12 +550,22 @@ def _discover_patterns(
     }
 
     # Build JQL for recent issues
-    since_date = (datetime.utcnow() - timedelta(days=sample_period_days)).strftime("%Y-%m-%d")
-    jql = f'project = "{project_key}" AND created >= "{since_date}" ORDER BY created DESC'
+    since_date = (datetime.utcnow() - timedelta(days=sample_period_days)).strftime(
+        "%Y-%m-%d"
+    )
+    jql = (
+        f'project = "{project_key}" AND created >= "{since_date}" ORDER BY created DESC'
+    )
 
     fields = [
-        "issuetype", "assignee", "reporter", "priority",
-        "labels", "components", "status", "customfield_10016",
+        "issuetype",
+        "assignee",
+        "reporter",
+        "priority",
+        "labels",
+        "components",
+        "status",
+        "customfield_10016",
     ]
 
     try:
@@ -555,17 +583,21 @@ def _discover_patterns(
         return patterns
 
     # Aggregate by issue type
-    by_type: dict[str, dict] = defaultdict(lambda: {
-        "issue_count": 0,
-        "assignees": defaultdict(lambda: {"count": 0, "display_name": ""}),
-        "labels": defaultdict(int),
-        "components": defaultdict(int),
-        "priorities": defaultdict(int),
-        "story_points": [],
-    })
+    by_type: dict[str, dict] = defaultdict(
+        lambda: {
+            "issue_count": 0,
+            "assignees": defaultdict(lambda: {"count": 0, "display_name": ""}),
+            "labels": defaultdict(int),
+            "components": defaultdict(int),
+            "priorities": defaultdict(int),
+            "story_points": [],
+        }
+    )
 
     all_labels: dict[str, int] = defaultdict(int)
-    all_assignees: dict[str, dict] = defaultdict(lambda: {"count": 0, "display_name": ""})
+    all_assignees: dict[str, dict] = defaultdict(
+        lambda: {"count": 0, "display_name": ""}
+    )
 
     for issue in issues:
         fields_data = issue.get("fields", {})
@@ -647,7 +679,9 @@ def _discover_patterns(
     patterns["common_labels"] = [label for label, _ in sorted_labels[:20]]
 
     # Top assignees
-    sorted_assignees = sorted(all_assignees.items(), key=lambda x: x[1]["count"], reverse=True)
+    sorted_assignees = sorted(
+        all_assignees.items(), key=lambda x: x[1]["count"], reverse=True
+    )
     patterns["top_assignees"] = [
         {
             "account_id": account_id,
@@ -658,7 +692,9 @@ def _discover_patterns(
     ]
 
     if verbose:
-        click.echo(f"  Found {len(patterns['by_issue_type'])} issue types with patterns")
+        click.echo(
+            f"  Found {len(patterns['by_issue_type'])} issue types with patterns"
+        )
 
     return patterns
 
@@ -686,7 +722,9 @@ def _discover_project_impl(
     client = get_jira_client()
     try:
         metadata = _discover_metadata(client, project_key, verbose)
-        patterns = _discover_patterns(client, project_key, sample_size, sample_period_days, verbose)
+        patterns = _discover_patterns(
+            client, project_key, sample_size, sample_period_days, verbose
+        )
 
         return {
             "metadata": metadata,
@@ -704,18 +742,24 @@ def _discover_project_impl(
 def _format_cache_status(stats: dict, verbose: bool = False) -> str:
     """Format cache status for text output."""
     lines = ["\nCache Statistics:"]
-    lines.append(f"  Total Size: {_format_bytes(stats['total_size_bytes'])} / {_format_bytes(stats['max_size_bytes'])}")
+    lines.append(
+        f"  Total Size: {_format_bytes(stats['total_size_bytes'])} / {_format_bytes(stats['max_size_bytes'])}"
+    )
     lines.append(f"  Entries: {stats['entry_count']:,}")
 
-    if stats['hits'] + stats['misses'] > 0:
-        lines.append(f"  Hit Rate: {stats['hit_rate'] * 100:.1f}% ({stats['hits']:,} hits, {stats['misses']:,} misses)")
+    if stats["hits"] + stats["misses"] > 0:
+        lines.append(
+            f"  Hit Rate: {stats['hit_rate'] * 100:.1f}% ({stats['hits']:,} hits, {stats['misses']:,} misses)"
+        )
     else:
         lines.append("  Hit Rate: N/A (no requests)")
 
-    if stats.get('by_category'):
+    if stats.get("by_category"):
         lines.append("\nBy Category:")
-        for category, cat_stats in sorted(stats['by_category'].items()):
-            lines.append(f"  {category}: {cat_stats['count']:,} entries, {_format_bytes(cat_stats['size_bytes'])}")
+        for category, cat_stats in sorted(stats["by_category"].items()):
+            lines.append(
+                f"  {category}: {cat_stats['count']:,} entries, {_format_bytes(cat_stats['size_bytes'])}"
+            )
     else:
         lines.append("\nNo cached entries.")
 
@@ -746,9 +790,9 @@ def _format_cache_warm(result: dict) -> str:
         f"Total cache size: {result['cache_size_bytes'] / (1024 * 1024):.1f} MB",
     ]
 
-    if result.get('errors'):
+    if result.get("errors"):
         lines.append("\nWarnings:")
-        for err in result['errors']:
+        for err in result["errors"]:
             lines.append(f"  - {err}")
 
     return "\n".join(lines)
@@ -775,11 +819,11 @@ def _format_discover_project(context: dict) -> str:
         f"  Sample Period: {patterns.get('sample_period_days', 30)} days",
     ]
 
-    if patterns.get('top_assignees'):
-        top_names = [a['display_name'] for a in patterns['top_assignees'][:3]]
+    if patterns.get("top_assignees"):
+        top_names = [a["display_name"] for a in patterns["top_assignees"][:3]]
         lines.append(f"  Top Assignees: {', '.join(top_names)}")
 
-    if patterns.get('common_labels'):
+    if patterns.get("common_labels"):
         lines.append(f"  Common Labels: {', '.join(patterns['common_labels'][:5])}")
 
     return "\n".join(lines)
@@ -813,13 +857,16 @@ def ops_cache_status(ctx, output_json: bool, verbose: bool):
 
 @ops.command(name="cache-clear")
 @click.option(
-    "--category", "-c",
+    "--category",
+    "-c",
     type=click.Choice(["issue", "project", "user", "field", "search", "default"]),
     help="Clear only entries in this category",
 )
 @click.option("--pattern", help="Clear keys matching glob pattern (e.g., 'PROJ-*')")
 @click.option("--key", help="Clear specific cache key (requires --category)")
-@click.option("--dry-run", is_flag=True, help="Show what would be cleared without clearing")
+@click.option(
+    "--dry-run", is_flag=True, help="Show what would be cleared without clearing"
+)
 @click.option("--force", "-f", is_flag=True, help="Skip confirmation prompt")
 @click.option("--json", "output_json", is_flag=True, help="Output as JSON")
 @click.pass_context
@@ -844,7 +891,9 @@ def ops_cache_clear(
         if key:
             description = f"key '{key}' in category '{category}'"
         elif pattern:
-            description = f"keys matching '{pattern}'" + (f" in category '{category}'" if category else "")
+            description = f"keys matching '{pattern}'" + (
+                f" in category '{category}'" if category else ""
+            )
         elif category:
             description = f"all entries in category '{category}'"
         else:
@@ -871,7 +920,9 @@ def ops_cache_clear(
 @ops.command(name="cache-warm")
 @click.option("--projects", is_flag=True, help="Cache project list")
 @click.option("--fields", is_flag=True, help="Cache field definitions")
-@click.option("--users", is_flag=True, help="Cache assignable users (requires project context)")
+@click.option(
+    "--users", is_flag=True, help="Cache assignable users (requires project context)"
+)
 @click.option("--all", "warm_all", is_flag=True, help="Cache all available metadata")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
 @click.option("--json", "output_json", is_flag=True, help="Output as JSON")
@@ -892,7 +943,10 @@ def ops_cache_warm(
         ctx.exit(1)
 
     if users:
-        click.echo("User caching requires a project context. Use search scripts instead.", err=True)
+        click.echo(
+            "User caching requires a project context. Use search scripts instead.",
+            err=True,
+        )
         return
 
     result = _cache_warm_impl(
@@ -904,8 +958,11 @@ def ops_cache_warm(
     )
 
     if result.get("errors"):
-        click.echo(f"\nCache warming completed with {len(result['errors'])} error(s).", err=True)
-        for err in result['errors']:
+        click.echo(
+            f"\nCache warming completed with {len(result['errors'])} error(s).",
+            err=True,
+        )
+        for err in result["errors"]:
             click.echo(f"  - {err}", err=True)
         ctx.exit(1)
 
@@ -917,9 +974,21 @@ def ops_cache_warm(
 
 @ops.command(name="discover-project")
 @click.argument("project_key")
-@click.option("--sample-size", "-s", type=int, default=100, help="Number of issues to sample for patterns")
+@click.option(
+    "--sample-size",
+    "-s",
+    type=int,
+    default=100,
+    help="Number of issues to sample for patterns",
+)
 @click.option("--days", "-d", type=int, default=30, help="Sample period in days")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
 @click.pass_context
 @handle_jira_errors

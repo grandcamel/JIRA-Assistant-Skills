@@ -211,11 +211,13 @@ def _bulk_transition_impl(
                 current_status = (
                     issue.get("fields", {}).get("status", {}).get("name", "Unknown")
                 )
-                preview.append({
-                    "key": key,
-                    "from": current_status,
-                    "to": target_status,
-                })
+                preview.append(
+                    {
+                        "key": key,
+                        "from": current_status,
+                        "to": target_status,
+                    }
+                )
 
             return {
                 "dry_run": True,
@@ -327,13 +329,17 @@ def _bulk_assign_impl(
                 key = issue.get("key")
                 current = issue.get("fields", {}).get("assignee")
                 current_name = (
-                    current.get("displayName", "Unassigned") if current else "Unassigned"
+                    current.get("displayName", "Unassigned")
+                    if current
+                    else "Unassigned"
                 )
-                preview.append({
-                    "key": key,
-                    "current": current_name,
-                    "action": action,
-                })
+                preview.append(
+                    {
+                        "key": key,
+                        "current": current_name,
+                        "action": action,
+                    }
+                )
 
             return {
                 "dry_run": True,
@@ -419,11 +425,13 @@ def _bulk_set_priority_impl(
                 key = issue.get("key")
                 current = issue.get("fields", {}).get("priority")
                 current_name = current.get("name", "None") if current else "None"
-                preview.append({
-                    "key": key,
-                    "from": current_name,
-                    "to": priority,
-                })
+                preview.append(
+                    {
+                        "key": key,
+                        "from": current_name,
+                        "to": priority,
+                    }
+                )
 
             return {
                 "dry_run": True,
@@ -446,7 +454,9 @@ def _bulk_set_priority_impl(
 
             try:
                 client.update_issue(
-                    issue_key, fields={"priority": {"name": priority}}, notify_users=False
+                    issue_key,
+                    fields={"priority": {"name": priority}},
+                    notify_users=False,
                 )
                 success += 1
                 processed.append(issue_key)
@@ -673,13 +683,16 @@ def _bulk_clone_impl(
                 summary = issue.get("fields", {}).get("summary", "")[:50]
                 subtask_count = len(issue.get("fields", {}).get("subtasks", []))
                 link_count = len(issue.get("fields", {}).get("issuelinks", []))
-                preview.append({
-                    "key": key,
-                    "summary": summary,
-                    "subtasks": subtask_count if include_subtasks else 0,
-                    "links": link_count if include_links else 0,
-                    "target_project": target_project or issue.get("fields", {}).get("project", {}).get("key"),
-                })
+                preview.append(
+                    {
+                        "key": key,
+                        "summary": summary,
+                        "subtasks": subtask_count if include_subtasks else 0,
+                        "links": link_count if include_links else 0,
+                        "target_project": target_project
+                        or issue.get("fields", {}).get("project", {}).get("key"),
+                    }
+                )
 
             return {
                 "dry_run": True,
@@ -782,13 +795,15 @@ def _bulk_delete_impl(
                 issue_type = fields.get("issuetype", {}).get("name", "")
                 status = fields.get("status", {}).get("name", "")
                 subtasks = fields.get("subtasks", [])
-                preview.append({
-                    "key": key,
-                    "type": issue_type,
-                    "status": status,
-                    "summary": summary,
-                    "subtasks": len(subtasks) if delete_subtasks else 0,
-                })
+                preview.append(
+                    {
+                        "key": key,
+                        "type": issue_type,
+                        "status": status,
+                        "summary": summary,
+                        "subtasks": len(subtasks) if delete_subtasks else 0,
+                    }
+                )
 
             return {
                 "dry_run": True,
@@ -843,7 +858,9 @@ def _format_bulk_result(result: dict, operation: str) -> str:
     lines = []
 
     if result.get("dry_run"):
-        count = result.get("would_process", result.get("would_create", result.get("would_delete", 0)))
+        count = result.get(
+            "would_process", result.get("would_create", result.get("would_delete", 0))
+        )
         lines.append(f"[DRY RUN] Would {operation} {count} issue(s)")
 
         issues = result.get("issues", [])
@@ -855,7 +872,9 @@ def _format_bulk_result(result: dict, operation: str) -> str:
                     if "from" in issue and "to" in issue:
                         lines.append(f"  - {key}: {issue['from']} -> {issue['to']}")
                     elif "current" in issue:
-                        lines.append(f"  - {key}: {issue['current']} -> {issue['action']}")
+                        lines.append(
+                            f"  - {key}: {issue['current']} -> {issue['action']}"
+                        )
                     elif "summary" in issue:
                         lines.append(f"  - {key}: {issue['summary']}")
                     else:
@@ -916,12 +935,31 @@ def bulk():
 @click.option("--comment", "-c", help="Add comment with transition")
 @click.option("--resolution", "-r", help="Resolution for Done transitions")
 @click.option("--dry-run", "-n", is_flag=True, help="Preview without making changes")
-@click.option("--max-issues", "-m", type=int, default=100, help="Maximum issues to process")
+@click.option(
+    "--max-issues", "-m", type=int, default=100, help="Maximum issues to process"
+)
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmation")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
-def bulk_transition(ctx, jql, issues, target_status, comment, resolution, dry_run, max_issues, yes, output):
+def bulk_transition(
+    ctx,
+    jql,
+    issues,
+    target_status,
+    comment,
+    resolution,
+    dry_run,
+    max_issues,
+    yes,
+    output,
+):
     """Transition multiple issues to a new status.
 
     Specify issues using either --jql or --issues (mutually exclusive).
@@ -962,9 +1000,17 @@ def bulk_transition(ctx, jql, issues, target_status, comment, resolution, dry_ru
 @click.option("--assignee", "-a", help='User to assign (account ID, email, or "self")')
 @click.option("--unassign", is_flag=True, help="Unassign all matching issues")
 @click.option("--dry-run", "-n", is_flag=True, help="Preview without making changes")
-@click.option("--max-issues", "-m", type=int, default=100, help="Maximum issues to process")
+@click.option(
+    "--max-issues", "-m", type=int, default=100, help="Maximum issues to process"
+)
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmation")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def bulk_assign(ctx, jql, issues, assignee, unassign, dry_run, max_issues, yes, output):
@@ -1012,11 +1058,24 @@ def bulk_assign(ctx, jql, issues, assignee, unassign, dry_run, max_issues, yes, 
 @bulk.command(name="set-priority")
 @click.option("--jql", "-q", help="JQL query to find issues")
 @click.option("--issues", "-i", help="Comma-separated issue keys")
-@click.option("--priority", "-p", required=True, help="Priority name (Highest, High, Medium, Low, Lowest)")
+@click.option(
+    "--priority",
+    "-p",
+    required=True,
+    help="Priority name (Highest, High, Medium, Low, Lowest)",
+)
 @click.option("--dry-run", "-n", is_flag=True, help="Preview without making changes")
-@click.option("--max-issues", "-m", type=int, default=100, help="Maximum issues to process")
+@click.option(
+    "--max-issues", "-m", type=int, default=100, help="Maximum issues to process"
+)
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmation")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def bulk_set_priority(ctx, jql, issues, priority, dry_run, max_issues, yes, output):
@@ -1060,12 +1119,32 @@ def bulk_set_priority(ctx, jql, issues, priority, dry_run, max_issues, yes, outp
 @click.option("--include-links", "-l", is_flag=True, help="Clone issue links")
 @click.option("--include-subtasks", "-s", is_flag=True, help="Clone subtasks")
 @click.option("--dry-run", "-n", is_flag=True, help="Preview without making changes")
-@click.option("--max-issues", "-m", type=int, default=100, help="Maximum issues to process")
+@click.option(
+    "--max-issues", "-m", type=int, default=100, help="Maximum issues to process"
+)
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmation")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
-def bulk_clone(ctx, jql, issues, target_project, prefix, include_links, include_subtasks, dry_run, max_issues, yes, output):
+def bulk_clone(
+    ctx,
+    jql,
+    issues,
+    target_project,
+    prefix,
+    include_links,
+    include_subtasks,
+    dry_run,
+    max_issues,
+    yes,
+    output,
+):
     """Clone multiple issues.
 
     Specify issues using either --jql or --issues (mutually exclusive).
@@ -1105,10 +1184,20 @@ def bulk_clone(ctx, jql, issues, target_project, prefix, include_links, include_
 @click.option("--jql", "-q", help="JQL query to find issues")
 @click.option("--issues", "-i", help="Comma-separated issue keys")
 @click.option("--no-subtasks", is_flag=True, help="Do NOT delete subtasks")
-@click.option("--dry-run", "-n", is_flag=True, help="Preview without deleting (RECOMMENDED)")
-@click.option("--max-issues", "-m", type=int, default=100, help="Maximum issues to process")
+@click.option(
+    "--dry-run", "-n", is_flag=True, help="Preview without deleting (RECOMMENDED)"
+)
+@click.option(
+    "--max-issues", "-m", type=int, default=100, help="Maximum issues to process"
+)
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmation (use with caution)")
-@click.option("--output", "-o", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.pass_context
 @handle_jira_errors
 def bulk_delete(ctx, jql, issues, no_subtasks, dry_run, max_issues, yes, output):

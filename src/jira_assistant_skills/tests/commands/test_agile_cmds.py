@@ -328,12 +328,18 @@ class TestEpicImplementation:
         """Test creating an epic."""
         mock_client.create_issue.return_value = sample_epic
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"epic_name": "customfield_10011", "epic_color": "customfield_10012"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={
+                    "epic_name": "customfield_10011",
+                    "epic_color": "customfield_10012",
+                },
+            ),
         ):
             result = _create_epic_impl(
                 project="PROJ",
@@ -366,12 +372,18 @@ class TestEpicImplementation:
         mock_client.create_issue.return_value = sample_epic
         mock_client.get_current_user_id.return_value = "account123"
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"epic_name": "customfield_10011", "epic_color": "customfield_10012"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={
+                    "epic_name": "customfield_10011",
+                    "epic_color": "customfield_10012",
+                },
+            ),
         ):
             _create_epic_impl(
                 project="PROJ",
@@ -387,12 +399,15 @@ class TestEpicImplementation:
         """Test getting epic without children."""
         mock_client.get_issue.return_value = sample_epic
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"story_points": "customfield_10016"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={"story_points": "customfield_10016"},
+            ),
         ):
             result = _get_epic_impl("PROJ-100")
 
@@ -405,12 +420,15 @@ class TestEpicImplementation:
         mock_client.get_issue.return_value = sample_epic
         mock_client.search_issues.return_value = {"issues": sample_issues}
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"story_points": "customfield_10016"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={"story_points": "customfield_10016"},
+            ),
         ):
             result = _get_epic_impl("PROJ-100", with_children=True)
 
@@ -428,12 +446,15 @@ class TestEpicImplementation:
         """Test adding issues to epic."""
         mock_client.get_issue.return_value = sample_epic
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
-            return_value="customfield_10014",
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
+                return_value="customfield_10014",
+            ),
         ):
             result = _add_to_epic_impl("PROJ-100", ["PROJ-1", "PROJ-2"])
 
@@ -501,7 +522,9 @@ class TestSprintImplementation:
         assert result["sprints"][0]["name"] == "Sprint 1"
         mock_client.close.assert_called_once()
 
-    def test_list_sprints_impl_by_project(self, mock_client, sample_board, sample_sprint):
+    def test_list_sprints_impl_by_project(
+        self, mock_client, sample_board, sample_sprint
+    ):
         """Test listing sprints by project."""
         mock_client.get_all_boards.return_value = {"values": [sample_board]}
         mock_client.get_board_sprints.return_value = {"values": [sample_sprint]}
@@ -528,12 +551,15 @@ class TestSprintImplementation:
         """Test creating sprint."""
         mock_client.create_sprint.return_value = sample_sprint
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.parse_date_to_iso",
-            side_effect=lambda x: f"{x}T00:00:00.000Z",
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.parse_date_to_iso",
+                side_effect=lambda x: f"{x}T00:00:00.000Z",
+            ),
         ):
             result = _create_sprint_impl(
                 board_id=123,
@@ -563,7 +589,9 @@ class TestSprintImplementation:
             "jira_assistant_skills.cli.commands.agile_cmds.parse_date_to_iso",
             side_effect=lambda x: f"{x}T00:00:00.000Z",
         ):
-            with pytest.raises(ValidationError, match="End date must be after start date"):
+            with pytest.raises(
+                ValidationError, match="End date must be after start date"
+            ):
                 _create_sprint_impl(
                     board_id=123,
                     name="Sprint 1",
@@ -575,12 +603,15 @@ class TestSprintImplementation:
         """Test getting sprint without issues."""
         mock_client.get_sprint.return_value = sample_sprint
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
-            return_value="customfield_10016",
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
+                return_value="customfield_10016",
+            ),
         ):
             result = _get_sprint_impl(456)
 
@@ -588,17 +619,22 @@ class TestSprintImplementation:
         assert "issues" not in result
         mock_client.close.assert_called_once()
 
-    def test_get_sprint_impl_with_issues(self, mock_client, sample_sprint, sample_issues):
+    def test_get_sprint_impl_with_issues(
+        self, mock_client, sample_sprint, sample_issues
+    ):
         """Test getting sprint with issues."""
         mock_client.get_sprint.return_value = sample_sprint
         mock_client.get_sprint_issues.return_value = {"issues": sample_issues}
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
-            return_value="customfield_10016",
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
+                return_value="customfield_10016",
+            ),
         ):
             result = _get_sprint_impl(456, with_issues=True)
 
@@ -772,14 +808,23 @@ class TestBacklogRankImplementation:
 
     def test_get_backlog_impl_by_board(self, mock_client, sample_issues):
         """Test getting backlog by board."""
-        mock_client.get_board_backlog.return_value = {"issues": sample_issues, "total": 3}
+        mock_client.get_board_backlog.return_value = {
+            "issues": sample_issues,
+            "total": 3,
+        }
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"epic_link": "customfield_10014", "story_points": "customfield_10016"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={
+                    "epic_link": "customfield_10014",
+                    "story_points": "customfield_10016",
+                },
+            ),
         ):
             result = _get_backlog_impl(board_id=123)
 
@@ -789,18 +834,45 @@ class TestBacklogRankImplementation:
     def test_get_backlog_impl_group_by_epic(self, mock_client):
         """Test getting backlog grouped by epic."""
         issues = [
-            {"key": "PROJ-1", "fields": {"summary": "Issue 1", "customfield_10014": "PROJ-100", "status": {"name": "To Do"}}},
-            {"key": "PROJ-2", "fields": {"summary": "Issue 2", "customfield_10014": "PROJ-100", "status": {"name": "To Do"}}},
-            {"key": "PROJ-3", "fields": {"summary": "Issue 3", "customfield_10014": None, "status": {"name": "To Do"}}},
+            {
+                "key": "PROJ-1",
+                "fields": {
+                    "summary": "Issue 1",
+                    "customfield_10014": "PROJ-100",
+                    "status": {"name": "To Do"},
+                },
+            },
+            {
+                "key": "PROJ-2",
+                "fields": {
+                    "summary": "Issue 2",
+                    "customfield_10014": "PROJ-100",
+                    "status": {"name": "To Do"},
+                },
+            },
+            {
+                "key": "PROJ-3",
+                "fields": {
+                    "summary": "Issue 3",
+                    "customfield_10014": None,
+                    "status": {"name": "To Do"},
+                },
+            },
         ]
         mock_client.get_board_backlog.return_value = {"issues": issues}
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"epic_link": "customfield_10014", "story_points": "customfield_10016"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={
+                    "epic_link": "customfield_10014",
+                    "story_points": "customfield_10016",
+                },
+            ),
         ):
             result = _get_backlog_impl(board_id=123, group_by_epic=True)
 
@@ -818,7 +890,9 @@ class TestBacklogRankImplementation:
             result = _rank_issue_impl(["PROJ-1"], before_key="PROJ-2")
 
         assert result["ranked"] == 1
-        mock_client.rank_issues.assert_called_once_with(["PROJ-1"], rank_before="PROJ-2")
+        mock_client.rank_issues.assert_called_once_with(
+            ["PROJ-1"], rank_before="PROJ-2"
+        )
 
     def test_rank_issue_impl_after(self, mock_client):
         """Test ranking issue after another."""
@@ -856,12 +930,15 @@ class TestEstimationImplementation:
 
     def test_estimate_issue_impl_success(self, mock_client):
         """Test setting story points."""
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
-            return_value="customfield_10016",
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
+                return_value="customfield_10016",
+            ),
         ):
             result = _estimate_issue_impl(issue_keys=["PROJ-1"], points=5)
 
@@ -871,12 +948,15 @@ class TestEstimationImplementation:
 
     def test_estimate_issue_impl_fibonacci_valid(self, mock_client):
         """Test valid Fibonacci value."""
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
-            return_value="customfield_10016",
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
+                return_value="customfield_10016",
+            ),
         ):
             result = _estimate_issue_impl(
                 issue_keys=["PROJ-1"], points=8, validate_fibonacci=True
@@ -887,16 +967,21 @@ class TestEstimationImplementation:
     def test_estimate_issue_impl_fibonacci_invalid(self):
         """Test invalid Fibonacci value."""
         with pytest.raises(ValidationError, match="not a valid Fibonacci"):
-            _estimate_issue_impl(issue_keys=["PROJ-1"], points=7, validate_fibonacci=True)
+            _estimate_issue_impl(
+                issue_keys=["PROJ-1"], points=7, validate_fibonacci=True
+            )
 
     def test_estimate_issue_impl_clear(self, mock_client):
         """Test clearing story points."""
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
-            return_value="customfield_10016",
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
+                return_value="customfield_10016",
+            ),
         ):
             _estimate_issue_impl(issue_keys=["PROJ-1"], points=0)
 
@@ -908,12 +993,15 @@ class TestEstimationImplementation:
         """Test getting estimates by sprint."""
         mock_client.get_sprint_issues.return_value = {"issues": sample_issues}
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"story_points": "customfield_10016"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={"story_points": "customfield_10016"},
+            ),
         ):
             result = _get_estimates_impl(sprint_id=456)
 
@@ -926,19 +1014,24 @@ class TestEstimationImplementation:
         """Test getting estimates by epic."""
         mock_client.search_issues.return_value = {"issues": sample_issues}
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"story_points": "customfield_10016"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={"story_points": "customfield_10016"},
+            ),
         ):
             result = _get_estimates_impl(epic_key="PROJ-100")
 
         assert result["epic_key"] == "PROJ-100"
         assert result["total_points"] == 16
 
-    def test_get_velocity_impl_success(self, mock_client, sample_board, sample_velocity_sprints):
+    def test_get_velocity_impl_success(
+        self, mock_client, sample_board, sample_velocity_sprints
+    ):
         """Test calculating velocity."""
         mock_client.get_all_boards.return_value = {"values": [sample_board]}
         mock_client.get_board_sprints.return_value = {"values": sample_velocity_sprints}
@@ -954,12 +1047,15 @@ class TestEstimationImplementation:
 
         mock_client.search_issues.side_effect = mock_search
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"story_points": "customfield_10016"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={"story_points": "customfield_10016"},
+            ),
         ):
             result = _get_velocity_impl(project_key="PROJ", num_sprints=3)
 
@@ -1067,7 +1163,10 @@ class TestFormattingFunctions:
             "progress": {"total": 10, "done": 5, "percentage": 50},
             "story_points": {"total": 40, "done": 20, "percentage": 50},
             "children": [
-                {"key": "PROJ-1", "fields": {"summary": "Child 1", "status": {"name": "Done"}}},
+                {
+                    "key": "PROJ-1",
+                    "fields": {"summary": "Child 1", "status": {"name": "Done"}},
+                },
             ],
         }
         output = _format_epic_details(epic_data)
@@ -1172,17 +1271,32 @@ class TestEpicCommands:
         """Test epic create with text output."""
         mock_client.create_issue.return_value = sample_epic
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"epic_name": "customfield_10011", "epic_color": "customfield_10012"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={
+                    "epic_name": "customfield_10011",
+                    "epic_color": "customfield_10012",
+                },
+            ),
         ):
             runner = CliRunner()
             result = runner.invoke(
                 agile,
-                ["epic", "create", "-p", "PROJ", "-s", "Epic Summary", "-n", "Epic Name"],
+                [
+                    "epic",
+                    "create",
+                    "-p",
+                    "PROJ",
+                    "-s",
+                    "Epic Summary",
+                    "-n",
+                    "Epic Name",
+                ],
             )
 
         assert result.exit_code == 0
@@ -1192,12 +1306,18 @@ class TestEpicCommands:
         """Test epic create with JSON output."""
         mock_client.create_issue.return_value = sample_epic
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"epic_name": "customfield_10011", "epic_color": "customfield_10012"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={
+                    "epic_name": "customfield_10011",
+                    "epic_color": "customfield_10012",
+                },
+            ),
         ):
             runner = CliRunner()
             result = runner.invoke(
@@ -1213,12 +1333,15 @@ class TestEpicCommands:
         """Test epic get with text output."""
         mock_client.get_issue.return_value = sample_epic
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"story_points": "customfield_10016"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={"story_points": "customfield_10016"},
+            ),
         ):
             runner = CliRunner()
             result = runner.invoke(agile, ["epic", "get", "PROJ-100"])
@@ -1231,12 +1354,15 @@ class TestEpicCommands:
         """Test adding issues to epic."""
         mock_client.get_issue.return_value = sample_epic
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
-            return_value="customfield_10014",
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
+                return_value="customfield_10014",
+            ),
         ):
             runner = CliRunner()
             result = runner.invoke(
@@ -1294,12 +1420,15 @@ class TestSprintCommands:
         """Test sprint get by ID."""
         mock_client.get_sprint.return_value = sample_sprint
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
-            return_value="customfield_10016",
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
+                return_value="customfield_10016",
+            ),
         ):
             runner = CliRunner()
             result = runner.invoke(agile, ["sprint", "get", "456"])
@@ -1391,14 +1520,23 @@ class TestOtherAgileCommands:
 
     def test_backlog_text(self, mock_client, sample_issues):
         """Test backlog command."""
-        mock_client.get_board_backlog.return_value = {"issues": sample_issues, "total": 3}
+        mock_client.get_board_backlog.return_value = {
+            "issues": sample_issues,
+            "total": 3,
+        }
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"epic_link": "customfield_10014", "story_points": "customfield_10016"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={
+                    "epic_link": "customfield_10014",
+                    "story_points": "customfield_10016",
+                },
+            ),
         ):
             runner = CliRunner()
             result = runner.invoke(agile, ["backlog", "-b", "123"])
@@ -1429,12 +1567,15 @@ class TestOtherAgileCommands:
 
     def test_estimate_text(self, mock_client):
         """Test estimate command."""
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
-            return_value="customfield_10016",
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_field",
+                return_value="customfield_10016",
+            ),
         ):
             runner = CliRunner()
             result = runner.invoke(agile, ["estimate", "PROJ-1", "-p", "5"])
@@ -1447,12 +1588,15 @@ class TestOtherAgileCommands:
         """Test estimates by sprint."""
         mock_client.get_sprint_issues.return_value = {"issues": sample_issues}
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"story_points": "customfield_10016"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={"story_points": "customfield_10016"},
+            ),
         ):
             runner = CliRunner()
             result = runner.invoke(agile, ["estimates", "-s", "456"])
@@ -1477,12 +1621,15 @@ class TestOtherAgileCommands:
             "issues": [{"fields": {"customfield_10016": 10}}]
         }
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"story_points": "customfield_10016"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={"story_points": "customfield_10016"},
+            ),
         ):
             runner = CliRunner()
             result = runner.invoke(agile, ["velocity", "-p", "PROJ"])
@@ -1529,12 +1676,15 @@ class TestErrorHandling:
         """Test JIRA error is handled gracefully."""
         mock_client.get_issue.side_effect = JiraError("API Error")
 
-        with patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
-            return_value=mock_client,
-        ), patch(
-            "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
-            return_value={"story_points": "customfield_10016"},
+        with (
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_jira_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "jira_assistant_skills.cli.commands.agile_cmds.get_agile_fields",
+                return_value={"story_points": "customfield_10016"},
+            ),
         ):
             runner = CliRunner()
             result = runner.invoke(agile, ["epic", "get", "PROJ-100"])

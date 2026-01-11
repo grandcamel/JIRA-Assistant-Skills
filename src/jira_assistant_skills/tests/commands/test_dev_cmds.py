@@ -285,7 +285,9 @@ class TestCreateBranchNameImpl:
 
         assert "bugfix/" in result["branch_name"]
 
-    def test_create_branch_name_includes_git_command(self, mock_jira_client, sample_issue):
+    def test_create_branch_name_includes_git_command(
+        self, mock_jira_client, sample_issue
+    ):
         """Test that git command is included in result."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
 
@@ -510,7 +512,10 @@ class TestGetCommitsImpl:
                                     "displayId": "abc123d",
                                     "url": "https://github.com/org/repo/commit/abc123def456",
                                     "message": "Fix bug",
-                                    "author": {"name": "John Doe", "email": "john@example.com"},
+                                    "author": {
+                                        "name": "John Doe",
+                                        "email": "john@example.com",
+                                    },
                                 }
                             ],
                         }
@@ -542,7 +547,10 @@ class TestGetCommitsImpl:
                                 {
                                     "id": "abc123",
                                     "message": "Fix bug",
-                                    "author": {"name": "John Doe", "email": "john@example.com"},
+                                    "author": {
+                                        "name": "John Doe",
+                                        "email": "john@example.com",
+                                    },
                                     "authorTimestamp": "2025-01-15T10:30:00Z",
                                 }
                             ],
@@ -610,7 +618,9 @@ class TestBranchNameCommand:
         assert result.exit_code == 0
         assert "{" in result.output
 
-    def test_branch_name_cli_git_output(self, cli_runner, mock_jira_client, sample_issue):
+    def test_branch_name_cli_git_output(
+        self, cli_runner, mock_jira_client, sample_issue
+    ):
         """Test CLI branch-name with git output format."""
         mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
 

@@ -152,7 +152,9 @@ class TestHelperFunctions:
         assert result[1]["key"] == "TEST-2"
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_get_issues_to_process_with_jql(self, mock_validate, mock_client, sample_issues):
+    def test_get_issues_to_process_with_jql(
+        self, mock_validate, mock_client, sample_issues
+    ):
         """Test getting issues from JQL."""
         mock_validate.return_value = "project = TEST"
         mock_client.search_issues.return_value = {"issues": sample_issues}
@@ -245,7 +247,9 @@ class TestBulkTransitionImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_transition_dry_run(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_transition_dry_run(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk transition dry run."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -264,7 +268,14 @@ class TestBulkTransitionImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_transition_execute(self, mock_validate, mock_get_client, mock_client, sample_issues, sample_transitions):
+    def test_bulk_transition_execute(
+        self,
+        mock_validate,
+        mock_get_client,
+        mock_client,
+        sample_issues,
+        sample_transitions,
+    ):
         """Test bulk transition execution."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -283,7 +294,14 @@ class TestBulkTransitionImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_transition_with_comment(self, mock_validate, mock_get_client, mock_client, sample_issues, sample_transitions):
+    def test_bulk_transition_with_comment(
+        self,
+        mock_validate,
+        mock_get_client,
+        mock_client,
+        sample_issues,
+        sample_transitions,
+    ):
         """Test bulk transition with comment."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -302,7 +320,9 @@ class TestBulkTransitionImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_transition_no_transition_available(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_transition_no_transition_available(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk transition when target not available."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -329,7 +349,9 @@ class TestBulkAssignImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_assign_dry_run(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_assign_dry_run(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk assign dry run."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -348,7 +370,9 @@ class TestBulkAssignImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_assign_execute(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_assign_execute(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk assign execution."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -365,7 +389,9 @@ class TestBulkAssignImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_unassign(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_unassign(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk unassign."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -391,7 +417,9 @@ class TestBulkSetPriorityImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_set_priority_dry_run(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_set_priority_dry_run(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk set priority dry run."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -409,7 +437,9 @@ class TestBulkSetPriorityImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_set_priority_execute(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_set_priority_execute(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk set priority execution."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -440,7 +470,9 @@ class TestBulkCloneImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_clone_dry_run(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_clone_dry_run(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk clone dry run."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -457,7 +489,9 @@ class TestBulkCloneImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_clone_execute(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_clone_execute(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk clone execution."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -474,7 +508,9 @@ class TestBulkCloneImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_clone_with_prefix(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_clone_with_prefix(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk clone with prefix."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -544,7 +580,9 @@ class TestBulkDeleteImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_delete_dry_run(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_delete_dry_run(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk delete dry run."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -561,7 +599,9 @@ class TestBulkDeleteImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_delete_execute(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_delete_execute(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk delete execution."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -577,7 +617,9 @@ class TestBulkDeleteImplementation:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_bulk_delete_without_subtasks(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_bulk_delete_without_subtasks(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test bulk delete without subtasks."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
@@ -688,36 +730,56 @@ class TestBulkTransitionCommand:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_transition_command_dry_run(self, mock_validate, mock_get_client, runner, mock_client, sample_issues):
+    def test_transition_command_dry_run(
+        self, mock_validate, mock_get_client, runner, mock_client, sample_issues
+    ):
         """Test transition command dry run."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
         mock_client.search_issues.return_value = {"issues": sample_issues}
 
-        result = runner.invoke(bulk, [
-            "transition",
-            "--jql", "project = TEST",
-            "--to", "Done",
-        ])
+        result = runner.invoke(
+            bulk,
+            [
+                "transition",
+                "--jql",
+                "project = TEST",
+                "--to",
+                "Done",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "DRY RUN" in result.output
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_transition_command_execute(self, mock_validate, mock_get_client, runner, mock_client, sample_issues, sample_transitions):
+    def test_transition_command_execute(
+        self,
+        mock_validate,
+        mock_get_client,
+        runner,
+        mock_client,
+        sample_issues,
+        sample_transitions,
+    ):
         """Test transition command execution."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
         mock_client.search_issues.return_value = {"issues": sample_issues}
         mock_client.get_transitions.return_value = sample_transitions
 
-        result = runner.invoke(bulk, [
-            "transition",
-            "--jql", "project = TEST",
-            "--to", "Done",
-            "--yes",
-        ])
+        result = runner.invoke(
+            bulk,
+            [
+                "transition",
+                "--jql",
+                "project = TEST",
+                "--to",
+                "Done",
+                "--yes",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "succeeded" in result.output
@@ -740,45 +802,62 @@ class TestBulkAssignCommand:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_assign_command(self, mock_validate, mock_get_client, runner, mock_client, sample_issues):
+    def test_assign_command(
+        self, mock_validate, mock_get_client, runner, mock_client, sample_issues
+    ):
         """Test assign command."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
         mock_client.search_issues.return_value = {"issues": sample_issues}
 
-        result = runner.invoke(bulk, [
-            "assign",
-            "--jql", "project = TEST",
-            "--assignee", "user123",
-            "--yes",
-        ])
+        result = runner.invoke(
+            bulk,
+            [
+                "assign",
+                "--jql",
+                "project = TEST",
+                "--assignee",
+                "user123",
+                "--yes",
+            ],
+        )
 
         assert result.exit_code == 0
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_unassign_command(self, mock_validate, mock_get_client, runner, mock_client, sample_issues):
+    def test_unassign_command(
+        self, mock_validate, mock_get_client, runner, mock_client, sample_issues
+    ):
         """Test unassign command."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
         mock_client.search_issues.return_value = {"issues": sample_issues}
 
-        result = runner.invoke(bulk, [
-            "assign",
-            "--jql", "project = TEST",
-            "--unassign",
-            "--yes",
-        ])
+        result = runner.invoke(
+            bulk,
+            [
+                "assign",
+                "--jql",
+                "project = TEST",
+                "--unassign",
+                "--yes",
+            ],
+        )
 
         assert result.exit_code == 0
 
     def test_assign_requires_action(self, runner):
         """Test assign requires assignee or unassign."""
-        result = runner.invoke(bulk, [
-            "assign",
-            "--jql", "project = TEST",
-            "--yes",
-        ])
+        result = runner.invoke(
+            bulk,
+            [
+                "assign",
+                "--jql",
+                "project = TEST",
+                "--yes",
+            ],
+        )
 
         assert result.exit_code != 0
 
@@ -793,18 +872,25 @@ class TestBulkSetPriorityCommand:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_set_priority_command(self, mock_validate, mock_get_client, runner, mock_client, sample_issues):
+    def test_set_priority_command(
+        self, mock_validate, mock_get_client, runner, mock_client, sample_issues
+    ):
         """Test set-priority command."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
         mock_client.search_issues.return_value = {"issues": sample_issues}
 
-        result = runner.invoke(bulk, [
-            "set-priority",
-            "--jql", "project = TEST",
-            "--priority", "High",
-            "--yes",
-        ])
+        result = runner.invoke(
+            bulk,
+            [
+                "set-priority",
+                "--jql",
+                "project = TEST",
+                "--priority",
+                "High",
+                "--yes",
+            ],
+        )
 
         assert result.exit_code == 0
 
@@ -819,18 +905,24 @@ class TestBulkCloneCommand:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_clone_command(self, mock_validate, mock_get_client, runner, mock_client, sample_issues):
+    def test_clone_command(
+        self, mock_validate, mock_get_client, runner, mock_client, sample_issues
+    ):
         """Test clone command."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
         mock_client.search_issues.return_value = {"issues": sample_issues}
         mock_client.create_issue.return_value = {"key": "TEST-NEW", "id": "99"}
 
-        result = runner.invoke(bulk, [
-            "clone",
-            "--jql", "project = TEST",
-            "--yes",
-        ])
+        result = runner.invoke(
+            bulk,
+            [
+                "clone",
+                "--jql",
+                "project = TEST",
+                "--yes",
+            ],
+        )
 
         assert result.exit_code == 0
 
@@ -845,44 +937,60 @@ class TestBulkDeleteCommand:
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_delete_command_dry_run(self, mock_validate, mock_get_client, runner, mock_client, sample_issues):
+    def test_delete_command_dry_run(
+        self, mock_validate, mock_get_client, runner, mock_client, sample_issues
+    ):
         """Test delete command dry run."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
         mock_client.search_issues.return_value = {"issues": sample_issues}
 
-        result = runner.invoke(bulk, [
-            "delete",
-            "--jql", "project = TEST",
-            "--dry-run",
-        ])
+        result = runner.invoke(
+            bulk,
+            [
+                "delete",
+                "--jql",
+                "project = TEST",
+                "--dry-run",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "DRY RUN" in result.output
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_delete_command_execute(self, mock_validate, mock_get_client, runner, mock_client, sample_issues):
+    def test_delete_command_execute(
+        self, mock_validate, mock_get_client, runner, mock_client, sample_issues
+    ):
         """Test delete command execution."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
         mock_client.search_issues.return_value = {"issues": sample_issues}
 
-        result = runner.invoke(bulk, [
-            "delete",
-            "--jql", "project = TEST",
-            "--yes",
-        ])
+        result = runner.invoke(
+            bulk,
+            [
+                "delete",
+                "--jql",
+                "project = TEST",
+                "--yes",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "succeeded" in result.output
 
     def test_delete_shows_warning(self, runner):
         """Test delete shows warning without yes."""
-        result = runner.invoke(bulk, [
-            "delete",
-            "--jql", "project = TEST",
-        ])
+        result = runner.invoke(
+            bulk,
+            [
+                "delete",
+                "--jql",
+                "project = TEST",
+            ],
+        )
 
         assert "WARNING" in result.output
 
@@ -907,18 +1015,25 @@ class TestErrorHandling:
         mock_get_client.return_value = mock_client
         mock_client.search_issues.side_effect = JiraError("API Error")
 
-        result = runner.invoke(bulk, [
-            "transition",
-            "--jql", "project = TEST",
-            "--to", "Done",
-            "--yes",
-        ])
+        result = runner.invoke(
+            bulk,
+            [
+                "transition",
+                "--jql",
+                "project = TEST",
+                "--to",
+                "Done",
+                "--yes",
+            ],
+        )
 
         assert result.exit_code == 1
 
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.get_jira_client")
     @patch("jira_assistant_skills.cli.commands.bulk_cmds.validate_jql")
-    def test_partial_failure(self, mock_validate, mock_get_client, mock_client, sample_issues):
+    def test_partial_failure(
+        self, mock_validate, mock_get_client, mock_client, sample_issues
+    ):
         """Test partial failures in bulk operation."""
         mock_get_client.return_value = mock_client
         mock_validate.return_value = "project = TEST"
