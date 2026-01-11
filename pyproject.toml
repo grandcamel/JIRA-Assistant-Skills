@@ -1,60 +1,32 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+# This project is a Claude Code plugin (documentation only)
+# The CLI is now distributed via jira-assistant-skills-lib
+# This file provides development tooling configuration
 
 [project]
-name = "jira-assistant-skills"
-version = "4.0.0"
-description = "A collection of CLI-based assistant skills for interacting with Jira."
+name = "jira-assistant-skills-plugin"
+version = "4.1.0"
+description = "Claude Code plugin for JIRA automation - provides skill documentation for the jira-as CLI"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
+
+# CLI is installed via the library
 dependencies = [
-    "click>=8.0",
-    "jira-assistant-skills-lib>=0.2.1",
+    "jira-assistant-skills>=1.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pre-commit>=3.5.0",
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "pytest-asyncio>=0.21.0",
     "ruff>=0.8.0",
-    "mypy>=1.0.0",
-    "types-requests>=2.28.0",
-    "types-tabulate>=0.9.0",
-    "bandit[toml]>=1.7.0",
-]
-
-[project.scripts]
-jira-as = "jira_assistant_skills.cli.main:cli"
-
-# =============================================================================
-# Hatch Build Configuration
-# =============================================================================
-[tool.hatch.build.targets.wheel]
-packages = ["src/jira_assistant_skills"]
-
-[tool.hatch.build.targets.wheel.force-include]
-# Include skills scripts in the wheel so pip install works without editable mode
-"plugins/jira-assistant-skills/skills" = "jira_assistant_skills/skills"
-
-[tool.hatch.build.targets.sdist]
-include = [
-    "/src",
-    "/plugins/jira-assistant-skills/skills",
-    "/README.md",
-    "/LICENSE",
 ]
 
 # =============================================================================
-# Ruff - Fast Python linter and formatter (replaces flake8, isort, black)
+# Ruff - Fast Python linter and formatter
 # =============================================================================
 [tool.ruff]
 target-version = "py310"
 line-length = 88
-src = ["jira_assistant_skills", "jira-assistant-skills-lib/src", "plugins"]
 
 [tool.ruff.lint]
 select = [
@@ -62,126 +34,12 @@ select = [
     "W",      # pycodestyle warnings
     "F",      # pyflakes
     "I",      # isort
-    "B",      # flake8-bugbear
-    "C4",     # flake8-comprehensions
-    "UP",     # pyupgrade
-    "ARG",    # flake8-unused-arguments
-    "SIM",    # flake8-simplify
-    "TCH",    # flake8-type-checking
-    "PTH",    # flake8-use-pathlib
-    "RUF",    # Ruff-specific rules
 ]
 ignore = [
     "E501",   # Line too long (handled by formatter)
-    "E402",   # Module import not at top of file (needed for path manipulation)
-    "E722",   # Bare except (sometimes intentional for catch-all)
-    "E741",   # Ambiguous variable name (e.g., l, O, I)
-    "B008",   # Do not perform function calls in argument defaults (Click uses this)
-    "B904",   # Within an except clause, raise from err or None
-    "ARG001", # Unused function argument (common in CLI apps)
-    "ARG002", # Unused method argument
-    "SIM102", # Collapsible if (readability preference)
-    "SIM105", # Suppressible exception (readability preference)
-    "SIM108", # Use ternary operator (readability preference)
-    "SIM117", # Multiple with statements (readability preference)
-    "SIM116", # Use dict instead of if-elif (readability preference)
-    "PTH",    # Use pathlib (extensive refactoring needed)
-    "RUF001", # Ambiguous unicode character (intentional info symbol)
-    "RUF043", # pytest.raises match pattern (works fine with regex)
-    "B007",   # Unused loop control variable (often intentional)
-    "B017",   # assert raises exception (test pattern)
-    "B018",   # Useless expression (sometimes intentional)
 ]
-
-[tool.ruff.lint.per-file-ignores]
-"**/tests/**/*.py" = ["ARG", "S101", "PLR2004"]  # Allow asserts and magic values in tests
-"**/conftest.py" = ["ARG"]
-
-[tool.ruff.lint.isort]
-known-first-party = ["jira_assistant_skills", "jira_assistant_skills_lib"]
-force-single-line = false
-combine-as-imports = true
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
-skip-magic-trailing-comma = false
 line-ending = "lf"
-
-# =============================================================================
-# Mypy - Static type checking
-# =============================================================================
-[tool.mypy]
-python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-strict_equality = true
-check_untyped_defs = true
-disallow_untyped_defs = false  # Gradual adoption - enable later
-disallow_incomplete_defs = true
-no_implicit_optional = true
-show_error_codes = true
-show_column_numbers = true
-pretty = true
-
-[[tool.mypy.overrides]]
-module = [
-    "tabulate.*",
-    "colorama.*",
-    "tqdm.*",
-    "responses.*",
-]
-ignore_missing_imports = true
-
-# =============================================================================
-# Bandit - Security scanning
-# =============================================================================
-[tool.bandit]
-exclude_dirs = ["tests", "**/tests", "conftest.py"]
-skips = [
-    "B101",  # assert_used - OK in production for invariants
-    "B104",  # hardcoded_bind_all_interfaces - not applicable
-]
-
-# =============================================================================
-# Pytest configuration
-# =============================================================================
-[tool.pytest.ini_options]
-minversion = "7.0"
-pythonpath = ["."]
-testpaths = ["src/jira_assistant_skills/tests", "plugins/jira-assistant-skills/skills"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-addopts = "-v --tb=short"
-import_mode = "importlib"
-markers = [
-    "unit: Unit tests (fast, no external dependencies)",
-    "integration: Integration tests (may hit external services)",
-    "slow: Slow-running tests",
-    "admin: Tests for jira-admin skill",
-    "agile: Tests for jira-agile skill",
-    "bulk: Tests for jira-bulk skill",
-    "collaborate: Tests for jira-collaborate skill",
-    "dev: Tests for jira-dev skill",
-    "fields: Tests for jira-fields skill",
-    "issue: Tests for jira-issue skill",
-    "jsm: Tests for jira-jsm skill",
-    "lifecycle: Tests for jira-lifecycle skill",
-    "ops: Tests for jira-ops skill",
-    "relationships: Tests for jira-relationships skill",
-    "search: Tests for jira-search skill",
-    "shared: Tests for shared library",
-    "time: Tests for jira-time skill",
-]
-
-[tool.coverage.run]
-source = ["src/jira_assistant_skills", "plugins/jira-assistant-skills/skills"]
-omit = ["*/tests/*", "*/conftest.py", "*/__init__.py"]
-
-[tool.coverage.report]
-precision = 2
-show_missing = true
-skip_covered = false
