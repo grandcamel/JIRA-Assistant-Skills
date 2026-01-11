@@ -36,9 +36,7 @@ def validate_email(email: str) -> bool:
     return re.match(pattern, email) is not None
 
 
-def create_customer_account(
-    email: str, display_name: str | None = None
-) -> dict:
+def create_customer_account(email: str, display_name: str | None = None) -> dict:
     """
     Create a customer account.
 
@@ -110,9 +108,7 @@ Examples:
             print(f"  Display Name: {args.name or args.email}")
             return 0
 
-        customer = create_customer_account(
-            email=args.email, display_name=args.name
-        )
+        customer = create_customer_account(email=args.email, display_name=args.name)
 
         if args.output == "json":
             if args.verbose:

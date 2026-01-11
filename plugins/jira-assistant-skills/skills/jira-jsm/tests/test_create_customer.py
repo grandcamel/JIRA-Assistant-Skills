@@ -129,5 +129,3 @@ def test_create_customer_special_characters(mock_jira_client, sample_customer_re
         mock_jira_client.create_customer.assert_called_once_with(
             "user@example.com", "O'Brien, José"
         )
-
-

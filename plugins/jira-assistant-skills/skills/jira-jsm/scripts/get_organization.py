@@ -57,9 +57,7 @@ Examples:
     args = parser.parse_args(argv)
 
     try:
-        organization = get_organization_func(
-            organization_id=args.organization_id
-        )
+        organization = get_organization_func(organization_id=args.organization_id)
 
         if args.output == "json":
             if args.verbose:

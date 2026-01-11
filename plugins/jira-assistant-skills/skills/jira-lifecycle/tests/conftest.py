@@ -79,8 +79,6 @@ def sample_issue_list():
     }
 
 
-
-
 @pytest.fixture
 def sample_version():
     """Sample version response."""

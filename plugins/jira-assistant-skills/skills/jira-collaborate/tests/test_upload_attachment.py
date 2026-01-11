@@ -69,9 +69,7 @@ class TestUploadAttachment:
 
         from upload_attachment import upload_attachment
 
-        upload_attachment(
-            "PROJ-123", str(test_file), file_name="custom_name.txt"
-        )
+        upload_attachment("PROJ-123", str(test_file), file_name="custom_name.txt")
 
         call_args = mock_jira_client.upload_file.call_args
         assert call_args[1]["file_name"] == "custom_name.txt"

@@ -119,9 +119,7 @@ Examples:
     args = parser.parse_args(argv)
 
     try:
-        template = get_automation_template(
-            template_id=args.template_id
-        )
+        template = get_automation_template(template_id=args.template_id)
 
         if args.output == "json":
             print(json.dumps(template, indent=2))

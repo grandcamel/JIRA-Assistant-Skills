@@ -31,9 +31,7 @@ class TestUpdateComponent:
 
         from update_component import update_component
 
-        result = update_component(
-            component_id="10000", name="New Component Name"
-        )
+        result = update_component(component_id="10000", name="New Component Name")
 
         assert result["name"] == "New Component Name"
         mock_jira_client.update_component.assert_called_once()
@@ -78,7 +76,7 @@ class TestUpdateComponent:
         result = update_component(
             component_id="10000",
             lead_account_id="5b10a2844c20165700ede22h",
-                )
+        )
 
         assert result["lead"]["accountId"] == "5b10a2844c20165700ede22h"
 
@@ -96,9 +94,7 @@ class TestUpdateComponent:
 
         from update_component import update_component
 
-        result = update_component(
-            component_id="10000", assignee_type="PROJECT_LEAD"
-        )
+        result = update_component(component_id="10000", assignee_type="PROJECT_LEAD")
 
         assert result["assigneeType"] == "PROJECT_LEAD"
 
@@ -127,7 +123,7 @@ class TestUpdateComponent:
             description="Updated description",
             lead_account_id="5b10a2844c20165700ede22h",
             assignee_type="COMPONENT_LEAD",
-                )
+        )
 
         assert result["name"] == "Updated Name"
         assert result["description"] == "Updated description"

@@ -53,9 +53,7 @@ def get_comments(
     return result
 
 
-def get_comment_by_id(
-    issue_key: str, comment_id: str
-) -> dict[str, Any]:
+def get_comment_by_id(issue_key: str, comment_id: str) -> dict[str, Any]:
     """
     Get a specific comment by ID.
 
@@ -213,9 +211,7 @@ Examples:
 
         else:
             # Get all comments
-            result = get_comments(
-                args.issue_key, args.limit, args.offset, args.order
-            )
+            result = get_comments(args.issue_key, args.limit, args.offset, args.order)
 
             if args.output == "json":
                 print(json.dumps(result, indent=2))

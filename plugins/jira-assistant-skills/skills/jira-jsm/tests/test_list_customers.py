@@ -137,5 +137,3 @@ def test_list_customers_count_only(
 
     captured = capsys.readouterr()
     assert "3" in captured.out
-
-

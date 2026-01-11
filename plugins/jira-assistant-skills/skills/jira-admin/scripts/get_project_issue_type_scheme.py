@@ -20,9 +20,7 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_project_issue_type_scheme(
-    project_id: str, client=None
-) -> dict[str, Any]:
+def get_project_issue_type_scheme(project_id: str, client=None) -> dict[str, Any]:
     """
     Get issue type scheme assigned to a project.
 
@@ -105,9 +103,7 @@ Examples:
     args = parser.parse_args(argv)
 
     try:
-        assignment = get_project_issue_type_scheme(
-            project_id=args.project_id
-        )
+        assignment = get_project_issue_type_scheme(project_id=args.project_id)
 
         output = format_project_scheme(assignment, args.format)
         print(output)

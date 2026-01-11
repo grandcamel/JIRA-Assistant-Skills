@@ -32,9 +32,7 @@ def parse_account_ids(account_id_string: str) -> list:
     return [id.strip() for id in account_id_string.split(",") if id.strip()]
 
 
-def add_users_to_organization_func(
-    organization_id: int, account_ids: list
-) -> None:
+def add_users_to_organization_func(organization_id: int, account_ids: list) -> None:
     """
     Add users to an organization.
 

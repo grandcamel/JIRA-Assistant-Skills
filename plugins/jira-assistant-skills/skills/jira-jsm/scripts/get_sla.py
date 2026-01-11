@@ -25,9 +25,7 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_slas(
-    issue_key: str, sla_id: str | None = None
-) -> dict[str, Any]:
+def get_slas(issue_key: str, sla_id: str | None = None) -> dict[str, Any]:
     """
     Get SLA information for a service request.
 
@@ -147,9 +145,7 @@ Examples:
     args = parser.parse_args(argv)
 
     try:
-        sla_data = get_slas(
-            issue_key=args.request_key, sla_id=args.sla_id
-        )
+        sla_data = get_slas(issue_key=args.request_key, sla_id=args.sla_id)
 
         if args.output == "json":
             print(format_sla_json(sla_data))

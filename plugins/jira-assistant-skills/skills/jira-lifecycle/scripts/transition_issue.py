@@ -174,9 +174,7 @@ def transition_issue(
             print(f"  Sprint: Would move to sprint {sprint_id}")
 
         # Show context workflow hint if available
-        context_hint = get_context_workflow_hint(
-            project_key, issue_type, target_status
-        )
+        context_hint = get_context_workflow_hint(project_key, issue_type, target_status)
         if context_hint:
             print(
                 f"\n  After transition, expected options:{context_hint.replace(chr(10), chr(10) + '  ')}"

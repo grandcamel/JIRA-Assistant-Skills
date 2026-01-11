@@ -139,8 +139,6 @@ def sample_dev_info():
     return copy.deepcopy(_sample_dev_info)
 
 
-
-
 @pytest.fixture
 def mock_get_jira_client(mock_jira_client):
     """Mock get_jira_client function."""

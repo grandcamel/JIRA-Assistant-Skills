@@ -47,9 +47,7 @@ def validate_account_ids(account_ids: list) -> bool:
     return all(id.strip() for id in account_ids)
 
 
-def add_customer_to_service_desk(
-    service_desk_id: str, account_ids: list
-) -> None:
+def add_customer_to_service_desk(service_desk_id: str, account_ids: list) -> None:
     """
     Add customers to a service desk.
 

@@ -301,4 +301,3 @@ class TestDeletePermissionSchemeCLI:
                 main()
 
         assert exc_info.value.code == 1
-

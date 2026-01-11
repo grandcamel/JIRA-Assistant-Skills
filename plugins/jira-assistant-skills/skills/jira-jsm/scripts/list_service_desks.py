@@ -20,9 +20,7 @@ from jira_assistant_skills_lib import (
 )
 
 
-def list_service_desks(
-    start: int = 0, limit: int = 50
-) -> dict:
+def list_service_desks(start: int = 0, limit: int = 50) -> dict:
     """
     List all JSM service desks.
 
@@ -143,9 +141,7 @@ def main(argv: list[str] | None = None):
 
     try:
         # Fetch service desks
-        service_desks = list_service_desks(
-            start=args.start, limit=args.limit
-        )
+        service_desks = list_service_desks(start=args.start, limit=args.limit)
 
         # Apply filters
         if args.project_key:

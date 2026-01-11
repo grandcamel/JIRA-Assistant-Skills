@@ -49,9 +49,7 @@ class TestArchiveVersion:
 
         from archive_version import archive_version_by_name
 
-        result = archive_version_by_name(
-            project="PROJ", version_name="v0.5.0"
-        )
+        result = archive_version_by_name(project="PROJ", version_name="v0.5.0")
 
         assert result["archived"] is True
         mock_jira_client.get_versions.assert_called_once_with("PROJ")
@@ -70,9 +68,7 @@ class TestArchiveVersion:
         from archive_version import archive_version_by_name
 
         with pytest.raises(ValidationError, match="Version.*not found"):
-            archive_version_by_name(
-                project="PROJ", version_name="v99.0.0"
-            )
+            archive_version_by_name(project="PROJ", version_name="v99.0.0")
 
     @patch("archive_version.get_jira_client")
     def test_archive_version_dry_run(self, mock_get_client, mock_jira_client):

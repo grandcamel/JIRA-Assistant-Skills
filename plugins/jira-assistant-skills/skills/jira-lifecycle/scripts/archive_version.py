@@ -38,9 +38,7 @@ def archive_version(version_id: str) -> dict[str, Any]:
     return result
 
 
-def archive_version_by_name(
-    project: str, version_name: str
-) -> dict[str, Any]:
+def archive_version_by_name(project: str, version_name: str) -> dict[str, Any]:
     """
     Archive a version by name (requires project lookup).
 

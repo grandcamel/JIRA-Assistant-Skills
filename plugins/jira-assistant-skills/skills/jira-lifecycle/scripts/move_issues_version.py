@@ -198,9 +198,7 @@ def move_specific_issues(
     return {"moved": moved, "failed": failed, "total": total, "errors": errors}
 
 
-def move_issues_dry_run(
-    jql: str, target_version: str
-) -> dict[str, Any]:
+def move_issues_dry_run(jql: str, target_version: str) -> dict[str, Any]:
     """
     Show what issues would be moved without moving them.
 
@@ -257,9 +255,7 @@ def move_issues_with_confirmation(
     )
 
     if confirmation.lower() == "yes":
-        return move_issues_to_version(
-            jql, target_version, field, show_progress
-        )
+        return move_issues_to_version(jql, target_version, field, show_progress)
     else:
         return {"moved": 0, "failed": 0, "total": 0, "errors": {}, "cancelled": True}
 

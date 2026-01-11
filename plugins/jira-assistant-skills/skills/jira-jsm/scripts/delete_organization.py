@@ -66,9 +66,7 @@ Examples:
             print_error("Confirmation required. Use --yes flag to confirm deletion.")
             return 1
 
-        delete_organization_func(
-            organization_id=args.organization_id
-        )
+        delete_organization_func(organization_id=args.organization_id)
 
         print_success(f"Successfully deleted organization {args.organization_id}")
 

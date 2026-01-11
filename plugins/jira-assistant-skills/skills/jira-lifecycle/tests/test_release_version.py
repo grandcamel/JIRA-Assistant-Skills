@@ -49,9 +49,7 @@ class TestReleaseVersion:
 
         from release_version import release_version
 
-        result = release_version(
-            version_id="10001", release_date="2025-02-15"
-        )
+        result = release_version(version_id="10001", release_date="2025-02-15")
 
         assert result["released"] is True
         assert result["releaseDate"] == "2025-02-15"
@@ -71,9 +69,7 @@ class TestReleaseVersion:
 
         from release_version import release_version_by_name
 
-        result = release_version_by_name(
-            project="PROJ", version_name="v1.0.0"
-        )
+        result = release_version_by_name(project="PROJ", version_name="v1.0.0")
 
         assert result["released"] is True
         mock_jira_client.get_versions.assert_called_once_with("PROJ")
@@ -92,9 +88,7 @@ class TestReleaseVersion:
         from release_version import release_version_by_name
 
         with pytest.raises(ValidationError, match="Version.*not found"):
-            release_version_by_name(
-                project="PROJ", version_name="v99.0.0"
-            )
+            release_version_by_name(project="PROJ", version_name="v99.0.0")
 
     @patch("release_version.get_jira_client")
     def test_release_with_description(self, mock_get_client, mock_jira_client):
@@ -111,9 +105,7 @@ class TestReleaseVersion:
 
         from release_version import release_version
 
-        result = release_version(
-            version_id="10001", description="Released version"
-        )
+        result = release_version(version_id="10001", description="Released version")
 
         assert result["description"] == "Released version"
 

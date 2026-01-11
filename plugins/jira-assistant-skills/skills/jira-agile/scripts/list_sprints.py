@@ -23,9 +23,7 @@ from jira_assistant_skills_lib import (
 from jira_assistant_skills_lib.validators import validate_project_key
 
 
-def get_board_for_project(
-    project_key: str, client=None
-) -> dict | None:
+def get_board_for_project(project_key: str, client=None) -> dict | None:
     """
     Find the first Scrum board for a project.
 

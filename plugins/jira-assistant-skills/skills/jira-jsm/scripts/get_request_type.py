@@ -19,9 +19,7 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_request_type(
-    service_desk_id: str, request_type_id: str
-) -> dict:
+def get_request_type(service_desk_id: str, request_type_id: str) -> dict:
     """
     Get request type details.
 
@@ -115,9 +113,7 @@ def main(argv: list[str] | None = None):
 
     try:
         # Fetch request type
-        request_type = get_request_type(
-            args.service_desk_id, args.request_type_id
-        )
+        request_type = get_request_type(args.service_desk_id, args.request_type_id)
 
         # Output results
         if args.output == "json":

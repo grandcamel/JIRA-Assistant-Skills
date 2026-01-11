@@ -87,9 +87,7 @@ def delete_component_with_confirmation(
         return False
 
 
-def delete_component_dry_run(
-    component_id: str
-) -> dict[str, Any]:
+def delete_component_dry_run(component_id: str) -> dict[str, Any]:
     """
     Show what component would be deleted without deleting.
 
@@ -154,9 +152,7 @@ Examples:
 
         else:
             # Delete with confirmation
-            deleted = delete_component_with_confirmation(
-                args.id, args.move_to
-            )
+            deleted = delete_component_with_confirmation(args.id, args.move_to)
 
             if deleted:
                 print_success(f"\nDeleted component {args.id}")

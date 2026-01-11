@@ -374,6 +374,7 @@ class TestGetIssueOutputFormatting:
 class TestGetIssueProfile:
     """Tests for profile handling."""
 
+
 @pytest.mark.unit
 class TestGetIssueMinimal:
     """Tests for minimal issue responses."""

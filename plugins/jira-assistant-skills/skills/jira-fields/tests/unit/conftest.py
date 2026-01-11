@@ -276,5 +276,3 @@ def sample_created_field():
 def sample_all_screens():
     """Sample all screens response."""
     return copy.deepcopy(SAMPLE_ALL_SCREENS)
-
-

@@ -117,9 +117,7 @@ def get_sprint(
             client.close()
 
 
-def get_active_sprint_for_board(
-    board_id: int, client=None
-) -> dict:
+def get_active_sprint_for_board(board_id: int, client=None) -> dict:
     """
     Get the currently active sprint for a board.
 
@@ -261,9 +259,7 @@ def main(argv: list[str] | None = None):
         if args.active:
             if not args.board:
                 parser.error("--board is required with --active")
-            result = get_active_sprint_for_board(
-                board_id=args.board
-            )
+            result = get_active_sprint_for_board(board_id=args.board)
             if not result:
                 print("No active sprint found for this board")
                 return

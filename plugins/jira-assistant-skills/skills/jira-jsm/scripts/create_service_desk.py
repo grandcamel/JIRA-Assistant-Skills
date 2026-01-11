@@ -65,9 +65,7 @@ def list_available_templates() -> None:
     print("Usage: --template <template-key>")
 
 
-def create_service_desk(
-    name: str, key: str, project_template_key: str
-) -> dict:
+def create_service_desk(name: str, key: str, project_template_key: str) -> dict:
     """
     Create a new service desk.
 
@@ -198,9 +196,7 @@ def main(argv: list[str] | None = None):
             return
 
         # Create service desk
-        service_desk = create_service_desk(
-            args.name, args.key, template_id
-        )
+        service_desk = create_service_desk(args.name, args.key, template_id)
 
         # Output results
         if args.output == "json":

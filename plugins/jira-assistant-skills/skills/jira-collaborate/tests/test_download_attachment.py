@@ -80,6 +80,7 @@ class TestListAttachments:
 
             assert result == []
 
+
 @pytest.mark.collaborate
 @pytest.mark.unit
 class TestDownloadAttachment:

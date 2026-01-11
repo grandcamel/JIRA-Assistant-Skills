@@ -69,7 +69,3 @@ def sample_project_data():
         "projectTypeKey": "software",
     }
     return copy.deepcopy(data)
-
-
-
-

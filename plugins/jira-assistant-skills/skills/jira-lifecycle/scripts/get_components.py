@@ -39,9 +39,7 @@ def get_components(project: str) -> list[dict[str, Any]]:
     return result
 
 
-def get_component_by_id(
-    component_id: str
-) -> dict[str, Any]:
+def get_component_by_id(component_id: str) -> dict[str, Any]:
     """
     Get a specific component by ID.
 
@@ -74,9 +72,7 @@ def filter_by_lead(
     return [c for c in components if c.get("lead", {}).get("displayName") == lead_name]
 
 
-def get_component_issue_counts(
-    component_id: str
-) -> dict[str, Any]:
+def get_component_issue_counts(component_id: str) -> dict[str, Any]:
     """
     Get issue counts for a component.
 

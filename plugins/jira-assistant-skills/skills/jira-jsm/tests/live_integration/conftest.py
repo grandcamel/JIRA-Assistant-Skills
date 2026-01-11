@@ -30,8 +30,7 @@ from jira_assistant_skills_lib import JiraClient, get_jira_client
 
 def pytest_addoption(parser):
     """Add custom command line options."""
-    parser.addoption(
-    )
+    parser.addoption()
     parser.addoption(
         "--keep-project",
         action="store_true",
@@ -65,8 +64,6 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope="session")
-
-
 @pytest.fixture(scope="session")
 def keep_project(request) -> bool:
     """Check if service desk should be kept after tests."""

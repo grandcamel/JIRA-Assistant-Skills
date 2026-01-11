@@ -30,9 +30,7 @@ class TestUpdateComment:
 
         from update_comment import update_comment
 
-        result = update_comment(
-            "PROJ-123", "10001", "Updated text", format_type="text"
-        )
+        result = update_comment("PROJ-123", "10001", "Updated text", format_type="text")
 
         assert result["id"] == "10001"
         mock_jira_client.update_comment.assert_called_once()
@@ -57,7 +55,7 @@ class TestUpdateComment:
             "10001",
             "## New heading\n**Bold text**",
             format_type="markdown",
-                )
+        )
 
         call_args = mock_jira_client.update_comment.call_args
         body_adf = call_args[0][2]
@@ -106,9 +104,7 @@ class TestUpdateComment:
 
         from update_comment import update_comment
 
-        result = update_comment(
-            "PROJ-123", "10002", "Updated internal note"
-        )
+        result = update_comment("PROJ-123", "10002", "Updated internal note")
 
         # Visibility should still be present in result
         assert result.get("visibility") is not None

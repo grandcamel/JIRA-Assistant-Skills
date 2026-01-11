@@ -81,7 +81,6 @@ class TestListFieldsCLI:
                             pytest.fail(f"--output {fmt} should be valid")
 
 
-
 @pytest.mark.fields
 @pytest.mark.unit
 class TestCreateFieldCLI:
@@ -211,4 +210,3 @@ class TestConfigureAgileFieldsCLI:
                         pytest.fail(
                             "positional project with auto-discovery should be valid"
                         )
-

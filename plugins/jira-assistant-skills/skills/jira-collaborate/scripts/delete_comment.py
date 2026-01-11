@@ -39,9 +39,7 @@ def delete_comment(issue_key: str, comment_id: str) -> None:
     client.close()
 
 
-def delete_comment_with_confirm(
-    issue_key: str, comment_id: str
-) -> bool:
+def delete_comment_with_confirm(issue_key: str, comment_id: str) -> bool:
     """
     Delete a comment with confirmation prompt.
 
@@ -88,9 +86,7 @@ def delete_comment_with_confirm(
         return False
 
 
-def delete_comment_dry_run(
-    issue_key: str, comment_id: str
-) -> dict[str, Any]:
+def delete_comment_dry_run(issue_key: str, comment_id: str) -> dict[str, Any]:
     """
     Show what would be deleted without actually deleting.
 

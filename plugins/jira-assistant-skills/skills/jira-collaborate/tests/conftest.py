@@ -283,7 +283,3 @@ def sample_changelog():
             },
         ],
     }
-
-
-
-

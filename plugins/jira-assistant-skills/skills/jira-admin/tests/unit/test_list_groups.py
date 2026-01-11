@@ -33,7 +33,9 @@ class TestListGroupsBasic:
         """Test listing all groups returns complete list."""
         mock_jira_client.find_groups.return_value = sample_groups_picker_response
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from list_groups import list_groups
 
             results = list_groups(mock_jira_client)
@@ -54,7 +56,9 @@ class TestListGroupsQuery:
         }
         mock_jira_client.find_groups.return_value = filtered_response
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from list_groups import list_groups
 
             list_groups(mock_jira_client, query="jira-")
@@ -73,7 +77,9 @@ class TestListGroupsWithMemberCounts:
         mock_jira_client.find_groups.return_value = sample_groups_picker_response
         mock_jira_client.get_group_members.return_value = sample_group_members
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from list_groups import list_groups_with_member_counts
 
             list_groups_with_member_counts(mock_jira_client)
@@ -91,7 +97,9 @@ class TestListGroupsPagination:
         """Test pagination with max_results parameter."""
         mock_jira_client.find_groups.return_value = sample_groups_picker_response
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from list_groups import list_groups
 
             list_groups(mock_jira_client, max_results=10)
@@ -112,7 +120,9 @@ class TestListGroupsEmpty:
         }
         mock_jira_client.find_groups.return_value = empty_response
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from list_groups import list_groups
 
             results = list_groups(mock_jira_client, query="nonexistent")
@@ -125,7 +135,9 @@ class TestListGroupsOutputFormats:
 
     def test_list_groups_table_output(self, mock_jira_client, sample_groups):
         """Test formatted table output."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from list_groups import format_groups_table
 
             output = format_groups_table(sample_groups)
@@ -135,7 +147,9 @@ class TestListGroupsOutputFormats:
 
     def test_list_groups_json_output(self, mock_jira_client, sample_groups):
         """Test JSON output format."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from list_groups import format_groups_json
 
             output = format_groups_json(sample_groups)
@@ -146,7 +160,9 @@ class TestListGroupsOutputFormats:
 
     def test_list_groups_csv_output(self, mock_jira_client, sample_groups):
         """Test CSV output format."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from list_groups import format_groups_csv
 
             output = format_groups_csv(sample_groups)
@@ -167,7 +183,9 @@ class TestListGroupsPermissionError:
             "Browse users and groups permission required"
         )
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from list_groups import list_groups
 
             with pytest.raises(PermissionError) as exc_info:
@@ -185,7 +203,9 @@ class TestListGroupsCaseInsensitive:
         """Test that search is case-insensitive by default."""
         mock_jira_client.find_groups.return_value = sample_groups_picker_response
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from list_groups import list_groups
 
             list_groups(mock_jira_client, query="JIRA")
@@ -202,7 +222,9 @@ class TestListGroupsSystemGroups:
         self, mock_jira_client, sample_groups, system_groups
     ):
         """Test that system groups can be identified in output."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from list_groups import format_groups_table
 
             output = format_groups_table(sample_groups, highlight_system=True)

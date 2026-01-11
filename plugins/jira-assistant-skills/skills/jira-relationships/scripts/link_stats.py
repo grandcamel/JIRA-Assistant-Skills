@@ -84,9 +84,7 @@ def get_issue_link_stats(issue_key: str) -> dict[str, Any]:
     return stats
 
 
-def get_project_link_stats(
-    jql: str, max_results: int = 500
-) -> dict[str, Any]:
+def get_project_link_stats(jql: str, max_results: int = 500) -> dict[str, Any]:
     """
     Get link statistics for issues matching a JQL query.
 
@@ -330,9 +328,7 @@ Examples:
             else:
                 jql = args.jql
 
-            stats = get_project_link_stats(
-                jql, max_results=args.max_results
-            )
+            stats = get_project_link_stats(jql, max_results=args.max_results)
 
             if args.output == "json":
                 print(json.dumps(stats, indent=2))

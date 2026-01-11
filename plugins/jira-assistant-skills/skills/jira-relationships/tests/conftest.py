@@ -158,5 +158,3 @@ def sample_issue_no_links():
             "issuelinks": [],
         },
     }
-
-

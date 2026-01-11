@@ -78,7 +78,7 @@ class TestCreateVersion:
             name="v2.0.0",
             start_date="2025-02-01",
             release_date="2025-03-01",
-                )
+        )
 
         assert result["startDate"] == "2025-02-01"
         assert result["releaseDate"] == "2025-03-01"
@@ -104,7 +104,7 @@ class TestCreateVersion:
             name="v0.9.0",
             released=True,
             release_date="2025-01-15",
-                )
+        )
 
         assert result["released"] is True
 
@@ -123,9 +123,7 @@ class TestCreateVersion:
 
         from create_version import create_version
 
-        result = create_version(
-            project="PROJ", name="v0.8.0", archived=True
-        )
+        result = create_version(project="PROJ", name="v0.8.0", archived=True)
 
         assert result["archived"] is True
 

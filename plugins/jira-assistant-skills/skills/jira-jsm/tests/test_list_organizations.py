@@ -155,5 +155,3 @@ def test_list_organizations_network_error(mock_jira_client, capsys):
     captured = capsys.readouterr()
     assert "Network error" in captured.err
     assert exit_code == 1
-
-

@@ -52,7 +52,7 @@ class TestMoveIssuesVersion:
             project="PROJ",
             source_version="v1.0.0",
             target_version="v1.2.0",
-                )
+        )
 
         # Should have moved the issues found by JQL
         assert result["moved"] == 2
@@ -86,7 +86,7 @@ class TestMoveIssuesVersion:
             issue_keys=["PROJ-1"],
             target_version="v2.0.0",
             field="fixVersions",
-                )
+        )
 
         assert result["moved"] == 1
         call_args = mock_jira_client.update_issue.call_args
@@ -102,9 +102,7 @@ class TestMoveIssuesVersion:
 
         from move_issues_version import move_issues_dry_run
 
-        result = move_issues_dry_run(
-            jql="project = PROJ", target_version="v2.0.0"
-        )
+        result = move_issues_dry_run(jql="project = PROJ", target_version="v2.0.0")
 
         # Should return issue count without updating
         assert result["would_move"] == 2
@@ -151,9 +149,7 @@ class TestMoveIssuesVersionErrorHandling:
         from move_issues_version import move_issues_to_version
 
         with pytest.raises(AuthenticationError):
-            move_issues_to_version(
-                jql="project = PROJ", target_version="v2.0.0"
-            )
+            move_issues_to_version(jql="project = PROJ", target_version="v2.0.0")
 
     @patch("move_issues_version.get_jira_client")
     def test_permission_error(
@@ -174,7 +170,7 @@ class TestMoveIssuesVersionErrorHandling:
         result = move_issues_to_version(
             jql="project = PROJ",
             target_version="v2.0.0",
-                show_progress=False,
+            show_progress=False,
         )
 
         assert result["moved"] == 0
@@ -194,9 +190,7 @@ class TestMoveIssuesVersionErrorHandling:
         from move_issues_version import move_issues_to_version
 
         with pytest.raises(NotFoundError):
-            move_issues_to_version(
-                jql="issue = PROJ-999", target_version="v2.0.0"
-            )
+            move_issues_to_version(jql="issue = PROJ-999", target_version="v2.0.0")
 
     @patch("move_issues_version.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -211,9 +205,7 @@ class TestMoveIssuesVersionErrorHandling:
         from move_issues_version import move_issues_to_version
 
         with pytest.raises(JiraError) as exc_info:
-            move_issues_to_version(
-                jql="project = PROJ", target_version="v2.0.0"
-            )
+            move_issues_to_version(jql="project = PROJ", target_version="v2.0.0")
         assert exc_info.value.status_code == 429
 
     @patch("move_issues_version.get_jira_client")
@@ -229,7 +221,5 @@ class TestMoveIssuesVersionErrorHandling:
         from move_issues_version import move_issues_to_version
 
         with pytest.raises(JiraError) as exc_info:
-            move_issues_to_version(
-                jql="project = PROJ", target_version="v2.0.0"
-            )
+            move_issues_to_version(jql="project = PROJ", target_version="v2.0.0")
         assert exc_info.value.status_code == 500

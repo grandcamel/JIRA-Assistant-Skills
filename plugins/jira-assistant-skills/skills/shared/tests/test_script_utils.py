@@ -155,6 +155,7 @@ class TestFormatOutput:
     def test_text_with_formatter(self, capsys):
         def formatter(x):
             return f"Key: {x['key']}"
+
         format_output({"key": "PROJ-123"}, "text", text_formatter=formatter)
         captured = capsys.readouterr()
         assert "Key: PROJ-123" in captured.out

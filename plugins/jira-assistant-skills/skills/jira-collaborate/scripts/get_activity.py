@@ -24,9 +24,7 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_activity(
-    issue_key: str, limit: int = 100, offset: int = 0
-) -> dict[str, Any]:
+def get_activity(issue_key: str, limit: int = 100, offset: int = 0) -> dict[str, Any]:
     """
     Get activity/changelog for an issue.
 
@@ -198,9 +196,7 @@ Field types:
 
     try:
         # Get activity
-        changelog = get_activity(
-            args.issue_key, limit=args.limit, offset=args.offset
-        )
+        changelog = get_activity(args.issue_key, limit=args.limit, offset=args.offset)
 
         # Parse changelog with filters
         changes = parse_changelog(

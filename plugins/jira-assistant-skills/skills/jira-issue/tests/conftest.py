@@ -160,5 +160,3 @@ def sample_issue_detailed(sample_issue):
         },
     ]
     return issue
-
-

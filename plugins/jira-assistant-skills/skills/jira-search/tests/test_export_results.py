@@ -237,6 +237,7 @@ class TestExportResults:
             # Second issue has None assignee
             assert data[1]["assignee"] is None or data[1]["assignee"] == ""
 
+
 @pytest.mark.search
 @pytest.mark.unit
 class TestExportResultsMain:

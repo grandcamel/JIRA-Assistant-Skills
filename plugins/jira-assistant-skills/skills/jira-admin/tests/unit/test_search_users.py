@@ -32,7 +32,9 @@ class TestSearchUsersByName:
         """Test searching users by display name returns matching users."""
         mock_jira_client.search_users.return_value = sample_users[:2]  # First two Johns
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import search_users
 
             results = search_users(mock_jira_client, query="john")
@@ -45,7 +47,9 @@ class TestSearchUsersByName:
         """Test that partial name matching works."""
         mock_jira_client.search_users.return_value = sample_users[:1]
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import search_users
 
             results = search_users(mock_jira_client, query="doe")
@@ -61,7 +65,9 @@ class TestSearchUsersByEmail:
         """Test searching users by email address."""
         mock_jira_client.search_users.return_value = [sample_user]
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import search_users
 
             results = search_users(mock_jira_client, query="john.doe@example.com")
@@ -79,7 +85,9 @@ class TestSearchUsersActiveFilter:
         active_users = [u for u in sample_users if u["active"]]
         mock_jira_client.search_users.return_value = active_users
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import search_users
 
             results = search_users(mock_jira_client, query="john", active_only=True)
@@ -90,7 +98,9 @@ class TestSearchUsersActiveFilter:
         """Test including inactive users in search results."""
         mock_jira_client.search_users.return_value = sample_users
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import search_users
 
             results = search_users(mock_jira_client, query="john", active_only=False)
@@ -107,7 +117,9 @@ class TestSearchUsersAssignable:
         """Test finding assignable users for specific project."""
         mock_jira_client.find_assignable_users.return_value = sample_users[:2]
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import search_assignable_users
 
             results = search_assignable_users(
@@ -127,7 +139,9 @@ class TestSearchUsersPagination:
         """Test pagination with start_at parameter."""
         mock_jira_client.search_users.return_value = sample_users[1:]
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import search_users
 
             search_users(mock_jira_client, query="john", start_at=1, max_results=10)
@@ -139,7 +153,9 @@ class TestSearchUsersPagination:
         """Test pagination with max_results parameter."""
         mock_jira_client.search_users.return_value = sample_users[:2]
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import search_users
 
             results = search_users(
@@ -156,7 +172,9 @@ class TestSearchUsersEmptyResults:
         """Test handling when no users match the query."""
         mock_jira_client.search_users.return_value = []
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import search_users
 
             results = search_users(mock_jira_client, query="nonexistent")
@@ -171,7 +189,9 @@ class TestSearchUsersOutputFormats:
         """Test formatted table output."""
         mock_jira_client.search_users.return_value = sample_users[:2]
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import format_users_table
 
             output = format_users_table(sample_users[:2])
@@ -181,7 +201,9 @@ class TestSearchUsersOutputFormats:
 
     def test_search_users_json_output(self, mock_jira_client, sample_users):
         """Test JSON output format."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import format_users_json
 
             output = format_users_json(sample_users[:2])
@@ -192,7 +214,9 @@ class TestSearchUsersOutputFormats:
 
     def test_search_users_csv_output(self, mock_jira_client, sample_users):
         """Test CSV export format."""
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import format_users_csv
 
             output = format_users_csv(sample_users[:2])
@@ -209,7 +233,9 @@ class TestSearchUsersPrivacyControls:
         """Test handling users with hidden email addresses."""
         mock_jira_client.search_users.return_value = [privacy_restricted_user]
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import format_users_table
 
             output = format_users_table([privacy_restricted_user])
@@ -232,7 +258,9 @@ class TestSearchUsersWithGroups:
             {"name": "jira-developers", "groupId": "g2"},
         ]
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import search_users_with_groups
 
             search_users_with_groups(mock_jira_client, query="john")
@@ -252,7 +280,9 @@ class TestSearchUsersPermissionError:
             "Browse users and groups permission required"
         )
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import search_users
 
             with pytest.raises(PermissionError) as exc_info:
@@ -268,7 +298,9 @@ class TestSearchUsersEmptyQuery:
         """Test that empty query returns paginated users."""
         mock_jira_client.search_users.return_value = sample_users
 
-        with patch("jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client):
+        with patch(
+            "jira_assistant_skills_lib.get_jira_client", return_value=mock_jira_client
+        ):
             from search_users import search_users
 
             results = search_users(mock_jira_client, query="", active_only=False)

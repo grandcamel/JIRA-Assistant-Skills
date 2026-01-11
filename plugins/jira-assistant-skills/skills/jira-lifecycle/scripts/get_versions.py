@@ -83,9 +83,7 @@ def filter_versions(
     return filtered
 
 
-def get_version_issue_counts(
-    version_id: str
-) -> dict[str, Any]:
+def get_version_issue_counts(version_id: str) -> dict[str, Any]:
     """
     Get issue counts for a version.
 
@@ -102,9 +100,7 @@ def get_version_issue_counts(
     return result
 
 
-def get_version_unresolved_count(
-    version_id: str
-) -> dict[str, Any]:
+def get_version_unresolved_count(version_id: str) -> dict[str, Any]:
     """
     Get unresolved issue count for a version.
 

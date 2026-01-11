@@ -167,6 +167,7 @@ class TestSearchIssues:
                 next_page_token="abc123",
             )
 
+
 @pytest.mark.search
 @pytest.mark.unit
 class TestGetJqlFromFilter:
