@@ -1,3 +1,0 @@
-# JIRA Assistant Skills Library
-# Install with: pip install jira-assistant-skills-lib
-jira-assistant-skills-lib>=0.2.1

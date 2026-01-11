@@ -117,16 +117,18 @@ jira-as ops discover-project PROJ --output json --no-save
 jira-as ops discover-project PROJ --sample-size 200 --days 60
 ```
 
-See [Scripts Guide](docs/SCRIPTS.md) for complete documentation.
+See [Commands Guide](docs/COMMANDS.md) for complete documentation.
 
-## Scripts
+## Available Commands
 
-| Script | Description |
-|--------|-------------|
-| `discover_project.py` | Discover project metadata, workflows, and patterns |
-| `cache_status.py` | Display cache statistics (size, entries, hit rate) |
-| `cache_clear.py` | Clear cache entries (all, by category, or by pattern) |
-| `cache_warm.py` | Pre-warm cache with commonly accessed data |
+All commands support `--help` for full documentation.
+
+| Command | Description |
+|---------|-------------|
+| `jira-as ops discover-project` | Discover project metadata, workflows, and patterns |
+| `jira-as ops cache-status` | Display cache statistics (size, entries, hit rate) |
+| `jira-as ops cache-clear` | Clear cache entries (all, by category, or by pattern) |
+| `jira-as ops cache-warm` | Pre-warm cache with commonly accessed data |
 
 ## Exit Codes
 
@@ -165,9 +167,3 @@ See [API Reference](docs/API_REFERENCE.md) for programmatic usage.
 - [Security](docs/SECURITY.md) - Cache security considerations
 - [Best Practices](docs/best-practices/INDEX.md) - Optimization patterns
 
-## Testing
-
-```bash
-# Run tests (with jira-assistant-skills-lib installed)
-pytest plugins/jira-assistant-skills/skills/jira-ops/tests/ -v
-```

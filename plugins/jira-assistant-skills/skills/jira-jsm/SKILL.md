@@ -47,14 +47,14 @@ Use jira-jsm when you encounter:
 
 This skill provides comprehensive JSM operations organized into 6 key ITSM capabilities:
 
-| Capability | Description | Key Scripts |
-|------------|-------------|-------------|
-| **Service Desk Core** | Manage service desks, portals, request types | `list_service_desks.py`, `get_request_type_fields.py` |
-| **Request Management** | Create and manage customer-facing requests | `create_request.py`, `get_request.py`, `transition_request.py` |
-| **Customer & Organization** | Manage customers, organizations, participants | `create_customer.py`, `add_participant.py` |
-| **SLA & Queue** | Track SLAs, manage queues | `get_sla.py`, `sla_report.py`, `list_queues.py` |
-| **Comments & Approvals** | Collaboration and approval workflows | `add_request_comment.py`, `approve_request.py` |
-| **Knowledge Base & Assets** | KB search, asset management | `search_kb.py`, `suggest_kb.py`, `create_asset.py` |
+| Capability | Description | Key Commands |
+|------------|-------------|--------------|
+| **Service Desk Core** | Manage service desks, portals, request types | `jira-as jsm service-desk list`, `jira-as jsm request-type fields` |
+| **Request Management** | Create and manage customer-facing requests | `jira-as jsm request create`, `jira-as jsm request get`, `jira-as jsm request transition` |
+| **Customer & Organization** | Manage customers, organizations, participants | `jira-as jsm customer create`, `jira-as jsm participant add` |
+| **SLA & Queue** | Track SLAs, manage queues | `jira-as jsm sla get`, `jira-as jsm sla report`, `jira-as jsm queue list` |
+| **Comments & Approvals** | Collaboration and approval workflows | `jira-as jsm request comment`, `jira-as jsm approval approve` |
+| **Knowledge Base & Assets** | KB search, asset management | `jira-as jsm kb search`, `jira-as jsm kb suggest`, `jira-as jsm asset create` |
 
 ## Quick Start
 
@@ -86,66 +86,82 @@ jira-as jsm approval approve SD-124 1001 --dry-run
 
 For detailed setup instructions, see [docs/QUICK_START.md](docs/QUICK_START.md).
 
-## Available Scripts (45 total)
+## Available Commands
 
-### Service Desk Core (6 scripts)
-- `create_service_desk.py` - Create new service desk
-- `list_service_desks.py` - List all service desks
-- `get_service_desk.py` - Get service desk details
-- `list_request_types.py` - List available request types
-- `get_request_type.py` - Get request type details
-- `get_request_type_fields.py` - Get custom fields for request type
+All commands support `--help` for full documentation.
 
-### Request Management (5 scripts)
-- `create_request.py` - Create service request
-- `get_request.py` - Get request details
-- `get_request_status.py` - Get request status/lifecycle
-- `transition_request.py` - Transition request through workflow
-- `list_requests.py` - List requests with filtering
+### Service Desk Core
+| Command | Description |
+|---------|-------------|
+| `jira-as jsm service-desk create` | Create new service desk |
+| `jira-as jsm service-desk list` | List all service desks |
+| `jira-as jsm service-desk get` | Get service desk details |
+| `jira-as jsm request-type list` | List available request types |
+| `jira-as jsm request-type get` | Get request type details |
+| `jira-as jsm request-type fields` | Get custom fields for request type |
 
-### Customer Management (7 scripts)
-- `create_customer.py` - Create new customer
-- `list_customers.py` - List service desk customers
-- `add_customer.py` - Add customer to service desk
-- `remove_customer.py` - Remove customer from service desk
-- `add_participant.py` - Add participant to request
-- `remove_participant.py` - Remove participant from request
-- `get_participants.py` - List request participants
+### Request Management
+| Command | Description |
+|---------|-------------|
+| `jira-as jsm request create` | Create service request |
+| `jira-as jsm request get` | Get request details |
+| `jira-as jsm request status` | Get request status/lifecycle |
+| `jira-as jsm request transition` | Transition request through workflow |
+| `jira-as jsm request list` | List requests with filtering |
 
-### Organization Management (6 scripts)
-- `create_organization.py` - Create customer organization
-- `list_organizations.py` - List all organizations
-- `get_organization.py` - Get organization details
-- `delete_organization.py` - Delete organization
-- `add_to_organization.py` - Add customer to organization
-- `remove_from_organization.py` - Remove customer from organization
+### Customer Management
+| Command | Description |
+|---------|-------------|
+| `jira-as jsm customer create` | Create new customer |
+| `jira-as jsm customer list` | List service desk customers |
+| `jira-as jsm customer add` | Add customer to service desk |
+| `jira-as jsm customer remove` | Remove customer from service desk |
+| `jira-as jsm participant add` | Add participant to request |
+| `jira-as jsm participant remove` | Remove participant from request |
+| `jira-as jsm participant list` | List request participants |
 
-### SLA & Queue Management (6 scripts)
-- `get_sla.py` - Get SLA information for request
-- `check_sla_breach.py` - Check for SLA breaches
-- `sla_report.py` - Generate SLA compliance report
-- `list_queues.py` - List service desk queues
-- `get_queue.py` - Get queue details
-- `get_queue_issues.py` - Get requests in queue
+### Organization Management
+| Command | Description |
+|---------|-------------|
+| `jira-as jsm organization create` | Create customer organization |
+| `jira-as jsm organization list` | List all organizations |
+| `jira-as jsm organization get` | Get organization details |
+| `jira-as jsm organization delete` | Delete organization |
+| `jira-as jsm organization add-customer` | Add customer to organization |
+| `jira-as jsm organization remove-customer` | Remove customer from organization |
 
-### Comments & Approvals (6 scripts)
-- `add_request_comment.py` - Add comment to request
-- `get_request_comments.py` - Get request comments
-- `get_approvals.py` - Get approval status for request
-- `list_pending_approvals.py` - List pending approvals
-- `approve_request.py` - Approve request
-- `decline_request.py` - Decline request
+### SLA & Queue Management
+| Command | Description |
+|---------|-------------|
+| `jira-as jsm sla get` | Get SLA information for request |
+| `jira-as jsm sla check-breach` | Check for SLA breaches |
+| `jira-as jsm sla report` | Generate SLA compliance report |
+| `jira-as jsm queue list` | List service desk queues |
+| `jira-as jsm queue get` | Get queue details |
+| `jira-as jsm queue issues` | Get requests in queue |
 
-### Knowledge Base & Assets (9 scripts)
-- `search_kb.py` - Search knowledge base articles
-- `get_kb_article.py` - Get knowledge base article
-- `suggest_kb.py` - Get KB article suggestions for request
-- `create_asset.py` - Create new asset
-- `list_assets.py` - List assets
-- `get_asset.py` - Get asset details
-- `update_asset.py` - Update asset attributes
-- `link_asset.py` - Link asset to request
-- `find_affected_assets.py` - Find assets affected by request
+### Comments & Approvals
+| Command | Description |
+|---------|-------------|
+| `jira-as jsm request comment` | Add comment to request |
+| `jira-as jsm request comments` | Get request comments |
+| `jira-as jsm approval list` | Get approval status for request |
+| `jira-as jsm approval pending` | List pending approvals |
+| `jira-as jsm approval approve` | Approve request |
+| `jira-as jsm approval decline` | Decline request |
+
+### Knowledge Base & Assets
+| Command | Description |
+|---------|-------------|
+| `jira-as jsm kb search` | Search knowledge base articles |
+| `jira-as jsm kb get` | Get knowledge base article |
+| `jira-as jsm kb suggest` | Get KB article suggestions for request |
+| `jira-as jsm asset create` | Create new asset |
+| `jira-as jsm asset list` | List assets |
+| `jira-as jsm asset get` | Get asset details |
+| `jira-as jsm asset update` | Update asset attributes |
+| `jira-as jsm asset link` | Link asset to request |
+| `jira-as jsm asset affected` | Find assets affected by request |
 
 ## Common Options
 
@@ -280,6 +296,3 @@ For Data Center specifics, see [references/DATACENTER_GUIDE.md](references/DATAC
 - [JSM Assets REST API](https://developer.atlassian.com/cloud/insight/rest/intro/)
 - [ITIL Framework](https://www.axelos.com/certifications/itil-service-management)
 
----
-
-**Note**: All scripts support `--help` flag for detailed usage information.

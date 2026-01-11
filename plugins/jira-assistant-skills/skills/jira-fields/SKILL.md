@@ -61,10 +61,18 @@ All scripts support these common options:
 | `--output FORMAT` | Output format: `text` (default) or `json` |
 | `--help` | Show help message and exit |
 
-## Available scripts
+## Available Commands
 
-### list_fields.py
-List all custom fields in the JIRA instance.
+All commands support `--help` for full documentation.
+
+| Command | Description |
+|---------|-------------|
+| `jira-as fields list` | List all custom fields in the JIRA instance |
+| `jira-as fields check-project` | Check field availability for a specific project |
+| `jira-as fields configure-agile` | Configure Agile fields for a company-managed project |
+| `jira-as fields create` | Create a new custom field (requires admin) |
+
+### List Fields
 ```bash
 # List all custom fields
 jira-as fields list
@@ -77,11 +85,9 @@ jira-as fields list --agile
 
 # Show all fields (including system fields)
 jira-as fields list --all
-
 ```
 
-### check_project_fields.py
-Check field availability for a specific project.
+### Check Project Fields
 ```bash
 # Check what fields are available for issue creation
 jira-as fields check-project PROJ
@@ -93,8 +99,7 @@ jira-as fields check-project PROJ --type Story
 jira-as fields check-project PROJ --check-agile
 ```
 
-### configure_agile_fields.py
-Configure Agile fields for a company-managed project.
+### Configure Agile Fields
 ```bash
 # Configure default Agile fields for a project
 jira-as fields configure-agile PROJ
@@ -109,8 +114,7 @@ jira-as fields configure-agile PROJ --story-points customfield_10016 --epic-link
 jira-as fields configure-agile PROJ --story-points customfield_10016 --epic-link customfield_10014 --sprint customfield_10020
 ```
 
-### create_field.py
-Create a new custom field (requires admin permissions).
+### Create Field
 ```bash
 # Create Story Points field
 jira-as fields create --name "Story Points" --type number
@@ -141,10 +145,10 @@ jira-as fields list --filter "sprint"
 ```
 
 JSON output includes:
-- `list_fields.py`: Array of field objects with `id`, `name`, `type`, `custom`, `searcherKey`
-- `check_project_fields.py`: Object with `project`, `projectType`, `issueType`, `fields`, `agileFields`
-- `create_field.py`: Created field object with `id`, `name`, `type`
-- `configure_agile_fields.py`: Configuration result with `configured`, `skipped`, `errors`
+- `jira-as fields list`: Array of field objects with `id`, `name`, `type`, `custom`, `searcherKey`
+- `jira-as fields check-project`: Object with `project`, `projectType`, `issueType`, `fields`, `agileFields`
+- `jira-as fields create`: Created field object with `id`, `name`, `type`
+- `jira-as fields configure-agile`: Configuration result with `configured`, `skipped`, `errors`
 
 ## Exit Codes
 
@@ -232,7 +236,7 @@ jira-as fields check-project PROJ --check-agile
 
 ### "Permission denied" when creating fields
 
-**Symptom**: Exit code 1 when running `create_field.py` with permission error.
+**Symptom**: Exit code 1 when running `jira-as fields create` with permission error.
 
 **Solutions**:
 1. Field creation requires JIRA Administrator permission

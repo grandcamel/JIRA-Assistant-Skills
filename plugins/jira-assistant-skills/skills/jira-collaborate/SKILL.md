@@ -46,33 +46,35 @@ Use this skill when you need to:
 5. **Activity History**: View issue changelog
 6. **Custom Fields**: Update custom field values
 
-## Available Scripts
+## Available Commands
 
 ### Comments
-| Script | Description |
-|--------|-------------|
-| `add_comment.py` | Add comment with visibility controls |
-| `update_comment.py` | Update existing comment |
-| `delete_comment.py` | Delete comment (with confirmation) |
-| `get_comments.py` | List and search comments |
+| Command | Description |
+|---------|-------------|
+| `jira-as collaborate comment add` | Add comment with visibility controls |
+| `jira-as collaborate comment update` | Update existing comment |
+| `jira-as collaborate comment delete` | Delete comment (with confirmation) |
+| `jira-as collaborate comment list` | List and search comments |
 
 ### Attachments
-| Script | Description |
-|--------|-------------|
-| `upload_attachment.py` | Upload file to issue |
-| `download_attachment.py` | Download or list attachments |
+| Command | Description |
+|---------|-------------|
+| `jira-as collaborate attachment upload` | Upload file to issue |
+| `jira-as collaborate attachment download` | Download or list attachments |
 
 ### Notifications & Activity
-| Script | Description |
-|--------|-------------|
-| `send_notification.py` | Send notifications to users/groups |
-| `get_activity.py` | View issue changelog |
+| Command | Description |
+|---------|-------------|
+| `jira-as collaborate notify` | Send notifications to users/groups |
+| `jira-as collaborate activity` | View issue changelog |
 
 ### Watchers & Fields
-| Script | Description |
-|--------|-------------|
-| `manage_watchers.py` | Add/remove watchers |
-| `update_custom_fields.py` | Update custom fields |
+| Command | Description |
+|---------|-------------|
+| `jira-as collaborate watchers` | Add/remove/list watchers |
+| `jira-as collaborate update-fields` | Update custom fields |
+
+All commands support `--help` for full documentation.
 
 ## Quick Start Examples
 
@@ -133,13 +135,13 @@ jira-as collaborate activity PROJ-123 --field-type custom --limit 10
 
 ## Common Options
 
-All scripts support:
+All commands support:
 
 | Option | Description |
 |--------|-------------|
 | `--help`, `-h` | Show detailed help |
 
-For script-specific options, use `--help` on any script:
+For command-specific options, use `--help` on any command:
 ```bash
 jira-as collaborate comment add --help
 jira-as collaborate notify --help
@@ -158,7 +160,7 @@ See [references/SCRIPT_OPTIONS.md](references/SCRIPT_OPTIONS.md) for full option
 
 | Error | Solution |
 |-------|----------|
-| "Comment not found" | Verify comment ID with `get_comments.py` |
+| "Comment not found" | Verify comment ID with `jira-as collaborate comment list ISSUE-KEY` |
 | "Attachment not found" | Use `--list` to see available attachments |
 | "Permission denied" | Check visibility role/group permissions |
 | "User not found" | Use account ID (not email) for watchers |

@@ -40,23 +40,25 @@ The jira-time skill provides comprehensive time tracking and worklog management:
 - **Export timesheets** - Export to CSV/JSON for billing systems
 - **Bulk operations** - Log time to multiple issues at once
 
-## Available scripts
+## Available Commands
 
-| Script | Description |
-|--------|-------------|
-| `add_worklog.py` | Add a time entry to an issue |
-| `get_worklogs.py` | List all worklogs for an issue |
-| `update_worklog.py` | Modify an existing worklog |
-| `delete_worklog.py` | Remove a worklog entry |
-| `set_estimate.py` | Set original/remaining time estimates |
-| `get_time_tracking.py` | View time tracking summary |
-| `time_report.py` | Generate time reports |
-| `export_timesheets.py` | Export time data to CSV/JSON |
-| `bulk_log_time.py` | Log time to multiple issues |
+| Command | Description |
+|---------|-------------|
+| `jira-as time log` | Add a time entry to an issue |
+| `jira-as time worklogs` | List all worklogs for an issue |
+| `jira-as time update-worklog` | Modify an existing worklog |
+| `jira-as time delete-worklog` | Remove a worklog entry |
+| `jira-as time estimate` | Set original/remaining time estimates |
+| `jira-as time tracking` | View time tracking summary |
+| `jira-as time report` | Generate time reports |
+| `jira-as time export` | Export time data to CSV/JSON |
+| `jira-as time bulk-log` | Log time to multiple issues |
+
+All commands support `--help` for full documentation.
 
 ## Common Options
 
-All scripts support these common options:
+All commands support these common options:
 
 | Option | Description |
 |--------|-------------|
@@ -85,7 +87,7 @@ All scripts support these common options:
 
 ## Exit Codes
 
-All scripts return standard exit codes:
+All commands return standard exit codes:
 
 | Code | Meaning |
 |------|---------|
@@ -123,8 +125,8 @@ jira-as time worklogs PROJ-123 --author currentUser()
 # Filter by date range
 jira-as time worklogs PROJ-123 --since 2025-01-01 --until 2025-01-31
 
-# Output as JSON (via script directly)
-python scripts/get_worklogs.py PROJ-123 --output json
+# Output as JSON
+jira-as time worklogs PROJ-123 --output json
 ```
 
 ### Manage estimates
@@ -206,12 +208,12 @@ jira-as time delete-worklog PROJ-123 --worklog-id 12345 --yes
 
 ## Dry Run Support
 
-The following scripts support `--dry-run` for previewing changes without making modifications:
+The following commands support `--dry-run` for previewing changes without making modifications:
 
-| Script | Dry Run Behavior |
-|--------|------------------|
-| `bulk_log_time.py` | Shows which issues would receive worklogs and the time that would be logged |
-| `delete_worklog.py` | Shows worklog details that would be deleted and estimate impact |
+| Command | Dry Run Behavior |
+|---------|------------------|
+| `jira-as time bulk-log` | Shows which issues would receive worklogs and the time that would be logged |
+| `jira-as time delete-worklog` | Shows worklog details that would be deleted and estimate impact |
 
 **Dry-Run Pattern**: Always use `--dry-run` first when performing bulk operations or deleting worklogs. This preview-before-execute workflow prevents accidental data changes:
 
@@ -237,13 +239,6 @@ JIRA accepts human-readable time formats:
 
 Time tracking must be enabled in your JIRA project. If you receive an error about time tracking being disabled, ask your JIRA administrator to enable it.
 
-### Profile support
-
-All scripts support environment variables for JIRA credentials:
-
-```bash
-```
-
 ## Troubleshooting
 
 ### Common Issues
@@ -258,10 +253,10 @@ Possible causes:
 - The issue type doesn't support time tracking
 
 #### "Worklog not found"
-The worklog ID may be incorrect or the worklog was already deleted. Use `get_worklogs.py ISSUE-KEY` to list valid worklog IDs.
+The worklog ID may be incorrect or the worklog was already deleted. Use `jira-as time worklogs ISSUE-KEY` to list valid worklog IDs.
 
 #### Estimates not updating correctly
-JIRA Cloud has a known bug (JRACLOUD-67539) where estimates may not update as expected. Workaround: Set both original and remaining estimates together using `set_estimate.py`:
+JIRA Cloud has a known bug (JRACLOUD-67539) where estimates may not update as expected. Workaround: Set both original and remaining estimates together:
 ```bash
 jira-as time estimate PROJ-123 --original "2d" --remaining "1d"
 ```
@@ -277,7 +272,7 @@ Use JIRA's standard time notation:
 - Incorrect: `2 hours`, `1.5h`, `90 minutes`
 
 #### Bulk operation failures
-When using `bulk_log_time.py`:
+When using bulk time logging:
 1. Always use `--dry-run` first to preview changes
 2. Check that all issues in the JQL results are accessible
 3. Verify time tracking is enabled on all target projects
@@ -295,7 +290,7 @@ For detailed permission matrix, see [Permission Matrix](docs/reference/permissio
 ### Advanced Troubleshooting
 
 #### API rate limits
-When performing bulk operations on large result sets, scripts automatically retry with exponential backoff on 429 errors. To reduce load:
+When performing bulk operations on large result sets, the CLI automatically retries with exponential backoff on 429 errors. To reduce load:
 - Use smaller date ranges for reports
 - Filter JQL to limit results before bulk operations
 

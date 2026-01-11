@@ -13,7 +13,7 @@ allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 
 # JIRA Admin Skill
 
-Comprehensive administration tools for JIRA Cloud covering 8 major subsystems with 84+ scripts.
+Comprehensive administration tools for JIRA Cloud covering 8 major subsystems.
 
 ---
 
@@ -21,17 +21,17 @@ Comprehensive administration tools for JIRA Cloud covering 8 major subsystems wi
 
 **8 Major Administration Areas:**
 
-| Area | Scripts | Key Operations |
-|------|---------|----------------|
-| **Project Management** | 14 | Create, configure, archive, restore projects and categories |
-| **Automation Rules** | 12 | Discover, manage, invoke automation rules and templates |
-| **Permission Schemes** | 7 | Control who can do what across projects |
-| **Permission Diagnostics** | 4 | Check permissions, diagnose 403 errors, manage project roles |
-| **User & Group Management** | 8 | Find users, create groups, manage membership |
-| **Notification Schemes** | 7 | Configure who receives what notifications |
-| **Screen Management** | 10 | Control which fields appear in issue workflows |
-| **Issue Types & Schemes** | 13 | Define work item types and their availability |
-| **Workflow Management** | 9 | Explore and assign issue lifecycle workflows |
+| Area | Key Operations |
+|------|----------------|
+| **Project Management** | Create, configure, archive, restore projects and categories |
+| **Automation Rules** | Discover, manage, invoke automation rules and templates |
+| **Permission Schemes** | Control who can do what across projects |
+| **Permission Diagnostics** | Check permissions, diagnose 403 errors, manage project roles |
+| **User & Group Management** | Find users, create groups, manage membership |
+| **Notification Schemes** | Configure who receives what notifications |
+| **Screen Management** | Control which fields appear in issue workflows |
+| **Issue Types & Schemes** | Define work item types and their availability |
+| **Workflow Management** | Explore and assign issue lifecycle workflows |
 
 ---
 
@@ -45,7 +45,7 @@ Comprehensive administration tools for JIRA Cloud covering 8 major subsystems wi
 - [Setting up notifications](docs/WORKFLOWS.md#configuring-notification-rules-for-team-5-steps) - 5 steps
 
 ### Choose Your Task
-- [I want to do X, find the script](docs/DECISION-TREE.md) - Quick decision tree
+- [I want to do X, find the command](docs/DECISION-TREE.md) - Quick decision tree
 - [I need command syntax](docs/QUICK-REFERENCE.md) - One-page cheat sheet
 - [I'm learning JIRA admin](docs/BEST_PRACTICES.md) - Comprehensive best practices
 - [I need detailed guides](docs/subsystems/) - Per-subsystem deep dives
@@ -408,7 +408,7 @@ jira-admin/
 ├── SKILL.md                 # This file - skill overview (discovery)
 ├── docs/
 │   ├── BEST_PRACTICES.md    # Comprehensive best practices
-│   ├── DECISION-TREE.md     # Find the right script
+│   ├── DECISION-TREE.md     # Find the right command
 │   ├── WORKFLOWS.md         # Step-by-step workflows
 │   ├── QUICK-REFERENCE.md   # Command syntax reference
 │   ├── VOODOO_CONSTANTS.md  # Field IDs, event IDs, constants
@@ -422,6 +422,5 @@ jira-admin/
 │       ├── issue-types-guide.md
 │       ├── issue-type-schemes-guide.md
 │       └── workflow-management-guide.md
-├── assets/templates/        # JSON templates
-└── scripts/                 # All 84+ Python scripts
+└── assets/templates/        # JSON templates
 ```

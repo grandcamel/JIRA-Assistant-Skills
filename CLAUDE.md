@@ -88,68 +88,32 @@ jira-as search query "project = PROJ"
 - Clear command examples help Claude execute correctly on first try
 - Skill does NOT execute commands itself - it provides instructions for Claude to follow
 
-## Adding Scripts
-
-1. Place in skill's `scripts/` directory
-2. Import: `from jira_assistant_skills_lib import ...`
-3. Use shared utilities from `shared/scripts/script_utils.py`
-4. Add shebang `#!/usr/bin/env python3`, make executable
-5. Update skill's SKILL.md
-
-**Script utilities** (`shared/scripts/script_utils.py`):
-- `add_common_args(parser)` - Adds `--output` arg
-- `add_bulk_args(parser)` - Adds `--dry-run`, `--max-issues`, `--yes` for bulk ops
-- `parse_comma_list(value)` - Parse "a,b,c" → ["a", "b", "c"]
-- `parse_json_arg(value)` - Parse JSON string args
-- `format_output(result, format)` - Handle text vs JSON output
-- `run_script(main_func)` - Wrapper with standard error handling
-- `@script_main` - Decorator version of `run_script`
-- `ScriptResult` - Helper for building structured results
-
-**Script template**:
-```python
-#!/usr/bin/env python3
-import argparse
-import sys
-sys.path.insert(0, str(__file__).replace("/scripts/my_script.py", "/../shared/scripts"))
-
-from jira_assistant_skills_lib import get_jira_client, JiraError
-from jira_assistant_skills_lib.validators import validate_issue_key
-from script_utils import add_common_args, format_output, run_script
-
-def main(argv: list[str] | None = None):
-    parser = argparse.ArgumentParser(...)
-    add_common_args(parser)  # Adds --output
-    args = parser.parse_args(argv)
-
-    client = get_jira_client()
-    result = client.get_issue(args.issue_key)
-    format_output(result, args.output, success_message=f"Found: {result['key']}")
-
-if __name__ == '__main__':
-    run_script(main)  # Handles JiraError, KeyboardInterrupt, etc.
-```
-
 ## Adding Skills
+
+Skills are pure documentation - all implementation is in the CLI (`src/jira_assistant_skills/cli/commands/`).
 
 ```
 plugins/jira-assistant-skills/skills/new-skill/
 ├── SKILL.md              # Description for autonomous discovery
-├── scripts/              # Executable Python scripts
-├── tests/                # Unit and integration tests
-├── references/           # API docs, guides (optional)
+├── docs/                 # Guides and documentation
+├── references/           # API docs, quick references (optional)
 └── assets/templates/     # JSON templates (optional)
 ```
 
 **SKILL.md format**:
 - "When to use this skill" section for autonomous discovery
 - "What this skill does" with feature list
-- "Available scripts" with descriptions
-- "Examples" with concrete bash commands
+- "Available Commands" with CLI command examples
+- Examples showing `jira-as` CLI commands
 
-## Available Scripts
+**Adding CLI commands**:
+1. Add command functions to `src/jira_assistant_skills/cli/commands/<skill>_cmds.py`
+2. Add tests to `src/jira_assistant_skills/tests/commands/test_<skill>_cmds.py`
+3. Update the skill's SKILL.md to document the new commands
 
-Scripts in `scripts/` for development and testing:
+## Development Scripts
+
+Scripts in the root `scripts/` directory for development and testing:
 
 | Script | Purpose |
 |--------|---------|
@@ -234,13 +198,13 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`
 
 ## Gotchas
 
-- **Mock mode for testing**: Set `JIRA_MOCK_MODE=true` to use mock client instead of real JIRA API. Useful for skill testing without credentials.
-- **Shared test fixtures**: Common fixtures in `skills/shared/tests/conftest.py`. Import with `from shared.tests.conftest import *` in skill conftest.py files.
+- **Mock mode for testing**: Set `JIRA_MOCK_MODE=true` to use mock client instead of real JIRA API. Useful for testing without credentials.
+- **Test fixtures**: Common fixtures in `src/jira_assistant_skills/tests/conftest.py`.
 - **Skill routing**: The `jira-assistant` hub skill routes to specific skills based on descriptions. If routing fails (goes to setup instead of skill), check SKILL.md "When to use" sections.
-- **Script imports**: Scripts must use `from jira_assistant_skills_lib import ...` not relative imports. The library is installed separately.
 - **SKILL.md discovery**: Claude reads SKILL.md files to understand capabilities. Keep "When to use this skill" section accurate and specific.
 - **jira-as CLI from wheel, not editable**: The `jira-as` CLI is defined in root `pyproject.toml`. Editable installs (`pip install -e .`) fail due to broken venv symlinks in skill directories. Use `pip install dist/*.whl` or build fresh wheel with `hatch build`.
-- **Rebuild wheel after changes**: Changes to the package (CLI, skills) require rebuilding the wheel (`hatch build`) before they take effect. The wheel is NOT auto-rebuilt.
+- **Rebuild wheel after changes**: Changes to the package (CLI, commands) require rebuilding the wheel (`hatch build`) before they take effect. The wheel is NOT auto-rebuilt.
+- **Skills are documentation only**: All implementation logic is in `src/jira_assistant_skills/cli/commands/`. Skills provide SKILL.md documentation that Claude uses to understand capabilities and execute CLI commands.
 
 ## Best Practices
 

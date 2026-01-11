@@ -47,13 +47,24 @@ Use the single test runner for rapid iteration:
 
 ## Test Organization
 
+Unit tests are located in the CLI package:
+
 ```
-plugins/jira-assistant-skills/skills/<skill>/tests/
-├── conftest.py           # Skill-specific fixtures
-├── fixtures/             # Test data and mock responses
-├── test_*.py             # Unit tests
-├── unit/                 # Additional unit test modules (optional)
-└── live_integration/     # Live API tests (excluded from unit tests)
+src/jira_assistant_skills/tests/
+├── conftest.py                    # Shared test fixtures
+└── commands/
+    ├── conftest.py                # Command test fixtures
+    ├── test_issue_cmds.py         # Issue command tests
+    ├── test_lifecycle_cmds.py     # Lifecycle command tests
+    ├── test_search_cmds.py        # Search command tests
+    └── ...                        # Other command tests
+```
+
+Live integration tests remain in the skills directory:
+
+```
+plugins/jira-assistant-skills/skills/<skill>/
+└── tests/live_integration/        # Live API tests (excluded from unit tests)
 ```
 
 ## Test Coverage
@@ -154,8 +165,8 @@ pytest test_routing.py --otel --otlp-endpoint http://localhost:4318 -v
 1. **Commit after all tests pass** - capture working code immediately
 2. **Two-commit pattern per feature**:
    ```bash
-   test(jira-search): add failing tests for jql_validate
-   feat(jira-search): implement jql_validate.py (7/7 tests passing)
+   test(jira-search): add failing tests for validate command
+   feat(jira-search): implement validate command (7/7 tests passing)
    ```
-3. **Include test counts**: `feat(jira-agile): implement create_sprint.py (6/6 tests passing)`
+3. **Include test counts**: `feat(jira-agile): implement sprint create command (6/6 tests passing)`
 4. **Never commit failing tests** - main branch should always have passing tests

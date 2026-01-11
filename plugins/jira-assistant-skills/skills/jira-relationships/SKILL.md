@@ -79,25 +79,29 @@ This skill provides issue relationship operations:
    - Create "clones" link to original
    - Optionally copy subtasks and links
 
-## Available scripts
+## Available Commands
 
-- `get_link_types.py` - List available link types
-- `link_issue.py` - Create link between issues
-- `get_links.py` - View links for an issue
-- `unlink_issue.py` - Remove issue links
-- `get_blockers.py` - Find blocker chain (recursive)
-- `get_dependencies.py` - Find all dependencies
-- `link_stats.py` - Analyze link statistics for issues/projects
-- `bulk_link.py` - Bulk link multiple issues
-- `clone_issue.py` - Clone issue with links
+| Command | Description |
+|---------|-------------|
+| `jira-as relationships link-types` | List available link types |
+| `jira-as relationships link` | Create link between issues |
+| `jira-as relationships get-links` | View links for an issue |
+| `jira-as relationships unlink` | Remove issue links |
+| `jira-as relationships get-blockers` | Find blocker chain (recursive) |
+| `jira-as relationships get-dependencies` | Find all dependencies |
+| `jira-as relationships stats` | Analyze link statistics for issues/projects |
+| `jira-as relationships bulk-link` | Bulk link multiple issues |
+| `jira-as relationships clone` | Clone issue with links |
+
+All commands support `--help` for full documentation.
 
 ## Common Options
 
-All scripts support these common options:
+All commands support these common options:
 
 | Option | Description |
 |--------|-------------|
-| `--output FORMAT` | Output format: text, json (some scripts also support mermaid, dot, plantuml, d2) |
+| `--output FORMAT` | Output format: text, json (some commands also support mermaid, dot, plantuml, d2) |
 | `--help` | Show help message and exit |
 
 ## Examples
@@ -172,7 +176,7 @@ d2 deps.d2 deps.svg
 
 ## Exporting Dependency Graphs
 
-Use `get_dependencies.py` with `--output` flag to generate diagrams:
+Use `jira-as relationships get-dependencies` with `--output` flag to generate diagrams:
 - Formats: `text` (default), `json`, `mermaid` (GitHub docs), `dot` (Graphviz), `plantuml`, `d2`
 - All formats include status-based coloring and link type labels
 - Run `jira-as relationships get-dependencies --help` for rendering instructions
@@ -227,7 +231,7 @@ Use `--blocks` when source issue blocks target; use `--is-blocked-by` when sourc
 - Some fields may not be cloneable (e.g., custom field restrictions)
 
 ### Circular dependency detected
-- The `get_blockers.py` script automatically detects and reports cycles
+- The blocker analysis command automatically detects and reports cycles
 - Review the blocker chain to identify and break the cycle
 - Consider whether the blocking relationship is correctly modeled
 

@@ -216,7 +216,6 @@ Requires JIRA credentials via environment variables (`JIRA_SITE_URL`, `JIRA_EMAI
 | Document | Purpose |
 |----------|---------|
 | [docs/QUICK_START.md](docs/QUICK_START.md) | Get started in 5 minutes |
-| [docs/SCRIPT_REFERENCE.md](docs/SCRIPT_REFERENCE.md) | All scripts with examples |
 | [references/jql_reference.md](references/jql_reference.md) | JQL syntax reference |
 | [references/BEST_PRACTICES.md](references/BEST_PRACTICES.md) | Expert guide |
 | [references/TROUBLESHOOTING.md](references/TROUBLESHOOTING.md) | Error solutions |
@@ -226,7 +225,6 @@ Requires JIRA credentials via environment variables (`JIRA_SITE_URL`, `JIRA_EMAI
 
 Pre-configured JQL templates:
 - `assets/templates/jql_templates.json` - Common search patterns
-- `assets/SCRIPT_SELECTOR.json` - Script selection guide
 - `assets/ERROR_SOLUTIONS.json` - Error catalog
 
 ## Related skills

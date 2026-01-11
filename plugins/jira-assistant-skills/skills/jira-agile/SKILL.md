@@ -41,21 +41,15 @@ See [Skill Selection Guide](docs/SKILL_SELECTION.md) for detailed guidance.
 
 Create epics with Epic Name and Color fields, link stories/tasks to epics, and track epic progress with story point calculations.
 
-**Scripts:** `create_epic.py`, `add_to_epic.py`, `get_epic.py`
-
 See [epic examples](examples/epic-management.md) for detailed usage.
 
 ### 2. Subtask Management
 
 Create subtasks linked to parent issues with automatic project inheritance and time estimate support.
 
-**Scripts:** `create_subtask.py`
-
 ### 3. Sprint Management
 
 List and discover sprints for a project, create sprints with dates and goals, manage sprint lifecycle (start/close), move issues to sprints or backlog, and track sprint progress.
-
-**Scripts:** `list_sprints.py`, `create_sprint.py`, `manage_sprint.py`, `move_to_sprint.py`, `get_sprint.py`
 
 See [sprint examples](examples/sprint-lifecycle.md) for detailed usage.
 
@@ -63,15 +57,11 @@ See [sprint examples](examples/sprint-lifecycle.md) for detailed usage.
 
 View board backlog with epic grouping, rank issues by priority (before/after/top/bottom).
 
-**Scripts:** `get_backlog.py`, `rank_issue.py`
-
 See [backlog examples](examples/backlog-management.md) for detailed usage.
 
 ### 5. Story Points and Estimation
 
 Set story points on single or bulk issues, validate against Fibonacci sequence, get estimation summaries grouped by status or assignee.
-
-**Scripts:** `estimate_issue.py`, `get_estimates.py`
 
 See [estimation examples](examples/estimation.md) for detailed usage.
 
@@ -79,81 +69,67 @@ See [estimation examples](examples/estimation.md) for detailed usage.
 
 Calculate team velocity from completed sprints. Shows average story points per sprint, trends, and historical data for planning.
 
-**Scripts:** `get_velocity.py`
-
-## Available scripts
+## Available Commands
 
 ### Epic Management
-- `create_epic.py` - Create new epic issues with Epic Name and Color
-- `add_to_epic.py` - Add or remove issues from epics (bulk operations supported)
-- `get_epic.py` - Retrieve epic details with progress and story point calculations
-
-### Subtask Management
-- `create_subtask.py` - Create subtasks linked to parent issues
-
-### Sprint Management
-- `list_sprints.py` - List sprints for a board or project (by state: active, closed, future)
-- `create_sprint.py` - Create new sprints on Scrum boards
-- `manage_sprint.py` - Start, close, and update sprints
-- `move_to_sprint.py` - Move issues to sprints or backlog
-- `get_sprint.py` - Retrieve sprint details with progress tracking (supports --board --active)
-
-### Backlog Management
-- `rank_issue.py` - Reorder issues in backlog (before/after/top/bottom)
-- `get_backlog.py` - Retrieve board backlog with filtering and epic grouping
-
-### Story Points and Estimation
-- `estimate_issue.py` - Set story points on issues (single, bulk, JQL)
-- `get_estimates.py` - Get story point summaries for sprints, projects, or epics
-
-### Velocity Tracking
-- `get_velocity.py` - Calculate velocity from completed sprints
-
-## Quick examples
-
 ```bash
-# Create epic and add issues
 jira-as agile epic create --project PROJ --summary "Mobile App MVP"
 jira-as agile epic create --project PROJ --summary "MVP" --epic-name "Mobile MVP" --color blue
 jira-as agile epic get PROJ-100 --with-children
 jira-as agile epic add-issues --epic PROJ-100 --issues PROJ-101,PROJ-102
+jira-as agile epic remove-issues --epic PROJ-100 --issues PROJ-103
+```
 
-# Create subtasks
+### Subtask Management
+```bash
 jira-as agile subtask --parent PROJ-101 --summary "Implement login API"
 jira-as agile subtask --parent PROJ-101 --summary "Task" --assignee self --estimate 4h
+```
 
-# List and discover sprints
+### Sprint Management
+```bash
 jira-as agile sprint list --project DEMO                    # List all sprints for project
 jira-as agile sprint list --project DEMO --state active     # Find active sprint
 jira-as agile sprint list --board 123 --state closed        # List closed sprints
 jira-as agile sprint get --board 123 --active               # Get active sprint details
 jira-as agile sprint get 456 --include-issues               # Get sprint with issues
-
-# Create and manage sprints
 jira-as agile sprint create --board 123 --name "Sprint 42" --goal "Launch MVP"
 jira-as agile sprint move-issues --sprint 456 --issues PROJ-101,PROJ-102
 jira-as agile sprint manage --sprint 456 --start
 jira-as agile sprint manage --sprint 456 --close --move-incomplete-to 457
+```
 
-# Estimate and track
+### Backlog Management
+```bash
+jira-as agile backlog --board 123
+jira-as agile backlog --board 123 --group-by epic
+jira-as agile rank PROJ-101 --before PROJ-100
+jira-as agile rank PROJ-101 --after PROJ-102
+jira-as agile rank PROJ-101 --position top
+```
+
+### Story Points and Estimation
+```bash
 jira-as agile estimate PROJ-101 --points 5
 jira-as agile estimates --project PROJ
 jira-as agile estimates --sprint 456 --group-by assignee
+```
 
-# Velocity tracking
+### Velocity Tracking
+```bash
 jira-as agile velocity --project PROJ                     # Last 3 sprints
 jira-as agile velocity --project PROJ --sprints 5         # Last 5 sprints
 jira-as agile velocity --board 123 --output json          # JSON output
 ```
 
-See [Quick Start Guide](docs/QUICK_START.md) for essential workflows.
+All commands support `--help` for full documentation.
 
 ## Common options
 
-All scripts support:
+All commands support:
 - `--help` - Show usage and examples
 
-Most scripts also support:
+Most commands also support:
 - `--output json` - Output as JSON (query and creation commands)
 - `--dry-run` - Preview changes (where applicable)
 

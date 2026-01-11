@@ -71,7 +71,7 @@ JIRA Cloud requires Atlassian Document Format for rich text:
 | `markdown_to_adf()` | Markdown → ADF (headings, bold, italic, code, lists, links) |
 | `adf_to_text()` | ADF → plain text extraction |
 
-Scripts accept `--format` flag: text (default), markdown, or adf (raw JSON).
+CLI commands accept `--format` flag: text (default), markdown, or adf (raw JSON).
 
 ## Common API Patterns
 

@@ -42,42 +42,29 @@ Use this skill when you need to:
 
 **IMPORTANT:** Always use the `jira-as` CLI. Never run Python scripts directly.
 
-## Learning Path
+## Available Commands
 
-### Phase 1: Core Git Integration (30-45 min)
+All commands support `--help` for full documentation.
 
-Learn to automate Git workflow integration. Start here if you're new to JIRA-Git integration.
-
-| Script | Purpose |
-|--------|---------|
-| `create_branch_name.py` | Generate consistent branch names from issues |
-| `parse_commit_issues.py` | Extract issue keys from commit messages |
-| `link_commit.py` | Link commits to JIRA issues |
-| `get_issue_commits.py` | Retrieve development information |
-
-### Phase 2: Pull Request & CI/CD (45-60 min)
-
-Integrate pull requests and deployment tracking. Prerequisites: Complete Phase 1 first.
-
-| Script | Purpose |
-|--------|---------|
-| `link_pr.py` | Automatically link PRs to JIRA |
-| `create_pr_description.py` | Generate PR descriptions from issues |
-
-**Advanced:** See [CI/CD Integration Guide](docs/guides/ci-cd-integration.md) for pipeline setup.
+| Command | Description |
+|---------|-------------|
+| `jira-as dev branch-name` | Generate consistent branch names from issues |
+| `jira-as dev parse-commits` | Extract issue keys from commit messages |
+| `jira-as dev link-commit` | Link commits to JIRA issues |
+| `jira-as dev get-commits` | Retrieve development information |
+| `jira-as dev link-pr` | Automatically link PRs to JIRA |
+| `jira-as dev pr-description` | Generate PR descriptions from issues |
 
 ### Recommended Starting Points
 
 | Role | Start With |
 |------|------------|
-| Developer | Phase 1, try `create_branch_name.py` |
-| Git Administrator | Phase 1, then Phase 2 |
-| DevOps Engineer | Phase 2 CI/CD integration |
-| Release Manager | Phase 2 deployment tracking |
+| Developer | `jira-as dev branch-name PROJ-123` |
+| Git Administrator | Branch names, then PR integration |
+| DevOps Engineer | CI/CD integration with `link-pr` and `link-commit` |
+| Release Manager | Deployment tracking with `link-pr` |
 
-## Scripts Overview
-
-All scripts support `--help` for detailed usage. See [scripts/REFERENCE.md](scripts/REFERENCE.md) for complete options.
+**Advanced:** See [CI/CD Integration Guide](docs/guides/ci-cd-integration.md) for pipeline setup.
 
 ### Quick Examples
 
@@ -190,18 +177,6 @@ See [Common Pitfalls Guide](docs/guides/common-pitfalls.md) for solutions to:
 | Release notes | [Release Notes](docs/guides/release-notes.md) |
 
 For comprehensive guidance, see [Best Practices Guide](docs/BEST_PRACTICES.md).
-
-## Scripts Summary
-
-| Phase | Script | Purpose | Tests |
-|-------|--------|---------|-------|
-| 1 | create_branch_name.py | Generate branch names | 10 |
-| 1 | parse_commit_issues.py | Extract issue keys | 8 |
-| 1 | link_commit.py | Link commits to issues | 6 |
-| 1 | get_issue_commits.py | Get linked commits | 5 |
-| 2 | link_pr.py | Link PRs to issues | 7 |
-| 2 | create_pr_description.py | Generate PR descriptions | 6 |
-| **Total** | **6 scripts** | | **42 tests** |
 
 ## Related Skills
 

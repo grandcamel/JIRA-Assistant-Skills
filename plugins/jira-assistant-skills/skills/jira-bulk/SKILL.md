@@ -41,17 +41,17 @@ jira-as bulk transition --jql "project=PROJ AND status='In Progress'" --to "Done
 
 For more patterns, see [Quick Start Guide](docs/QUICK_START.md).
 
-## Available Scripts
+## Available Commands
 
-| Script | Purpose | Example |
-|--------|---------|---------|
-| `bulk_transition.py` | Move issues to new status | `--jql "..." --to "Done"` |
-| `bulk_assign.py` | Assign issues to user | `--jql "..." --assignee john` |
-| `bulk_set_priority.py` | Set issue priority | `--jql "..." --priority High` |
-| `bulk_clone.py` | Clone issues | `--jql "..." --include-subtasks` |
-| `bulk_delete.py` | **Delete issues permanently** | `--jql "..." --dry-run` |
+| Command | Purpose | Example |
+|---------|---------|---------|
+| `jira-as bulk transition` | Move issues to new status | `--jql "..." --to "Done"` |
+| `jira-as bulk assign` | Assign issues to user | `--jql "..." --assignee john` |
+| `jira-as bulk set-priority` | Set issue priority | `--jql "..." --priority High` |
+| `jira-as bulk clone` | Clone issues | `--jql "..." --include-subtasks` |
+| `jira-as bulk delete` | **Delete issues permanently** | `--jql "..." --dry-run` |
 
-For help choosing, see [Operations Guide](docs/OPERATIONS_GUIDE.md).
+All commands support `--help` for full documentation.
 
 ## Common Options
 
@@ -183,7 +183,7 @@ For detailed error recovery, see [Error Recovery Playbook](docs/ERROR_RECOVERY.m
 | Guide | When to Use |
 |-------|-------------|
 | [Quick Start](docs/QUICK_START.md) | Get started in 5 minutes |
-| [Operations Guide](docs/OPERATIONS_GUIDE.md) | Choose the right script |
+| [Operations Guide](docs/OPERATIONS_GUIDE.md) | Choose the right command |
 | [Checkpoint Guide](docs/CHECKPOINT_GUIDE.md) | Resume interrupted operations |
 | [Error Recovery](docs/ERROR_RECOVERY.md) | Handle failures |
 | [Safety Checklist](docs/SAFETY_CHECKLIST.md) | Pre-flight verification |
