@@ -62,7 +62,6 @@ def create_issue(
     components: list | None = None,
     template: str | None = None,
     custom_fields: dict | None = None,
-    profile: str | None = None,
     epic: str | None = None,
     sprint: int | None = None,
     story_points: float | None = None,
@@ -85,7 +84,6 @@ def create_issue(
         components: List of component names
         template: Template name to use as base
         custom_fields: Additional custom fields
-        profile: JIRA profile to use
         epic: Epic key to link this issue to
         sprint: Sprint ID to add this issue to
         story_points: Story point estimate
@@ -101,8 +99,8 @@ def create_issue(
 
     # Apply project context defaults for unspecified fields
     defaults_applied = []
-    if not no_defaults and has_project_context(project, profile):
-        defaults = get_project_defaults(project, issue_type, profile)
+    if not no_defaults and has_project_context(project):
+        defaults = get_project_defaults(project, issue_type)
         if defaults:
             if priority is None and "priority" in defaults:
                 priority = defaults["priority"]
@@ -146,7 +144,7 @@ def create_issue(
     if assignee:
         if assignee.lower() == "self":
             # Will resolve to current user's account ID
-            client = get_jira_client(profile)
+            client = get_jira_client()
             account_id = client.get_current_user_id()
             fields["assignee"] = {"accountId": account_id}
             client.close()
@@ -166,7 +164,7 @@ def create_issue(
 
     # Agile fields - get field IDs from configuration
     if epic or story_points is not None:
-        agile_fields = get_agile_fields(profile)
+        agile_fields = get_agile_fields()
 
         if epic:
             epic = validate_issue_key(epic)
@@ -179,7 +177,7 @@ def create_issue(
     if estimate:
         fields["timetracking"] = {"originalEstimate": estimate}
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.create_issue(fields)
 
     # Add to sprint after creation (sprint assignment requires issue to exist)
@@ -260,7 +258,6 @@ def main(argv: list[str] | None = None):
         "--relates-to", help="Comma-separated issue keys this issue relates to"
     )
     parser.add_argument("--estimate", help="Original time estimate (e.g., 2d, 4h, 1w)")
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
     parser.add_argument(
         "--no-defaults", action="store_true", help="Disable project context defaults"
     )
@@ -296,7 +293,6 @@ def main(argv: list[str] | None = None):
             components=components,
             template=args.template,
             custom_fields=custom_fields,
-            profile=args.profile,
             epic=args.epic,
             sprint=args.sprint,
             story_points=args.story_points,

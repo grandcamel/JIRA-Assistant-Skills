@@ -20,18 +20,17 @@ from jira_assistant_skills_lib import (
 )
 
 
-def create_organization_func(name: str, profile: str | None = None) -> dict:
+def create_organization_func(name: str) -> dict:
     """
     Create an organization.
 
     Args:
         name: Organization name
-        profile: JIRA profile to use
 
     Returns:
         Created organization data
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         return client.create_organization(name)
 
 
@@ -65,7 +64,6 @@ Examples:
         action="store_true",
         help="Show what would be created without creating",
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Show full API response"
     )
@@ -83,7 +81,7 @@ Examples:
             print(f"  Name: {args.name}")
             return 0
 
-        organization = create_organization_func(name=args.name, profile=args.profile)
+        organization = create_organization_func(name=args.name)
 
         if args.output == "json":
             if args.verbose:

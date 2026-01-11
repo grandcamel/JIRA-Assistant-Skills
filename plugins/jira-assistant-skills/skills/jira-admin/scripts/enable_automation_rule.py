@@ -8,7 +8,7 @@ Usage:
     python enable_automation_rule.py RULE_ID
     python enable_automation_rule.py --name "Rule Name"
     python enable_automation_rule.py RULE_ID --dry-run
-    python enable_automation_rule.py RULE_ID --profile development
+    python enable_automation_rule.py RULE_ID
 """
 
 import argparse
@@ -31,7 +31,6 @@ def enable_automation_rule(
     rule_id: str | None = None,
     name: str | None = None,
     dry_run: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Enable an automation rule.
@@ -41,7 +40,6 @@ def enable_automation_rule(
         rule_id: Rule UUID/ARI to enable
         name: Rule name to search for (alternative to rule_id)
         dry_run: If True, preview the change without applying
-        profile: JIRA profile to use
 
     Returns:
         Updated rule data or dry-run preview
@@ -51,7 +49,7 @@ def enable_automation_rule(
         ValueError: If neither rule_id nor name provided
     """
     if client is None:
-        client = get_automation_client(profile)
+        client = get_automation_client()
 
     if not rule_id and not name:
         raise ValueError("Either rule_id or name must be provided")
@@ -110,7 +108,7 @@ Examples:
     python enable_automation_rule.py RULE_ID --output json
 
     # Use specific profile
-    python enable_automation_rule.py RULE_ID --profile development
+    python enable_automation_rule.py RULE_ID
         """,
     )
 
@@ -126,7 +124,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -138,7 +135,6 @@ Examples:
             rule_id=args.rule_id,
             name=args.name,
             dry_run=args.dry_run,
-            profile=args.profile,
         )
 
         if args.output == "json":

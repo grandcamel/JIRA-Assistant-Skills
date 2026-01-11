@@ -456,21 +456,6 @@ class TestTimeReportMain:
             captured = capsys.readouterr()
             assert "Time Report" in captured.out
 
-    def test_main_with_profile(self, mock_jira_client, capsys):
-        """Test main with --profile."""
-        mock_jira_client.search_issues.return_value = {"issues": []}
-
-        from unittest.mock import patch
-
-        with patch(
-            "time_report.get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            from time_report import main
-
-            main(["--project", "PROJ", "--profile", "dev"])
-
-            mock_get_client.assert_called_with("dev")
-
     def test_main_jira_error(self, mock_jira_client, capsys):
         """Test main with JIRA API error."""
         from jira_assistant_skills_lib import JiraError

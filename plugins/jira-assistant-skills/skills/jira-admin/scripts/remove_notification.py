@@ -63,7 +63,6 @@ def remove_notification(
     force: bool = False,
     confirmed: bool = True,
     dry_run: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Remove a notification from a notification scheme.
@@ -78,7 +77,6 @@ def remove_notification(
         force: If True, bypass confirmation prompt
         confirmed: If False and not force, raise error requiring confirmation
         dry_run: If True, show what would be removed without removing
-        profile: JIRA profile to use
 
     Returns:
         Dict with success status and removed notification details
@@ -89,7 +87,7 @@ def remove_notification(
     """
     close_client = False
     if client is None:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         close_client = True
 
     try:
@@ -281,7 +279,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -305,7 +302,6 @@ Examples:
             force=args.force,
             confirmed=confirmed,
             dry_run=args.dry_run,
-            profile=args.profile,
         )
 
         if args.output == "json":

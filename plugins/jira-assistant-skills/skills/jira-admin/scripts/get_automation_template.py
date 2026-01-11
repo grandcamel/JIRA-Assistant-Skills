@@ -8,7 +8,7 @@ including required parameters.
 Usage:
     python get_automation_template.py TEMPLATE_ID
     python get_automation_template.py TEMPLATE_ID --output json
-    python get_automation_template.py TEMPLATE_ID --profile development
+    python get_automation_template.py TEMPLATE_ID
 """
 
 import argparse
@@ -26,7 +26,7 @@ from jira_assistant_skills_lib import (
 
 
 def get_automation_template(
-    client=None, template_id: str | None = None, profile: str | None = None
+    client=None, template_id: str | None = None
 ) -> dict[str, Any]:
     """
     Get automation template details.
@@ -34,7 +34,6 @@ def get_automation_template(
     Args:
         client: AutomationClient instance (optional, created if not provided)
         template_id: Template ID to fetch
-        profile: JIRA profile to use
 
     Returns:
         Template configuration
@@ -43,7 +42,7 @@ def get_automation_template(
         ValueError: If template_id not provided
     """
     if client is None:
-        client = get_automation_client(profile)
+        client = get_automation_client()
 
     if not template_id:
         raise ValueError("template_id is required")
@@ -104,7 +103,7 @@ Examples:
     python get_automation_template.py template-001 --output json
 
     # Use specific profile
-    python get_automation_template.py template-001 --profile development
+    python get_automation_template.py template-001
         """,
     )
 
@@ -116,13 +115,12 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         template = get_automation_template(
-            template_id=args.template_id, profile=args.profile
+            template_id=args.template_id
         )
 
         if args.output == "json":

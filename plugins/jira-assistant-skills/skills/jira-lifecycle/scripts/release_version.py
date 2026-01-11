@@ -27,7 +27,6 @@ def release_version(
     version_id: str,
     release_date: str | None = None,
     description: str | None = None,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Release a version by ID.
@@ -36,7 +35,6 @@ def release_version(
         version_id: Version ID
         release_date: Optional release date (YYYY-MM-DD), defaults to today
         description: Optional updated description
-        profile: JIRA profile to use
 
     Returns:
         Updated version data
@@ -50,7 +48,7 @@ def release_version(
     if description:
         update_data["description"] = description
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.update_version(version_id, **update_data)
     client.close()
 
@@ -62,7 +60,6 @@ def release_version_by_name(
     version_name: str,
     release_date: str | None = None,
     description: str | None = None,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Release a version by name (requires project lookup).
@@ -72,7 +69,6 @@ def release_version_by_name(
         version_name: Version name
         release_date: Optional release date (YYYY-MM-DD)
         description: Optional updated description
-        profile: JIRA profile to use
 
     Returns:
         Updated version data
@@ -81,7 +77,7 @@ def release_version_by_name(
         ValidationError: If version name not found in project
     """
     # Get all versions for the project
-    client = get_jira_client(profile)
+    client = get_jira_client()
     versions = client.get_versions(project)
 
     # Find version by name
@@ -170,7 +166,6 @@ Examples:
         action="store_true",
         help="Show what would be released without releasing",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -214,7 +209,6 @@ Examples:
                     version_id=args.id,
                     release_date=args.date,
                     description=args.description,
-                    profile=args.profile,
                 )
                 version_name = version.get("name", args.id)
             else:
@@ -223,7 +217,6 @@ Examples:
                     version_name=args.name,
                     release_date=args.date,
                     description=args.description,
-                    profile=args.profile,
                 )
                 version_name = version.get("name", args.name)
 

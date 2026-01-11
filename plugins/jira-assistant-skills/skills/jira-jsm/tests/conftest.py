@@ -661,7 +661,7 @@ def mock_config_manager_all(mock_jira_client, monkeypatch):
     for module_name in script_modules:
         try:
             monkeypatch.setattr(
-                f"{module_name}.get_jira_client", lambda profile=None: mock_jira_client
+                f"{module_name}.get_jira_client", lambda: mock_jira_client
             )
         except (AttributeError, ModuleNotFoundError):
             # Module not yet imported or doesn't use get_jira_client

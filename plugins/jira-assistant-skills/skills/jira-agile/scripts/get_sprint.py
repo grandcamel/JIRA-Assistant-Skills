@@ -28,7 +28,6 @@ from jira_assistant_skills_lib import (
 def get_sprint(
     sprint_id: int,
     with_issues: bool = False,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -37,7 +36,6 @@ def get_sprint(
     Args:
         sprint_id: Sprint ID to retrieve
         with_issues: Include issues and calculate progress
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -51,14 +49,14 @@ def get_sprint(
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
 
     try:
         # Get Story Points field ID from configuration
-        story_points_field = get_agile_field("story_points", profile)
+        story_points_field = get_agile_field("story_points")
 
         # Fetch sprint details
         sprint = client.get_sprint(sprint_id)
@@ -120,14 +118,13 @@ def get_sprint(
 
 
 def get_active_sprint_for_board(
-    board_id: int, profile: str | None = None, client=None
+    board_id: int, client=None
 ) -> dict:
     """
     Get the currently active sprint for a board.
 
     Args:
         board_id: Board ID to query
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -141,7 +138,7 @@ def get_active_sprint_for_board(
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -252,7 +249,6 @@ def main(argv: list[str] | None = None):
         action="store_true",
         help="Include issues and calculate progress",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
@@ -266,7 +262,7 @@ def main(argv: list[str] | None = None):
             if not args.board:
                 parser.error("--board is required with --active")
             result = get_active_sprint_for_board(
-                board_id=args.board, profile=args.profile
+                board_id=args.board
             )
             if not result:
                 print("No active sprint found for this board")
@@ -277,7 +273,6 @@ def main(argv: list[str] | None = None):
             result = get_sprint(
                 sprint_id=args.sprint_id,
                 with_issues=args.with_issues,
-                profile=args.profile,
             )
 
         output = format_sprint_output(result, format=args.output)

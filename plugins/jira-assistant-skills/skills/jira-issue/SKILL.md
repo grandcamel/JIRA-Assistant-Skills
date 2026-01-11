@@ -55,7 +55,6 @@ All commands support `--help` for full option documentation.
 ### Global Options
 
 All commands inherit global options from the parent `jira-as` command:
-- `--profile, -p`: Select JIRA profile (e.g., `jira --profile dev issue get PROJ-123`)
 - `--output, -o`: Output format for `get` and `create` commands (text, json)
 
 ## Templates

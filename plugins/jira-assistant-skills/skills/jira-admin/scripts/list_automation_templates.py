@@ -9,7 +9,7 @@ Usage:
     python list_automation_templates.py --category "Issue Management"
     python list_automation_templates.py --output json
     python list_automation_templates.py --verbose
-    python list_automation_templates.py --profile development
+    python list_automation_templates.py
 """
 
 import argparse
@@ -32,7 +32,6 @@ def list_automation_templates(
     category: str | None = None,
     limit: int = 50,
     fetch_all: bool = False,
-    profile: str | None = None,
 ) -> list[dict[str, Any]]:
     """
     List available automation templates.
@@ -42,13 +41,12 @@ def list_automation_templates(
         category: Filter by category
         limit: Maximum results per page
         fetch_all: If True, fetch all pages
-        profile: JIRA profile to use
 
     Returns:
         List of template summaries
     """
     if client is None:
-        client = get_automation_client(profile)
+        client = get_automation_client()
 
     all_templates = []
     cursor = None
@@ -117,7 +115,7 @@ Examples:
     python list_automation_templates.py --all
 
     # Use specific profile
-    python list_automation_templates.py --profile development
+    python list_automation_templates.py
         """,
     )
 
@@ -146,7 +144,6 @@ Examples:
         default="table",
         help="Output format (default: table)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -155,7 +152,6 @@ Examples:
             category=args.category,
             limit=args.limit,
             fetch_all=args.fetch_all,
-            profile=args.profile,
         )
 
         if not templates:

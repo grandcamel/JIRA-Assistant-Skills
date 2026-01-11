@@ -28,10 +28,9 @@ def generate_sla_report(
     jql: str | None = None,
     sla_name: str | None = None,
     breached_only: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """Generate SLA compliance report."""
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         # Build JQL query
         if jql:
             query = jql
@@ -151,7 +150,6 @@ def main(argv: list[str] | None = None):
         "--breached-only", action="store_true", help="Only breached SLAs"
     )
     parser.add_argument("--output", choices=["text", "csv", "json"], default="text")
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -162,7 +160,6 @@ def main(argv: list[str] | None = None):
             jql=args.jql,
             sla_name=args.sla_name,
             breached_only=args.breached_only,
-            profile=args.profile,
         )
 
         if args.output == "json":

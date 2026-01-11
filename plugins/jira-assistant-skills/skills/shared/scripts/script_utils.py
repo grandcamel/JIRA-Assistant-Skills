@@ -85,16 +85,11 @@ def add_common_args(parser: argparse.ArgumentParser) -> None:
     Add common arguments to an argument parser.
 
     Adds:
-        --profile: JIRA profile to use
         --output: Output format (text/json)
 
     Args:
         parser: ArgumentParser instance to modify
     """
-    parser.add_argument(
-        "--profile",
-        help="JIRA profile to use (default: from config)",
-    )
     parser.add_argument(
         "--output",
         "-o",

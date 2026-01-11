@@ -24,7 +24,7 @@ class TestAssignIssue:
 
         from assign_issue import assign_issue
 
-        assign_issue("PROJ-123", user="5b10ac8d82e05b22cc7d4ef5", profile=None)
+        assign_issue("PROJ-123", user="5b10ac8d82e05b22cc7d4ef5")
 
         mock_jira_client.assign_issue.assert_called_once_with(
             "PROJ-123", "5b10ac8d82e05b22cc7d4ef5"
@@ -37,7 +37,7 @@ class TestAssignIssue:
 
         from assign_issue import assign_issue
 
-        assign_issue("PROJ-123", assign_to_self=True, profile=None)
+        assign_issue("PROJ-123", assign_to_self=True)
 
         mock_jira_client.assign_issue.assert_called_once_with("PROJ-123", "-1")
 
@@ -48,7 +48,7 @@ class TestAssignIssue:
 
         from assign_issue import assign_issue
 
-        assign_issue("PROJ-123", unassign=True, profile=None)
+        assign_issue("PROJ-123", unassign=True)
 
         mock_jira_client.assign_issue.assert_called_once_with("PROJ-123", None)
 
@@ -58,7 +58,7 @@ class TestAssignIssue:
         from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError, match="Specify exactly one"):
-            assign_issue("PROJ-123", profile=None)
+            assign_issue("PROJ-123")
 
     def test_assign_rejects_multiple_options(self):
         """Test error when multiple assignment options specified."""
@@ -66,7 +66,7 @@ class TestAssignIssue:
         from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError, match="Specify exactly one"):
-            assign_issue("PROJ-123", user="test", assign_to_self=True, profile=None)
+            assign_issue("PROJ-123", user="test", assign_to_self=True)
 
     def test_assign_rejects_user_and_unassign(self):
         """Test error when user and unassign both specified."""
@@ -74,7 +74,7 @@ class TestAssignIssue:
         from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError, match="Specify exactly one"):
-            assign_issue("PROJ-123", user="test", unassign=True, profile=None)
+            assign_issue("PROJ-123", user="test", unassign=True)
 
     def test_assign_rejects_all_options(self):
         """Test error when all assignment options specified."""
@@ -87,8 +87,7 @@ class TestAssignIssue:
                 user="test",
                 assign_to_self=True,
                 unassign=True,
-                profile=None,
-            )
+                )
 
     def test_assign_invalid_issue_key(self):
         """Test error on invalid issue key."""
@@ -96,18 +95,7 @@ class TestAssignIssue:
         from assistant_skills_lib.error_handler import ValidationError
 
         with pytest.raises(ValidationError):
-            assign_issue("invalid", user="test", profile=None)
-
-    @patch("assign_issue.get_jira_client")
-    def test_assign_issue_with_profile(self, mock_get_client, mock_jira_client):
-        """Test assigning issue with a specific profile."""
-        mock_get_client.return_value = mock_jira_client
-
-        from assign_issue import assign_issue
-
-        assign_issue("PROJ-123", user="test-user", profile="development")
-
-        mock_get_client.assert_called_once_with("development")
+            assign_issue("invalid", user="test")
 
 
 @pytest.mark.lifecycle
@@ -126,7 +114,7 @@ class TestAssignIssueErrorHandling:
         from assign_issue import assign_issue
 
         with pytest.raises(NotFoundError):
-            assign_issue("PROJ-999", user="test", profile=None)
+            assign_issue("PROJ-999", user="test")
 
     @patch("assign_issue.get_jira_client")
     def test_permission_denied(self, mock_get_client, mock_jira_client):
@@ -139,7 +127,7 @@ class TestAssignIssueErrorHandling:
         from assign_issue import assign_issue
 
         with pytest.raises(PermissionError):
-            assign_issue("PROJ-123", user="test", profile=None)
+            assign_issue("PROJ-123", user="test")
 
     @patch("assign_issue.get_jira_client")
     def test_authentication_error(self, mock_get_client, mock_jira_client):
@@ -152,7 +140,7 @@ class TestAssignIssueErrorHandling:
         from assign_issue import assign_issue
 
         with pytest.raises(AuthenticationError):
-            assign_issue("PROJ-123", user="test", profile=None)
+            assign_issue("PROJ-123", user="test")
 
     @patch("assign_issue.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -167,7 +155,7 @@ class TestAssignIssueErrorHandling:
         from assign_issue import assign_issue
 
         with pytest.raises(JiraError) as exc_info:
-            assign_issue("PROJ-123", user="test", profile=None)
+            assign_issue("PROJ-123", user="test")
         assert exc_info.value.status_code == 429
 
     @patch("assign_issue.get_jira_client")
@@ -183,7 +171,7 @@ class TestAssignIssueErrorHandling:
         from assign_issue import assign_issue
 
         with pytest.raises(JiraError) as exc_info:
-            assign_issue("PROJ-123", user="test", profile=None)
+            assign_issue("PROJ-123", user="test")
         assert exc_info.value.status_code == 500
 
     @patch("assign_issue.get_jira_client")
@@ -197,7 +185,7 @@ class TestAssignIssueErrorHandling:
         from assign_issue import assign_issue
 
         with pytest.raises(ValidationError, match="User not found"):
-            assign_issue("PROJ-123", user="nonexistent-user", profile=None)
+            assign_issue("PROJ-123", user="nonexistent-user")
 
 
 @pytest.mark.lifecycle
@@ -261,17 +249,6 @@ class TestAssignIssueMain:
         captured = capsys.readouterr()
         assert "DRY RUN" in captured.out
         mock_jira_client.assign_issue.assert_not_called()
-
-    @patch("assign_issue.get_jira_client")
-    def test_main_with_profile(self, mock_get_client, mock_jira_client, capsys):
-        """Test main with --profile."""
-        mock_get_client.return_value = mock_jira_client
-
-        from assign_issue import main
-
-        main(["PROJ-123", "--user", "alice", "--profile", "dev"])
-
-        mock_get_client.assert_called_with("dev")
 
     @patch("assign_issue.get_jira_client")
     def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):

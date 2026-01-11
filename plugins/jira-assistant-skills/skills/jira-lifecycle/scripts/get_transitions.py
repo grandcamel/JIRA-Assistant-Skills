@@ -20,20 +20,19 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_transitions(issue_key: str, profile: str | None = None) -> list:
+def get_transitions(issue_key: str) -> list:
     """
     Get available transitions for an issue.
 
     Args:
         issue_key: Issue key (e.g., PROJ-123)
-        profile: JIRA profile to use
 
     Returns:
         List of available transitions
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     transitions = client.get_transitions(issue_key)
     client.close()
 
@@ -54,12 +53,11 @@ def main(argv: list[str] | None = None):
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
-        transitions = get_transitions(issue_key=args.issue_key, profile=args.profile)
+        transitions = get_transitions(issue_key=args.issue_key)
 
         if not transitions:
             print(f"No transitions available for {args.issue_key}")

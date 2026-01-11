@@ -9,7 +9,7 @@ Usage:
     python list_notification_schemes.py --output json
     python list_notification_schemes.py --filter "default"
     python list_notification_schemes.py --show-events
-    python list_notification_schemes.py --profile production
+    python list_notification_schemes.py
 """
 
 import argparse
@@ -31,7 +31,6 @@ def list_notification_schemes(
     show_events: bool = False,
     max_results: int = 50,
     fetch_all: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     List all notification schemes.
@@ -42,14 +41,13 @@ def list_notification_schemes(
         show_events: If True, include event count per scheme
         max_results: Maximum results per API call
         fetch_all: If True, fetch all pages of results
-        profile: JIRA profile to use
 
     Returns:
         Dict with 'schemes' list and 'total' count
     """
     close_client = False
     if client is None:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         close_client = True
 
     try:
@@ -158,7 +156,7 @@ Examples:
     python list_notification_schemes.py --output json
     python list_notification_schemes.py --filter "default"
     python list_notification_schemes.py --show-events
-    python list_notification_schemes.py --profile production
+    python list_notification_schemes.py
         """,
     )
     parser.add_argument(
@@ -187,7 +185,6 @@ Examples:
         action="store_true",
         help="Fetch all pages of results",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -196,7 +193,6 @@ Examples:
             filter_name=args.filter_name,
             show_events=args.show_events,
             fetch_all=args.fetch_all,
-            profile=args.profile,
         )
 
         if args.output == "json":

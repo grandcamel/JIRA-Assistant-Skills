@@ -66,7 +66,7 @@ def list_available_templates() -> None:
 
 
 def create_service_desk(
-    name: str, key: str, project_template_key: str, profile: str | None = None
+    name: str, key: str, project_template_key: str
 ) -> dict:
     """
     Create a new service desk.
@@ -75,12 +75,11 @@ def create_service_desk(
         name: Service desk name
         key: Project key
         project_template_key: Project template key
-        profile: JIRA profile to use
 
     Returns:
         Created service desk data
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     service_desk = client.create_service_desk(name, key, project_template_key)
     client.close()
 
@@ -170,7 +169,6 @@ def main(argv: list[str] | None = None):
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -201,7 +199,7 @@ def main(argv: list[str] | None = None):
 
         # Create service desk
         service_desk = create_service_desk(
-            args.name, args.key, template_id, profile=args.profile
+            args.name, args.key, template_id
         )
 
         # Output results

@@ -268,12 +268,11 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         result = get_project_screens(
             project_key=args.project_key,

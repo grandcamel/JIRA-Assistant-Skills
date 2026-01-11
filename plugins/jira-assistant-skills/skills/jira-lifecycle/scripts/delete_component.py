@@ -24,7 +24,6 @@ from jira_assistant_skills_lib import (
 def delete_component(
     component_id: str,
     move_issues_to: str | None = None,
-    profile: str | None = None,
 ) -> None:
     """
     Delete a component.
@@ -32,9 +31,8 @@ def delete_component(
     Args:
         component_id: Component ID to delete
         move_issues_to: Optional component ID to move issues to
-        profile: JIRA profile to use
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     kwargs = {}
     if move_issues_to:
@@ -47,7 +45,6 @@ def delete_component(
 def delete_component_with_confirmation(
     component_id: str,
     move_issues_to: str | None = None,
-    profile: str | None = None,
 ) -> bool:
     """
     Delete a component with confirmation prompt.
@@ -55,13 +52,12 @@ def delete_component_with_confirmation(
     Args:
         component_id: Component ID to delete
         move_issues_to: Optional component ID to move issues to
-        profile: JIRA profile to use
 
     Returns:
         True if deleted, False if cancelled
     """
     # Get component details first
-    client = get_jira_client(profile)
+    client = get_jira_client()
     component = client.get_component(component_id)
 
     # Show component preview
@@ -92,19 +88,18 @@ def delete_component_with_confirmation(
 
 
 def delete_component_dry_run(
-    component_id: str, profile: str | None = None
+    component_id: str
 ) -> dict[str, Any]:
     """
     Show what component would be deleted without deleting.
 
     Args:
         component_id: Component ID
-        profile: JIRA profile to use
 
     Returns:
         Component data that would be deleted
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     component = client.get_component(component_id)
     client.close()
 
@@ -136,14 +131,13 @@ Examples:
         action="store_true",
         help="Show what would be deleted without deleting",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         if args.dry_run:
             # Dry run mode
-            component = delete_component_dry_run(args.id, args.profile)
+            component = delete_component_dry_run(args.id)
 
             print(f"[DRY RUN] Would delete component {args.id}:\n")
             print(f"  Name: {component['name']}")
@@ -155,13 +149,13 @@ Examples:
 
         elif args.yes:
             # Delete without confirmation
-            delete_component(args.id, args.move_to, args.profile)
+            delete_component(args.id, args.move_to)
             print_success(f"Deleted component {args.id}")
 
         else:
             # Delete with confirmation
             deleted = delete_component_with_confirmation(
-                args.id, args.move_to, args.profile
+                args.id, args.move_to
             )
 
             if deleted:

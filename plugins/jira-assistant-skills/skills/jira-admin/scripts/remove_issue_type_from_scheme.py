@@ -14,7 +14,7 @@ from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
 def remove_issue_type_from_scheme(
-    scheme_id: str, issue_type_id: str, client=None, profile: str | None = None
+    scheme_id: str, issue_type_id: str, client=None
 ) -> bool:
     """
     Remove an issue type from a scheme.
@@ -23,7 +23,6 @@ def remove_issue_type_from_scheme(
         scheme_id: Scheme ID
         issue_type_id: Issue type ID to remove
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
 
     Returns:
         True if successful
@@ -35,7 +34,7 @@ def remove_issue_type_from_scheme(
         Cannot remove the default issue type or the last issue type.
     """
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         client.remove_issue_type_from_scheme(
@@ -61,7 +60,7 @@ Examples:
   python remove_issue_type_from_scheme.py --scheme-id 10001 --issue-type-id 10003 --force
 
   # Use specific profile
-  python remove_issue_type_from_scheme.py --scheme-id 10001 --issue-type-id 10003 --profile production
+  python remove_issue_type_from_scheme.py --scheme-id 10001 --issue-type-id 10003
 
 Note:
   Requires 'Administer Jira' global permission.
@@ -75,7 +74,6 @@ Note:
         "--issue-type-id", required=True, help="Issue type ID to remove"
     )
     parser.add_argument("--force", action="store_true", help="Skip confirmation prompt")
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -92,7 +90,6 @@ Note:
         remove_issue_type_from_scheme(
             scheme_id=args.scheme_id,
             issue_type_id=args.issue_type_id,
-            profile=args.profile,
         )
 
         print(f"Issue type {args.issue_type_id} removed from scheme {args.scheme_id}.")

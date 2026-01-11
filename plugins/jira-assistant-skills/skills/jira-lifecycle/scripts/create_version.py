@@ -29,7 +29,6 @@ def create_version(
     release_date: str | None = None,
     released: bool = False,
     archived: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Create a project version.
@@ -42,12 +41,11 @@ def create_version(
         release_date: Optional release date (YYYY-MM-DD)
         released: Mark as released
         archived: Mark as archived
-        profile: JIRA profile to use
 
     Returns:
         Created version data
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.create_version(
         project=project,
         name=name,
@@ -134,7 +132,6 @@ Examples:
         action="store_true",
         help="Show what would be created without creating",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -173,7 +170,6 @@ Examples:
                 release_date=args.release_date,
                 released=args.released,
                 archived=args.archived,
-                profile=args.profile,
             )
 
             version_id = version.get("id", "")

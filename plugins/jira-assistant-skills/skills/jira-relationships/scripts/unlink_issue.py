@@ -49,7 +49,6 @@ def unlink_issue(
     link_type: str | None = None,
     remove_all: bool = False,
     dry_run: bool = False,
-    profile: str | None = None,
 ) -> dict:
     """
     Remove links from an issue.
@@ -60,7 +59,6 @@ def unlink_issue(
         link_type: Type of links to remove
         remove_all: Remove all matching links
         dry_run: Preview without deleting
-        profile: JIRA profile to use
 
     Returns:
         Dict with info about deleted links (for dry-run)
@@ -76,7 +74,7 @@ def unlink_issue(
     if from_issue:
         from_issue = validate_issue_key(from_issue)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     try:
         links = client.get_issue_links(issue_key)
@@ -162,7 +160,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--dry-run", "-n", action="store_true", help="Preview without deleting"
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -173,7 +170,6 @@ def main(argv: list[str] | None = None):
             link_type=args.link_type,
             remove_all=args.remove_all,
             dry_run=args.dry_run,
-            profile=args.profile,
         )
 
         if args.dry_run and result:

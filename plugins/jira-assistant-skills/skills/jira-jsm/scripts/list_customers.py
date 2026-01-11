@@ -26,7 +26,6 @@ def list_service_desk_customers(
     query: str | None = None,
     start: int = 0,
     limit: int = 50,
-    profile: str | None = None,
 ) -> dict:
     """
     List customers for a service desk.
@@ -36,12 +35,11 @@ def list_service_desk_customers(
         query: Search query for filtering
         start: Starting index for pagination
         limit: Maximum results per page
-        profile: JIRA profile to use
 
     Returns:
         Customers data
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         return client.get_service_desk_customers(
             service_desk_id, query=query, start=start, limit=limit
         )
@@ -89,7 +87,6 @@ Examples:
         help="Output format (default: text)",
     )
     parser.add_argument("--count", action="store_true", help="Show customer count only")
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -99,7 +96,6 @@ Examples:
             query=args.query,
             start=args.start,
             limit=args.limit,
-            profile=args.profile,
         )
 
         customers = result.get("values", [])

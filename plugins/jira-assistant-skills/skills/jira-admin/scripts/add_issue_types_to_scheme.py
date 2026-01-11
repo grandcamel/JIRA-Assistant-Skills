@@ -22,7 +22,6 @@ def add_issue_types_to_scheme(
     scheme_id: str,
     issue_type_ids: list[str],
     client=None,
-    profile: str | None = None,
 ) -> bool:
     """
     Add issue types to a scheme.
@@ -31,7 +30,6 @@ def add_issue_types_to_scheme(
         scheme_id: Scheme ID
         issue_type_ids: List of issue type IDs to add
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
 
     Returns:
         True if successful
@@ -44,7 +42,7 @@ def add_issue_types_to_scheme(
         raise ValidationError("At least one issue type ID is required")
 
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         client.add_issue_types_to_scheme(
@@ -70,7 +68,7 @@ Examples:
   python add_issue_types_to_scheme.py --scheme-id 10001 --issue-type-ids 10003 10004 10005
 
   # Use specific profile
-  python add_issue_types_to_scheme.py --scheme-id 10001 --issue-type-ids 10003 --profile production
+  python add_issue_types_to_scheme.py --scheme-id 10001 --issue-type-ids 10003
 
 Note:
   Requires 'Administer Jira' global permission.
@@ -82,7 +80,6 @@ Note:
     parser.add_argument(
         "--issue-type-ids", nargs="+", required=True, help="Issue type IDs to add"
     )
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -90,7 +87,6 @@ Note:
         add_issue_types_to_scheme(
             scheme_id=args.scheme_id,
             issue_type_ids=args.issue_type_ids,
-            profile=args.profile,
         )
 
         print(

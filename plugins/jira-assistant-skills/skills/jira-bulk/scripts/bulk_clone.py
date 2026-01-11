@@ -257,7 +257,6 @@ def bulk_clone(
     max_issues: int = 100,
     delay_between_ops: float = 0.2,
     progress_callback: Callable | None = None,
-    profile: str | None = None,
     show_progress: bool = True,
     confirm_threshold: int = 50,
     skip_confirmation: bool = False,
@@ -277,7 +276,6 @@ def bulk_clone(
         max_issues: Maximum number of issues to process
         delay_between_ops: Delay between operations (seconds)
         progress_callback: Optional callback(current, total, issue_key, status)
-        profile: JIRA profile to use
         show_progress: If True, show tqdm progress bar (default: True)
         confirm_threshold: Prompt for confirmation above this count (default: 50)
         skip_confirmation: If True, skip confirmation prompt (default: False)
@@ -287,7 +285,7 @@ def bulk_clone(
     """
     close_client = False
     if client is None:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         close_client = True
 
     try:
@@ -480,7 +478,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--no-progress", action="store_true", help="Disable progress bar"
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -498,7 +495,6 @@ def main(argv: list[str] | None = None):
             include_links=args.include_links,
             dry_run=args.dry_run,
             max_issues=args.max_issues,
-            profile=args.profile,
             show_progress=not args.no_progress,
             skip_confirmation=args.yes,
         )

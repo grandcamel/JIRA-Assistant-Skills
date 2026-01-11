@@ -21,7 +21,7 @@ from jira_assistant_skills_lib import (
 
 
 def list_service_desks(
-    start: int = 0, limit: int = 50, profile: str | None = None
+    start: int = 0, limit: int = 50
 ) -> dict:
     """
     List all JSM service desks.
@@ -29,12 +29,11 @@ def list_service_desks(
     Args:
         start: Starting index for pagination
         limit: Maximum results per page
-        profile: JIRA profile to use
 
     Returns:
         Service desks data with values, size, start, limit, isLastPage
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     service_desks = client.get_service_desks(start=start, limit=limit)
     client.close()
 
@@ -139,14 +138,13 @@ def main(argv: list[str] | None = None):
         default=0,
         help="Starting index for pagination (default: 0)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
         # Fetch service desks
         service_desks = list_service_desks(
-            start=args.start, limit=args.limit, profile=args.profile
+            start=args.start, limit=args.limit
         )
 
         # Apply filters

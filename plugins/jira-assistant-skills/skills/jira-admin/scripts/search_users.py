@@ -293,7 +293,6 @@ Examples:
         default="table",
         help="Output format (default: table)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -302,7 +301,7 @@ Examples:
         parser.error("--assignable requires --project")
 
     try:
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         # Determine active_only flag
         active_only = not args.all

@@ -25,7 +25,7 @@ class TestDeleteComponent:
 
         from delete_component import delete_component
 
-        delete_component(component_id="10000", profile=None)
+        delete_component(component_id="10000")
 
         mock_jira_client.delete_component.assert_called_once_with("10000")
 
@@ -43,7 +43,7 @@ class TestDeleteComponent:
 
         from delete_component import delete_component_with_confirmation
 
-        result = delete_component_with_confirmation(component_id="10000", profile=None)
+        result = delete_component_with_confirmation(component_id="10000")
 
         assert result is True
         mock_jira_client.delete_component.assert_called_once()
@@ -61,7 +61,7 @@ class TestDeleteComponent:
 
         from delete_component import delete_component_with_confirmation
 
-        result = delete_component_with_confirmation(component_id="10000", profile=None)
+        result = delete_component_with_confirmation(component_id="10000")
 
         assert result is False
         mock_jira_client.delete_component.assert_not_called()
@@ -74,7 +74,7 @@ class TestDeleteComponent:
 
         from delete_component import delete_component
 
-        delete_component(component_id="10000", move_issues_to="10001", profile=None)
+        delete_component(component_id="10000", move_issues_to="10001")
 
         call_args = mock_jira_client.delete_component.call_args
         assert call_args[0][0] == "10000"
@@ -90,7 +90,7 @@ class TestDeleteComponent:
 
         from delete_component import delete_component_dry_run
 
-        result = delete_component_dry_run(component_id="10000", profile=None)
+        result = delete_component_dry_run(component_id="10000")
 
         # Dry run should return component info without deleting
         assert result["id"] == "10000"
@@ -108,7 +108,7 @@ class TestDeleteComponent:
         from delete_component import delete_component
 
         # Should not prompt, should delete directly
-        delete_component(component_id="10000", profile=None)
+        delete_component(component_id="10000")
 
         mock_jira_client.delete_component.assert_called_once()
 
@@ -131,7 +131,7 @@ class TestDeleteComponentErrorHandling:
         from delete_component import delete_component
 
         with pytest.raises(AuthenticationError):
-            delete_component(component_id="10000", profile=None)
+            delete_component(component_id="10000")
 
     @patch("delete_component.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client):
@@ -146,7 +146,7 @@ class TestDeleteComponentErrorHandling:
         from delete_component import delete_component
 
         with pytest.raises(PermissionError):
-            delete_component(component_id="10000", profile=None)
+            delete_component(component_id="10000")
 
     @patch("delete_component.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -161,7 +161,7 @@ class TestDeleteComponentErrorHandling:
         from delete_component import delete_component
 
         with pytest.raises(NotFoundError):
-            delete_component(component_id="99999", profile=None)
+            delete_component(component_id="99999")
 
     @patch("delete_component.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -176,7 +176,7 @@ class TestDeleteComponentErrorHandling:
         from delete_component import delete_component
 
         with pytest.raises(JiraError) as exc_info:
-            delete_component(component_id="10000", profile=None)
+            delete_component(component_id="10000")
         assert exc_info.value.status_code == 429
 
     @patch("delete_component.get_jira_client")
@@ -192,5 +192,5 @@ class TestDeleteComponentErrorHandling:
         from delete_component import delete_component
 
         with pytest.raises(JiraError) as exc_info:
-            delete_component(component_id="10000", profile=None)
+            delete_component(component_id="10000")
         assert exc_info.value.status_code == 500

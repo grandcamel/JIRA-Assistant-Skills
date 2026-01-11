@@ -29,7 +29,7 @@ class TestResolveIssue:
 
         from resolve_issue import resolve_issue
 
-        resolve_issue("PROJ-123", resolution="Fixed", profile=None)
+        resolve_issue("PROJ-123", resolution="Fixed")
 
         mock_jira_client.transition_issue.assert_called_once()
         call_args = mock_jira_client.transition_issue.call_args
@@ -47,7 +47,7 @@ class TestResolveIssue:
 
         from resolve_issue import resolve_issue
 
-        resolve_issue("PROJ-123", resolution="Fixed", comment="Bug fixed", profile=None)
+        resolve_issue("PROJ-123", resolution="Fixed", comment="Bug fixed")
 
         call_args = mock_jira_client.transition_issue.call_args
         assert "comment" in call_args[1]["fields"]
@@ -67,7 +67,7 @@ class TestResolveIssue:
 
         from resolve_issue import resolve_issue
 
-        resolve_issue("PROJ-123", resolution="Fixed", profile=None)
+        resolve_issue("PROJ-123", resolution="Fixed")
 
         call_args = mock_jira_client.transition_issue.call_args
         # Should pick "Done" transition (id=31)
@@ -84,7 +84,7 @@ class TestResolveIssue:
         from resolve_issue import resolve_issue
 
         with pytest.raises(ValidationError, match="No transitions available"):
-            resolve_issue("PROJ-123", resolution="Fixed", profile=None)
+            resolve_issue("PROJ-123", resolution="Fixed")
 
     @patch("resolve_issue.get_jira_client")
     def test_resolve_issue_no_resolve_transition(
@@ -102,7 +102,7 @@ class TestResolveIssue:
         from resolve_issue import resolve_issue
 
         with pytest.raises(ValidationError, match="No resolution transition"):
-            resolve_issue("PROJ-123", resolution="Fixed", profile=None)
+            resolve_issue("PROJ-123", resolution="Fixed")
 
     def test_resolve_issue_invalid_key(self):
         """Test error on invalid issue key."""
@@ -110,7 +110,7 @@ class TestResolveIssue:
         from resolve_issue import resolve_issue
 
         with pytest.raises(ValidationError):
-            resolve_issue("invalid", resolution="Fixed", profile=None)
+            resolve_issue("invalid", resolution="Fixed")
 
 
 @pytest.mark.lifecycle
@@ -131,7 +131,7 @@ class TestResolveIssueErrorHandling:
         from resolve_issue import resolve_issue
 
         with pytest.raises(AuthenticationError):
-            resolve_issue("PROJ-123", resolution="Fixed", profile=None)
+            resolve_issue("PROJ-123", resolution="Fixed")
 
     @patch("resolve_issue.get_jira_client")
     def test_permission_denied(
@@ -151,7 +151,7 @@ class TestResolveIssueErrorHandling:
         from resolve_issue import resolve_issue
 
         with pytest.raises(PermissionError):
-            resolve_issue("PROJ-123", resolution="Fixed", profile=None)
+            resolve_issue("PROJ-123", resolution="Fixed")
 
     @patch("resolve_issue.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -166,7 +166,7 @@ class TestResolveIssueErrorHandling:
         from resolve_issue import resolve_issue
 
         with pytest.raises(NotFoundError):
-            resolve_issue("PROJ-999", resolution="Fixed", profile=None)
+            resolve_issue("PROJ-999", resolution="Fixed")
 
     @patch("resolve_issue.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -181,7 +181,7 @@ class TestResolveIssueErrorHandling:
         from resolve_issue import resolve_issue
 
         with pytest.raises(JiraError) as exc_info:
-            resolve_issue("PROJ-123", resolution="Fixed", profile=None)
+            resolve_issue("PROJ-123", resolution="Fixed")
         assert exc_info.value.status_code == 429
 
     @patch("resolve_issue.get_jira_client")
@@ -197,7 +197,7 @@ class TestResolveIssueErrorHandling:
         from resolve_issue import resolve_issue
 
         with pytest.raises(JiraError) as exc_info:
-            resolve_issue("PROJ-123", resolution="Fixed", profile=None)
+            resolve_issue("PROJ-123", resolution="Fixed")
         assert exc_info.value.status_code == 500
 
 
@@ -258,22 +258,6 @@ class TestResolveIssueMain:
 
         call_args = mock_jira_client.transition_issue.call_args
         assert "comment" in call_args[1]["fields"]
-
-    @patch("resolve_issue.get_jira_client")
-    def test_main_with_profile(
-        self, mock_get_client, mock_jira_client, sample_transitions, capsys
-    ):
-        """Test main with --profile."""
-        mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_transitions.return_value = copy.deepcopy(
-            sample_transitions
-        )
-
-        from resolve_issue import main
-
-        main(["PROJ-123", "--profile", "dev"])
-
-        mock_get_client.assert_called_with("dev")
 
     @patch("resolve_issue.get_jira_client")
     def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):

@@ -85,12 +85,6 @@ class TestParseJsonArg:
 class TestAddCommonArgs:
     """Tests for add_common_args function."""
 
-    def test_adds_profile_arg(self):
-        parser = argparse.ArgumentParser()
-        add_common_args(parser)
-        args = parser.parse_args(["--profile", "test-profile"])
-        assert args.profile == "test-profile"
-
     def test_adds_output_arg(self):
         parser = argparse.ArgumentParser()
         add_common_args(parser)

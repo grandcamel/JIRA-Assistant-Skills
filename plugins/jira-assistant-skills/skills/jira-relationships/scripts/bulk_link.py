@@ -43,7 +43,6 @@ def bulk_link(
     dry_run: bool = False,
     skip_existing: bool = False,
     show_progress: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Bulk link multiple issues to a target.
@@ -56,14 +55,13 @@ def bulk_link(
         dry_run: If True, don't create links, just report what would be done
         skip_existing: If True, skip issues already linked to target
         show_progress: If True, track progress
-        profile: JIRA profile
 
     Returns:
         Dict with operation results
     """
     target = validate_issue_key(target)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     try:
         # Get issues from JQL if specified
@@ -242,7 +240,6 @@ def main(argv: list[str] | None = None):
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -291,7 +288,6 @@ def main(argv: list[str] | None = None):
             dry_run=args.dry_run,
             skip_existing=args.skip_existing,
             show_progress=False,
-            profile=args.profile,
         )
 
         output = format_bulk_result(result, output_format=args.output)

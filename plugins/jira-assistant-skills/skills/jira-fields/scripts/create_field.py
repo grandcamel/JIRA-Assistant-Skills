@@ -101,7 +101,6 @@ def create_field(
     name: str,
     field_type: str,
     description: str | None = None,
-    profile: str | None = None,
     client=None,
 ) -> dict[str, Any]:
     """
@@ -111,7 +110,6 @@ def create_field(
         name: Field name
         field_type: Field type (text, number, select, etc.)
         description: Optional field description
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -128,7 +126,7 @@ def create_field(
         )
 
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -168,7 +166,6 @@ def main(argv: list[str] | None = None):
         help="Field type",
     )
     parser.add_argument("--description", "-d", help="Field description")
-    parser.add_argument("--profile", help="JIRA profile to use")
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
@@ -180,7 +177,6 @@ def main(argv: list[str] | None = None):
             name=args.name,
             field_type=args.type,
             description=args.description,
-            profile=args.profile,
         )
 
         if args.output == "json":

@@ -22,18 +22,17 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_components(project: str, profile: str | None = None) -> list[dict[str, Any]]:
+def get_components(project: str) -> list[dict[str, Any]]:
     """
     Get all components for a project.
 
     Args:
         project: Project key (e.g., PROJ)
-        profile: JIRA profile to use
 
     Returns:
         List of component data
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.get_components(project)
     client.close()
 
@@ -41,19 +40,18 @@ def get_components(project: str, profile: str | None = None) -> list[dict[str, A
 
 
 def get_component_by_id(
-    component_id: str, profile: str | None = None
+    component_id: str
 ) -> dict[str, Any]:
     """
     Get a specific component by ID.
 
     Args:
         component_id: Component ID
-        profile: JIRA profile to use
 
     Returns:
         Component data
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.get_component(component_id)
     client.close()
 
@@ -77,19 +75,18 @@ def filter_by_lead(
 
 
 def get_component_issue_counts(
-    component_id: str, profile: str | None = None
+    component_id: str
 ) -> dict[str, Any]:
     """
     Get issue counts for a component.
 
     Args:
         component_id: Component ID
-        profile: JIRA profile to use
 
     Returns:
         Issue counts
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.get_component_issue_counts(component_id)
     client.close()
 
@@ -156,7 +153,6 @@ Examples:
         default="table",
         help="Output format (default: table)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -179,11 +175,11 @@ Examples:
     try:
         if args.id:
             # Get specific component
-            component = get_component_by_id(args.id, args.profile)
+            component = get_component_by_id(args.id)
 
             if args.counts:
                 # Get issue counts
-                counts = get_component_issue_counts(args.id, args.profile)
+                counts = get_component_issue_counts(args.id)
 
                 print(f"Component: {component['name']} (ID: {component['id']})")
                 print(f"\nIssue Count: {counts['issueCount']}")
@@ -202,7 +198,7 @@ Examples:
                         print(f"Assignee Type: {component['assigneeType']}")
         else:
             # Get project components
-            components = get_components(args.project, args.profile)
+            components = get_components(args.project)
 
             # Output
             if args.output == "json":

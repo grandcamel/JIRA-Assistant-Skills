@@ -145,7 +145,6 @@ Requires JIRA credentials via environment variables:
 
 | Option | Description |
 |--------|-------------|
-| `--profile` | JIRA profile for multi-instance support |
 | `--output, -o` | Output format varies by command (see below) |
 | `--help` | Show detailed help and examples |
 

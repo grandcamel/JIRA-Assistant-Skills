@@ -11,7 +11,7 @@ Usage:
     python search_automation_rules.py --trigger issue_created --state enabled
     python search_automation_rules.py --project PROJ
     python search_automation_rules.py --output json
-    python search_automation_rules.py --profile development
+    python search_automation_rules.py
 """
 
 import argparse
@@ -37,7 +37,6 @@ def search_automation_rules(
     project: str | None = None,
     limit: int = 50,
     fetch_all: bool = False,
-    profile: str | None = None,
 ) -> list[dict[str, Any]]:
     """
     Search automation rules with filters.
@@ -50,13 +49,12 @@ def search_automation_rules(
         project: Filter by project key (converted to scope)
         limit: Maximum results per page
         fetch_all: If True, fetch all pages
-        profile: JIRA profile to use
 
     Returns:
         List of matching automation rules
     """
     if client is None:
-        client = get_automation_client(profile)
+        client = get_automation_client()
 
     # Convert project key to scope if provided
     if project and not scope:
@@ -168,7 +166,7 @@ Examples:
     python search_automation_rules.py --trigger issue_created --output json
 
     # Use specific profile
-    python search_automation_rules.py --profile development
+    python search_automation_rules.py
 
 Trigger shortcuts:
     issue_created, created     -> jira.issue.event.trigger:created
@@ -207,7 +205,6 @@ Trigger shortcuts:
         default="table",
         help="Output format (default: table)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -228,7 +225,6 @@ Trigger shortcuts:
             project=args.project,
             limit=args.limit,
             fetch_all=args.fetch_all,
-            profile=args.profile,
         )
 
         if not rules:

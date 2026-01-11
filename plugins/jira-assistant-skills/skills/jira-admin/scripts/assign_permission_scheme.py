@@ -241,7 +241,6 @@ Examples:
         default="table",
         help="Output format (default: table)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -253,7 +252,7 @@ Examples:
         parser.error("Either --scheme or --show-current is required")
 
     try:
-        client = get_jira_client(profile=args.profile)
+        client = get_jira_client()
 
         # Get project keys
         if args.projects:

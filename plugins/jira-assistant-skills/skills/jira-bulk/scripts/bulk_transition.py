@@ -131,7 +131,6 @@ def bulk_transition_batched(
     enable_checkpoint: bool = False,
     operation_id: str | None = None,
     progress_callback: Callable | None = None,
-    profile: str | None = None,
     show_progress: bool = True,
     skip_confirmation: bool = False,
 ) -> dict[str, Any]:
@@ -156,7 +155,6 @@ def bulk_transition_batched(
         enable_checkpoint: Enable checkpoint/resume (default: False)
         operation_id: Unique ID for checkpoint (auto-generated if None)
         progress_callback: Optional callback for progress updates
-        profile: JIRA profile to use
         show_progress: Show progress bar (default: True)
         skip_confirmation: Skip confirmation prompt (default: False)
 
@@ -165,7 +163,7 @@ def bulk_transition_batched(
     """
     close_client = False
     if client is None:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         close_client = True
 
     try:
@@ -394,7 +392,6 @@ def bulk_transition(
     max_issues: int = 100,
     delay_between_ops: float = 0.1,
     progress_callback: Callable | None = None,
-    profile: str | None = None,
     show_progress: bool = True,
     confirm_threshold: int = 50,
     skip_confirmation: bool = False,
@@ -413,7 +410,6 @@ def bulk_transition(
         max_issues: Maximum number of issues to process
         delay_between_ops: Delay between operations (seconds)
         progress_callback: Optional callback(current, total, issue_key, status)
-        profile: JIRA profile to use
         show_progress: If True, show tqdm progress bar (default: True)
         confirm_threshold: Prompt for confirmation above this count (default: 50)
         skip_confirmation: If True, skip confirmation prompt (default: False)
@@ -423,7 +419,7 @@ def bulk_transition(
     """
     close_client = False
     if client is None:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         close_client = True
 
     try:
@@ -634,7 +630,6 @@ Examples:
     parser.add_argument(
         "--no-progress", action="store_true", help="Disable progress bar"
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -711,7 +706,6 @@ Examples:
                 max_issues=args.max_issues,
                 batch_size=args.batch_size,
                 enable_checkpoint=args.enable_checkpoint,
-                profile=args.profile,
                 show_progress=not args.no_progress,
                 skip_confirmation=args.yes,
             )
@@ -724,7 +718,6 @@ Examples:
                 comment=args.comment,
                 dry_run=args.dry_run,
                 max_issues=args.max_issues,
-                profile=args.profile,
                 show_progress=not args.no_progress,
                 skip_confirmation=args.yes,
             )

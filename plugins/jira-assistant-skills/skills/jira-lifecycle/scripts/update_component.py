@@ -27,7 +27,6 @@ def update_component(
     description: str | None = None,
     lead_account_id: str | None = None,
     assignee_type: str | None = None,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Update a component.
@@ -38,7 +37,6 @@ def update_component(
         description: Optional new description
         lead_account_id: Optional new lead account ID
         assignee_type: Optional new assignee type
-        profile: JIRA profile to use
 
     Returns:
         Updated component data
@@ -54,7 +52,7 @@ def update_component(
     if assignee_type:
         update_data["assigneeType"] = assignee_type
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.update_component(component_id, **update_data)
     client.close()
 
@@ -123,7 +121,6 @@ Examples:
         action="store_true",
         help="Show what would be updated without updating",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -164,7 +161,6 @@ Examples:
                 description=args.description,
                 lead_account_id=args.lead,
                 assignee_type=args.assignee_type,
-                profile=args.profile,
             )
 
             component_name = component.get("name", args.id)

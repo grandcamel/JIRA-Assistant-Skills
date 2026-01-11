@@ -78,7 +78,6 @@ All commands support `--help` for full documentation.
 
 | Option | Description |
 |--------|-------------|
-| `--profile` | JIRA profile to use (from settings.json) |
 | `--help`, `-h` | Show help message and usage |
 | `--output`, `-o` | Output format: `text` (default), `json` |
 | `--max-results`, `-m` | Maximum results to return |

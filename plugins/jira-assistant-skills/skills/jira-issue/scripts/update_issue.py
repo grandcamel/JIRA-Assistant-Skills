@@ -33,7 +33,6 @@ def update_issue(
     components: list | None = None,
     custom_fields: dict | None = None,
     notify_users: bool = True,
-    profile: str | None = None,
 ) -> None:
     """
     Update a JIRA issue.
@@ -48,7 +47,6 @@ def update_issue(
         components: New components (replaces existing)
         custom_fields: Custom fields to update
         notify_users: Send notifications to watchers
-        profile: JIRA profile to use
     """
     issue_key = validate_issue_key(issue_key)
 
@@ -75,7 +73,7 @@ def update_issue(
             fields["assignee"] = None
         elif assignee.lower() == "self":
             # Will resolve to current user's account ID
-            client = get_jira_client(profile)
+            client = get_jira_client()
             account_id = client.get_current_user_id()
             fields["assignee"] = {"accountId": account_id}
             client.close()
@@ -96,7 +94,7 @@ def update_issue(
     if not fields:
         raise ValueError("No fields specified for update")
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     client.update_issue(issue_key, fields, notify_users=notify_users)
     client.close()
 
@@ -128,7 +126,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--no-notify", action="store_true", help="Do not send notifications to watchers"
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -149,7 +146,6 @@ def main(argv: list[str] | None = None):
             components=components,
             custom_fields=custom_fields,
             notify_users=not args.no_notify,
-            profile=args.profile,
         )
 
         print_success(f"Updated issue: {args.issue_key}")

@@ -157,15 +157,3 @@ def test_list_organizations_network_error(mock_jira_client, capsys):
     assert exit_code == 1
 
 
-def test_list_organizations_with_profile(
-    mock_jira_client, sample_organizations_response
-):
-    """Test using specific profile."""
-    mock_jira_client.get_organizations.return_value = sample_organizations_response
-
-    with patch("list_organizations.get_jira_client", return_value=mock_jira_client):
-        from list_organizations import list_organizations_func
-
-        list_organizations_func(profile="staging")
-
-        # Verify profile was passed (checked in get_jira_client call)

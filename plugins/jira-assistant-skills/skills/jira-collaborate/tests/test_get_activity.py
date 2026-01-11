@@ -27,7 +27,7 @@ class TestGetActivity:
 
         from get_activity import get_activity
 
-        result = get_activity("PROJ-123", profile=None)
+        result = get_activity("PROJ-123")
 
         assert result["total"] == 5
         assert len(result["values"]) == 5
@@ -43,7 +43,7 @@ class TestGetActivity:
 
         from get_activity import get_activity
 
-        get_activity("PROJ-123", limit=2, offset=1, profile=None)
+        get_activity("PROJ-123", limit=2, offset=1)
 
         call_args = mock_jira_client.get_changelog.call_args
         assert call_args[1]["max_results"] == 2
@@ -116,7 +116,7 @@ class TestGetActivity:
 
         from get_activity import get_activity, parse_changelog
 
-        result = get_activity("PROJ-123", profile=None)
+        result = get_activity("PROJ-123")
         parsed = parse_changelog(result)
 
         # Filter only status changes (there are 2 in the fixture)
@@ -181,7 +181,7 @@ class TestGetActivityErrorHandling:
         from get_activity import get_activity
 
         with pytest.raises(AuthenticationError):
-            get_activity("PROJ-123", profile=None)
+            get_activity("PROJ-123")
 
     @patch("get_activity.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client):
@@ -196,7 +196,7 @@ class TestGetActivityErrorHandling:
         from get_activity import get_activity
 
         with pytest.raises(PermissionError):
-            get_activity("PROJ-123", profile=None)
+            get_activity("PROJ-123")
 
     @patch("get_activity.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -211,7 +211,7 @@ class TestGetActivityErrorHandling:
         from get_activity import get_activity
 
         with pytest.raises(NotFoundError):
-            get_activity("PROJ-999", profile=None)
+            get_activity("PROJ-999")
 
     @patch("get_activity.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -226,7 +226,7 @@ class TestGetActivityErrorHandling:
         from get_activity import get_activity
 
         with pytest.raises(JiraError) as exc_info:
-            get_activity("PROJ-123", profile=None)
+            get_activity("PROJ-123")
         assert exc_info.value.status_code == 429
 
     @patch("get_activity.get_jira_client")
@@ -242,5 +242,5 @@ class TestGetActivityErrorHandling:
         from get_activity import get_activity
 
         with pytest.raises(JiraError) as exc_info:
-            get_activity("PROJ-123", profile=None)
+            get_activity("PROJ-123")
         assert exc_info.value.status_code == 500

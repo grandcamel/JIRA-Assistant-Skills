@@ -315,21 +315,6 @@ class TestGetWorklogsMain:
             captured = capsys.readouterr()
             assert "No worklogs found" in captured.out
 
-    def test_main_with_profile(self, mock_jira_client, sample_worklogs, capsys):
-        """Test main with --profile."""
-        mock_jira_client.get_worklogs.return_value = sample_worklogs
-
-        from unittest.mock import patch
-
-        with patch(
-            "get_worklogs.get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            from get_worklogs import main
-
-            main(["PROJ-123", "--profile", "dev"])
-
-            mock_get_client.assert_called_with("dev")
-
     def test_main_jira_error(self, mock_jira_client, capsys):
         """Test main with JIRA API error."""
         from jira_assistant_skills_lib import JiraError

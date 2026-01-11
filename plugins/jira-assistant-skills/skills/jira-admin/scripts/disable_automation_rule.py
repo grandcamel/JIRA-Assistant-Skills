@@ -9,7 +9,7 @@ Usage:
     python disable_automation_rule.py --name "Rule Name"
     python disable_automation_rule.py RULE_ID --dry-run
     python disable_automation_rule.py RULE_ID --confirm
-    python disable_automation_rule.py RULE_ID --profile development
+    python disable_automation_rule.py RULE_ID
 """
 
 import argparse
@@ -32,7 +32,6 @@ def disable_automation_rule(
     rule_id: str | None = None,
     name: str | None = None,
     dry_run: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Disable an automation rule.
@@ -42,7 +41,6 @@ def disable_automation_rule(
         rule_id: Rule UUID/ARI to disable
         name: Rule name to search for (alternative to rule_id)
         dry_run: If True, preview the change without applying
-        profile: JIRA profile to use
 
     Returns:
         Updated rule data or dry-run preview
@@ -52,7 +50,7 @@ def disable_automation_rule(
         ValueError: If neither rule_id nor name provided
     """
     if client is None:
-        client = get_automation_client(profile)
+        client = get_automation_client()
 
     if not rule_id and not name:
         raise ValueError("Either rule_id or name must be provided")
@@ -114,7 +112,7 @@ Examples:
     python disable_automation_rule.py RULE_ID --output json
 
     # Use specific profile
-    python disable_automation_rule.py RULE_ID --profile development
+    python disable_automation_rule.py RULE_ID
         """,
     )
 
@@ -133,7 +131,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -144,7 +141,7 @@ Examples:
         # For non-dry-run, check if confirmation needed
         if not args.dry_run and not args.confirm:
             # First get the rule to show what will be disabled
-            client = get_automation_client(args.profile)
+            client = get_automation_client()
             if args.name:
                 response = client.search_rules(limit=100)
                 rules = response.get("values", [])
@@ -171,7 +168,6 @@ Examples:
             rule_id=args.rule_id,
             name=args.name,
             dry_run=args.dry_run,
-            profile=args.profile,
         )
 
         if args.output == "json":

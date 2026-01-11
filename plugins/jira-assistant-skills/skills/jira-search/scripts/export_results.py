@@ -27,7 +27,6 @@ def export_results(
     format_type: str = "csv",
     fields: list | None = None,
     max_results: int = 1000,
-    profile: str | None = None,
 ) -> None:
     """
     Export search results to file.
@@ -38,7 +37,6 @@ def export_results(
         format_type: Export format ('csv' or 'json')
         fields: Fields to include
         max_results: Maximum results to export
-        profile: JIRA profile to use
     """
     jql = validate_jql(jql)
 
@@ -55,7 +53,7 @@ def export_results(
             "updated",
         ]
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     results = client.search_issues(
         jql, fields=fields, max_results=max_results, start_at=0
     )
@@ -129,7 +127,6 @@ def main(argv: list[str] | None = None):
         default=1000,
         help="Maximum results to export (default: 1000)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -142,7 +139,6 @@ def main(argv: list[str] | None = None):
             format_type=args.format,
             fields=fields,
             max_results=args.max_results,
-            profile=args.profile,
         )
 
         print_success(f"Exported results to {args.output}")

@@ -250,7 +250,6 @@ Examples:
         choices=["issue", "day", "user"],
         help="Group results by field",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
     parser.add_argument(
         "--output",
         "-o",
@@ -292,7 +291,7 @@ Examples:
 
     try:
         # Get client
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         # Generate report
         report = generate_report(

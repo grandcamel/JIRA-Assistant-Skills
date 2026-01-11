@@ -21,7 +21,7 @@ from jira_assistant_skills_lib import (
 
 
 def get_request_type_fields(
-    service_desk_id: str, request_type_id: str, profile: str | None = None
+    service_desk_id: str, request_type_id: str
 ) -> dict:
     """
     Get fields for a request type.
@@ -29,12 +29,11 @@ def get_request_type_fields(
     Args:
         service_desk_id: Service desk ID
         request_type_id: Request type ID
-        profile: JIRA profile to use
 
     Returns:
         Fields data
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     fields = client.get_request_type_fields(service_desk_id, request_type_id)
     client.close()
 
@@ -184,14 +183,13 @@ def main(argv: list[str] | None = None):
         action="store_true",
         help="Show valid values for fields",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
         # Fetch fields
         fields_data = get_request_type_fields(
-            args.service_desk_id, args.request_type_id, profile=args.profile
+            args.service_desk_id, args.request_type_id
         )
 
         # Apply filters
@@ -199,7 +197,7 @@ def main(argv: list[str] | None = None):
             fields_data = filter_fields(fields_data, required_only=True)
 
         # Get request type name for display
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
         request_type = client.get_request_type(
             args.service_desk_id, args.request_type_id
         )

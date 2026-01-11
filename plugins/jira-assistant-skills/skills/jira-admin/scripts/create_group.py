@@ -169,7 +169,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -187,7 +186,7 @@ Examples:
             print(format_dry_run_preview(args.name))
             sys.exit(0)
 
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         # Create group
         group = create_group(client, name=args.name)

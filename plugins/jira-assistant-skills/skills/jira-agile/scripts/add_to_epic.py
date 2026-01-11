@@ -31,7 +31,6 @@ def add_to_epic(
     issue_keys: list[str] | None = None,
     dry_run: bool = False,
     remove: bool = False,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -42,7 +41,6 @@ def add_to_epic(
         issue_keys: List of issue keys to add/remove
         dry_run: Preview changes without making them
         remove: Remove issues from epic instead of adding
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -66,7 +64,7 @@ def add_to_epic(
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -90,7 +88,7 @@ def add_to_epic(
             return result
 
         # Get the Epic Link field ID from configuration
-        epic_link_field = get_agile_field("epic_link", profile)
+        epic_link_field = get_agile_field("epic_link")
 
         # Process each issue
         for issue_key in issue_keys:
@@ -142,7 +140,6 @@ def main(argv: list[str] | None = None):
         action="store_true",
         help="Preview changes without making them",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -161,7 +158,7 @@ def main(argv: list[str] | None = None):
 
         # Handle JQL query
         if args.jql:
-            client = get_jira_client(args.profile)
+            client = get_jira_client()
             try:
                 jql_results = client.search_issues(args.jql)
                 jql_keys = [issue["key"] for issue in jql_results.get("issues", [])]
@@ -191,7 +188,6 @@ def main(argv: list[str] | None = None):
             issue_keys=issue_keys,
             dry_run=args.dry_run,
             remove=args.remove,
-            profile=args.profile,
         )
 
         # Report results

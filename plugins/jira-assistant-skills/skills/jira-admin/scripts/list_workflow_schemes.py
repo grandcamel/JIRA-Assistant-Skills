@@ -197,12 +197,11 @@ Note: Requires 'Administer Jira' global permission.
         dest="fetch_all",
         help="Fetch all pages of results",
     )
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
     try:
-        client = get_jira_client(profile=args.profile)
+        client = get_jira_client()
 
         result = list_workflow_schemes(
             client=client,

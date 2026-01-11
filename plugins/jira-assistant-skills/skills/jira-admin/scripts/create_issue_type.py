@@ -50,7 +50,6 @@ def create_issue_type(
     issue_type: str = "standard",
     hierarchy_level: int | None = None,
     client=None,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Create a new issue type.
@@ -61,7 +60,6 @@ def create_issue_type(
         issue_type: 'standard' or 'subtask'
         hierarchy_level: Hierarchy level (-1 for subtask, 0 for standard, 1+ for higher)
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
 
     Returns:
         Created issue type details
@@ -76,7 +74,7 @@ def create_issue_type(
     issue_type = validate_issue_type_type(issue_type)
 
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         result = client.create_issue_type(
@@ -130,7 +128,7 @@ Examples:
   python create_issue_type.py --name "Change Request" --format json
 
   # Use specific profile
-  python create_issue_type.py --name "Incident" --profile production
+  python create_issue_type.py --name "Incident"
 
 Note:
   Requires 'Administer Jira' global permission.
@@ -161,7 +159,6 @@ Note:
         default="detail",
         help="Output format (default: detail)",
     )
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -171,7 +168,6 @@ Note:
             description=args.description,
             issue_type=args.issue_type,
             hierarchy_level=args.hierarchy,
-            profile=args.profile,
         )
 
         output = format_created_issue_type(issue_type, args.format)

@@ -10,7 +10,7 @@ Usage:
     python get_notification_scheme.py 10000 --output json
     python get_notification_scheme.py 10000 --show-projects
     python get_notification_scheme.py --name "Default Notification Scheme"
-    python get_notification_scheme.py 10000 --profile production
+    python get_notification_scheme.py 10000
 """
 
 import argparse
@@ -34,7 +34,6 @@ def get_notification_scheme(
     scheme_id: str | None = None,
     scheme_name: str | None = None,
     show_projects: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Get notification scheme details.
@@ -44,7 +43,6 @@ def get_notification_scheme(
         scheme_id: Notification scheme ID
         scheme_name: Notification scheme name (alternative to ID)
         show_projects: If True, include projects using this scheme
-        profile: JIRA profile to use
 
     Returns:
         Notification scheme object with events and notifications
@@ -55,7 +53,7 @@ def get_notification_scheme(
     """
     close_client = False
     if client is None:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         close_client = True
 
     try:
@@ -166,7 +164,7 @@ Examples:
     python get_notification_scheme.py 10000 --output json
     python get_notification_scheme.py 10000 --show-projects
     python get_notification_scheme.py --name "Default Notification Scheme"
-    python get_notification_scheme.py 10000 --profile production
+    python get_notification_scheme.py 10000
         """,
     )
     parser.add_argument("scheme_id", nargs="?", help="Notification scheme ID")
@@ -189,7 +187,6 @@ Examples:
         action="store_true",
         help="Show projects using this scheme",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -201,7 +198,6 @@ Examples:
             scheme_id=args.scheme_id,
             scheme_name=args.scheme_name,
             show_projects=args.show_projects,
-            profile=args.profile,
         )
 
         if args.output == "json":

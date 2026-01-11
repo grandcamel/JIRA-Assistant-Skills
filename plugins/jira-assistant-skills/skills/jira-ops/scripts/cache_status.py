@@ -7,7 +7,7 @@ Shows cache size, entry counts, hit rates, and breakdown by category.
 Usage:
     python cache_status.py
     python cache_status.py --json
-    python cache_status.py --profile production
+    python cache_status.py
 
 Output:
     Cache Statistics:
@@ -60,12 +60,6 @@ Examples:
         """,
     )
     parser.add_argument("--json", action="store_true", help="Output as JSON")
-    parser.add_argument(
-        "--profile",
-        type=str,
-        default=None,
-        help="JIRA profile (for future multi-profile cache support)",
-    )
     parser.add_argument(
         "--cache-dir", type=str, default=None, help="Custom cache directory"
     )

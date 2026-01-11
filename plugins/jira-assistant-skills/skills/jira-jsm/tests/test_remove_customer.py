@@ -99,27 +99,3 @@ def test_remove_customer_confirmation_yes_flag(mock_jira_client):
         mock_jira_client.remove_customers_from_service_desk.assert_called_once()
 
 
-def test_remove_customer_profile_flag(mock_jira_client):
-    """Test --profile flag is honored."""
-    mock_jira_client.remove_customers_from_service_desk.return_value = None
-
-    with patch(
-        "remove_customer.get_jira_client", return_value=mock_jira_client
-    ) as mock_get_client:
-        from remove_customer import main
-
-        with patch(
-            "sys.argv",
-            [
-                "remove_customer.py",
-                "SD-1",
-                "--account-id",
-                "5b10ac8d82e05b22cc7d4ef5",
-                "--yes",
-                "--profile",
-                "production",
-            ],
-        ):
-            main()
-
-        mock_get_client.assert_called_once_with("production")

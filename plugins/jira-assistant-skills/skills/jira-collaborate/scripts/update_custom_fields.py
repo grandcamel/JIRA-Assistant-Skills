@@ -27,7 +27,6 @@ def update_custom_fields(
     field: str | None = None,
     value: str | None = None,
     fields_json: str | None = None,
-    profile: str | None = None,
 ) -> None:
     """
     Update custom fields on an issue.
@@ -37,7 +36,6 @@ def update_custom_fields(
         field: Single field ID
         value: Single field value
         fields_json: JSON string with multiple fields
-        profile: JIRA profile to use
     """
     issue_key = validate_issue_key(issue_key)
 
@@ -52,7 +50,7 @@ def update_custom_fields(
             "Either --field and --value, or --fields must be specified"
         )
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     client.update_issue(issue_key, fields, notify_users=True)
     client.close()
 
@@ -67,7 +65,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument("--field", help="Custom field ID (e.g., customfield_10001)")
     parser.add_argument("--value", help="Field value (string or JSON)")
     parser.add_argument("--fields", help="JSON string with multiple fields to update")
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -77,7 +74,6 @@ def main(argv: list[str] | None = None):
             field=args.field,
             value=args.value,
             fields_json=args.fields,
-            profile=args.profile,
         )
 
         print_success(f"Updated custom fields on {args.issue_key}")

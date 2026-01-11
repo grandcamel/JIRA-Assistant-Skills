@@ -367,22 +367,3 @@ class TestListPermissionSchemesCLI:
 
         assert exc_info.value.code == 1
 
-    def test_cli_with_profile(self, mock_jira_client, permission_schemes_response):
-        """Test CLI with profile argument."""
-        mock_jira_client.get_permission_schemes.return_value = (
-            permission_schemes_response
-        )
-
-        with (
-            patch(
-                "list_permission_schemes.get_jira_client", return_value=mock_jira_client
-            ) as mock_get_client,
-            patch(
-                "sys.argv", ["list_permission_schemes.py", "--profile", "development"]
-            ),
-        ):
-            from list_permission_schemes import main
-
-            main()
-
-        mock_get_client.assert_called_once_with(profile="development")

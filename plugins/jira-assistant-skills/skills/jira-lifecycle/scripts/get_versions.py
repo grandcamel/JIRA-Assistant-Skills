@@ -22,36 +22,34 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_versions(project: str, profile: str | None = None) -> list[dict[str, Any]]:
+def get_versions(project: str) -> list[dict[str, Any]]:
     """
     Get all versions for a project.
 
     Args:
         project: Project key (e.g., PROJ)
-        profile: JIRA profile to use
 
     Returns:
         List of version data
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.get_versions(project)
     client.close()
 
     return result
 
 
-def get_version_by_id(version_id: str, profile: str | None = None) -> dict[str, Any]:
+def get_version_by_id(version_id: str) -> dict[str, Any]:
     """
     Get a specific version by ID.
 
     Args:
         version_id: Version ID
-        profile: JIRA profile to use
 
     Returns:
         Version data
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.get_version(version_id)
     client.close()
 
@@ -86,19 +84,18 @@ def filter_versions(
 
 
 def get_version_issue_counts(
-    version_id: str, profile: str | None = None
+    version_id: str
 ) -> dict[str, Any]:
     """
     Get issue counts for a version.
 
     Args:
         version_id: Version ID
-        profile: JIRA profile to use
 
     Returns:
         Issue counts (fixed, affected, etc.)
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.get_version_issue_counts(version_id)
     client.close()
 
@@ -106,19 +103,18 @@ def get_version_issue_counts(
 
 
 def get_version_unresolved_count(
-    version_id: str, profile: str | None = None
+    version_id: str
 ) -> dict[str, Any]:
     """
     Get unresolved issue count for a version.
 
     Args:
         version_id: Version ID
-        profile: JIRA profile to use
 
     Returns:
         Unresolved issue count
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.get_version_unresolved_count(version_id)
     client.close()
 
@@ -210,7 +206,6 @@ Examples:
         default="table",
         help="Output format (default: table)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -237,12 +232,12 @@ Examples:
     try:
         if args.id:
             # Get specific version
-            version = get_version_by_id(args.id, args.profile)
+            version = get_version_by_id(args.id)
 
             if args.counts:
                 # Get issue counts
-                counts = get_version_issue_counts(args.id, args.profile)
-                unresolved = get_version_unresolved_count(args.id, args.profile)
+                counts = get_version_issue_counts(args.id)
+                unresolved = get_version_unresolved_count(args.id)
 
                 print(f"Version: {version['name']} (ID: {version['id']})")
                 print("\nIssue Counts:")
@@ -266,7 +261,7 @@ Examples:
                     print(f"Archived: {'Yes' if version.get('archived') else 'No'}")
         else:
             # Get project versions
-            versions = get_versions(args.project, args.profile)
+            versions = get_versions(args.project)
 
             # Apply filters
             if args.released:

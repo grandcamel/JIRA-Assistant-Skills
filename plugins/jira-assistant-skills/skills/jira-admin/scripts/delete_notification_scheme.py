@@ -8,7 +8,7 @@ Usage:
     python delete_notification_scheme.py 10000
     python delete_notification_scheme.py 10000 --force
     python delete_notification_scheme.py 10000 --dry-run
-    python delete_notification_scheme.py 10000 --profile production
+    python delete_notification_scheme.py 10000
 """
 
 import argparse
@@ -30,7 +30,6 @@ def delete_notification_scheme(
     force: bool = False,
     confirmed: bool = True,
     dry_run: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Delete a notification scheme.
@@ -41,7 +40,6 @@ def delete_notification_scheme(
         force: If True, bypass confirmation prompt
         confirmed: If False and not force, raise error requiring confirmation
         dry_run: If True, show what would be deleted without deleting
-        profile: JIRA profile to use
 
     Returns:
         Dict with success status and deleted scheme details
@@ -52,7 +50,7 @@ def delete_notification_scheme(
     """
     close_client = False
     if client is None:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         close_client = True
 
     try:
@@ -178,7 +176,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -195,7 +192,6 @@ Examples:
             force=args.force,
             confirmed=confirmed,
             dry_run=args.dry_run,
-            profile=args.profile,
         )
 
         if args.output == "json":

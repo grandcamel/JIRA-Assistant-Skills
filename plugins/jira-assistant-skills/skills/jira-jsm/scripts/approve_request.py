@@ -20,11 +20,11 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_jira_client(profile=None):
+def get_jira_client():
     """Get JIRA client (overridable for testing)."""
     from jira_assistant_skills_lib import get_jira_client as _get_client
 
-    return _get_client(profile)
+    return _get_client()
 
 
 @handle_errors
@@ -61,12 +61,11 @@ Examples:
         action="store_true",
         help="Show what would be approved without making changes",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     parsed_args = parser.parse_args(args)
 
     # Get JIRA client
-    jira = get_jira_client(parsed_args.profile)
+    jira = get_jira_client()
 
     # Process each approval ID
     for approval_id in parsed_args.approval_id:

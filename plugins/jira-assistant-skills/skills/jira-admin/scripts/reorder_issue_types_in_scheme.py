@@ -18,7 +18,6 @@ def reorder_issue_types_in_scheme(
     issue_type_id: str,
     after: str | None = None,
     client=None,
-    profile: str | None = None,
 ) -> bool:
     """
     Reorder issue types in a scheme.
@@ -28,7 +27,6 @@ def reorder_issue_types_in_scheme(
         issue_type_id: Issue type ID to move
         after: Issue type ID to position after (None = move to first)
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
 
     Returns:
         True if successful
@@ -37,7 +35,7 @@ def reorder_issue_types_in_scheme(
         JiraError: On API failure
     """
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         client.reorder_issue_types_in_scheme(
@@ -63,7 +61,7 @@ Examples:
   python reorder_issue_types_in_scheme.py --scheme-id 10001 --issue-type-id 10003 --after 10001
 
   # Use specific profile
-  python reorder_issue_types_in_scheme.py --scheme-id 10001 --issue-type-id 10003 --profile production
+  python reorder_issue_types_in_scheme.py --scheme-id 10001 --issue-type-id 10003
 
 Note:
   Requires 'Administer Jira' global permission.
@@ -76,7 +74,6 @@ Note:
     parser.add_argument(
         "--after", help="Issue type ID to position after (omit for first position)"
     )
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -85,7 +82,6 @@ Note:
             scheme_id=args.scheme_id,
             issue_type_id=args.issue_type_id,
             after=args.after,
-            profile=args.profile,
         )
 
         if args.after:

@@ -293,21 +293,6 @@ class TestBulkLogTimeMain:
             assert "Successful: 2 issues" in captured.out
             assert "Failed: 1 issues" in captured.out
 
-    def test_main_with_profile(self, mock_jira_client, sample_worklog, capsys):
-        """Test main with --profile."""
-        from unittest.mock import patch
-
-        mock_jira_client.add_worklog.return_value = sample_worklog
-
-        with patch(
-            "bulk_log_time.get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            from bulk_log_time import main
-
-            main(["--issues", "PROJ-1", "--time", "30m", "--profile", "dev"])
-
-            mock_get_client.assert_called_with("dev")
-
     def test_main_jira_error(self, mock_jira_client, capsys):
         """Test main with JIRA API error during search."""
         from unittest.mock import patch

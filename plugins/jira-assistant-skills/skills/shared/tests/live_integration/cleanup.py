@@ -6,9 +6,9 @@ Use this script to clean up test projects that weren't properly deleted
 (e.g., due to test failures or interruptions).
 
 Usage:
-    python cleanup.py INT123ABC --profile development
-    python cleanup.py --prefix INT --profile development  # Delete all INT* projects
-    python cleanup.py --list --profile development        # List all INT* projects
+    python cleanup.py INT123ABC
+    python cleanup.py --prefix INT  # Delete all INT* projects
+    python cleanup.py --list        # List all INT* projects
 
 Warning:
     This script permanently deletes projects. Use with caution!
@@ -164,7 +164,7 @@ def cleanup_by_prefix(client, prefix, dry_run=False):
 def main():
     parser = argparse.ArgumentParser(
         description="Clean up test projects in JIRA",
-        epilog="Example: python cleanup.py INT123ABC --profile development",
+        epilog="Example: python cleanup.py INT123ABC",
     )
 
     parser.add_argument("project_key", nargs="?", help="Specific project key to delete")
@@ -195,7 +195,7 @@ def main():
         sys.exit(1)
 
     try:
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         if args.list:
             prefix = args.prefix if args.prefix else "INT"

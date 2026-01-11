@@ -33,7 +33,6 @@ def move_to_sprint(
     jql: str | None = None,
     dry_run: bool = False,
     rank_position: str | None = None,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -45,7 +44,6 @@ def move_to_sprint(
         jql: JQL query to find issues to move
         dry_run: Preview changes without making them
         rank_position: Position to rank issues ('top', 'bottom')
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -66,7 +64,7 @@ def move_to_sprint(
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -104,7 +102,6 @@ def move_to_backlog(
     issue_keys: list[str] | None = None,
     jql: str | None = None,
     dry_run: bool = False,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -114,7 +111,6 @@ def move_to_backlog(
         issue_keys: List of issue keys to move
         jql: JQL query to find issues to move
         dry_run: Preview changes without making them
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -129,7 +125,7 @@ def move_to_backlog(
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -196,7 +192,6 @@ def main(argv: list[str] | None = None):
         help="Preview changes without making them",
     )
 
-    parser.add_argument("--profile", help="JIRA profile to use")
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
@@ -229,7 +224,6 @@ def main(argv: list[str] | None = None):
                 issue_keys=issue_keys,
                 jql=args.jql,
                 dry_run=args.dry_run,
-                profile=args.profile,
             )
 
             if args.output == "json":
@@ -250,7 +244,6 @@ def main(argv: list[str] | None = None):
                 jql=args.jql,
                 dry_run=args.dry_run,
                 rank_position=args.rank,
-                profile=args.profile,
             )
 
             if args.output == "json":

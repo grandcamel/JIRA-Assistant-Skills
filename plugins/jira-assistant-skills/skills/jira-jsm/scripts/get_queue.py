@@ -16,10 +16,10 @@ from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
 def get_queue(
-    service_desk_id: int, queue_id: int, profile: str | None = None
+    service_desk_id: int, queue_id: int
 ) -> dict[str, Any]:
     """Get queue details."""
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         return client.get_queue(service_desk_id, queue_id)
 
 
@@ -46,12 +46,11 @@ def main(argv: list[str] | None = None):
     )
     parser.add_argument("--queue-id", type=int, required=True, help="Queue ID")
     parser.add_argument("--output", choices=["text", "json"], default="text")
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
-        queue = get_queue(args.service_desk, args.queue_id, args.profile)
+        queue = get_queue(args.service_desk, args.queue_id)
 
         if args.output == "json":
             print(format_queue_json(queue))

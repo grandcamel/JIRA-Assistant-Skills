@@ -131,26 +131,3 @@ def test_create_customer_special_characters(mock_jira_client, sample_customer_re
         )
 
 
-def test_create_customer_profile_flag(mock_jira_client, sample_customer_response):
-    """Test --profile flag is honored."""
-    mock_jira_client.create_customer.return_value = sample_customer_response
-
-    with patch(
-        "create_customer.get_jira_client", return_value=mock_jira_client
-    ) as mock_get_client:
-        from create_customer import main
-
-        with patch(
-            "sys.argv",
-            [
-                "create_customer.py",
-                "--email",
-                "john@example.com",
-                "--profile",
-                "production",
-            ],
-        ):
-            main()
-
-        # Verify profile was passed to get_jira_client
-        mock_get_client.assert_called_once_with("production")

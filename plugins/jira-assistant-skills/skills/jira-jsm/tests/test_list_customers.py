@@ -139,18 +139,3 @@ def test_list_customers_count_only(
     assert "3" in captured.out
 
 
-def test_list_customers_profile_flag(mock_jira_client, sample_customers_list_response):
-    """Test --profile flag is honored."""
-    mock_jira_client.get_service_desk_customers.return_value = (
-        sample_customers_list_response
-    )
-
-    with patch(
-        "list_customers.get_jira_client", return_value=mock_jira_client
-    ) as mock_get_client:
-        from list_customers import main
-
-        with patch("sys.argv", ["list_customers.py", "SD-1", "--profile", "staging"]):
-            main()
-
-        mock_get_client.assert_called_once_with("staging")

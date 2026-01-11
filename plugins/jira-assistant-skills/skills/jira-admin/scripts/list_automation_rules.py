@@ -12,7 +12,7 @@ Usage:
     python list_automation_rules.py --state disabled
     python list_automation_rules.py --limit 10
     python list_automation_rules.py --output json
-    python list_automation_rules.py --profile development
+    python list_automation_rules.py
 """
 
 import argparse
@@ -36,7 +36,6 @@ def list_automation_rules(
     state: str | None = None,
     limit: int = 50,
     fetch_all: bool = False,
-    profile: str | None = None,
 ) -> list[dict[str, Any]]:
     """
     List automation rules with optional filtering.
@@ -47,13 +46,12 @@ def list_automation_rules(
         state: Filter by state ('enabled' or 'disabled')
         limit: Maximum results per page (1-100)
         fetch_all: If True, fetch all pages of results
-        profile: JIRA profile to use
 
     Returns:
         List of automation rule summaries
     """
     if client is None:
-        client = get_automation_client(profile)
+        client = get_automation_client()
 
     all_rules = []
     cursor = None
@@ -150,7 +148,7 @@ Examples:
     python list_automation_rules.py --output json
 
     # Use specific profile
-    python list_automation_rules.py --profile development
+    python list_automation_rules.py
         """,
     )
 
@@ -179,7 +177,6 @@ Examples:
         default="table",
         help="Output format (default: table)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -189,7 +186,6 @@ Examples:
             state=args.state,
             limit=args.limit,
             fetch_all=args.fetch_all,
-            profile=args.profile,
         )
 
         if not rules:

@@ -40,7 +40,6 @@ def update_issue_type(
     description: str | None = None,
     avatar_id: int | None = None,
     client=None,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Update an issue type.
@@ -51,7 +50,6 @@ def update_issue_type(
         description: New description (optional)
         avatar_id: New avatar ID (optional)
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
 
     Returns:
         Updated issue type details
@@ -73,7 +71,7 @@ def update_issue_type(
         name = validate_issue_type_name(name)
 
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         result = client.update_issue_type(
@@ -133,7 +131,7 @@ Examples:
   python update_issue_type.py 10001 --name "Bug" --format json
 
   # Use specific profile
-  python update_issue_type.py 10001 --name "Bug" --profile production
+  python update_issue_type.py 10001 --name "Bug"
 
 Note:
   Requires 'Administer Jira' global permission.
@@ -151,7 +149,6 @@ Note:
         default="detail",
         help="Output format (default: detail)",
     )
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -161,7 +158,6 @@ Note:
             name=args.name,
             description=args.description,
             avatar_id=args.avatar_id,
-            profile=args.profile,
         )
 
         output = format_updated_issue_type(issue_type, args.format)

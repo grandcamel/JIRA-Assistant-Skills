@@ -27,7 +27,6 @@ def create_component(
     description: str | None = None,
     lead_account_id: str | None = None,
     assignee_type: str | None = None,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Create a project component.
@@ -38,12 +37,11 @@ def create_component(
         description: Optional description
         lead_account_id: Optional component lead account ID
         assignee_type: Optional default assignee type (COMPONENT_LEAD, PROJECT_LEAD, PROJECT_DEFAULT, UNASSIGNED)
-        profile: JIRA profile to use
 
     Returns:
         Created component data
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.create_component(
         project=project,
         name=name,
@@ -116,7 +114,6 @@ Examples:
         action="store_true",
         help="Show what would be created without creating",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -149,7 +146,6 @@ Examples:
                 description=args.description,
                 lead_account_id=args.lead,
                 assignee_type=args.assignee_type,
-                profile=args.profile,
             )
 
             component_id = component.get("id", "")

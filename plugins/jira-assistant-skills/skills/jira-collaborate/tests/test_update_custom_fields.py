@@ -26,7 +26,7 @@ class TestUpdateCustomFields:
         from update_custom_fields import update_custom_fields
 
         update_custom_fields(
-            "PROJ-123", field="customfield_10001", value="Production", profile=None
+            "PROJ-123", field="customfield_10001", value="Production"
         )
 
         mock_jira_client.update_issue.assert_called_once()
@@ -48,7 +48,7 @@ class TestUpdateCustomFields:
             {"customfield_10001": "Production", "customfield_10002": "High"}
         )
 
-        update_custom_fields("PROJ-123", fields_json=fields_json, profile=None)
+        update_custom_fields("PROJ-123", fields_json=fields_json)
 
         call_args = mock_jira_client.update_issue.call_args
         assert "customfield_10001" in call_args[0][1]
@@ -67,8 +67,7 @@ class TestUpdateCustomFields:
             "PROJ-123",
             field="customfield_10001",
             value='{"value": "Option A"}',
-            profile=None,
-        )
+                )
 
         call_args = mock_jira_client.update_issue.call_args
         assert call_args[0][1]["customfield_10001"] == {"value": "Option A"}
@@ -79,7 +78,7 @@ class TestUpdateCustomFields:
         from update_custom_fields import update_custom_fields
 
         with pytest.raises(ValidationError):
-            update_custom_fields("PROJ-123", profile=None)
+            update_custom_fields("PROJ-123")
 
     def test_update_invalid_issue_key(self):
         """Test error for invalid issue key."""
@@ -88,7 +87,7 @@ class TestUpdateCustomFields:
 
         with pytest.raises(ValidationError):
             update_custom_fields(
-                "invalid", field="customfield_10001", value="test", profile=None
+                "invalid", field="customfield_10001", value="test"
             )
 
 
@@ -111,7 +110,7 @@ class TestUpdateCustomFieldsErrorHandling:
 
         with pytest.raises(AuthenticationError):
             update_custom_fields(
-                "PROJ-123", field="customfield_10001", value="test", profile=None
+                "PROJ-123", field="customfield_10001", value="test"
             )
 
     @patch("update_custom_fields.get_jira_client")
@@ -128,7 +127,7 @@ class TestUpdateCustomFieldsErrorHandling:
 
         with pytest.raises(PermissionError):
             update_custom_fields(
-                "PROJ-123", field="customfield_10001", value="test", profile=None
+                "PROJ-123", field="customfield_10001", value="test"
             )
 
     @patch("update_custom_fields.get_jira_client")
@@ -145,7 +144,7 @@ class TestUpdateCustomFieldsErrorHandling:
 
         with pytest.raises(NotFoundError):
             update_custom_fields(
-                "PROJ-999", field="customfield_10001", value="test", profile=None
+                "PROJ-999", field="customfield_10001", value="test"
             )
 
     @patch("update_custom_fields.get_jira_client")
@@ -162,7 +161,7 @@ class TestUpdateCustomFieldsErrorHandling:
 
         with pytest.raises(JiraError):
             update_custom_fields(
-                "PROJ-123", field="customfield_99999", value="test", profile=None
+                "PROJ-123", field="customfield_99999", value="test"
             )
 
     @patch("update_custom_fields.get_jira_client")
@@ -179,7 +178,7 @@ class TestUpdateCustomFieldsErrorHandling:
 
         with pytest.raises(JiraError) as exc_info:
             update_custom_fields(
-                "PROJ-123", field="customfield_10001", value="test", profile=None
+                "PROJ-123", field="customfield_10001", value="test"
             )
         assert exc_info.value.status_code == 429
 
@@ -197,6 +196,6 @@ class TestUpdateCustomFieldsErrorHandling:
 
         with pytest.raises(JiraError) as exc_info:
             update_custom_fields(
-                "PROJ-123", field="customfield_10001", value="test", profile=None
+                "PROJ-123", field="customfield_10001", value="test"
             )
         assert exc_info.value.status_code == 500

@@ -35,8 +35,7 @@ class TestCommentVisibility:
             format_type="text",
             visibility_type="role",
             visibility_value="Administrators",
-            profile=None,
-        )
+                )
 
         assert result["id"] == "10002"
         assert result["visibility"]["type"] == "role"
@@ -70,8 +69,7 @@ class TestCommentVisibility:
             format_type="text",
             visibility_type="group",
             visibility_value="jira-developers",
-            profile=None,
-        )
+                )
 
         assert result["visibility"]["type"] == "group"
         assert result["visibility"]["value"] == "jira-developers"
@@ -88,7 +86,7 @@ class TestCommentVisibility:
         from add_comment import add_comment
 
         result = add_comment(
-            "PROJ-123", "Public note", format_type="text", profile=None
+            "PROJ-123", "Public note", format_type="text"
         )
 
         # Should not have visibility restrictions
@@ -107,7 +105,7 @@ class TestCommentVisibility:
         from update_comment import update_comment
 
         result = update_comment(
-            "PROJ-123", "10002", "Updated internal note", profile=None
+            "PROJ-123", "10002", "Updated internal note"
         )
 
         # Visibility should be preserved
@@ -124,7 +122,7 @@ class TestCommentVisibility:
 
         from get_comments import get_comment_by_id
 
-        result = get_comment_by_id("PROJ-123", "10002", profile=None)
+        result = get_comment_by_id("PROJ-123", "10002")
 
         # Should include visibility info
         assert "visibility" in result
@@ -148,8 +146,7 @@ class TestCommentVisibility:
                 "Test comment",
                 visibility_type="role",
                 visibility_value="InvalidRole",
-                profile=None,
-            )
+                )
 
 
 @pytest.mark.collaborate
@@ -175,8 +172,7 @@ class TestCommentVisibilityErrorHandling:
                 "Test comment",
                 visibility_type="role",
                 visibility_value="Administrators",
-                profile=None,
-            )
+                )
 
     @patch("add_comment.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client):
@@ -196,8 +192,7 @@ class TestCommentVisibilityErrorHandling:
                 "Test comment",
                 visibility_type="role",
                 visibility_value="Administrators",
-                profile=None,
-            )
+                )
 
     @patch("add_comment.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -217,8 +212,7 @@ class TestCommentVisibilityErrorHandling:
                 "Test comment",
                 visibility_type="role",
                 visibility_value="Administrators",
-                profile=None,
-            )
+                )
         assert exc_info.value.status_code == 429
 
     @patch("add_comment.get_jira_client")
@@ -239,6 +233,5 @@ class TestCommentVisibilityErrorHandling:
                 "Test comment",
                 visibility_type="role",
                 visibility_value="Administrators",
-                profile=None,
-            )
+                )
         assert exc_info.value.status_code == 500

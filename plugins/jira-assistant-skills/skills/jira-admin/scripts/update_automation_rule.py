@@ -9,7 +9,7 @@ Usage:
     python update_automation_rule.py RULE_ID --description "Updated description"
     python update_automation_rule.py RULE_ID --config updated_rule.json
     python update_automation_rule.py RULE_ID --config updated_rule.json --dry-run
-    python update_automation_rule.py RULE_ID --name "New Name" --profile development
+    python update_automation_rule.py RULE_ID --name "New Name"
 """
 
 import argparse
@@ -33,7 +33,6 @@ def update_automation_rule(
     description: str | None = None,
     config: dict[str, Any] | None = None,
     dry_run: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Update an automation rule configuration.
@@ -45,7 +44,6 @@ def update_automation_rule(
         description: New description
         config: Full configuration object
         dry_run: If True, preview without updating
-        profile: JIRA profile to use
 
     Returns:
         Updated rule data or dry-run preview
@@ -54,7 +52,7 @@ def update_automation_rule(
         ValueError: If rule_id not provided or no updates specified
     """
     if client is None:
-        client = get_automation_client(profile)
+        client = get_automation_client()
 
     if not rule_id:
         raise ValueError("rule_id is required")
@@ -111,7 +109,7 @@ Examples:
     python update_automation_rule.py RULE_ID --name "New Name" --output json
 
     # Use specific profile
-    python update_automation_rule.py RULE_ID --name "New Name" --profile development
+    python update_automation_rule.py RULE_ID --name "New Name"
         """,
     )
 
@@ -129,7 +127,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -152,7 +149,6 @@ Examples:
             description=args.desc,
             config=config,
             dry_run=args.dry_run,
-            profile=args.profile,
         )
 
         if args.output == "json":

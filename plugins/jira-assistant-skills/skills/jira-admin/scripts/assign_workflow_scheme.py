@@ -272,7 +272,6 @@ Note: This is an experimental API endpoint.
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -287,7 +286,7 @@ Note: This is an experimental API endpoint.
             sys.exit(1)
 
     try:
-        client = get_jira_client(profile=args.profile)
+        client = get_jira_client()
 
         # Show current and exit if requested
         if args.show_current:

@@ -168,7 +168,6 @@ Examples:
     parser.add_argument(
         "--yes", "-y", action="store_true", help="Skip confirmation prompt"
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
     parser.add_argument(
         "--output",
         "-o",
@@ -192,7 +191,7 @@ Examples:
 
     try:
         # Get client
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         # Perform bulk log
         result = bulk_log_time(

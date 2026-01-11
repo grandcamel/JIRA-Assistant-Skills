@@ -2,10 +2,9 @@
 Live Integration Test Configuration for jira-ops skill.
 
 Usage:
-    pytest plugins/jira-assistant-skills/skills/jira-ops/tests/live_integration/ --profile development -v
+    pytest plugins/jira-assistant-skills/skills/jira-ops/tests/live_integration/ -v
 """
 
-import os
 import shutil
 import sys
 import tempfile
@@ -20,26 +19,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
 from jira_assistant_skills_lib import JiraCache, JiraClient, get_jira_client
 
 
-def pytest_addoption(parser):
-    """Add custom command line options."""
-    parser.addoption(
-        "--profile",
-        action="store",
-        default=os.environ.get("JIRA_PROFILE", "development"),
-        help="JIRA profile to use (default: development)",
-    )
-
-
 @pytest.fixture(scope="session")
-def jira_profile(request) -> str:
-    """Get the JIRA profile from command line."""
-    return request.config.getoption("--profile")
-
-
-@pytest.fixture(scope="session")
-def jira_client(jira_profile) -> Generator[JiraClient, None, None]:
+def jira_client() -> Generator[JiraClient, None, None]:
     """Create a JIRA client for the test session."""
-    client = get_jira_client(jira_profile)
+    client = get_jira_client()
     yield client
     client.close()
 

@@ -154,7 +154,6 @@ All scripts support these common options:
 | Option | Description | Example |
 |--------|-------------|---------|
 | `--help` | Show help and exit | `jira-as <command> --help` |
-| `--profile PROFILE` | Use specific JIRA profile | `--profile production` |
 | `--output FORMAT` | Output format: text, json, table | `--output json` |
 | `--service-desk ID` | Service desk ID (numeric) | `--service-desk 1` |
 
@@ -187,8 +186,6 @@ export JSM_DEFAULT_SERVICE_DESK="1"
 ### Profile Support
 
 ```bash
-# Use production profile
-jira-as jsm request create 1 10 --summary "Issue" --profile prod
 ```
 
 For full configuration options, see [references/CONFIG_REFERENCE.md](references/CONFIG_REFERENCE.md).

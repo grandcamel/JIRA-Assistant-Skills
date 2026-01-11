@@ -23,7 +23,7 @@ from jira_assistant_skills_lib import (
 
 
 def add_comment(
-    issue_key: str, body: str, format_type: str = "text", profile: str | None = None
+    issue_key: str, body: str, format_type: str = "text"
 ) -> dict:
     """
     Add a public comment to an issue.
@@ -32,7 +32,6 @@ def add_comment(
         issue_key: Issue key (e.g., PROJ-123)
         body: Comment body
         format_type: Format ('text', 'markdown', or 'adf')
-        profile: JIRA profile to use
 
     Returns:
         Created comment data
@@ -46,7 +45,7 @@ def add_comment(
     else:
         comment_body = text_to_adf(body)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.add_comment(issue_key, comment_body)
     client.close()
 
@@ -59,7 +58,6 @@ def add_comment_with_visibility(
     format_type: str = "text",
     visibility_type: str | None = None,
     visibility_value: str | None = None,
-    profile: str | None = None,
 ) -> dict:
     """
     Add a comment with visibility restrictions.
@@ -70,7 +68,6 @@ def add_comment_with_visibility(
         format_type: Format ('text', 'markdown', or 'adf')
         visibility_type: 'role' or 'group' (None for public)
         visibility_value: Role or group name
-        profile: JIRA profile to use
 
     Returns:
         Created comment data
@@ -84,7 +81,7 @@ def add_comment_with_visibility(
     else:
         comment_body = text_to_adf(body)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.add_comment_with_visibility(
         issue_key,
         comment_body,
@@ -123,7 +120,6 @@ Examples:
         "--visibility-group",
         help="Restrict visibility to a group (e.g., jira-developers)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -153,14 +149,12 @@ Examples:
                 format_type=args.format,
                 visibility_type=visibility_type,
                 visibility_value=visibility_value,
-                profile=args.profile,
             )
         else:
             result = add_comment(
                 issue_key=args.issue_key,
                 body=args.body,
                 format_type=args.format,
-                profile=args.profile,
             )
 
         comment_id = result.get("id", "")

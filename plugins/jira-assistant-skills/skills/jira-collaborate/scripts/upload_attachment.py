@@ -24,7 +24,6 @@ def upload_attachment(
     issue_key: str,
     file_path: str,
     file_name: str | None = None,
-    profile: str | None = None,
 ) -> dict:
     """
     Upload an attachment to an issue.
@@ -33,7 +32,6 @@ def upload_attachment(
         issue_key: Issue key (e.g., PROJ-123)
         file_path: Path to file to upload
         file_name: Name for the uploaded file (default: use file_path basename)
-        profile: JIRA profile to use
 
     Returns:
         Attachment data
@@ -41,7 +39,7 @@ def upload_attachment(
     issue_key = validate_issue_key(issue_key)
     file_path = validate_file_path(file_path, must_exist=True)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.upload_file(
         f"/rest/api/3/issue/{issue_key}/attachments",
         file_path,
@@ -64,7 +62,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--name", "-n", help="Name for the uploaded file (default: use filename)"
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -73,7 +70,6 @@ def main(argv: list[str] | None = None):
             issue_key=args.issue_key,
             file_path=args.file,
             file_name=args.name,
-            profile=args.profile,
         )
 
         if isinstance(result, list) and result:

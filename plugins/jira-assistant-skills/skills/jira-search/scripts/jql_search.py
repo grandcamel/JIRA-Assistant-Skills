@@ -72,7 +72,6 @@ def search_issues(
     fields: list | None = None,
     max_results: int = 50,
     next_page_token: str | None = None,
-    profile: str | None = None,
     include_agile: bool = False,
     include_links: bool = False,
     include_time: bool = False,
@@ -85,7 +84,6 @@ def search_issues(
         fields: List of fields to return (default: key, summary, status, priority, issuetype)
         max_results: Maximum results per page
         next_page_token: Token for fetching next page (from previous response)
-        profile: JIRA profile to use
         include_agile: If True, include epic link and story points fields
         include_links: If True, include issue links
         include_time: If True, include time tracking fields
@@ -112,7 +110,7 @@ def search_issues(
         if include_time:
             fields.append("timetracking")
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     results = client.search_issues(
         jql, fields=fields, max_results=max_results, next_page_token=next_page_token
     )
@@ -188,7 +186,6 @@ Examples:
         action="store_true",
         help="Show time tracking fields in results",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -197,7 +194,7 @@ Examples:
         parser.error("Either JQL query or --filter is required")
 
     try:
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
         jql = args.jql
         filter_name = None
 

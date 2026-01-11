@@ -161,7 +161,6 @@ Visibility options:
     parser.add_argument(
         "--visibility-value", help="Role or group name for visibility restriction"
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
     parser.add_argument(
         "--output",
         "-o",
@@ -177,7 +176,7 @@ Visibility options:
         validate_issue_key(args.issue_key)
 
         # Get client
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         # Add worklog
         result = add_worklog(

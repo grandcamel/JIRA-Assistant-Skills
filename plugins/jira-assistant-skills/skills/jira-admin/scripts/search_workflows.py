@@ -262,7 +262,6 @@ Note: Requires 'Administer Jira' global permission.
     parser.add_argument(
         "--max-results", type=int, default=50, help="Maximum results (default: 50)"
     )
-    parser.add_argument("--profile", "-p", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -274,7 +273,7 @@ Note: Requires 'Administer Jira' global permission.
         is_active = False
 
     try:
-        client = get_jira_client(profile=args.profile)
+        client = get_jira_client()
 
         result = search_workflows(
             client=client,

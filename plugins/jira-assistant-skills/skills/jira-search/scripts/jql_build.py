@@ -197,7 +197,6 @@ Examples:
     parser.add_argument(
         "--output", choices=["text", "json"], default="text", help="Output format"
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -221,7 +220,7 @@ Examples:
     # Validate if requested
     if args.validate:
         try:
-            client = get_jira_client(args.profile)
+            client = get_jira_client()
             result = client.parse_jql([jql])
             parsed = result.get("queries", [{}])[0]
             errors = parsed.get("errors", [])

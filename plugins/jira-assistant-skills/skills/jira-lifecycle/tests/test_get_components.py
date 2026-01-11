@@ -27,7 +27,7 @@ class TestGetComponents:
 
         from get_components import get_components
 
-        result = get_components("PROJ", profile=None)
+        result = get_components("PROJ")
 
         assert len(result) == 4
         mock_jira_client.get_components.assert_called_once_with("PROJ")
@@ -42,7 +42,7 @@ class TestGetComponents:
 
         from get_components import get_component_by_id
 
-        result = get_component_by_id("10000", profile=None)
+        result = get_component_by_id("10000")
 
         assert result["id"] == "10000"
         assert result["name"] == "Backend API"
@@ -58,7 +58,7 @@ class TestGetComponents:
 
         from get_components import filter_by_lead, get_components
 
-        components = get_components("PROJ", profile=None)
+        components = get_components("PROJ")
         filtered = filter_by_lead(components, "Alice Smith")
 
         # Alice Smith leads 1 component in sample data (Backend API)
@@ -77,7 +77,7 @@ class TestGetComponents:
 
         from get_components import get_component_issue_counts
 
-        result = get_component_issue_counts("10000", profile=None)
+        result = get_component_issue_counts("10000")
 
         assert result["issueCount"] == 78
         mock_jira_client.get_component_issue_counts.assert_called_once()
@@ -111,7 +111,7 @@ class TestGetComponents:
 
         from get_components import get_components
 
-        components = get_components("PROJ", profile=None)
+        components = get_components("PROJ")
         json_output = json.dumps(components, indent=2)
 
         # Should be valid JSON with 4 components
@@ -139,7 +139,7 @@ class TestGetComponentsErrorHandling:
         from get_components import get_components
 
         with pytest.raises(AuthenticationError):
-            get_components("PROJ", profile=None)
+            get_components("PROJ")
 
     @patch("get_components.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client):
@@ -154,7 +154,7 @@ class TestGetComponentsErrorHandling:
         from get_components import get_components
 
         with pytest.raises(PermissionError):
-            get_components("PROJ", profile=None)
+            get_components("PROJ")
 
     @patch("get_components.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -169,7 +169,7 @@ class TestGetComponentsErrorHandling:
         from get_components import get_components
 
         with pytest.raises(NotFoundError):
-            get_components("INVALID", profile=None)
+            get_components("INVALID")
 
     @patch("get_components.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -184,7 +184,7 @@ class TestGetComponentsErrorHandling:
         from get_components import get_components
 
         with pytest.raises(JiraError) as exc_info:
-            get_components("PROJ", profile=None)
+            get_components("PROJ")
         assert exc_info.value.status_code == 429
 
     @patch("get_components.get_jira_client")
@@ -200,5 +200,5 @@ class TestGetComponentsErrorHandling:
         from get_components import get_components
 
         with pytest.raises(JiraError) as exc_info:
-            get_components("PROJ", profile=None)
+            get_components("PROJ")
         assert exc_info.value.status_code == 500

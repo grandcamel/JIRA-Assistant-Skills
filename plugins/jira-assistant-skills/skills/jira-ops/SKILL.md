@@ -8,7 +8,7 @@ allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 triggers:
   - "Cache hit rate drops below 50%"
   - "JIRA API responses slower than 2 seconds"
-  - "Setting up new JIRA profile/instance"
+  - "Setting up new JIRA instance"
   - "Before bulk operations (warm cache first)"
   - "After modifying projects (invalidate cache)"
   - "Troubleshooting 429 rate limit errors"
@@ -160,7 +160,7 @@ See [API Reference](docs/API_REFERENCE.md) for programmatic usage.
 - [Quick Start Guide](docs/QUICK_START.md) - Get started in 5 minutes
 - [Scripts Guide](docs/SCRIPTS.md) - Detailed script documentation
 - [API Reference](docs/API_REFERENCE.md) - Programmatic cache and batcher APIs
-- [Configuration](docs/CONFIG.md) - TTL and profile settings
+- [Configuration](docs/CONFIG.md) - TTL settings
 - [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
 - [Security](docs/SECURITY.md) - Cache security considerations
 - [Best Practices](docs/best-practices/INDEX.md) - Optimization patterns

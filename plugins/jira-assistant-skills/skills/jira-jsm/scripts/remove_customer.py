@@ -33,7 +33,7 @@ def parse_account_ids(account_id_string: str) -> list:
 
 
 def remove_customer_from_service_desk(
-    service_desk_id: str, account_ids: list, profile: str | None = None
+    service_desk_id: str, account_ids: list
 ) -> None:
     """
     Remove customers from a service desk.
@@ -41,9 +41,8 @@ def remove_customer_from_service_desk(
     Args:
         service_desk_id: Service desk ID or key
         account_ids: List of customer account IDs
-        profile: JIRA profile to use
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         client.remove_customers_from_service_desk(service_desk_id, account_ids)
 
 
@@ -77,7 +76,6 @@ Examples:
         action="store_true",
         help="Show what would be removed without removing",
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -104,7 +102,6 @@ Examples:
         remove_customer_from_service_desk(
             service_desk_id=args.service_desk_id,
             account_ids=account_ids,
-            profile=args.profile,
         )
 
         print_success(

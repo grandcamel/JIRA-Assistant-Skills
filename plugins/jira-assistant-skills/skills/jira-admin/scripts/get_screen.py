@@ -133,7 +133,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -142,7 +141,7 @@ Examples:
         args.show_tabs = True
 
     try:
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         screen = get_screen(
             screen_id=args.screen_id,

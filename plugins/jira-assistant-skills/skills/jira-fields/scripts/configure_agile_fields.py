@@ -147,7 +147,6 @@ def configure_agile_fields(
     epic_link_id: str | None = None,
     sprint_id: str | None = None,
     dry_run: bool = False,
-    profile: str | None = None,
     client=None,
 ) -> dict[str, Any]:
     """
@@ -159,7 +158,6 @@ def configure_agile_fields(
         epic_link_id: Custom Epic Link field ID (optional, auto-detect)
         sprint_id: Custom Sprint field ID (optional, auto-detect)
         dry_run: If True, show what would be done without making changes
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -170,7 +168,7 @@ def configure_agile_fields(
         JiraError: If API call fails
     """
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -260,7 +258,6 @@ def main(argv: list[str] | None = None):
         action="store_true",
         help="Show what would be done without making changes",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
@@ -274,7 +271,6 @@ def main(argv: list[str] | None = None):
             epic_link_id=args.epic_link,
             sprint_id=args.sprint,
             dry_run=args.dry_run,
-            profile=args.profile,
         )
 
         if args.output == "json":

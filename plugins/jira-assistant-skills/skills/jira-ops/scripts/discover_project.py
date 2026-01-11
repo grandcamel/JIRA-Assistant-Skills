@@ -7,7 +7,7 @@ and saves them in a format that Claude can use for intelligent defaults.
 
 Usage:
     python discover_project.py PROJ
-    python discover_project.py PROJ --profile development
+    python discover_project.py PROJ
     python discover_project.py PROJ --personal
     python discover_project.py PROJ --sample-size 200 --days 60
     python discover_project.py PROJ --output json --no-save
@@ -688,16 +688,13 @@ def save_to_skill_directory(
     return skill_path
 
 
-def save_to_settings_local(
-    project_key: str, defaults: dict[str, Any], profile: str = "production"
-) -> Path:
+def save_to_settings_local(project_key: str, defaults: dict[str, Any]) -> Path:
     """
     Save defaults to settings.local.json for personal use.
 
     Args:
         project_key: JIRA project key
         defaults: Defaults to save
-        profile: JIRA profile name
 
     Returns:
         Path to settings.local.json
@@ -714,15 +711,11 @@ def save_to_settings_local(
     # Ensure structure exists
     if "jira" not in settings:
         settings["jira"] = {}
-    if "profiles" not in settings["jira"]:
-        settings["jira"]["profiles"] = {}
-    if profile not in settings["jira"]["profiles"]:
-        settings["jira"]["profiles"][profile] = {}
-    if "projects" not in settings["jira"]["profiles"][profile]:
-        settings["jira"]["profiles"][profile]["projects"] = {}
+    if "projects" not in settings["jira"]:
+        settings["jira"]["projects"] = {}
 
     # Add project defaults
-    settings["jira"]["profiles"][profile]["projects"][project_key] = {
+    settings["jira"]["projects"][project_key] = {
         "defaults": defaults.get("by_issue_type", {}),
         "global_defaults": defaults.get("global", {}),
     }
@@ -736,7 +729,6 @@ def save_to_settings_local(
 
 def discover_project(
     project_key: str,
-    profile: str | None = None,
     sample_size: int = 100,
     sample_period_days: int = 30,
     save_skill: bool = True,
@@ -747,7 +739,6 @@ def discover_project(
 
     Args:
         project_key: JIRA project key
-        profile: JIRA profile to use
         sample_size: Number of issues to sample for patterns
         sample_period_days: How many days back to sample
         save_skill: If True, save to skill directory
@@ -756,7 +747,7 @@ def discover_project(
     Returns:
         Dict with all discovered context
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     try:
         # Discover metadata
@@ -789,7 +780,7 @@ def discover_project(
 
         if save_personal:
             settings_path = save_to_settings_local(
-                project_key, defaults, profile or "production"
+                project_key, defaults
             )
             print_success(f"Saved to settings: {settings_path}")
 
@@ -805,7 +796,7 @@ def main(argv: list[str] | None = None):
         epilog="""
 Examples:
   %(prog)s PROJ                           # Discover and save to skill directory
-  %(prog)s PROJ --profile development     # Use specific profile
+  %(prog)s PROJ     # Use specific profile
   %(prog)s PROJ --personal                # Save to settings.local.json only
   %(prog)s PROJ --sample-size 200         # Sample more issues for patterns
   %(prog)s PROJ --output json --no-save   # Output JSON without saving
@@ -813,7 +804,6 @@ Examples:
     )
 
     parser.add_argument("project_key", help="JIRA project key (e.g., PROJ)")
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
     parser.add_argument(
         "--sample-size",
         "-s",
@@ -864,7 +854,6 @@ Examples:
     try:
         context = discover_project(
             project_key=project_key,
-            profile=args.profile,
             sample_size=args.sample_size,
             sample_period_days=args.days,
             save_skill=save_skill,

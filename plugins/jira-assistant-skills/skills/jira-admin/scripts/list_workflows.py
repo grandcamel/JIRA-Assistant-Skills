@@ -260,7 +260,7 @@ Examples:
   python list_workflows.py --output json
 
   # With profile
-  python list_workflows.py --profile production
+  python list_workflows.py
 
 Note: Requires 'Administer Jira' global permission.
         """,
@@ -306,12 +306,11 @@ Note: Requires 'Administer Jira' global permission.
         dest="fetch_all",
         help="Fetch all pages of results",
     )
-    parser.add_argument("--profile", "-p", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
     try:
-        client = get_jira_client(profile=args.profile)
+        client = get_jira_client()
 
         result = list_workflows(
             client=client,

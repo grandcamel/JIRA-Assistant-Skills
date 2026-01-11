@@ -293,31 +293,6 @@ class TestUpdateWorklogMain:
             assert call_args[1]["adjust_estimate"] == "new"
             assert call_args[1]["new_estimate"] == "4h"
 
-    def test_main_with_profile(self, mock_jira_client, sample_worklog, capsys):
-        """Test main with --profile."""
-        mock_jira_client.update_worklog.return_value = sample_worklog
-
-        from unittest.mock import patch
-
-        with patch(
-            "update_worklog.get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            from update_worklog import main
-
-            main(
-                [
-                    "PROJ-123",
-                    "--worklog-id",
-                    "10045",
-                    "--time",
-                    "3h",
-                    "--profile",
-                    "dev",
-                ]
-            )
-
-            mock_get_client.assert_called_with("dev")
-
     def test_main_jira_error(self, mock_jira_client, capsys):
         """Test main with JIRA API error."""
         from jira_assistant_skills_lib import JiraError

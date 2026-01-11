@@ -27,7 +27,7 @@ class TestArchiveVersion:
 
         from archive_version import archive_version
 
-        result = archive_version(version_id="10002", profile=None)
+        result = archive_version(version_id="10002")
 
         assert result["archived"] is True
         mock_jira_client.update_version.assert_called_once()
@@ -50,7 +50,7 @@ class TestArchiveVersion:
         from archive_version import archive_version_by_name
 
         result = archive_version_by_name(
-            project="PROJ", version_name="v0.5.0", profile=None
+            project="PROJ", version_name="v0.5.0"
         )
 
         assert result["archived"] is True
@@ -71,7 +71,7 @@ class TestArchiveVersion:
 
         with pytest.raises(ValidationError, match="Version.*not found"):
             archive_version_by_name(
-                project="PROJ", version_name="v99.0.0", profile=None
+                project="PROJ", version_name="v99.0.0"
             )
 
     @patch("archive_version.get_jira_client")
@@ -107,7 +107,7 @@ class TestArchiveVersionErrorHandling:
         from archive_version import archive_version
 
         with pytest.raises(AuthenticationError):
-            archive_version(version_id="10002", profile=None)
+            archive_version(version_id="10002")
 
     @patch("archive_version.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client):
@@ -122,7 +122,7 @@ class TestArchiveVersionErrorHandling:
         from archive_version import archive_version
 
         with pytest.raises(PermissionError):
-            archive_version(version_id="10002", profile=None)
+            archive_version(version_id="10002")
 
     @patch("archive_version.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -135,7 +135,7 @@ class TestArchiveVersionErrorHandling:
         from archive_version import archive_version
 
         with pytest.raises(NotFoundError):
-            archive_version(version_id="99999", profile=None)
+            archive_version(version_id="99999")
 
     @patch("archive_version.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -150,7 +150,7 @@ class TestArchiveVersionErrorHandling:
         from archive_version import archive_version
 
         with pytest.raises(JiraError) as exc_info:
-            archive_version(version_id="10002", profile=None)
+            archive_version(version_id="10002")
         assert exc_info.value.status_code == 429
 
     @patch("archive_version.get_jira_client")
@@ -166,5 +166,5 @@ class TestArchiveVersionErrorHandling:
         from archive_version import archive_version
 
         with pytest.raises(JiraError) as exc_info:
-            archive_version(version_id="10002", profile=None)
+            archive_version(version_id="10002")
         assert exc_info.value.status_code == 500

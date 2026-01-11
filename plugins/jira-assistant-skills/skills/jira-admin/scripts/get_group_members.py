@@ -194,7 +194,6 @@ Examples:
         default="table",
         help="Output format (default: table)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -203,7 +202,7 @@ Examples:
         parser.error("Either group_name or --group-id is required")
 
     try:
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         # Get members
         members = get_members(

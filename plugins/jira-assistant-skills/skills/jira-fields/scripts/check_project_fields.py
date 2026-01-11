@@ -37,7 +37,6 @@ def check_project_fields(
     project_key: str,
     issue_type: str | None = None,
     check_agile: bool = False,
-    profile: str | None = None,
     client=None,
 ) -> dict[str, Any]:
     """
@@ -47,7 +46,6 @@ def check_project_fields(
         project_key: Project key
         issue_type: Optional issue type to check
         check_agile: If True, specifically check Agile field availability
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -57,7 +55,7 @@ def check_project_fields(
         JiraError: If API call fails
     """
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -147,7 +145,6 @@ def main(argv: list[str] | None = None):
         action="store_true",
         help="Check Agile field availability",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
@@ -159,7 +156,6 @@ def main(argv: list[str] | None = None):
             project_key=args.project,
             issue_type=args.type,
             check_agile=args.check_agile,
-            profile=args.profile,
         )
 
         if args.output == "json":

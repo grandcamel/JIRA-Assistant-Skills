@@ -236,22 +236,6 @@ class TestRunFilterMain:
                 sample_filter["jql"], max_results=25
             )
 
-    def test_main_with_profile(
-        self, mock_jira_client, sample_filter, sample_search_results
-    ):
-        """Test main function with profile parameter."""
-        mock_jira_client.get.return_value = sample_filter
-        mock_jira_client.search_issues.return_value = sample_search_results
-
-        with patch(
-            "run_filter.get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            from run_filter import main
-
-            main(["--id", "10042", "--profile", "development"])
-
-            mock_get_client.assert_called_with("development")
-
 
 @pytest.mark.search
 @pytest.mark.unit

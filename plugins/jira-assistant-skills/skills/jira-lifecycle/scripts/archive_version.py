@@ -21,18 +21,17 @@ from jira_assistant_skills_lib import (
 )
 
 
-def archive_version(version_id: str, profile: str | None = None) -> dict[str, Any]:
+def archive_version(version_id: str) -> dict[str, Any]:
     """
     Archive a version by ID.
 
     Args:
         version_id: Version ID
-        profile: JIRA profile to use
 
     Returns:
         Updated version data
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.update_version(version_id, archived=True)
     client.close()
 
@@ -40,7 +39,7 @@ def archive_version(version_id: str, profile: str | None = None) -> dict[str, An
 
 
 def archive_version_by_name(
-    project: str, version_name: str, profile: str | None = None
+    project: str, version_name: str
 ) -> dict[str, Any]:
     """
     Archive a version by name (requires project lookup).
@@ -48,7 +47,6 @@ def archive_version_by_name(
     Args:
         project: Project key
         version_name: Version name
-        profile: JIRA profile to use
 
     Returns:
         Updated version data
@@ -57,7 +55,7 @@ def archive_version_by_name(
         ValidationError: If version name not found in project
     """
     # Get all versions for the project
-    client = get_jira_client(profile)
+    client = get_jira_client()
     versions = client.get_versions(project)
 
     # Find version by name
@@ -114,7 +112,6 @@ Examples:
         action="store_true",
         help="Show what would be archived without archiving",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -146,11 +143,11 @@ Examples:
         else:
             # Archive version
             if args.id:
-                version = archive_version(version_id=args.id, profile=args.profile)
+                version = archive_version(version_id=args.id)
                 version_name = version.get("name", args.id)
             else:
                 version = archive_version_by_name(
-                    project=args.project, version_name=args.name, profile=args.profile
+                    project=args.project, version_name=args.name
                 )
                 version_name = version.get("name", args.name)
 

@@ -116,12 +116,11 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         # Get screen name for display
         try:

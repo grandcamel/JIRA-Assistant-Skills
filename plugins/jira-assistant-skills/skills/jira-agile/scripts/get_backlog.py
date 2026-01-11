@@ -27,7 +27,6 @@ from jira_assistant_skills_lib import (
 
 def get_board_for_project(
     project_key: str,
-    profile: str | None = None,
     client=None,
 ) -> int:
     """
@@ -35,7 +34,6 @@ def get_board_for_project(
 
     Args:
         project_key: Project key (e.g., DEMO)
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -45,7 +43,7 @@ def get_board_for_project(
         ValidationError: If no boards found for project
     """
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -76,7 +74,6 @@ def get_backlog(
     jql_filter: str | None = None,
     max_results: int = 100,
     group_by_epic: bool = False,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -88,7 +85,6 @@ def get_backlog(
         jql_filter: Additional JQL filter
         max_results: Maximum issues to return
         group_by_epic: Group results by epic
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -98,7 +94,7 @@ def get_backlog(
         raise ValidationError("Either board ID or project key is required")
 
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -106,10 +102,10 @@ def get_backlog(
     try:
         # Resolve board_id from project_key if not provided
         if not board_id and project_key:
-            board_id = get_board_for_project(project_key, profile, client)
+            board_id = get_board_for_project(project_key, client)
 
         # Get Agile field IDs from configuration
-        agile_fields = get_agile_fields(profile)
+        agile_fields = get_agile_fields()
         epic_link_field = agile_fields["epic_link"]
         agile_fields["story_points"]
 
@@ -158,7 +154,6 @@ def main(argv: list[str] | None = None):
         help="Maximum results (default: 100)",
     )
     parser.add_argument("--group-by", choices=["epic"], help="Group results")
-    parser.add_argument("--profile", help="JIRA profile to use")
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
@@ -176,7 +171,6 @@ def main(argv: list[str] | None = None):
             jql_filter=args.filter,
             max_results=args.max_results,
             group_by_epic=(args.group_by == "epic"),
-            profile=args.profile,
         )
 
         if args.output == "json":

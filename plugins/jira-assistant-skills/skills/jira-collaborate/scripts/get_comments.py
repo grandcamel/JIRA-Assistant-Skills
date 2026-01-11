@@ -27,7 +27,6 @@ def get_comments(
     limit: int = 50,
     offset: int = 0,
     order: str = "desc",
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Get all comments on an issue.
@@ -37,7 +36,6 @@ def get_comments(
         limit: Maximum number of comments to return
         offset: Starting index for pagination
         order: Sort order ('asc' for oldest first, 'desc' for newest first)
-        profile: JIRA profile to use
 
     Returns:
         Comments data with 'comments', 'total', 'startAt', 'maxResults'
@@ -46,7 +44,7 @@ def get_comments(
 
     order_by = "+created" if order == "asc" else "-created"
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.get_comments(
         issue_key, max_results=limit, start_at=offset, order_by=order_by
     )
@@ -56,7 +54,7 @@ def get_comments(
 
 
 def get_comment_by_id(
-    issue_key: str, comment_id: str, profile: str | None = None
+    issue_key: str, comment_id: str
 ) -> dict[str, Any]:
     """
     Get a specific comment by ID.
@@ -64,14 +62,13 @@ def get_comment_by_id(
     Args:
         issue_key: Issue key (e.g., PROJ-123)
         comment_id: Comment ID
-        profile: JIRA profile to use
 
     Returns:
         Comment data
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.get_comment(issue_key, comment_id)
     client.close()
 
@@ -184,14 +181,13 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         if args.id:
             # Get specific comment
-            result = get_comment_by_id(args.issue_key, args.id, args.profile)
+            result = get_comment_by_id(args.issue_key, args.id)
 
             if args.output == "json":
                 print(json.dumps(result, indent=2))
@@ -218,7 +214,7 @@ Examples:
         else:
             # Get all comments
             result = get_comments(
-                args.issue_key, args.limit, args.offset, args.order, args.profile
+                args.issue_key, args.limit, args.offset, args.order
             )
 
             if args.output == "json":

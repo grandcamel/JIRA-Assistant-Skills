@@ -60,7 +60,6 @@ All scripts support these common options:
 
 | Option | Description |
 |--------|-------------|
-| `--profile PROFILE` | Use specific JIRA profile (development, staging, production) |
 | `--format FORMAT` | Output format: text (default), json, or csv |
 | `--help` | Show help message with all available options |
 
@@ -240,10 +239,9 @@ Time tracking must be enabled in your JIRA project. If you receive an error abou
 
 ### Profile support
 
-All scripts support the `--profile` flag:
+All scripts support environment variables for JIRA credentials:
 
 ```bash
-jira-as time log PROJ-123 --time 2h --profile production
 ```
 
 ## Troubleshooting

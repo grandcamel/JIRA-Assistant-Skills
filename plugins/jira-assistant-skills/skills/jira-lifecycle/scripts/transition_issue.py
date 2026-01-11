@@ -39,7 +39,6 @@ def get_context_workflow_hint(
     project_key: str,
     issue_type: str,
     current_status: str,
-    profile: str | None = None,
 ) -> str:
     """
     Get workflow hint from project context if available.
@@ -48,15 +47,14 @@ def get_context_workflow_hint(
         project_key: Project key
         issue_type: Issue type name
         current_status: Current status name
-        profile: JIRA profile
 
     Returns:
         String with expected transitions from context, or empty string if no context
     """
-    if not has_project_context(project_key, profile):
+    if not has_project_context(project_key):
         return ""
 
-    context = get_project_context(project_key, profile)
+    context = get_project_context(project_key)
     if not context.has_context():
         return ""
 
@@ -80,7 +78,6 @@ def transition_issue(
     comment: str | None = None,
     fields: dict | None = None,
     sprint_id: int | None = None,
-    profile: str | None = None,
     dry_run: bool = False,
 ) -> dict:
     """
@@ -94,7 +91,6 @@ def transition_issue(
         comment: Comment to add
         fields: Additional fields to set
         sprint_id: Sprint ID to move issue to after transition
-        profile: JIRA profile to use
         dry_run: If True, preview changes without making them
 
     Returns:
@@ -105,7 +101,7 @@ def transition_issue(
     if not transition_id and not transition_name:
         raise ValidationError("Either --id or --name must be specified")
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     # Get issue details first for context hints
     issue = client.get_issue(issue_key, fields=["status", "issuetype", "project"])
@@ -119,7 +115,7 @@ def transition_issue(
 
     if not transitions:
         context_hint = get_context_workflow_hint(
-            project_key, issue_type, current_status, profile
+            project_key, issue_type, current_status
         )
         raise ValidationError(
             f"No transitions available for {issue_key} (status: {current_status}){context_hint}"
@@ -134,7 +130,7 @@ def transition_issue(
         if not matching:
             available = format_transitions(transitions)
             context_hint = get_context_workflow_hint(
-                project_key, issue_type, current_status, profile
+                project_key, issue_type, current_status
             )
             raise ValidationError(
                 f"Transition ID '{transition_id}' not available.\n\n{available}{context_hint}"
@@ -179,7 +175,7 @@ def transition_issue(
 
         # Show context workflow hint if available
         context_hint = get_context_workflow_hint(
-            project_key, issue_type, target_status, profile
+            project_key, issue_type, target_status
         )
         if context_hint:
             print(
@@ -230,7 +226,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--dry-run", action="store_true", help="Preview changes without making them"
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -245,7 +240,6 @@ def main(argv: list[str] | None = None):
             comment=args.comment,
             fields=fields,
             sprint_id=args.sprint,
-            profile=args.profile,
             dry_run=args.dry_run,
         )
 

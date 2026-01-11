@@ -88,7 +88,6 @@ Examples:
     parser.add_argument("issue_key", help="Issue key (e.g., PROJ-123)")
     parser.add_argument("--original", "-o", help="Original estimate (e.g., 2d, 1w)")
     parser.add_argument("--remaining", "-r", help="Remaining estimate (e.g., 1d 4h)")
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
     parser.add_argument(
         "--output",
         choices=["text", "json"],
@@ -107,7 +106,7 @@ Examples:
         validate_issue_key(args.issue_key)
 
         # Get client
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         # Get current values for comparison
         current = client.get_time_tracking(args.issue_key)

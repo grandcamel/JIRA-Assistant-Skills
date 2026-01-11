@@ -237,23 +237,6 @@ class TestExportResults:
             # Second issue has None assignee
             assert data[1]["assignee"] is None or data[1]["assignee"] == ""
 
-    def test_export_with_profile(self, mock_jira_client, sample_search_results):
-        """Test export with profile parameter."""
-        mock_jira_client.search_issues.return_value = sample_search_results
-
-        with (
-            patch(
-                "export_results.get_jira_client", return_value=mock_jira_client
-            ) as mock_get_client,
-            patch("export_results.export_csv"),
-        ):
-            from export_results import export_results
-
-            export_results("project = PROJ", "/tmp/test.csv", profile="development")
-
-            mock_get_client.assert_called_with("development")
-
-
 @pytest.mark.search
 @pytest.mark.unit
 class TestExportResultsMain:

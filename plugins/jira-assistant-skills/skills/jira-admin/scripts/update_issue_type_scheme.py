@@ -24,7 +24,6 @@ def update_issue_type_scheme(
     description: str | None = None,
     default_issue_type_id: str | None = None,
     client=None,
-    profile: str | None = None,
 ) -> bool:
     """
     Update an issue type scheme.
@@ -35,7 +34,6 @@ def update_issue_type_scheme(
         description: New description (optional)
         default_issue_type_id: New default issue type ID (optional)
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
 
     Returns:
         True if successful
@@ -51,7 +49,7 @@ def update_issue_type_scheme(
         )
 
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         client.update_issue_type_scheme(
@@ -86,7 +84,7 @@ Examples:
   python update_issue_type_scheme.py 10001 --name "Dev Scheme" --description "For development"
 
   # Use specific profile
-  python update_issue_type_scheme.py 10001 --name "New Name" --profile production
+  python update_issue_type_scheme.py 10001 --name "New Name"
 
 Note:
   Requires 'Administer Jira' global permission.
@@ -99,7 +97,6 @@ Note:
     parser.add_argument("--name", help="New scheme name")
     parser.add_argument("--description", help="New scheme description")
     parser.add_argument("--default-issue-type-id", help="New default issue type ID")
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -109,7 +106,6 @@ Note:
             name=args.name,
             description=args.description,
             default_issue_type_id=args.default_issue_type_id,
-            profile=args.profile,
         )
 
         print(f"Issue type scheme {args.scheme_id} updated successfully.")

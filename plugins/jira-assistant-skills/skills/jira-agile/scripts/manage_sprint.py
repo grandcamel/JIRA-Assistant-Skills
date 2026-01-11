@@ -41,7 +41,6 @@ def start_sprint(
     sprint_id: int,
     start_date: str | None = None,
     end_date: str | None = None,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -51,7 +50,6 @@ def start_sprint(
         sprint_id: Sprint ID to start
         start_date: Optional start date (defaults to now)
         end_date: Optional end date (required if not already set)
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -65,7 +63,7 @@ def start_sprint(
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -92,7 +90,6 @@ def start_sprint(
 def close_sprint(
     sprint_id: int,
     move_incomplete_to: int | None = None,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -101,7 +98,6 @@ def close_sprint(
     Args:
         sprint_id: Sprint ID to close
         move_incomplete_to: Sprint ID to move incomplete issues to
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -115,7 +111,7 @@ def close_sprint(
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -147,7 +143,6 @@ def update_sprint(
     goal: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -159,7 +154,6 @@ def update_sprint(
         goal: New sprint goal
         start_date: New start date
         end_date: New end date
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -173,7 +167,7 @@ def update_sprint(
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -206,13 +200,12 @@ def update_sprint(
             client.close()
 
 
-def get_active_sprint(board_id: int, profile: str | None = None, client=None) -> dict:
+def get_active_sprint(board_id: int, client=None) -> dict:
     """
     Get the currently active sprint for a board.
 
     Args:
         board_id: Board ID to query
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -226,7 +219,7 @@ def get_active_sprint(board_id: int, profile: str | None = None, client=None) ->
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -273,7 +266,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument("--start-date", help="Start date (YYYY-MM-DD)")
     parser.add_argument("--end-date", help="End date (YYYY-MM-DD)")
 
-    parser.add_argument("--profile", help="JIRA profile to use")
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
@@ -286,7 +278,7 @@ def main(argv: list[str] | None = None):
         if args.get_active:
             if not args.board:
                 parser.error("--board is required with --get-active")
-            result = get_active_sprint(board_id=args.board, profile=args.profile)
+            result = get_active_sprint(board_id=args.board)
 
             if result:
                 if args.output == "json":
@@ -308,7 +300,6 @@ def main(argv: list[str] | None = None):
                 sprint_id=args.sprint,
                 start_date=args.start_date,
                 end_date=args.end_date,
-                profile=args.profile,
             )
             if args.output == "json":
                 print(json.dumps(result, indent=2))
@@ -321,7 +312,6 @@ def main(argv: list[str] | None = None):
             result = close_sprint(
                 sprint_id=args.sprint,
                 move_incomplete_to=args.move_incomplete_to,
-                profile=args.profile,
             )
             if args.output == "json":
                 print(json.dumps(result, indent=2))
@@ -341,7 +331,6 @@ def main(argv: list[str] | None = None):
                 goal=args.goal,
                 start_date=args.start_date,
                 end_date=args.end_date,
-                profile=args.profile,
             )
             if args.output == "json":
                 print(json.dumps(result, indent=2))

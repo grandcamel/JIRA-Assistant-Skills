@@ -24,7 +24,6 @@ def list_service_requests(
     jql: str | None = None,
     max_results: int = 50,
     start_at: int = 0,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     List service requests.
@@ -36,7 +35,6 @@ def list_service_requests(
         jql: Custom JQL filter
         max_results: Maximum results to return
         start_at: Pagination offset
-        profile: JIRA profile to use
 
     Returns:
         Search results with issues and total count
@@ -57,7 +55,7 @@ def list_service_requests(
 
     final_jql = " AND ".join(jql_parts)
 
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         return client.search_issues(
             jql=final_jql, max_results=max_results, start_at=start_at
         )
@@ -143,7 +141,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -155,7 +152,6 @@ Examples:
             jql=args.jql,
             max_results=args.max_results,
             start_at=args.start_at,
-            profile=args.profile,
         )
 
         issues = result.get("issues", [])

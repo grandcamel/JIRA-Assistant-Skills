@@ -97,7 +97,6 @@ All scripts support these common options:
 
 | Option | Description |
 |--------|-------------|
-| `--profile PROFILE` | JIRA profile to use (default: from config) |
 | `--output FORMAT` | Output format: text, json (some scripts also support mermaid, dot, plantuml, d2) |
 | `--help` | Show help message and exit |
 

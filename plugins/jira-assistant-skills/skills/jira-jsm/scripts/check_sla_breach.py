@@ -29,7 +29,6 @@ def check_sla_breach(
     issue_key: str,
     threshold: float = 20.0,
     sla_name: str | None = None,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Check SLA breach status for a service request.
@@ -38,7 +37,6 @@ def check_sla_breach(
         issue_key: Request key (e.g., 'SD-123')
         threshold: At-risk threshold percentage (default 20%)
         sla_name: Filter to specific SLA name (optional)
-        profile: JIRA profile to use
 
     Returns:
         Dict with breach status, SLAs, and statistics
@@ -46,7 +44,7 @@ def check_sla_breach(
     Raises:
         NotFoundError: If request doesn't exist
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         sla_data = client.get_request_slas(issue_key)
 
     slas = sla_data.get("values", [])
@@ -261,7 +259,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -270,7 +267,6 @@ Examples:
             issue_key=args.request_key,
             threshold=args.threshold,
             sla_name=args.sla_name,
-            profile=args.profile,
         )
 
         if args.output == "json":

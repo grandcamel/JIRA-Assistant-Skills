@@ -65,7 +65,6 @@ def main(argv: list[str] | None = None):
     )
     parser.add_argument("--asset-id", type=int, required=True, help="Asset object ID")
     parser.add_argument("--comment", help="Optional comment about the link")
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 

@@ -447,30 +447,3 @@ class TestCreatePermissionSchemeCLI:
 
         assert exc_info.value.code == 1
 
-    def test_cli_with_profile(self, mock_jira_client, created_permission_scheme):
-        """Test CLI with profile argument."""
-        mock_jira_client.create_permission_scheme.return_value = (
-            created_permission_scheme
-        )
-
-        with (
-            patch(
-                "create_permission_scheme.get_jira_client",
-                return_value=mock_jira_client,
-            ) as mock_get_client,
-            patch(
-                "sys.argv",
-                [
-                    "create_permission_scheme.py",
-                    "--name",
-                    "New Scheme",
-                    "--profile",
-                    "development",
-                ],
-            ),
-        ):
-            from create_permission_scheme import main
-
-            main()
-
-        mock_get_client.assert_called_once_with(profile="development")

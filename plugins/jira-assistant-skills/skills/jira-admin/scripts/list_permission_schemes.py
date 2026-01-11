@@ -145,12 +145,11 @@ Examples:
         default="table",
         help="Output format (default: table)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
-        client = get_jira_client(profile=args.profile)
+        client = get_jira_client()
 
         schemes = list_permission_schemes(
             client, name_filter=args.name_filter, show_grants=args.show_grants

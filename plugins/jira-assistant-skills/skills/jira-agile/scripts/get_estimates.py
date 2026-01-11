@@ -29,7 +29,6 @@ from jira_assistant_skills_lib import (
 
 def get_active_sprint_for_project(
     project_key: str,
-    profile: str | None = None,
     client=None,
 ) -> tuple[int, str]:
     """
@@ -37,7 +36,6 @@ def get_active_sprint_for_project(
 
     Args:
         project_key: Project key (e.g., DEMO)
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -47,7 +45,7 @@ def get_active_sprint_for_project(
         ValidationError: If no boards or active sprints found
     """
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -85,7 +83,6 @@ def get_estimates(
     project_key: str | None = None,
     epic_key: str | None = None,
     group_by: str | None = None,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -96,7 +93,6 @@ def get_estimates(
         project_key: Project key to find active sprint (alternative to sprint_id)
         epic_key: Epic key to get estimates for
         group_by: Group by 'assignee' or 'status'
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -113,19 +109,19 @@ def get_estimates(
     sprint_name = None
     if project_key and not sprint_id:
         sprint_id, sprint_name = get_active_sprint_for_project(
-            project_key, profile, client
+            project_key, client
         )
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
 
     try:
         # Get Agile field IDs from configuration
-        agile_fields = get_agile_fields(profile)
+        agile_fields = get_agile_fields()
         story_points_field = agile_fields["story_points"]
 
         # Get issues
@@ -205,7 +201,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--group-by", "-g", choices=["assignee", "status"], help="Group results"
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
@@ -218,7 +213,6 @@ def main(argv: list[str] | None = None):
             project_key=args.project,
             epic_key=args.epic,
             group_by=args.group_by,
-            profile=args.profile,
         )
 
         if args.output == "json":

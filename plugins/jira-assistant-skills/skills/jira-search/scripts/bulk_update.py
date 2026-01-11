@@ -28,7 +28,6 @@ def bulk_update(
     priority: str | None = None,
     max_issues: int = 100,
     dry_run: bool = False,
-    profile: str | None = None,
 ) -> None:
     """
     Bulk update issues from search results.
@@ -40,11 +39,10 @@ def bulk_update(
         priority: Priority to set
         max_issues: Maximum issues to update
         dry_run: If True, show what would be updated without making changes
-        profile: JIRA profile to use
     """
     jql = validate_jql(jql)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     results = client.search_issues(
         jql, fields=["key", "summary", "labels"], max_results=max_issues
     )
@@ -136,7 +134,6 @@ def main(argv: list[str] | None = None):
         action="store_true",
         help="Show what would be updated without making changes",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -157,7 +154,6 @@ def main(argv: list[str] | None = None):
             priority=args.priority,
             max_issues=args.max_issues,
             dry_run=args.dry_run,
-            profile=args.profile,
         )
 
     except JiraError as e:

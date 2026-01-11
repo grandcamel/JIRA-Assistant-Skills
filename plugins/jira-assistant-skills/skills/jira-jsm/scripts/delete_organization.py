@@ -18,15 +18,14 @@ from jira_assistant_skills_lib import (
 )
 
 
-def delete_organization_func(organization_id: int, profile: str | None = None) -> None:
+def delete_organization_func(organization_id: int) -> None:
     """
     Delete an organization.
 
     Args:
         organization_id: Organization ID
-        profile: JIRA profile to use
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         client.delete_organization(organization_id)
 
 
@@ -54,7 +53,6 @@ Examples:
         action="store_true",
         help="Show what would be deleted without deleting",
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -69,7 +67,7 @@ Examples:
             return 1
 
         delete_organization_func(
-            organization_id=args.organization_id, profile=args.profile
+            organization_id=args.organization_id
         )
 
         print_success(f"Successfully deleted organization {args.organization_id}")

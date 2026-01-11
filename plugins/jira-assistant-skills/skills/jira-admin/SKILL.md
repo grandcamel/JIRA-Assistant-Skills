@@ -266,8 +266,6 @@ jira-as admin workflow get --name "Workflow" --output json
 
 ### Profile Selection
 ```bash
-jira-as admin project list --profile production
-jira-as admin project get PROJ --profile development
 ```
 
 ---

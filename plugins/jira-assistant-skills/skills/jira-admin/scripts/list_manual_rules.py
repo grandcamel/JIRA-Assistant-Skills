@@ -9,7 +9,7 @@ Usage:
     python list_manual_rules.py --context issue
     python list_manual_rules.py --context alert
     python list_manual_rules.py --output json
-    python list_manual_rules.py --profile development
+    python list_manual_rules.py
 """
 
 import argparse
@@ -32,7 +32,6 @@ def list_manual_rules(
     context_type: str = "issue",
     limit: int = 50,
     fetch_all: bool = False,
-    profile: str | None = None,
 ) -> list[dict[str, Any]]:
     """
     List manually-triggered automation rules.
@@ -42,13 +41,12 @@ def list_manual_rules(
         context_type: Context type ('issue', 'alert', etc.)
         limit: Maximum results per page
         fetch_all: If True, fetch all pages
-        profile: JIRA profile to use
 
     Returns:
         List of manual rule summaries
     """
     if client is None:
-        client = get_automation_client(profile)
+        client = get_automation_client()
 
     all_rules = []
     cursor = None
@@ -107,7 +105,7 @@ Examples:
     python list_manual_rules.py --output json
 
     # Use specific profile
-    python list_manual_rules.py --profile development
+    python list_manual_rules.py
         """,
     )
 
@@ -135,7 +133,6 @@ Examples:
         default="table",
         help="Output format (default: table)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -144,7 +141,6 @@ Examples:
             context_type=args.context,
             limit=args.limit,
             fetch_all=args.fetch_all,
-            profile=args.profile,
         )
 
         if not rules:

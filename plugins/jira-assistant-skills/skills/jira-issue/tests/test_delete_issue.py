@@ -277,20 +277,6 @@ class TestDeleteIssueErrors:
 class TestDeleteIssueProfile:
     """Tests for profile handling."""
 
-    def test_delete_issue_with_profile(self, mock_jira_client):
-        """Test deleting issue with specific profile."""
-        mock_jira_client.delete_issue.return_value = None
-
-        with patch.object(
-            delete_issue_module, "get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            delete_issue_module.delete_issue(
-                issue_key="PROJ-123", force=True, profile="development"
-            )
-
-        mock_get_client.assert_called_with("development")
-
-
 @pytest.mark.unit
 class TestDeleteIssueCleanup:
     """Tests for client cleanup."""
