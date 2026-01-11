@@ -143,7 +143,6 @@ def link_commit(
     repo_url: str | None = None,
     author: str | None = None,
     branch: str | None = None,
-    profile: str | None = None,
     client=None,
     # Aliases for parameter names
     commit: str | None = None,
@@ -159,7 +158,6 @@ def link_commit(
         repo_url: Repository URL
         author: Commit author
         branch: Branch name
-        profile: JIRA profile
         client: Optional JiraClient instance (created if not provided)
         commit: Alias for commit_sha
         repo: Alias for repo_url
@@ -187,7 +185,7 @@ def link_commit(
     # Create comment via JIRA API
     close_client = False
     if client is None:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         close_client = True
     try:
         # Convert wiki markup to ADF using shared helper
@@ -218,7 +216,6 @@ def link_commit_to_issues(
     repo_url: str | None = None,
     author: str | None = None,
     branch: str | None = None,
-    profile: str | None = None,
 ) -> list[dict[str, Any]]:
     """
     Link a commit to multiple JIRA issues.
@@ -230,7 +227,6 @@ def link_commit_to_issues(
         repo_url: Repository URL
         author: Commit author
         branch: Branch name
-        profile: JIRA profile
 
     Returns:
         List of results for each issue
@@ -246,7 +242,6 @@ def link_commit_to_issues(
                 repo_url=repo_url,
                 author=author,
                 branch=branch,
-                profile=profile,
             )
             results.append(result)
         except JiraError as e:
@@ -278,7 +273,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -305,7 +299,6 @@ def main(argv: list[str] | None = None):
             repo_url=args.repo,
             author=args.author,
             branch=args.branch,
-            profile=args.profile,
         )
 
         # Output results

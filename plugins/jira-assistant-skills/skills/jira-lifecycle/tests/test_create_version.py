@@ -28,7 +28,7 @@ class TestCreateVersion:
 
         from create_version import create_version
 
-        result = create_version(project="PROJ", name="v1.0.0", profile=None)
+        result = create_version(project="PROJ", name="v1.0.0")
 
         assert result["name"] == "v1.0.0"
         assert result["project"] == "PROJ"
@@ -51,7 +51,7 @@ class TestCreateVersion:
         from create_version import create_version
 
         result = create_version(
-            project="PROJ", name="v1.1.0", description="Bug fix release", profile=None
+            project="PROJ", name="v1.1.0", description="Bug fix release"
         )
 
         assert result["description"] == "Bug fix release"
@@ -78,8 +78,7 @@ class TestCreateVersion:
             name="v2.0.0",
             start_date="2025-02-01",
             release_date="2025-03-01",
-            profile=None,
-        )
+                )
 
         assert result["startDate"] == "2025-02-01"
         assert result["releaseDate"] == "2025-03-01"
@@ -105,8 +104,7 @@ class TestCreateVersion:
             name="v0.9.0",
             released=True,
             release_date="2025-01-15",
-            profile=None,
-        )
+                )
 
         assert result["released"] is True
 
@@ -126,7 +124,7 @@ class TestCreateVersion:
         from create_version import create_version
 
         result = create_version(
-            project="PROJ", name="v0.8.0", archived=True, profile=None
+            project="PROJ", name="v0.8.0", archived=True
         )
 
         assert result["archived"] is True
@@ -173,7 +171,7 @@ class TestCreateVersionErrorHandling:
         from create_version import create_version
 
         with pytest.raises(AuthenticationError):
-            create_version(project="PROJ", name="v1.0.0", profile=None)
+            create_version(project="PROJ", name="v1.0.0")
 
     @patch("create_version.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client):
@@ -188,7 +186,7 @@ class TestCreateVersionErrorHandling:
         from create_version import create_version
 
         with pytest.raises(PermissionError):
-            create_version(project="PROJ", name="v1.0.0", profile=None)
+            create_version(project="PROJ", name="v1.0.0")
 
     @patch("create_version.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -203,7 +201,7 @@ class TestCreateVersionErrorHandling:
         from create_version import create_version
 
         with pytest.raises(NotFoundError):
-            create_version(project="INVALID", name="v1.0.0", profile=None)
+            create_version(project="INVALID", name="v1.0.0")
 
     @patch("create_version.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -218,7 +216,7 @@ class TestCreateVersionErrorHandling:
         from create_version import create_version
 
         with pytest.raises(JiraError) as exc_info:
-            create_version(project="PROJ", name="v1.0.0", profile=None)
+            create_version(project="PROJ", name="v1.0.0")
         assert exc_info.value.status_code == 429
 
     @patch("create_version.get_jira_client")
@@ -234,7 +232,7 @@ class TestCreateVersionErrorHandling:
         from create_version import create_version
 
         with pytest.raises(JiraError) as exc_info:
-            create_version(project="PROJ", name="v1.0.0", profile=None)
+            create_version(project="PROJ", name="v1.0.0")
         assert exc_info.value.status_code == 500
 
 
@@ -381,20 +379,6 @@ class TestCreateVersionMain:
         assert "DRY RUN" in captured.out
         assert "Test" in captured.out
         assert "2025-02-01" in captured.out
-
-    @patch("create_version.get_jira_client")
-    def test_main_with_profile(
-        self, mock_get_client, mock_jira_client, sample_version, capsys
-    ):
-        """Test main with --profile."""
-        mock_get_client.return_value = mock_jira_client
-        mock_jira_client.create_version.return_value = copy.deepcopy(sample_version)
-
-        from create_version import main
-
-        main(["PROJ", "--name", "v1.0.0", "--profile", "dev"])
-
-        mock_get_client.assert_called_with("dev")
 
     @patch("create_version.get_jira_client")
     def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):

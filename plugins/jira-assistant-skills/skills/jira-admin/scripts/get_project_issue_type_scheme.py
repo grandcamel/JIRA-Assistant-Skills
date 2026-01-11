@@ -21,7 +21,7 @@ from jira_assistant_skills_lib import (
 
 
 def get_project_issue_type_scheme(
-    project_id: str, client=None, profile: str | None = None
+    project_id: str, client=None
 ) -> dict[str, Any]:
     """
     Get issue type scheme assigned to a project.
@@ -29,7 +29,6 @@ def get_project_issue_type_scheme(
     Args:
         project_id: Project ID
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
 
     Returns:
         Scheme assignment with issueTypeScheme and projectIds
@@ -39,7 +38,7 @@ def get_project_issue_type_scheme(
         JiraError: On API failure
     """
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         result = client.get_issue_type_scheme_for_projects(project_ids=[project_id])
@@ -91,7 +90,7 @@ Examples:
   python get_project_issue_type_scheme.py 10000 --format json
 
   # Use specific profile
-  python get_project_issue_type_scheme.py 10000 --profile production
+  python get_project_issue_type_scheme.py 10000
 """,
     )
 
@@ -102,13 +101,12 @@ Examples:
         default="detail",
         help="Output format (default: detail)",
     )
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         assignment = get_project_issue_type_scheme(
-            project_id=args.project_id, profile=args.profile
+            project_id=args.project_id
         )
 
         output = format_project_scheme(assignment, args.format)

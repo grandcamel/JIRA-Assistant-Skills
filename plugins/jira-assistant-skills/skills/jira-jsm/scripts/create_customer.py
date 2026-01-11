@@ -37,7 +37,7 @@ def validate_email(email: str) -> bool:
 
 
 def create_customer_account(
-    email: str, display_name: str | None = None, profile: str | None = None
+    email: str, display_name: str | None = None
 ) -> dict:
     """
     Create a customer account.
@@ -45,7 +45,6 @@ def create_customer_account(
     Args:
         email: Customer email address
         display_name: Display name (defaults to email)
-        profile: JIRA profile to use
 
     Returns:
         Created customer data
@@ -53,7 +52,7 @@ def create_customer_account(
     if not validate_email(email):
         raise ValueError(f"Invalid email format: {email}")
 
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         return client.create_customer(email, display_name)
 
 
@@ -93,7 +92,6 @@ Examples:
         action="store_true",
         help="Show what would be created without creating",
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Show full API response"
     )
@@ -113,7 +111,7 @@ Examples:
             return 0
 
         customer = create_customer_account(
-            email=args.email, display_name=args.name, profile=args.profile
+            email=args.email, display_name=args.name
         )
 
         if args.output == "json":

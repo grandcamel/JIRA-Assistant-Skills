@@ -26,7 +26,6 @@ def get_service_request(
     issue_key: str,
     show_sla: bool = False,
     show_participants: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Get service request details.
@@ -35,7 +34,6 @@ def get_service_request(
         issue_key: Request key (e.g., 'SD-101')
         show_sla: Include SLA information
         show_participants: Include participant list
-        profile: JIRA profile to use
 
     Returns:
         Request data
@@ -49,7 +47,7 @@ def get_service_request(
     if show_participants:
         expand.append("participant")
 
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         return client.get_request(issue_key, expand=expand if expand else None)
 
 
@@ -189,7 +187,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -201,7 +198,6 @@ Examples:
             issue_key=args.request_key,
             show_sla=show_sla,
             show_participants=show_participants,
-            profile=args.profile,
         )
 
         if args.output == "json":

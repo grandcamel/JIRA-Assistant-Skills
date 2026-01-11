@@ -147,11 +147,3 @@ def test_add_users_multiple_batches(mock_jira_client):
     assert exit_code == 0
 
 
-def test_add_users_with_profile(mock_jira_client):
-    """Test using specific profile."""
-    mock_jira_client.add_users_to_organization.return_value = None
-
-    with patch("add_to_organization.get_jira_client", return_value=mock_jira_client):
-        from add_to_organization import add_users_to_organization_func
-
-        add_users_to_organization_func(1, ["id1"], profile="staging")

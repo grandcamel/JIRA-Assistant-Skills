@@ -24,10 +24,10 @@ from jira_assistant_skills_lib import (
 )
 
 
-def list_watchers(issue_key: str, profile: str | None = None) -> list:
+def list_watchers(issue_key: str) -> list:
     """List watchers on an issue."""
     issue_key = validate_issue_key(issue_key)
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.get(
         f"/rest/api/3/issue/{issue_key}/watchers",
         operation=f"get watchers for {issue_key}",
@@ -36,10 +36,10 @@ def list_watchers(issue_key: str, profile: str | None = None) -> list:
     return result.get("watchers", [])
 
 
-def add_watcher(issue_key: str, user: str, profile: str | None = None) -> None:
+def add_watcher(issue_key: str, user: str) -> None:
     """Add a watcher to an issue."""
     issue_key = validate_issue_key(issue_key)
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     try:
         account_id = resolve_user_to_account_id(client, user)
@@ -55,10 +55,10 @@ def add_watcher(issue_key: str, user: str, profile: str | None = None) -> None:
     client.close()
 
 
-def remove_watcher(issue_key: str, user: str, profile: str | None = None) -> None:
+def remove_watcher(issue_key: str, user: str) -> None:
     """Remove a watcher from an issue."""
     issue_key = validate_issue_key(issue_key)
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     try:
         account_id = resolve_user_to_account_id(client, user)
@@ -88,13 +88,12 @@ def main(argv: list[str] | None = None):
         "--list", "-l", action="store_true", help="List current watchers"
     )
 
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
         if args.list:
-            watchers = list_watchers(args.issue_key, profile=args.profile)
+            watchers = list_watchers(args.issue_key)
             if not watchers:
                 print(f"No watchers on {args.issue_key}")
             else:
@@ -108,11 +107,11 @@ def main(argv: list[str] | None = None):
                 print(format_table(data))
 
         elif args.add:
-            add_watcher(args.issue_key, args.add, profile=args.profile)
+            add_watcher(args.issue_key, args.add)
             print_success(f"Added {args.add} as watcher to {args.issue_key}")
 
         elif args.remove:
-            remove_watcher(args.issue_key, args.remove, profile=args.profile)
+            remove_watcher(args.issue_key, args.remove)
             print_success(f"Removed {args.remove} as watcher from {args.issue_key}")
 
     except JiraError as e:

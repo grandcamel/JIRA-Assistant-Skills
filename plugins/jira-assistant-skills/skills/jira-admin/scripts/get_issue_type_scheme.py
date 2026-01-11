@@ -23,7 +23,6 @@ from jira_assistant_skills_lib import (
 def get_issue_type_scheme(
     scheme_id: str,
     client=None,
-    profile: str | None = None,
     include_items: bool = False,
 ) -> dict[str, Any]:
     """
@@ -32,7 +31,6 @@ def get_issue_type_scheme(
     Args:
         scheme_id: Scheme ID
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
         include_items: If True, include issue type mappings
 
     Returns:
@@ -43,7 +41,7 @@ def get_issue_type_scheme(
         JiraError: On API failure
     """
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         # Get scheme by filtering
@@ -112,7 +110,7 @@ Examples:
   python get_issue_type_scheme.py 10000 --format json
 
   # Use specific profile
-  python get_issue_type_scheme.py 10000 --profile production
+  python get_issue_type_scheme.py 10000
 """,
     )
 
@@ -126,14 +124,12 @@ Examples:
         default="detail",
         help="Output format (default: detail)",
     )
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         scheme = get_issue_type_scheme(
             scheme_id=args.scheme_id,
-            profile=args.profile,
             include_items=args.include_items,
         )
 

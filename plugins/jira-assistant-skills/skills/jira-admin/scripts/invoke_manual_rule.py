@@ -9,7 +9,7 @@ Usage:
     python invoke_manual_rule.py RULE_ID --issue PROJ-123 --property '{"key": "value"}'
     python invoke_manual_rule.py RULE_ID --issue PROJ-123 --dry-run
     python invoke_manual_rule.py RULE_ID --context-file context.json
-    python invoke_manual_rule.py RULE_ID --issue PROJ-123 --profile development
+    python invoke_manual_rule.py RULE_ID --issue PROJ-123
 """
 
 import argparse
@@ -33,7 +33,6 @@ def invoke_manual_rule(
     context: dict[str, Any] | None = None,
     properties: dict[str, Any] | None = None,
     dry_run: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Invoke a manual automation rule.
@@ -45,7 +44,6 @@ def invoke_manual_rule(
         context: Full context object (alternative to issue_key)
         properties: Optional input properties for the rule
         dry_run: If True, preview without invoking
-        profile: JIRA profile to use
 
     Returns:
         Invocation result
@@ -54,7 +52,7 @@ def invoke_manual_rule(
         ValueError: If neither issue_key nor context provided
     """
     if client is None:
-        client = get_automation_client(profile)
+        client = get_automation_client()
 
     if not rule_id:
         raise ValueError("rule_id is required")
@@ -103,7 +101,7 @@ Examples:
     python invoke_manual_rule.py 12345 --issue PROJ-123 --output json
 
     # Use specific profile
-    python invoke_manual_rule.py 12345 --issue PROJ-123 --profile development
+    python invoke_manual_rule.py 12345 --issue PROJ-123
         """,
     )
 
@@ -125,7 +123,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -151,7 +148,6 @@ Examples:
             context=context,
             properties=properties,
             dry_run=args.dry_run,
-            profile=args.profile,
         )
 
         if args.output == "json":

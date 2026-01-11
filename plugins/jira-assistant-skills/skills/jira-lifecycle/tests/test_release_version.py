@@ -27,7 +27,7 @@ class TestReleaseVersion:
 
         from release_version import release_version
 
-        result = release_version(version_id="10001", profile=None)
+        result = release_version(version_id="10001")
 
         assert result["released"] is True
         mock_jira_client.update_version.assert_called_once()
@@ -50,7 +50,7 @@ class TestReleaseVersion:
         from release_version import release_version
 
         result = release_version(
-            version_id="10001", release_date="2025-02-15", profile=None
+            version_id="10001", release_date="2025-02-15"
         )
 
         assert result["released"] is True
@@ -72,7 +72,7 @@ class TestReleaseVersion:
         from release_version import release_version_by_name
 
         result = release_version_by_name(
-            project="PROJ", version_name="v1.0.0", profile=None
+            project="PROJ", version_name="v1.0.0"
         )
 
         assert result["released"] is True
@@ -93,7 +93,7 @@ class TestReleaseVersion:
 
         with pytest.raises(ValidationError, match="Version.*not found"):
             release_version_by_name(
-                project="PROJ", version_name="v99.0.0", profile=None
+                project="PROJ", version_name="v99.0.0"
             )
 
     @patch("release_version.get_jira_client")
@@ -112,7 +112,7 @@ class TestReleaseVersion:
         from release_version import release_version
 
         result = release_version(
-            version_id="10001", description="Released version", profile=None
+            version_id="10001", description="Released version"
         )
 
         assert result["description"] == "Released version"
@@ -151,7 +151,7 @@ class TestReleaseVersionErrorHandling:
         from release_version import release_version
 
         with pytest.raises(AuthenticationError):
-            release_version(version_id="10001", profile=None)
+            release_version(version_id="10001")
 
     @patch("release_version.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client):
@@ -166,7 +166,7 @@ class TestReleaseVersionErrorHandling:
         from release_version import release_version
 
         with pytest.raises(PermissionError):
-            release_version(version_id="10001", profile=None)
+            release_version(version_id="10001")
 
     @patch("release_version.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -179,7 +179,7 @@ class TestReleaseVersionErrorHandling:
         from release_version import release_version
 
         with pytest.raises(NotFoundError):
-            release_version(version_id="99999", profile=None)
+            release_version(version_id="99999")
 
     @patch("release_version.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -194,7 +194,7 @@ class TestReleaseVersionErrorHandling:
         from release_version import release_version
 
         with pytest.raises(JiraError) as exc_info:
-            release_version(version_id="10001", profile=None)
+            release_version(version_id="10001")
         assert exc_info.value.status_code == 429
 
     @patch("release_version.get_jira_client")
@@ -210,5 +210,5 @@ class TestReleaseVersionErrorHandling:
         from release_version import release_version
 
         with pytest.raises(JiraError) as exc_info:
-            release_version(version_id="10001", profile=None)
+            release_version(version_id="10001")
         assert exc_info.value.status_code == 500

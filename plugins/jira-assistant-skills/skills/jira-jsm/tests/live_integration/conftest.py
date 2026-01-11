@@ -5,13 +5,12 @@ Pytest fixtures for running integration tests against a real JIRA Service Manage
 Creates a temporary service desk project, runs tests, and cleans up all resources.
 
 Usage:
-    pytest tests/live_integration/ --profile development -v
-    pytest tests/live_integration/ --profile development --keep-project -v
-    pytest tests/live_integration/ --profile development --service-desk-id 1 -v
+    pytest tests/live_integration/ -v
+    pytest tests/live_integration/ --keep-project -v
+    pytest tests/live_integration/ --service-desk-id 1 -v
 
 Environment:
     Requires JIRA admin permissions to create/delete service desk projects.
-    Uses the profile specified via --profile flag or JIRA_PROFILE env var.
 
 Note:
     Some features like Assets/CMDB require JSM Premium license.
@@ -19,7 +18,6 @@ Note:
 """
 
 import contextlib
-import os
 import time
 import uuid
 from collections.abc import Generator
@@ -33,10 +31,6 @@ from jira_assistant_skills_lib import JiraClient, get_jira_client
 def pytest_addoption(parser):
     """Add custom command line options."""
     parser.addoption(
-        "--profile",
-        action="store",
-        default=os.environ.get("JIRA_PROFILE", "development"),
-        help="JIRA profile to use (default: development)",
     )
     parser.addoption(
         "--keep-project",
@@ -46,7 +40,6 @@ def pytest_addoption(parser):
     )
     parser.addoption(
         "--service-desk-id",
-        action="store",
         default=None,
         help="Use existing service desk ID instead of creating one (skips cleanup)",
     )
@@ -72,9 +65,6 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope="session")
-def jira_profile(request) -> str:
-    """Get the JIRA profile from command line."""
-    return request.config.getoption("--profile")
 
 
 @pytest.fixture(scope="session")
@@ -90,9 +80,9 @@ def existing_service_desk_id(request) -> str | None:
 
 
 @pytest.fixture(scope="session")
-def jira_client(jira_profile) -> Generator[JiraClient, None, None]:
+def jira_client() -> Generator[JiraClient, None, None]:
     """Create a JIRA client for the test session."""
-    client = get_jira_client(jira_profile)
+    client = get_jira_client()
     yield client
     client.close()
 

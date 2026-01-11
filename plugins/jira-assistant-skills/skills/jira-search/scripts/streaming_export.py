@@ -579,7 +579,6 @@ Examples:
     parser.add_argument(
         "--no-progress", action="store_true", help="Disable progress bar"
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -610,7 +609,7 @@ Examples:
                 sys.exit(1)
 
             print_info(f"Resuming export: {args.resume}")
-            client = get_jira_client(args.profile)
+            client = get_jira_client()
 
             exporter = StreamingExporter(
                 client=client,
@@ -641,7 +640,7 @@ Examples:
 
         fields = [f.strip() for f in args.fields.split(",")] if args.fields else None
 
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         exporter = StreamingExporter(
             client=client,

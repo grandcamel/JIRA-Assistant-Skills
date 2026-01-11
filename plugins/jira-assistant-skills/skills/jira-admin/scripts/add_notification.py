@@ -39,7 +39,6 @@ def add_notification(
     event_name: str | None = None,
     recipients: list[str] | None = None,
     dry_run: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Add notifications to a notification scheme.
@@ -51,7 +50,6 @@ def add_notification(
         event_name: Event name (alternative to event_id)
         recipients: List of recipient strings (e.g., ['CurrentAssignee', 'Group:devs'])
         dry_run: If True, validate but don't add
-        profile: JIRA profile to use
 
     Returns:
         Dict with success status and added notifications
@@ -61,7 +59,7 @@ def add_notification(
     """
     close_client = False
     if client is None:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         close_client = True
 
     try:
@@ -223,7 +221,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -240,7 +237,6 @@ Examples:
             event_name=args.event_name,
             recipients=args.recipients,
             dry_run=args.dry_run,
-            profile=args.profile,
         )
 
         if args.output == "json":

@@ -16,9 +16,9 @@ from typing import Any
 from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-def list_queues(service_desk_id: int, profile: str | None = None) -> dict[str, Any]:
+def list_queues(service_desk_id: int) -> dict[str, Any]:
     """List queues for a service desk."""
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         return client.get_service_desk_queues(service_desk_id)
 
 
@@ -56,12 +56,11 @@ def main(argv: list[str] | None = None):
     )
     parser.add_argument("--show-jql", action="store_true", help="Show JQL queries")
     parser.add_argument("--output", choices=["text", "json"], default="text")
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
-        queues = list_queues(args.service_desk, args.profile)
+        queues = list_queues(args.service_desk)
 
         if args.output == "json":
             print(format_queues_json(queues))

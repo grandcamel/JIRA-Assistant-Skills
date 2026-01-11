@@ -28,19 +28,16 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_jira_base_url(profile: str | None = None) -> str:
+def get_jira_base_url() -> str:
     """
     Get JIRA base URL from configuration.
-
-    Args:
-        profile: JIRA profile to use
 
     Returns:
         JIRA base URL
     """
     try:
-        config_manager = ConfigManager(profile=profile)
-        url, _, _ = config_manager.get_credentials(profile)
+        config_manager = ConfigManager()
+        url, _, _ = config_manager.get_credentials()
         return url
     except Exception:
         return "https://jira.example.com"
@@ -100,7 +97,6 @@ def create_pr_description(
     include_checklist: bool = False,
     include_labels: bool = False,
     include_components: bool = False,
-    profile: str | None = None,
     client=None,
     output_format: str = "text",
 ) -> dict[str, Any]:
@@ -112,7 +108,6 @@ def create_pr_description(
         include_checklist: Include testing checklist
         include_labels: Include issue labels
         include_components: Include components
-        profile: JIRA profile
         client: Optional JiraClient instance (created if not provided)
         output_format: Output format (text, json)
 
@@ -123,7 +118,7 @@ def create_pr_description(
 
     close_client = False
     if client is None:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         close_client = True
     try:
         issue = client.get_issue(
@@ -158,7 +153,7 @@ def create_pr_description(
         desc_text = description or ""
 
     # Get JIRA URL for link
-    jira_url = get_jira_base_url(profile)
+    jira_url = get_jira_base_url()
 
     # Build PR description
     lines = []
@@ -290,7 +285,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--copy", action="store_true", help="Copy to clipboard (requires pyperclip)"
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -300,7 +294,6 @@ def main(argv: list[str] | None = None):
             include_checklist=args.include_checklist,
             include_labels=args.include_labels,
             include_components=args.include_components,
-            profile=args.profile,
         )
 
         output = format_output(result, args.output)

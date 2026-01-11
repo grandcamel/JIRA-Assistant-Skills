@@ -21,27 +21,26 @@ from jira_assistant_skills_lib import (
 )
 
 
-def delete_comment(issue_key: str, comment_id: str, profile: str | None = None) -> None:
+def delete_comment(issue_key: str, comment_id: str) -> None:
     """
     Delete a comment.
 
     Args:
         issue_key: Issue key (e.g., PROJ-123)
         comment_id: Comment ID to delete
-        profile: JIRA profile to use
 
     Raises:
         JiraError or subclass on failure
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     client.delete_comment(issue_key, comment_id)
     client.close()
 
 
 def delete_comment_with_confirm(
-    issue_key: str, comment_id: str, profile: str | None = None
+    issue_key: str, comment_id: str
 ) -> bool:
     """
     Delete a comment with confirmation prompt.
@@ -49,7 +48,6 @@ def delete_comment_with_confirm(
     Args:
         issue_key: Issue key (e.g., PROJ-123)
         comment_id: Comment ID to delete
-        profile: JIRA profile to use
 
     Returns:
         True if deleted, False if cancelled
@@ -57,7 +55,7 @@ def delete_comment_with_confirm(
     issue_key = validate_issue_key(issue_key)
 
     # Get comment details first
-    client = get_jira_client(profile)
+    client = get_jira_client()
     comment = client.get_comment(issue_key, comment_id)
 
     # Show comment preview
@@ -91,7 +89,7 @@ def delete_comment_with_confirm(
 
 
 def delete_comment_dry_run(
-    issue_key: str, comment_id: str, profile: str | None = None
+    issue_key: str, comment_id: str
 ) -> dict[str, Any]:
     """
     Show what would be deleted without actually deleting.
@@ -99,14 +97,13 @@ def delete_comment_dry_run(
     Args:
         issue_key: Issue key (e.g., PROJ-123)
         comment_id: Comment ID
-        profile: JIRA profile to use
 
     Returns:
         Comment data that would be deleted
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     comment = client.get_comment(issue_key, comment_id)
     client.close()
 
@@ -135,14 +132,13 @@ Examples:
         action="store_true",
         help="Show what would be deleted without deleting",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         if args.dry_run:
             # Dry run mode
-            comment = delete_comment_dry_run(args.issue_key, args.id, args.profile)
+            comment = delete_comment_dry_run(args.issue_key, args.id)
 
             author = comment.get("author", {}).get("displayName", "Unknown")
             created = comment.get("created", "N/A")[:16]
@@ -160,12 +156,12 @@ Examples:
 
         elif args.yes:
             # Delete without confirmation
-            delete_comment(args.issue_key, args.id, args.profile)
+            delete_comment(args.issue_key, args.id)
             print(f"Comment {args.id} deleted from {args.issue_key}.")
 
         else:
             # Delete with confirmation
-            deleted = delete_comment_with_confirm(args.issue_key, args.id, args.profile)
+            deleted = delete_comment_with_confirm(args.issue_key, args.id)
 
             if deleted:
                 print(f"\nComment {args.id} deleted from {args.issue_key}.")

@@ -165,7 +165,6 @@ Examples:
     parser.add_argument(
         "--refresh", action="store_true", help="Force refresh cache from API"
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -178,7 +177,7 @@ Examples:
         sys.exit(1)
 
     try:
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         fields = get_fields(
             client,

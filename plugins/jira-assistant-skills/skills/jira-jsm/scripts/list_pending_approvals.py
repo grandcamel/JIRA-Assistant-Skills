@@ -16,11 +16,11 @@ from datetime import datetime
 from jira_assistant_skills_lib import handle_errors
 
 
-def get_jira_client(profile=None):
+def get_jira_client():
     """Get JIRA client (overridable for testing)."""
     from jira_assistant_skills_lib import get_jira_client as _get_client
 
-    return _get_client(profile)
+    return _get_client()
 
 
 def format_pending_approvals_table(
@@ -94,12 +94,11 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     parsed_args = parser.parse_args(args)
 
     # Get JIRA client
-    jira = get_jira_client(parsed_args.profile)
+    jira = get_jira_client()
 
     # Build JQL to find requests with pending approvals
     jql_parts = ["status != Resolved"]

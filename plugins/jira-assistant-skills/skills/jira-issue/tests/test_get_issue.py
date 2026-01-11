@@ -374,18 +374,6 @@ class TestGetIssueOutputFormatting:
 class TestGetIssueProfile:
     """Tests for profile handling."""
 
-    def test_get_issue_with_profile(self, mock_jira_client, sample_issue):
-        """Test retrieving issue with specific profile."""
-        mock_jira_client.get_issue.return_value = deepcopy(sample_issue)
-
-        with patch.object(
-            get_issue_module, "get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            get_issue_module.get_issue(issue_key="PROJ-123", profile="development")
-
-        mock_get_client.assert_called_with("development")
-
-
 @pytest.mark.unit
 class TestGetIssueMinimal:
     """Tests for minimal issue responses."""

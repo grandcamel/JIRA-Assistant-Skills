@@ -28,21 +28,20 @@ from jira_assistant_skills_lib import (
 
 
 def list_attachments(
-    issue_key: str, profile: str | None = None
+    issue_key: str
 ) -> list[dict[str, Any]]:
     """
     List all attachments for an issue.
 
     Args:
         issue_key: Issue key (e.g., PROJ-123)
-        profile: JIRA profile to use
 
     Returns:
         List of attachment objects
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     attachments = client.get_attachments(issue_key)
     client.close()
 
@@ -54,7 +53,6 @@ def download_attachment(
     attachment_id: str | None = None,
     attachment_name: str | None = None,
     output_dir: str | None = None,
-    profile: str | None = None,
 ) -> str:
     """
     Download a specific attachment.
@@ -64,7 +62,6 @@ def download_attachment(
         attachment_id: Attachment ID to download
         attachment_name: Attachment name to download (if ID not specified)
         output_dir: Directory to save file (default: current directory)
-        profile: JIRA profile to use
 
     Returns:
         Path to downloaded file
@@ -74,7 +71,7 @@ def download_attachment(
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     attachments = client.get_attachments(issue_key)
 
     # Find the attachment
@@ -126,7 +123,7 @@ def download_attachment(
 
 
 def download_all_attachments(
-    issue_key: str, output_dir: str | None = None, profile: str | None = None
+    issue_key: str, output_dir: str | None = None
 ) -> list[str]:
     """
     Download all attachments from an issue.
@@ -134,14 +131,13 @@ def download_all_attachments(
     Args:
         issue_key: Issue key (e.g., PROJ-123)
         output_dir: Directory to save files
-        profile: JIRA profile to use
 
     Returns:
         List of paths to downloaded files
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     attachments = client.get_attachments(issue_key)
 
     if not attachments:
@@ -255,13 +251,12 @@ Examples:
         default="text",
         help="Output format for --list (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
         if args.list:
-            attachments = list_attachments(args.issue_key, profile=args.profile)
+            attachments = list_attachments(args.issue_key)
 
             if args.output == "json":
                 print(json.dumps(attachments, indent=2))
@@ -274,7 +269,6 @@ Examples:
                 args.issue_key,
                 attachment_name=args.name,
                 output_dir=args.output_dir,
-                profile=args.profile,
             )
             print_success(f"Downloaded: {output_path}")
 
@@ -283,13 +277,12 @@ Examples:
                 args.issue_key,
                 attachment_id=args.id,
                 output_dir=args.output_dir,
-                profile=args.profile,
             )
             print_success(f"Downloaded: {output_path}")
 
         elif args.all:
             downloaded = download_all_attachments(
-                args.issue_key, output_dir=args.output_dir, profile=args.profile
+                args.issue_key, output_dir=args.output_dir
             )
 
             if downloaded:

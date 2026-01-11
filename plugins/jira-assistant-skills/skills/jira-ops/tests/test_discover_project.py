@@ -474,7 +474,7 @@ class TestSaveToSettingsLocal:
                 "global": {"priority": "Medium"},
             }
 
-            settings_path = save_to_settings_local("TESTPROJ", defaults, "development")
+            settings_path = save_to_settings_local("TESTPROJ", defaults)
 
             assert settings_path.exists()
 
@@ -482,10 +482,8 @@ class TestSaveToSettingsLocal:
                 settings = json.load(f)
 
             assert "jira" in settings
-            assert "profiles" in settings["jira"]
-            assert "development" in settings["jira"]["profiles"]
-            assert "projects" in settings["jira"]["profiles"]["development"]
-            assert "TESTPROJ" in settings["jira"]["profiles"]["development"]["projects"]
+            assert "projects" in settings["jira"]
+            assert "TESTPROJ" in settings["jira"]["projects"]
 
     def test_save_merges_with_existing(self, temp_skills_dir):
         """Test settings are merged with existing file."""
@@ -503,21 +501,19 @@ class TestSaveToSettingsLocal:
             settings_path = claude_dir / "settings.local.json"
             existing = {
                 "jira": {
-                    "profiles": {
-                        "development": {"projects": {"EXISTING": {"defaults": {}}}}
-                    }
+                    "projects": {"EXISTING": {"defaults": {}}}
                 }
             }
             settings_path.write_text(json.dumps(existing))
 
             defaults = {"project_key": "TESTPROJ", "by_issue_type": {}, "global": {}}
-            save_to_settings_local("TESTPROJ", defaults, "development")
+            save_to_settings_local("TESTPROJ", defaults)
 
             with open(settings_path) as f:
                 settings = json.load(f)
 
             # Both projects should exist
-            projects = settings["jira"]["profiles"]["development"]["projects"]
+            projects = settings["jira"]["projects"]
             assert "EXISTING" in projects
             assert "TESTPROJ" in projects
 

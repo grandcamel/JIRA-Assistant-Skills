@@ -22,7 +22,6 @@ from jira_assistant_skills_lib import (
 
 def list_issue_types(
     client=None,
-    profile: str | None = None,
     subtask_only: bool = False,
     standard_only: bool = False,
     hierarchy_level: int | None = None,
@@ -32,7 +31,6 @@ def list_issue_types(
 
     Args:
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
         subtask_only: If True, return only subtask types
         standard_only: If True, return only non-subtask types
         hierarchy_level: Filter by specific hierarchy level
@@ -44,7 +42,7 @@ def list_issue_types(
         JiraError: On API failure
     """
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         issue_types = client.get_issue_types()
@@ -124,7 +122,7 @@ Examples:
   python list_issue_types.py --format json
 
   # Use specific profile
-  python list_issue_types.py --profile production
+  python list_issue_types.py
 """,
     )
 
@@ -148,13 +146,11 @@ Examples:
         default="table",
         help="Output format (default: table)",
     )
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         issue_types = list_issue_types(
-            profile=args.profile,
             subtask_only=args.subtask_only,
             standard_only=args.standard_only,
             hierarchy_level=args.hierarchy,

@@ -31,7 +31,6 @@ def list_fields(
     filter_pattern: str | None = None,
     agile_only: bool = False,
     custom_only: bool = True,
-    profile: str | None = None,
     client=None,
 ) -> list[dict[str, Any]]:
     """
@@ -41,7 +40,6 @@ def list_fields(
         filter_pattern: Filter fields by name pattern (case-insensitive)
         agile_only: If True, only show Agile-related fields
         custom_only: If True, only show custom fields (default: True)
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -51,7 +49,7 @@ def list_fields(
         JiraError: If API call fails
     """
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -112,7 +110,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--all", action="store_true", help="Show all fields (not just custom)"
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
@@ -124,7 +121,6 @@ def main(argv: list[str] | None = None):
             filter_pattern=args.filter,
             agile_only=args.agile,
             custom_only=not args.all,
-            profile=args.profile,
         )
 
         if args.output == "json":

@@ -151,7 +151,6 @@ See [Quick Start Guide](docs/QUICK_START.md) for essential workflows.
 ## Common options
 
 All scripts support:
-- `--profile <name>` - Use specific JIRA profile
 - `--help` - Show usage and examples
 
 Most scripts also support:

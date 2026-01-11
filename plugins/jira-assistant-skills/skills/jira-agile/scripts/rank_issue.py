@@ -32,7 +32,6 @@ def rank_issue(
     after_key: str | None = None,
     position: str | None = None,
     board_id: int | None = None,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -44,7 +43,6 @@ def rank_issue(
         after_key: Rank after this issue
         position: Position ('top' or 'bottom')
         board_id: Board ID (for top/bottom positioning)
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -74,7 +72,7 @@ def rank_issue(
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -125,7 +123,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--board", type=int, help="Board ID (may be required for top/bottom)"
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
@@ -149,7 +146,6 @@ def main(argv: list[str] | None = None):
             after_key=args.after,
             position=position,
             board_id=args.board,
-            profile=args.profile,
         )
 
         if args.output == "json":

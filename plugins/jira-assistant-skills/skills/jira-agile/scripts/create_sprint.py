@@ -31,7 +31,6 @@ def create_sprint(
     start_date: str | None = None,
     end_date: str | None = None,
     goal: str | None = None,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -43,7 +42,6 @@ def create_sprint(
         start_date: Sprint start date (YYYY-MM-DD or ISO format)
         end_date: Sprint end date (YYYY-MM-DD or ISO format)
         goal: Sprint goal description
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -88,7 +86,7 @@ def create_sprint(
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -120,7 +118,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument("--start", "-s", help="Start date (YYYY-MM-DD)")
     parser.add_argument("--end", "-e", help="End date (YYYY-MM-DD)")
     parser.add_argument("--goal", "-g", help="Sprint goal")
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
     parser.add_argument(
         "--output",
         "-o",
@@ -138,7 +135,6 @@ def main(argv: list[str] | None = None):
             start_date=args.start,
             end_date=args.end,
             goal=args.goal,
-            profile=args.profile,
         )
 
         sprint_id = result.get("id")

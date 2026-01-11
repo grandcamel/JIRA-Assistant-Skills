@@ -80,20 +80,6 @@ class TestListAttachments:
 
             assert result == []
 
-    def test_list_attachments_with_profile(self, mock_jira_client, sample_attachments):
-        """Test listing attachments with a specific profile."""
-        mock_jira_client.get_attachments.return_value = sample_attachments
-
-        with patch(
-            "download_attachment.get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            from download_attachment import list_attachments
-
-            list_attachments("PROJ-123", profile="development")
-
-            mock_get_client.assert_called_with("development")
-
-
 @pytest.mark.collaborate
 @pytest.mark.unit
 class TestDownloadAttachment:

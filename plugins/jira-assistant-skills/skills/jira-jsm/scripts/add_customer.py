@@ -48,7 +48,7 @@ def validate_account_ids(account_ids: list) -> bool:
 
 
 def add_customer_to_service_desk(
-    service_desk_id: str, account_ids: list, profile: str | None = None
+    service_desk_id: str, account_ids: list
 ) -> None:
     """
     Add customers to a service desk.
@@ -56,9 +56,8 @@ def add_customer_to_service_desk(
     Args:
         service_desk_id: Service desk ID or key
         account_ids: List of customer account IDs
-        profile: JIRA profile to use
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         client.add_customers_to_service_desk(service_desk_id, account_ids)
 
 
@@ -87,7 +86,6 @@ Examples:
     parser.add_argument(
         "--dry-run", action="store_true", help="Show what would be added without adding"
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -110,7 +108,6 @@ Examples:
         add_customer_to_service_desk(
             service_desk_id=args.service_desk_id,
             account_ids=account_ids,
-            profile=args.profile,
         )
 
         print_success(

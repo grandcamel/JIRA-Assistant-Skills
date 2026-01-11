@@ -178,12 +178,11 @@ Examples:
         default="table",
         help="Output format (default: table)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
-        client = get_jira_client(profile=args.profile)
+        client = get_jira_client()
 
         # Get scheme info
         scheme = get_scheme_for_deletion(client, args.scheme_id)

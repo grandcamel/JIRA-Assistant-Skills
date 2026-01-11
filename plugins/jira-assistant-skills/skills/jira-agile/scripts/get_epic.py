@@ -27,7 +27,6 @@ from jira_assistant_skills_lib import (
 def get_epic(
     epic_key: str,
     with_children: bool = False,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -36,7 +35,6 @@ def get_epic(
     Args:
         epic_key: Epic key to retrieve
         with_children: Fetch child issues and calculate progress
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -55,14 +53,14 @@ def get_epic(
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
 
     try:
         # Get Agile field IDs from configuration
-        agile_fields = get_agile_fields(profile)
+        agile_fields = get_agile_fields()
         story_points_field = agile_fields["story_points"]
         agile_fields["epic_name"]
 
@@ -213,7 +211,6 @@ def main(argv: list[str] | None = None):
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -221,7 +218,6 @@ def main(argv: list[str] | None = None):
         result = get_epic(
             epic_key=args.epic_key,
             with_children=args.with_children,
-            profile=args.profile,
         )
 
         output = format_epic_output(result, format=args.output)

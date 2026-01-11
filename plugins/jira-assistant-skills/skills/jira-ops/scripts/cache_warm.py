@@ -10,14 +10,14 @@ Usage:
     python cache_warm.py --fields            # Cache field definitions
     python cache_warm.py --users             # Cache user list
     python cache_warm.py --all               # Cache everything
-    python cache_warm.py --profile production
+    python cache_warm.py
 
 Examples:
     # Warm project and field caches
     python cache_warm.py --projects --fields
 
     # Warm all caches for production profile
-    python cache_warm.py --all --profile production
+    python cache_warm.py --all
 """
 
 import argparse
@@ -237,7 +237,7 @@ def main(argv: list[str] | None = None):
         epilog="""
 Examples:
     python cache_warm.py --projects --fields
-    python cache_warm.py --all --profile production
+    python cache_warm.py --all
         """,
     )
     parser.add_argument("--projects", action="store_true", help="Cache project list")
@@ -248,7 +248,6 @@ Examples:
     parser.add_argument(
         "--all", action="store_true", help="Cache all available metadata"
     )
-    parser.add_argument("--profile", type=str, default=None, help="JIRA profile to use")
     parser.add_argument(
         "--cache-dir", type=str, default=None, help="Custom cache directory"
     )
@@ -270,7 +269,7 @@ Examples:
         sys.exit(1)
 
     try:
-        client = get_jira_client(profile=args.profile)
+        client = get_jira_client()
         cache = JiraCache(cache_dir=args.cache_dir)
 
         total_cached = 0

@@ -26,11 +26,11 @@ from jira_assistant_skills_lib.validators import validate_project_key
 
 
 def get_board_for_project(
-    project_key: str, profile: str | None = None, client=None
+    project_key: str, client=None
 ) -> dict | None:
     """Find the first Scrum board for a project."""
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -53,7 +53,6 @@ def get_velocity(
     board_id: int | None = None,
     project_key: str | None = None,
     num_sprints: int = 3,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -63,7 +62,6 @@ def get_velocity(
         board_id: Board ID to query
         project_key: Project key (will find board automatically)
         num_sprints: Number of closed sprints to analyze
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -77,7 +75,7 @@ def get_velocity(
         raise ValidationError("Either --board or --project is required")
 
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -89,7 +87,7 @@ def get_velocity(
         # If project key provided, find the board
         if project_key and not board_id:
             validate_project_key(project_key)
-            board = get_board_for_project(project_key, profile, client)
+            board = get_board_for_project(project_key, client)
             if not board:
                 raise ValidationError(
                     f"No board found for project {project_key}. "
@@ -118,7 +116,7 @@ def get_velocity(
         )[:num_sprints]
 
         # Get story points field
-        agile_fields = get_agile_fields(profile)
+        agile_fields = get_agile_fields()
         story_points_field = agile_fields["story_points"]
 
         # Calculate points for each sprint
@@ -251,7 +249,6 @@ def main(argv: list[str] | None = None):
         default=3,
         help="Number of closed sprints to analyze (default: 3)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
@@ -266,7 +263,6 @@ def main(argv: list[str] | None = None):
             board_id=args.board,
             project_key=args.project,
             num_sprints=args.sprints,
-            profile=args.profile,
         )
 
         output = format_velocity(result, args.output)

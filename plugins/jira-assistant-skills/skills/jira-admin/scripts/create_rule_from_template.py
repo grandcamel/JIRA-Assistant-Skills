@@ -10,7 +10,7 @@ Usage:
     python create_rule_from_template.py TEMPLATE_ID --project PROJ --param key=value
     python create_rule_from_template.py TEMPLATE_ID --config template_config.json
     python create_rule_from_template.py TEMPLATE_ID --project PROJ --dry-run
-    python create_rule_from_template.py TEMPLATE_ID --project PROJ --profile development
+    python create_rule_from_template.py TEMPLATE_ID --project PROJ
 """
 
 import argparse
@@ -35,7 +35,6 @@ def create_rule_from_template(
     name: str | None = None,
     scope: str | None = None,
     dry_run: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Create an automation rule from a template.
@@ -48,7 +47,6 @@ def create_rule_from_template(
         name: Custom rule name
         scope: Rule scope (project ARI)
         dry_run: If True, preview without creating
-        profile: JIRA profile to use
 
     Returns:
         Created rule data or dry-run preview
@@ -57,7 +55,7 @@ def create_rule_from_template(
         ValueError: If template_id not provided
     """
     if client is None:
-        client = get_automation_client(profile)
+        client = get_automation_client()
 
     if not template_id:
         raise ValueError("template_id is required")
@@ -130,7 +128,7 @@ Examples:
     python create_rule_from_template.py template-001 --project PROJ --output json
 
     # Use specific profile
-    python create_rule_from_template.py template-001 --project PROJ --profile development
+    python create_rule_from_template.py template-001 --project PROJ
         """,
     )
 
@@ -154,7 +152,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -182,7 +179,6 @@ Examples:
             parameters=parameters,
             name=args.name,
             dry_run=args.dry_run,
-            profile=args.profile,
         )
 
         if args.output == "json":

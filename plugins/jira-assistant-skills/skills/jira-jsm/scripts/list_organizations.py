@@ -16,7 +16,7 @@ from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
 def list_organizations_func(
-    start: int = 0, limit: int = 50, profile: str | None = None
+    start: int = 0, limit: int = 50
 ) -> dict:
     """
     List all organizations.
@@ -24,12 +24,11 @@ def list_organizations_func(
     Args:
         start: Starting index for pagination
         limit: Maximum results per page
-        profile: JIRA profile to use
 
     Returns:
         Organizations data
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         return client.get_organizations(start=start, limit=limit)
 
 
@@ -67,13 +66,12 @@ Examples:
         help="Output format (default: text)",
     )
     parser.add_argument("--count", action="store_true", help="Show only count")
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
     try:
         data = list_organizations_func(
-            start=args.start, limit=args.limit, profile=args.profile
+            start=args.start, limit=args.limit
         )
 
         organizations = data.get("values", [])

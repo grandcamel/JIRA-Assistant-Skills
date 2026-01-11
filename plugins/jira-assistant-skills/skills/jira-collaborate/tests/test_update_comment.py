@@ -31,7 +31,7 @@ class TestUpdateComment:
         from update_comment import update_comment
 
         result = update_comment(
-            "PROJ-123", "10001", "Updated text", format_type="text", profile=None
+            "PROJ-123", "10001", "Updated text", format_type="text"
         )
 
         assert result["id"] == "10001"
@@ -57,8 +57,7 @@ class TestUpdateComment:
             "10001",
             "## New heading\n**Bold text**",
             format_type="markdown",
-            profile=None,
-        )
+                )
 
         call_args = mock_jira_client.update_comment.call_args
         body_adf = call_args[0][2]
@@ -78,7 +77,7 @@ class TestUpdateComment:
         from update_comment import update_comment
 
         with pytest.raises(PermissionError):
-            update_comment("PROJ-123", "10001", "Updated text", profile=None)
+            update_comment("PROJ-123", "10001", "Updated text")
 
     @patch("update_comment.get_jira_client")
     def test_update_comment_not_found(self, mock_get_client, mock_jira_client):
@@ -93,7 +92,7 @@ class TestUpdateComment:
         from update_comment import update_comment
 
         with pytest.raises(NotFoundError):
-            update_comment("PROJ-123", "99999", "Updated text", profile=None)
+            update_comment("PROJ-123", "99999", "Updated text")
 
     @patch("update_comment.get_jira_client")
     def test_update_preserves_visibility(
@@ -108,7 +107,7 @@ class TestUpdateComment:
         from update_comment import update_comment
 
         result = update_comment(
-            "PROJ-123", "10002", "Updated internal note", profile=None
+            "PROJ-123", "10002", "Updated internal note"
         )
 
         # Visibility should still be present in result
@@ -134,7 +133,7 @@ class TestUpdateCommentErrorHandling:
         from update_comment import update_comment
 
         with pytest.raises(AuthenticationError):
-            update_comment("PROJ-123", "10001", "Updated text", profile=None)
+            update_comment("PROJ-123", "10001", "Updated text")
 
     @patch("update_comment.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -149,7 +148,7 @@ class TestUpdateCommentErrorHandling:
         from update_comment import update_comment
 
         with pytest.raises(JiraError) as exc_info:
-            update_comment("PROJ-123", "10001", "Updated text", profile=None)
+            update_comment("PROJ-123", "10001", "Updated text")
         assert exc_info.value.status_code == 429
 
     @patch("update_comment.get_jira_client")
@@ -165,5 +164,5 @@ class TestUpdateCommentErrorHandling:
         from update_comment import update_comment
 
         with pytest.raises(JiraError) as exc_info:
-            update_comment("PROJ-123", "10001", "Updated text", profile=None)
+            update_comment("PROJ-123", "10001", "Updated text")
         assert exc_info.value.status_code == 500

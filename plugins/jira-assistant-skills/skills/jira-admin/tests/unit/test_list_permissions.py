@@ -290,16 +290,3 @@ class TestListPermissionsCLI:
 
         assert exc_info.value.code == 1
 
-    def test_cli_with_profile(self, mock_jira_client, all_permissions):
-        """Test CLI with profile argument."""
-        mock_jira_client.get_all_permissions.return_value = all_permissions
-
-        with patch(
-            "list_permissions.get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            with patch("sys.argv", ["list_permissions.py", "--profile", "development"]):
-                from list_permissions import main
-
-                main()
-
-        mock_get_client.assert_called_once_with(profile="development")

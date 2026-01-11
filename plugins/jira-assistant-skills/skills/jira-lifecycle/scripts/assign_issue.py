@@ -38,7 +38,6 @@ def assign_issue(
     user: str | None = None,
     assign_to_self: bool = False,
     unassign: bool = False,
-    profile: str | None = None,
     dry_run: bool = False,
 ) -> dict:
     """
@@ -49,7 +48,6 @@ def assign_issue(
         user: User account ID or email
         assign_to_self: Assign to current user
         unassign: Remove assignee
-        profile: JIRA profile to use
         dry_run: If True, preview changes without making them
 
     Returns:
@@ -60,7 +58,7 @@ def assign_issue(
     if sum([bool(user), assign_to_self, unassign]) != 1:
         raise ValidationError("Specify exactly one of: --user, --self, or --unassign")
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     if unassign:
         account_id = None
@@ -137,7 +135,6 @@ Note: Account IDs are more reliable than emails. Find them via:
     parser.add_argument(
         "--dry-run", action="store_true", help="Preview changes without making them"
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -147,7 +144,6 @@ Note: Account IDs are more reliable than emails. Find them via:
             user=args.user,
             assign_to_self=args.self,
             unassign=args.unassign,
-            profile=args.profile,
             dry_run=args.dry_run,
         )
 

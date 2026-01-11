@@ -9,7 +9,7 @@ Usage:
     python update_notification_scheme.py 10000 --description "New description"
     python update_notification_scheme.py 10000 --name "Renamed Scheme" --description "Updated description"
     python update_notification_scheme.py 10000 --name "Test" --dry-run
-    python update_notification_scheme.py 10000 --profile production --name "Prod Scheme"
+    python update_notification_scheme.py 10000 --name "Prod Scheme"
 """
 
 import argparse
@@ -31,7 +31,6 @@ def update_notification_scheme(
     name: str | None = None,
     description: str | None = None,
     dry_run: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Update notification scheme metadata.
@@ -42,7 +41,6 @@ def update_notification_scheme(
         name: New scheme name
         description: New scheme description
         dry_run: If True, show what would change without applying
-        profile: JIRA profile to use
 
     Returns:
         Dict with success status and change details
@@ -53,7 +51,7 @@ def update_notification_scheme(
     """
     close_client = False
     if client is None:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         close_client = True
 
     try:
@@ -187,7 +185,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -200,7 +197,6 @@ Examples:
             name=args.name,
             description=args.description,
             dry_run=args.dry_run,
-            profile=args.profile,
         )
 
         if args.output == "json":

@@ -30,7 +30,7 @@ class TestGetTransitions:
 
         from get_transitions import get_transitions
 
-        result = get_transitions("PROJ-123", profile=None)
+        result = get_transitions("PROJ-123")
 
         assert len(result) == 3
         assert any(t["name"] == "In Progress" for t in result)
@@ -44,7 +44,7 @@ class TestGetTransitions:
 
         from get_transitions import get_transitions
 
-        result = get_transitions("PROJ-123", profile=None)
+        result = get_transitions("PROJ-123")
 
         assert result == []
 
@@ -54,24 +54,7 @@ class TestGetTransitions:
         from get_transitions import get_transitions
 
         with pytest.raises(ValidationError):
-            get_transitions("invalid", profile=None)
-
-    @patch("get_transitions.get_jira_client")
-    def test_get_transitions_with_profile(
-        self, mock_get_client, mock_jira_client, sample_transitions
-    ):
-        """Test getting transitions with a specific profile."""
-        mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_transitions.return_value = copy.deepcopy(
-            sample_transitions
-        )
-
-        from get_transitions import get_transitions
-
-        result = get_transitions("PROJ-123", profile="development")
-
-        assert len(result) == 3
-        mock_get_client.assert_called_once_with("development")
+            get_transitions("invalid")
 
 
 @pytest.mark.lifecycle
@@ -92,7 +75,7 @@ class TestGetTransitionsErrorHandling:
         from get_transitions import get_transitions
 
         with pytest.raises(AuthenticationError):
-            get_transitions("PROJ-123", profile=None)
+            get_transitions("PROJ-123")
 
     @patch("get_transitions.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client):
@@ -105,7 +88,7 @@ class TestGetTransitionsErrorHandling:
         from get_transitions import get_transitions
 
         with pytest.raises(PermissionError):
-            get_transitions("PROJ-123", profile=None)
+            get_transitions("PROJ-123")
 
     @patch("get_transitions.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -120,7 +103,7 @@ class TestGetTransitionsErrorHandling:
         from get_transitions import get_transitions
 
         with pytest.raises(NotFoundError):
-            get_transitions("PROJ-999", profile=None)
+            get_transitions("PROJ-999")
 
     @patch("get_transitions.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -135,7 +118,7 @@ class TestGetTransitionsErrorHandling:
         from get_transitions import get_transitions
 
         with pytest.raises(JiraError) as exc_info:
-            get_transitions("PROJ-123", profile=None)
+            get_transitions("PROJ-123")
         assert exc_info.value.status_code == 429
 
     @patch("get_transitions.get_jira_client")
@@ -151,7 +134,7 @@ class TestGetTransitionsErrorHandling:
         from get_transitions import get_transitions
 
         with pytest.raises(JiraError) as exc_info:
-            get_transitions("PROJ-123", profile=None)
+            get_transitions("PROJ-123")
         assert exc_info.value.status_code == 500
 
 
@@ -210,22 +193,6 @@ class TestGetTransitionsMain:
 
         captured = capsys.readouterr()
         assert "No transitions available" in captured.out
-
-    @patch("get_transitions.get_jira_client")
-    def test_main_with_profile(
-        self, mock_get_client, mock_jira_client, sample_transitions, capsys
-    ):
-        """Test main with --profile."""
-        mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_transitions.return_value = copy.deepcopy(
-            sample_transitions
-        )
-
-        from get_transitions import main
-
-        main(["PROJ-123", "--profile", "dev"])
-
-        mock_get_client.assert_called_with("dev")
 
     @patch("get_transitions.get_jira_client")
     def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):

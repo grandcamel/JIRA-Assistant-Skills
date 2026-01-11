@@ -22,7 +22,6 @@ from jira_assistant_skills_lib import (
 
 def get_issue_type_scheme_mappings(
     client=None,
-    profile: str | None = None,
     start_at: int = 0,
     max_results: int = 50,
     scheme_ids: list[str] | None = None,
@@ -32,7 +31,6 @@ def get_issue_type_scheme_mappings(
 
     Args:
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
         start_at: Starting index for pagination
         max_results: Maximum results per page
         scheme_ids: Filter by scheme IDs
@@ -44,7 +42,7 @@ def get_issue_type_scheme_mappings(
         JiraError: On API failure
     """
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         result = client.get_issue_type_scheme_items(
@@ -110,13 +108,11 @@ Examples:
         default="table",
         help="Output format (default: table)",
     )
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         response = get_issue_type_scheme_mappings(
-            profile=args.profile,
             start_at=args.start_at,
             max_results=args.max_results,
             scheme_ids=args.scheme_ids,

@@ -9,7 +9,7 @@ Usage:
     python create_notification_scheme.py --template notification_scheme.json
     python create_notification_scheme.py --name "Dev Scheme" --event "Issue created" --notify CurrentAssignee --notify Group:developers
     python create_notification_scheme.py --template scheme.json --dry-run
-    python create_notification_scheme.py --profile production --name "Prod Scheme"
+    python create_notification_scheme.py --name "Prod Scheme"
 """
 
 import argparse
@@ -40,7 +40,6 @@ def create_notification_scheme(
     template_file: str | None = None,
     dry_run: bool = False,
     check_duplicate: bool = False,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Create a new notification scheme.
@@ -55,7 +54,6 @@ def create_notification_scheme(
         template_file: Path to JSON template file
         dry_run: If True, validate but don't create
         check_duplicate: If True, check if name already exists
-        profile: JIRA profile to use
 
     Returns:
         Created notification scheme object (or dry_run preview)
@@ -66,7 +64,7 @@ def create_notification_scheme(
     """
     close_client = False
     if client is None:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         close_client = True
 
     try:
@@ -250,7 +248,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -270,7 +267,6 @@ Examples:
             events=events,
             dry_run=args.dry_run,
             check_duplicate=args.check_duplicate,
-            profile=args.profile,
         )
 
         if args.output == "json":

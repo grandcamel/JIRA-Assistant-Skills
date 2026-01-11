@@ -11,7 +11,7 @@ Usage:
     python get_automation_rule.py RULE_ID --output json
     python get_automation_rule.py RULE_ID --show-trigger
     python get_automation_rule.py RULE_ID --show-components
-    python get_automation_rule.py RULE_ID --profile development
+    python get_automation_rule.py RULE_ID
 """
 
 import argparse
@@ -33,7 +33,6 @@ def get_automation_rule(
     client=None,
     rule_id: str | None = None,
     name: str | None = None,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Get detailed automation rule configuration.
@@ -42,7 +41,6 @@ def get_automation_rule(
         client: AutomationClient instance (optional, created if not provided)
         rule_id: Rule UUID/ARI to fetch
         name: Rule name to search for (alternative to rule_id)
-        profile: JIRA profile to use
 
     Returns:
         Full rule configuration
@@ -52,7 +50,7 @@ def get_automation_rule(
         ValueError: If neither rule_id nor name provided
     """
     if client is None:
-        client = get_automation_client(profile)
+        client = get_automation_client()
 
     if not rule_id and not name:
         raise ValueError("Either rule_id or name must be provided")
@@ -193,7 +191,7 @@ Examples:
     python get_automation_rule.py RULE_ID --show-components
 
     # Use specific profile
-    python get_automation_rule.py RULE_ID --profile development
+    python get_automation_rule.py RULE_ID
         """,
     )
 
@@ -212,7 +210,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -221,7 +218,7 @@ Examples:
 
     try:
         rule = get_automation_rule(
-            rule_id=args.rule_id, name=args.name, profile=args.profile
+            rule_id=args.rule_id, name=args.name
         )
 
         if args.output == "json":

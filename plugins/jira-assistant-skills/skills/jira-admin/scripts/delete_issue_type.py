@@ -20,7 +20,7 @@ from jira_assistant_skills_lib import (
 
 
 def get_alternatives_for_type(
-    issue_type_id: str, client=None, profile: str | None = None
+    issue_type_id: str, client=None
 ) -> list[dict[str, Any]]:
     """
     Get alternative issue types for migration.
@@ -28,7 +28,6 @@ def get_alternatives_for_type(
     Args:
         issue_type_id: Issue type ID to get alternatives for
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
 
     Returns:
         List of alternative issue types
@@ -37,7 +36,7 @@ def get_alternatives_for_type(
         JiraError: On API failure
     """
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         return client.get_issue_type_alternatives(issue_type_id)
@@ -50,7 +49,6 @@ def delete_issue_type(
     issue_type_id: str,
     alternative_id: str | None = None,
     client=None,
-    profile: str | None = None,
     dry_run: bool = False,
 ) -> bool:
     """
@@ -60,7 +58,6 @@ def delete_issue_type(
         issue_type_id: Issue type ID to delete
         alternative_id: Alternative issue type ID for existing issues
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
         dry_run: If True, simulate without actual deletion
 
     Returns:
@@ -75,7 +72,7 @@ def delete_issue_type(
         return True
 
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         client.delete_issue_type(
@@ -121,7 +118,7 @@ Examples:
   python delete_issue_type.py 10005 --force
 
   # Use specific profile
-  python delete_issue_type.py 10005 --profile production
+  python delete_issue_type.py 10005
 
 Note:
   Requires 'Administer Jira' global permission.
@@ -145,7 +142,6 @@ Note:
         help="Simulate deletion without making changes",
     )
     parser.add_argument("--force", action="store_true", help="Skip confirmation prompt")
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -153,7 +149,7 @@ Note:
         # Show alternatives only
         if args.show_alternatives:
             alternatives = get_alternatives_for_type(
-                issue_type_id=args.issue_type_id, profile=args.profile
+                issue_type_id=args.issue_type_id
             )
             print(f"Alternative issue types for ID {args.issue_type_id}:")
             print(format_alternatives(alternatives))
@@ -180,7 +176,6 @@ Note:
             delete_issue_type(
                 issue_type_id=args.issue_type_id,
                 alternative_id=args.alternative_id,
-                profile=args.profile,
             )
             print(f"Issue type {args.issue_type_id} deleted successfully.")
             if args.alternative_id:

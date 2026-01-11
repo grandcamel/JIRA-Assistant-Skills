@@ -28,7 +28,6 @@ def update_comment(
     comment_id: str,
     body: str,
     format_type: str = "text",
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Update an existing comment.
@@ -38,7 +37,6 @@ def update_comment(
         comment_id: Comment ID to update
         body: New comment body
         format_type: Format ('text', 'markdown', or 'adf')
-        profile: JIRA profile to use
 
     Returns:
         Updated comment data
@@ -53,7 +51,7 @@ def update_comment(
     else:
         comment_body = text_to_adf(body)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.update_comment(issue_key, comment_id, comment_body)
     client.close()
 
@@ -82,7 +80,6 @@ Examples:
         default="text",
         help="Body format (default: text)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -92,7 +89,6 @@ Examples:
             comment_id=args.id,
             body=args.body,
             format_type=args.format,
-            profile=args.profile,
         )
 
         print(f"Comment {result['id']} updated on {args.issue_key}.\n")

@@ -30,7 +30,6 @@ def resolve_issue(
     issue_key: str,
     resolution: str = "Fixed",
     comment: str | None = None,
-    profile: str | None = None,
 ) -> None:
     """
     Resolve an issue.
@@ -41,11 +40,10 @@ def resolve_issue(
         issue_key: Issue key (e.g., PROJ-123)
         resolution: Resolution value (Fixed, Won't Fix, Duplicate, etc.)
         comment: Optional comment
-        profile: JIRA profile to use
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     transitions = client.get_transitions(issue_key)
 
@@ -86,7 +84,6 @@ def main(argv: list[str] | None = None):
         help="Resolution (default: Fixed). Common: Fixed, Won't Fix, Duplicate, Cannot Reproduce, Won't Do",
     )
     parser.add_argument("--comment", "-c", help="Optional comment")
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -95,7 +92,6 @@ def main(argv: list[str] | None = None):
             issue_key=args.issue_key,
             resolution=args.resolution,
             comment=args.comment,
-            profile=args.profile,
         )
 
         print_success(f"Resolved {args.issue_key} as {args.resolution}")

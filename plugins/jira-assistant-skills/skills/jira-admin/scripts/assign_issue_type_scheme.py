@@ -17,7 +17,6 @@ def assign_issue_type_scheme(
     scheme_id: str,
     project_id: str,
     client=None,
-    profile: str | None = None,
     dry_run: bool = False,
 ) -> bool:
     """
@@ -27,7 +26,6 @@ def assign_issue_type_scheme(
         scheme_id: Issue type scheme ID
         project_id: Project ID
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
         dry_run: If True, simulate without making changes
 
     Returns:
@@ -44,7 +42,7 @@ def assign_issue_type_scheme(
         return True
 
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         client.assign_issue_type_scheme(scheme_id=scheme_id, project_id=project_id)
@@ -71,7 +69,7 @@ Examples:
   python assign_issue_type_scheme.py --scheme-id 10001 --project-id 10000 --force
 
   # Use specific profile
-  python assign_issue_type_scheme.py --scheme-id 10001 --project-id 10000 --profile production
+  python assign_issue_type_scheme.py --scheme-id 10001 --project-id 10000
 
 Note:
   Requires 'Administer Jira' global permission.
@@ -92,7 +90,6 @@ Note:
         help="Simulate assignment without making changes",
     )
     parser.add_argument("--force", action="store_true", help="Skip confirmation prompt")
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -115,7 +112,6 @@ Note:
             assign_issue_type_scheme(
                 scheme_id=args.scheme_id,
                 project_id=args.project_id,
-                profile=args.profile,
             )
             print(
                 f"Scheme {args.scheme_id} assigned to project {args.project_id} successfully."

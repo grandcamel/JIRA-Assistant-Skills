@@ -302,30 +302,3 @@ class TestDeletePermissionSchemeCLI:
 
         assert exc_info.value.code == 1
 
-    def test_cli_with_profile(self, mock_jira_client, permission_scheme_detail):
-        """Test CLI with profile argument."""
-        mock_jira_client.get_permission_scheme.return_value = permission_scheme_detail
-        mock_jira_client.get.return_value = {"values": [], "isLast": True}
-        mock_jira_client.delete_permission_scheme.return_value = None
-
-        with (
-            patch(
-                "delete_permission_scheme.get_jira_client",
-                return_value=mock_jira_client,
-            ) as mock_get_client,
-            patch(
-                "sys.argv",
-                [
-                    "delete_permission_scheme.py",
-                    "10050",
-                    "--confirm",
-                    "--profile",
-                    "development",
-                ],
-            ),
-        ):
-            from delete_permission_scheme import main
-
-            main()
-
-        mock_get_client.assert_called_once_with(profile="development")

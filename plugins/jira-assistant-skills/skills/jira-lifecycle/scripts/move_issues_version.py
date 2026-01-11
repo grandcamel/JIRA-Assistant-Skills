@@ -33,7 +33,6 @@ def move_issues_to_version(
     jql: str,
     target_version: str,
     field: str = "fixVersions",
-    profile: str | None = None,
     show_progress: bool = True,
 ) -> dict[str, Any]:
     """
@@ -43,13 +42,12 @@ def move_issues_to_version(
         jql: JQL query to find issues
         target_version: Target version name
         field: Version field to update (fixVersions or affectedVersions)
-        profile: JIRA profile to use
         show_progress: If True, show progress bar (default: True)
 
     Returns:
         Dictionary with moved count, failed count, and errors
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     # Search for issues
     result = client.search_issues(jql, max_results=1000)
@@ -110,7 +108,6 @@ def move_issues_between_versions(
     source_version: str,
     target_version: str,
     field: str = "fixVersions",
-    profile: str | None = None,
     show_progress: bool = True,
 ) -> dict[str, Any]:
     """
@@ -121,7 +118,6 @@ def move_issues_between_versions(
         source_version: Source version name
         target_version: Target version name
         field: Version field to update
-        profile: JIRA profile to use
         show_progress: If True, show progress bar (default: True)
 
     Returns:
@@ -130,14 +126,13 @@ def move_issues_between_versions(
     # Build JQL to find issues in source version
     jql = f'project = {project} AND {field} = "{source_version}"'
 
-    return move_issues_to_version(jql, target_version, field, profile, show_progress)
+    return move_issues_to_version(jql, target_version, field, show_progress)
 
 
 def move_specific_issues(
     issue_keys: list[str],
     target_version: str,
     field: str = "fixVersions",
-    profile: str | None = None,
     show_progress: bool = True,
 ) -> dict[str, Any]:
     """
@@ -147,13 +142,12 @@ def move_specific_issues(
         issue_keys: List of issue keys
         target_version: Target version name
         field: Version field to update
-        profile: JIRA profile to use
         show_progress: If True, show progress bar (default: True)
 
     Returns:
         Dictionary with moved count, failed count, and errors
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     total = len(issue_keys)
 
     if total == 0:
@@ -205,7 +199,7 @@ def move_specific_issues(
 
 
 def move_issues_dry_run(
-    jql: str, target_version: str, profile: str | None = None
+    jql: str, target_version: str
 ) -> dict[str, Any]:
     """
     Show what issues would be moved without moving them.
@@ -213,12 +207,11 @@ def move_issues_dry_run(
     Args:
         jql: JQL query
         target_version: Target version name
-        profile: JIRA profile to use
 
     Returns:
         Dictionary with would_move count and issue list
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.search_issues(jql, max_results=1000)
     issues = result.get("issues", [])
     client.close()
@@ -235,7 +228,6 @@ def move_issues_with_confirmation(
     jql: str,
     target_version: str,
     field: str = "fixVersions",
-    profile: str | None = None,
     show_progress: bool = True,
 ) -> dict[str, Any]:
     """
@@ -245,14 +237,13 @@ def move_issues_with_confirmation(
         jql: JQL query
         target_version: Target version name
         field: Version field to update
-        profile: JIRA profile to use
         show_progress: If True, show progress bar (default: True)
 
     Returns:
         Dictionary with moved count, failed count, and errors
     """
     # First, do a dry run to show what would be moved
-    dry_run = move_issues_dry_run(jql, target_version, profile)
+    dry_run = move_issues_dry_run(jql, target_version)
 
     print(f"Found {dry_run['would_move']} issue(s) to move to '{target_version}':\n")
     for issue in dry_run["issues"][:10]:  # Show first 10
@@ -267,7 +258,7 @@ def move_issues_with_confirmation(
 
     if confirmation.lower() == "yes":
         return move_issues_to_version(
-            jql, target_version, field, profile, show_progress
+            jql, target_version, field, show_progress
         )
     else:
         return {"moved": 0, "failed": 0, "total": 0, "errors": {}, "cancelled": True}
@@ -316,7 +307,6 @@ Examples:
     parser.add_argument(
         "--no-progress", action="store_true", help="Disable progress bar"
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -365,7 +355,7 @@ Examples:
                 sys.exit(1)
 
             target = args.target or args.target_version
-            dry_run = move_issues_dry_run(jql, target, args.profile)
+            dry_run = move_issues_dry_run(jql, target)
 
             print(
                 f"[DRY RUN] Would move {dry_run['would_move']} issue(s) to '{target}':\n"
@@ -384,17 +374,17 @@ Examples:
 
                 if args.yes:
                     result = move_issues_to_version(
-                        jql, target, args.field, args.profile, show_progress
+                        jql, target, args.field, show_progress
                     )
                 else:
                     result = move_issues_with_confirmation(
-                        jql, target, args.field, args.profile, show_progress
+                        jql, target, args.field, show_progress
                     )
 
             elif args.issues:
                 issue_keys = [k.strip() for k in args.issues.split(",")]
                 result = move_specific_issues(
-                    issue_keys, args.target, args.field, args.profile, show_progress
+                    issue_keys, args.target, args.field, show_progress
                 )
 
             elif args.source_version:
@@ -403,7 +393,6 @@ Examples:
                     args.source_version,
                     args.target_version,
                     args.field,
-                    args.profile,
                     show_progress,
                 )
 

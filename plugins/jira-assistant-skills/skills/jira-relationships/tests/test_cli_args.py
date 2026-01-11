@@ -85,34 +85,6 @@ class TestLinkIssueCLI:
                     if e.code == 2:
                         pytest.fail(f"--type {link_type} --to should be valid")
 
-    def test_profile_option(self):
-        """Test --profile option."""
-        import link_issue
-
-        with (
-            patch(
-                "sys.argv",
-                [
-                    "link_issue.py",
-                    "PROJ-123",
-                    "--blocks",
-                    "PROJ-456",
-                    "--profile",
-                    "development",
-                ],
-            ),
-            patch.object(link_issue, "get_jira_client") as mock_client,
-        ):
-            mock_client.return_value.get_link_types.return_value = [
-                {"name": "Blocks", "outward": "blocks"}
-            ]
-            mock_client.return_value.create_link = Mock()
-            mock_client.return_value.close = Mock()
-            try:
-                link_issue.main()
-            except SystemExit as e:
-                if e.code == 2:
-                    pytest.fail("--profile should be valid")
 
 
 @pytest.mark.relationships

@@ -127,8 +127,7 @@ class TestCreateEpic:
                 project="PROJ",
                 summary="Mobile App MVP",
                 color="invalid-color",
-                profile=None,
-            )
+                )
 
         assert "color" in str(exc_info.value).lower()
 
@@ -138,7 +137,7 @@ class TestCreateEpic:
 
         # Act & Assert
         with pytest.raises(ValidationError) as exc_info:
-            create_epic(project=None, summary="Mobile App MVP", profile=None)
+            create_epic(project=None, summary="Mobile App MVP")
 
         assert "project" in str(exc_info.value).lower()
 

@@ -114,7 +114,6 @@ Examples:
     parser.add_argument(
         "--new-estimate", help="New remaining estimate (when --adjust-estimate=new)"
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
     parser.add_argument(
         "--output",
         "-o",
@@ -136,7 +135,7 @@ Examples:
         validate_issue_key(args.issue_key)
 
         # Get client
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         # Update worklog
         result = update_worklog(

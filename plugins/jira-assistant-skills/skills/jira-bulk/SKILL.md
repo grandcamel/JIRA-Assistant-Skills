@@ -61,7 +61,6 @@ All commands support these options:
 |--------|---------|-------------|
 | `--dry-run` | Preview changes | Always use for >10 issues |
 | `--force` / `-f` | Skip confirmation | Scripted automation |
-| `--profile` | JIRA instance | Multi-environment setups |
 | `--max-issues N` | Limit scope (default: 100) | Testing, large operations |
 
 ### Transition-Only Options

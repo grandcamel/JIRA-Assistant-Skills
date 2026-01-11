@@ -111,7 +111,6 @@ def create_branch_name(
     issue_key: str,
     prefix: str | None = None,
     auto_prefix: bool = False,
-    profile: str | None = None,
     client=None,
     output_format: str = "text",
 ) -> dict[str, Any]:
@@ -122,7 +121,6 @@ def create_branch_name(
         issue_key: JIRA issue key (e.g., PROJ-123)
         prefix: Custom prefix (feature, bugfix, hotfix, task)
         auto_prefix: If True, determine prefix from issue type
-        profile: JIRA profile to use
         client: Optional JiraClient instance (created if not provided)
         output_format: Output format (text, json, git)
 
@@ -134,7 +132,7 @@ def create_branch_name(
     # Get issue from JIRA
     close_client = False
     if client is None:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         close_client = True
     try:
         issue = client.get_issue(issue_key, fields=["summary", "issuetype"])
@@ -258,7 +256,6 @@ def main(argv: list[str] | None = None):
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -266,7 +263,7 @@ def main(argv: list[str] | None = None):
         issue_key = validate_issue_key(args.issue_key)
 
         # Get issue for full output
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
         try:
             issue = client.get_issue(issue_key, fields=["summary", "issuetype"])
         finally:

@@ -22,13 +22,12 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_status_history(issue_key: str, profile: str | None = None) -> dict[str, Any]:
+def get_status_history(issue_key: str) -> dict[str, Any]:
     """
     Get request status history.
 
     Args:
         issue_key: Request key
-        profile: JIRA profile to use
 
     Returns:
         Status history data
@@ -36,7 +35,7 @@ def get_status_history(issue_key: str, profile: str | None = None) -> dict[str, 
     Raises:
         NotFoundError: If request doesn't exist
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         return client.get_request_status(issue_key)
 
 
@@ -200,12 +199,11 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
     try:
-        history = get_status_history(args.request_key, args.profile)
+        history = get_status_history(args.request_key)
 
         statuses = history.get("values", [])
 

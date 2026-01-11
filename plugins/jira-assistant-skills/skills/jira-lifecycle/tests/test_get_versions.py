@@ -28,7 +28,7 @@ class TestGetVersions:
 
         from get_versions import get_versions
 
-        result = get_versions("PROJ", profile=None)
+        result = get_versions("PROJ")
 
         assert len(result) == 4
         mock_jira_client.get_versions.assert_called_once_with("PROJ")
@@ -41,7 +41,7 @@ class TestGetVersions:
 
         from get_versions import get_version_by_id
 
-        result = get_version_by_id("10000", profile=None)
+        result = get_version_by_id("10000")
 
         assert result["id"] == "10000"
         assert result["name"] == "v1.0.0"
@@ -57,7 +57,7 @@ class TestGetVersions:
 
         from get_versions import filter_versions, get_versions
 
-        versions = get_versions("PROJ", profile=None)
+        versions = get_versions("PROJ")
         released = filter_versions(versions, released=True)
 
         # 2 released versions in sample_versions_list (v0.9.0, v0.5.0)
@@ -74,7 +74,7 @@ class TestGetVersions:
 
         from get_versions import filter_versions, get_versions
 
-        versions = get_versions("PROJ", profile=None)
+        versions = get_versions("PROJ")
         unreleased = filter_versions(versions, released=False)
 
         # 2 unreleased versions in sample_versions_list (v1.2.0, v1.0.0)
@@ -91,7 +91,7 @@ class TestGetVersions:
 
         from get_versions import filter_versions, get_versions
 
-        versions = get_versions("PROJ", profile=None)
+        versions = get_versions("PROJ")
         archived = filter_versions(versions, archived=True)
 
         # 1 archived version in sample_versions_list
@@ -110,7 +110,7 @@ class TestGetVersions:
 
         from get_versions import get_version_issue_counts
 
-        result = get_version_issue_counts("10000", profile=None)
+        result = get_version_issue_counts("10000")
 
         assert result["issuesFixedCount"] == 45
         assert result["issuesAffectedCount"] == 12
@@ -127,7 +127,7 @@ class TestGetVersions:
 
         from get_versions import get_version_unresolved_count
 
-        result = get_version_unresolved_count("10000", profile=None)
+        result = get_version_unresolved_count("10000")
 
         assert result["issuesUnresolvedCount"] == 3
         assert result["issuesCount"] == 48
@@ -166,7 +166,7 @@ class TestGetVersionsErrorHandling:
         from get_versions import get_versions
 
         with pytest.raises(AuthenticationError):
-            get_versions("PROJ", profile=None)
+            get_versions("PROJ")
 
     @patch("get_versions.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client):
@@ -181,7 +181,7 @@ class TestGetVersionsErrorHandling:
         from get_versions import get_versions
 
         with pytest.raises(PermissionError):
-            get_versions("PROJ", profile=None)
+            get_versions("PROJ")
 
     @patch("get_versions.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -194,7 +194,7 @@ class TestGetVersionsErrorHandling:
         from get_versions import get_versions
 
         with pytest.raises(NotFoundError):
-            get_versions("INVALID", profile=None)
+            get_versions("INVALID")
 
     @patch("get_versions.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -209,7 +209,7 @@ class TestGetVersionsErrorHandling:
         from get_versions import get_versions
 
         with pytest.raises(JiraError) as exc_info:
-            get_versions("PROJ", profile=None)
+            get_versions("PROJ")
         assert exc_info.value.status_code == 429
 
     @patch("get_versions.get_jira_client")
@@ -225,7 +225,7 @@ class TestGetVersionsErrorHandling:
         from get_versions import get_versions
 
         with pytest.raises(JiraError) as exc_info:
-            get_versions("PROJ", profile=None)
+            get_versions("PROJ")
         assert exc_info.value.status_code == 500
 
 
@@ -360,20 +360,6 @@ class TestGetVersionsMain:
         captured = capsys.readouterr()
         assert "Issue Counts" in captured.out
         assert "Fixed:" in captured.out
-
-    @patch("get_versions.get_jira_client")
-    def test_main_with_profile(
-        self, mock_get_client, mock_jira_client, sample_versions_list, capsys
-    ):
-        """Test main with --profile."""
-        mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_versions.return_value = copy.deepcopy(sample_versions_list)
-
-        from get_versions import main
-
-        main(["PROJ", "--profile", "dev"])
-
-        mock_get_client.assert_called_with("dev")
 
     @patch("get_versions.get_jira_client")
     def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):

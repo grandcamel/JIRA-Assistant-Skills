@@ -98,7 +98,6 @@ Examples:
     parser.add_argument(
         "--yes", "-y", action="store_true", help="Skip confirmation prompt"
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -107,7 +106,7 @@ Examples:
         validate_issue_key(args.issue_key)
 
         # Get client
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         # Get worklog info first (for confirmation or dry-run)
         worklog = client.get_worklog(args.issue_key, args.worklog_id)

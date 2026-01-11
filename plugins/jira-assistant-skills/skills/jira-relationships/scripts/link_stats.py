@@ -33,20 +33,19 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_issue_link_stats(issue_key: str, profile: str | None = None) -> dict[str, Any]:
+def get_issue_link_stats(issue_key: str) -> dict[str, Any]:
     """
     Get link statistics for a single issue.
 
     Args:
         issue_key: Issue key (e.g., PROJ-123)
-        profile: JIRA profile to use
 
     Returns:
         Dict with link stats for the issue
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     try:
         links = client.get_issue_links(issue_key)
     finally:
@@ -86,14 +85,13 @@ def get_issue_link_stats(issue_key: str, profile: str | None = None) -> dict[str
 
 
 def get_project_link_stats(
-    jql: str, profile: str | None = None, max_results: int = 500
+    jql: str, max_results: int = 500
 ) -> dict[str, Any]:
     """
     Get link statistics for issues matching a JQL query.
 
     Args:
         jql: JQL query to find issues
-        profile: JIRA profile to use
         max_results: Maximum issues to analyze
 
     Returns:
@@ -101,7 +99,7 @@ def get_project_link_stats(
     """
     jql = validate_jql(jql)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     # Search for issues
     results = client.search_issues(
@@ -312,14 +310,13 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
         if args.issue_key:
             # Single issue stats
-            stats = get_issue_link_stats(args.issue_key, profile=args.profile)
+            stats = get_issue_link_stats(args.issue_key)
 
             if args.output == "json":
                 print(json.dumps(stats, indent=2))
@@ -334,7 +331,7 @@ Examples:
                 jql = args.jql
 
             stats = get_project_link_stats(
-                jql, profile=args.profile, max_results=args.max_results
+                jql, max_results=args.max_results
             )
 
             if args.output == "json":

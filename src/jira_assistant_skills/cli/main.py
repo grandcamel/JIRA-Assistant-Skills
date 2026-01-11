@@ -7,13 +7,6 @@ import click
 @click.group(invoke_without_command=True)
 @click.version_option(version="1.0.0")  # Use importlib.metadata for robustness later
 @click.option(
-    "--profile",
-    "-p",
-    type=str,
-    envvar="JIRA_PROFILE",
-    help="JIRA profile to use from ~/.claude/settings.json",
-)
-@click.option(
     "--output",
     "-o",
     type=click.Choice(["text", "json", "table"]),
@@ -23,21 +16,18 @@ import click
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.option("--quiet", "-q", is_flag=True, help="Suppress non-essential output")
 @click.pass_context
-def cli(ctx, profile: str, output: str, verbose: bool, quiet: bool):
+def cli(ctx, output: str, verbose: bool, quiet: bool):
     """Jira Assistant Skills CLI.
 
     Use --help on any command for more information.
     """
     ctx.ensure_object(dict)
-    ctx.obj["PROFILE"] = profile
     ctx.obj["OUTPUT"] = output
     ctx.obj["VERBOSE"] = verbose
     ctx.obj["QUIET"] = quiet
 
     # Set environment variables for subprocess calls to inherit global options
     env_prefix = "JIRA"  # This will be dynamic for other services
-    if profile:
-        os.environ[f"{env_prefix}_PROFILE"] = profile
     if output:
         os.environ[f"{env_prefix}_OUTPUT"] = output
     if verbose:

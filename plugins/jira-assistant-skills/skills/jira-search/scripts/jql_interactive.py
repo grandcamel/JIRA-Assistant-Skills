@@ -162,8 +162,7 @@ JQL_FUNCTIONS = {
 class InteractiveBuilder:
     """Interactive JQL query builder."""
 
-    def __init__(self, profile: str | None = None):
-        self.profile = profile
+    def __init__(self):
         self.clauses = []
         self.order_by = None
         self.order_desc = False
@@ -172,7 +171,7 @@ class InteractiveBuilder:
     def get_client(self):
         """Get or create JIRA client."""
         if not self.client:
-            self.client = get_jira_client(self.profile)
+            self.client = get_jira_client()
         return self.client
 
     def close_client(self):
@@ -551,12 +550,10 @@ Examples:
         action="store_true",
         help="Quick mode with common field prompts",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
-
     args = parser.parse_args(argv)
 
     try:
-        builder = InteractiveBuilder(profile=args.profile)
+        builder = InteractiveBuilder()
 
         if args.quick:
             # Quick mode - prompt for common fields

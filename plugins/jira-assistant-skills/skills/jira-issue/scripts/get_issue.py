@@ -24,7 +24,7 @@ from jira_assistant_skills_lib import (
 
 
 def get_issue(
-    issue_key: str, fields: list | None = None, profile: str | None = None
+    issue_key: str, fields: list | None = None
 ) -> dict:
     """
     Get a JIRA issue.
@@ -32,14 +32,13 @@ def get_issue(
     Args:
         issue_key: Issue key (e.g., PROJ-123)
         fields: Specific fields to retrieve (default: all)
-        profile: JIRA profile to use
 
     Returns:
         Issue data dictionary
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     issue = client.get_issue(issue_key, fields=fields)
     client.close()
 
@@ -78,7 +77,6 @@ def main(argv: list[str] | None = None):
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -96,7 +94,7 @@ def main(argv: list[str] | None = None):
         if args.show_time and fields is not None and "timetracking" not in fields:
             fields.append("timetracking")
 
-        issue = get_issue(issue_key=args.issue_key, fields=fields, profile=args.profile)
+        issue = get_issue(issue_key=args.issue_key, fields=fields)
 
         if args.output == "json":
             print(format_json(issue))

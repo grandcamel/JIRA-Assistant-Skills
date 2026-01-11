@@ -30,7 +30,6 @@ def send_notification(
     voters: bool = False,
     users: list[str] | None = None,
     groups: list[str] | None = None,
-    profile: str | None = None,
 ) -> None:
     """
     Send notification about an issue.
@@ -45,7 +44,6 @@ def send_notification(
         voters: Notify voters
         users: List of account IDs to notify
         groups: List of group names to notify
-        profile: JIRA profile to use
 
     Raises:
         JiraError or subclass on failure
@@ -68,7 +66,7 @@ def send_notification(
     if groups:
         to["groups"] = [{"name": group_name} for group_name in groups]
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     client.notify_issue(issue_key, subject=subject, text_body=body, to=to)
     client.close()
 
@@ -83,7 +81,6 @@ def notify_dry_run(
     voters: bool = False,
     users: list[str] | None = None,
     groups: list[str] | None = None,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Show notification details without sending.
@@ -98,7 +95,6 @@ def notify_dry_run(
         voters: Notify voters
         users: List of account IDs to notify
         groups: List of group names to notify
-        profile: JIRA profile to use
 
     Returns:
         Notification details
@@ -157,7 +153,6 @@ Examples:
     parser.add_argument(
         "--dry-run", action="store_true", help="Show what would be sent without sending"
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -194,7 +189,6 @@ Examples:
                 voters=args.voters,
                 users=args.users,
                 groups=args.groups,
-                profile=args.profile,
             )
 
             print(f"[DRY RUN] Would send notification for {args.issue_key}:\n")
@@ -231,7 +225,6 @@ Examples:
                 voters=args.voters,
                 users=args.users,
                 groups=args.groups,
-                profile=args.profile,
             )
 
             print(f"Notification sent for {args.issue_key}:\n")

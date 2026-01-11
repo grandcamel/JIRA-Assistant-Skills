@@ -154,7 +154,6 @@ def get_blockers(
     direction: str = "inward",
     recursive: bool = False,
     max_depth: int = 0,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Get blockers for an issue.
@@ -164,14 +163,13 @@ def get_blockers(
         direction: 'inward' (blocking this) or 'outward' (this blocks)
         recursive: Follow blocker chain
         max_depth: Max recursion depth (0 = unlimited)
-        profile: JIRA profile
 
     Returns:
         Dict with blockers info
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     try:
         if recursive:
@@ -330,7 +328,6 @@ def main(argv: list[str] | None = None):
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -340,7 +337,6 @@ def main(argv: list[str] | None = None):
             direction=args.direction,
             recursive=args.recursive,
             max_depth=args.depth,
-            profile=args.profile,
         )
         output = format_blockers(result, output_format=args.output)
         print(output)

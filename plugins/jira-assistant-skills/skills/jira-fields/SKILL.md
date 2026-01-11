@@ -58,7 +58,6 @@ All scripts support these common options:
 
 | Option | Description |
 |--------|-------------|
-| `--profile PROFILE` | Use a specific JIRA profile from settings.json |
 | `--output FORMAT` | Output format: `text` (default) or `json` |
 | `--help` | Show help message and exit |
 
@@ -79,8 +78,6 @@ jira-as fields list --agile
 # Show all fields (including system fields)
 jira-as fields list --all
 
-# Use specific profile
-jira-as fields list --profile production
 ```
 
 ### check_project_fields.py
@@ -280,7 +277,6 @@ jira-as fields check-project PROJ --check-agile
 1. Verify JIRA_API_TOKEN is set correctly (not expired)
 2. Check JIRA_EMAIL matches the account that created the token
 3. Generate a new API token at https://id.atlassian.com/manage-profile/security/api-tokens
-4. Try a different profile: `--profile development`
 
 ## Documentation
 

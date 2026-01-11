@@ -25,7 +25,6 @@ def get_links(
     issue_key: str,
     direction: str | None = None,
     link_type: str | None = None,
-    profile: str | None = None,
 ) -> list:
     """
     Get links for an issue.
@@ -34,14 +33,13 @@ def get_links(
         issue_key: Issue key (e.g., PROJ-123)
         direction: Filter by 'inward' or 'outward'
         link_type: Filter by link type name
-        profile: JIRA profile to use
 
     Returns:
         List of issue links
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     try:
         links = client.get_issue_links(issue_key)
     finally:
@@ -167,7 +165,6 @@ def main(argv: list[str] | None = None):
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -176,7 +173,6 @@ def main(argv: list[str] | None = None):
             issue_key=args.issue_key,
             direction=args.direction,
             link_type=args.link_type,
-            profile=args.profile,
         )
         output = format_links(links, args.issue_key, output_format=args.output)
         print(output)

@@ -21,10 +21,9 @@ def get_queue_issues(
     queue_id: int,
     start: int = 0,
     limit: int = 50,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """Get issues in a queue."""
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         return client.get_queue_issues(service_desk_id, queue_id, start, limit)
 
 
@@ -65,13 +64,12 @@ def main(argv: list[str] | None = None):
     parser.add_argument("--start", type=int, default=0, help="Starting index")
     parser.add_argument("--limit", type=int, default=50, help="Maximum results")
     parser.add_argument("--output", choices=["text", "json"], default="text")
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         issues = get_queue_issues(
-            args.service_desk, args.queue_id, args.start, args.limit, args.profile
+            args.service_desk, args.queue_id, args.start, args.limit
         )
 
         if args.output == "json":

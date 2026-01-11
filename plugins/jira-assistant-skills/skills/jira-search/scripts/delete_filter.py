@@ -102,12 +102,11 @@ Examples:
     parser.add_argument(
         "--dry-run", action="store_true", help="Preview what would be deleted"
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         if args.dry_run:
             print(dry_run_delete(client, args.filter_id))

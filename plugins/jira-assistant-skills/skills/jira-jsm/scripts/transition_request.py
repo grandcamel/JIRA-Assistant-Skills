@@ -27,7 +27,6 @@ def transition_service_request(
     transition_name: str | None = None,
     comment: str | None = None,
     public: bool = True,
-    profile: str | None = None,
 ) -> None:
     """
     Transition a service request.
@@ -38,13 +37,12 @@ def transition_service_request(
         transition_name: Transition name to lookup
         comment: Optional comment to add
         public: Whether comment is public (customer-visible)
-        profile: JIRA profile to use
 
     Raises:
         ValueError: If transition not found
         NotFoundError: If request doesn't exist
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         # Lookup transition ID if name provided
         if transition_name and not transition_id:
             transitions = client.get_request_transitions(issue_key)
@@ -67,18 +65,17 @@ def transition_service_request(
         )
 
 
-def list_transitions(issue_key: str, profile: str | None = None) -> list:
+def list_transitions(issue_key: str) -> list:
     """
     List available transitions for a request.
 
     Args:
         issue_key: Request key
-        profile: JIRA profile to use
 
     Returns:
         List of available transitions
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         return client.get_request_transitions(issue_key)
 
 
@@ -133,14 +130,13 @@ Examples:
         action="store_true",
         help="Show what would be done without doing it",
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
     try:
         # Show transitions
         if args.show_transitions:
-            transitions = list_transitions(args.request_key, args.profile)
+            transitions = list_transitions(args.request_key)
 
             print(f"\nAvailable transitions for {args.request_key}:\n")
             print(f"{'ID':<6} {'Name':<30} {'To Status'}")
@@ -187,7 +183,6 @@ Examples:
             transition_name=args.transition_name,
             comment=args.comment,
             public=public,
-            profile=args.profile,
         )
 
         print_success(f"Request {args.request_key} transitioned successfully!")

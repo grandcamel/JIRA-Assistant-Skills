@@ -351,7 +351,6 @@ Note: Requires 'Administer Jira' global permission.
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", "-p", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -359,7 +358,7 @@ Note: Requires 'Administer Jira' global permission.
         parser.error("Either workflow name or --entity-id must be provided")
 
     try:
-        client = get_jira_client(profile=args.profile)
+        client = get_jira_client()
 
         result = get_workflow(
             client=client,

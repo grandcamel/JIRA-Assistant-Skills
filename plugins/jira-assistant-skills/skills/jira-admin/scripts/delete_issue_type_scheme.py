@@ -14,7 +14,7 @@ from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
 def delete_issue_type_scheme(
-    scheme_id: str, client=None, profile: str | None = None, dry_run: bool = False
+    scheme_id: str, client=None, dry_run: bool = False
 ) -> bool:
     """
     Delete an issue type scheme.
@@ -22,7 +22,6 @@ def delete_issue_type_scheme(
     Args:
         scheme_id: Scheme ID to delete
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
         dry_run: If True, simulate without actual deletion
 
     Returns:
@@ -35,7 +34,7 @@ def delete_issue_type_scheme(
         return True
 
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         client.delete_issue_type_scheme(scheme_id)
@@ -62,7 +61,7 @@ Examples:
   python delete_issue_type_scheme.py 10002 --force
 
   # Use specific profile
-  python delete_issue_type_scheme.py 10002 --profile production
+  python delete_issue_type_scheme.py 10002
 
 Note:
   Requires 'Administer Jira' global permission.
@@ -78,7 +77,6 @@ Note:
         help="Simulate deletion without making changes",
     )
     parser.add_argument("--force", action="store_true", help="Skip confirmation prompt")
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -97,7 +95,7 @@ Note:
         if args.dry_run:
             print(f"[DRY RUN] Would delete issue type scheme {args.scheme_id}")
         else:
-            delete_issue_type_scheme(scheme_id=args.scheme_id, profile=args.profile)
+            delete_issue_type_scheme(scheme_id=args.scheme_id)
             print(f"Issue type scheme {args.scheme_id} deleted successfully.")
 
     except JiraError as e:

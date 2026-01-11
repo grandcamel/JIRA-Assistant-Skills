@@ -211,12 +211,11 @@ Template shortcuts:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
     try:
-        client = get_jira_client(profile=args.profile)
+        client = get_jira_client()
 
         result = create_project(
             key=args.key,

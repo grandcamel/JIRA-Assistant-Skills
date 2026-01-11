@@ -15,11 +15,11 @@ import sys
 from jira_assistant_skills_lib import handle_errors
 
 
-def get_jira_client(profile=None):
+def get_jira_client():
     """Get JIRA client (overridable for testing)."""
     from jira_assistant_skills_lib import get_jira_client as _get_client
 
-    return _get_client(profile)
+    return _get_client()
 
 
 def format_comment_output(comment: dict, issue_key: str) -> None:
@@ -74,7 +74,6 @@ Fix: Increased timeout to 30s."
         action="store_true",
         help="Internal comment (agent-only, not visible to customers)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     parsed_args = parser.parse_args(args)
 
@@ -84,7 +83,7 @@ Fix: Increased timeout to 30s."
         body = sys.stdin.read()
 
     # Get JIRA client
-    jira = get_jira_client(parsed_args.profile)
+    jira = get_jira_client()
 
     # Add comment with visibility flag
     public = not parsed_args.internal

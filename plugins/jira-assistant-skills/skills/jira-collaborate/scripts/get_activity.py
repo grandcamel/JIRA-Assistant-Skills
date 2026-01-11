@@ -25,7 +25,7 @@ from jira_assistant_skills_lib import (
 
 
 def get_activity(
-    issue_key: str, limit: int = 100, offset: int = 0, profile: str | None = None
+    issue_key: str, limit: int = 100, offset: int = 0
 ) -> dict[str, Any]:
     """
     Get activity/changelog for an issue.
@@ -34,14 +34,13 @@ def get_activity(
         issue_key: Issue key (e.g., PROJ-123)
         limit: Maximum number of changelog entries to return
         offset: Starting position (for pagination)
-        profile: JIRA profile to use
 
     Returns:
         Changelog data with values, total, etc.
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     result = client.get_changelog(issue_key, max_results=limit, start_at=offset)
     client.close()
 
@@ -194,14 +193,13 @@ Field types:
         default="table",
         help="Output format (default: table)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         # Get activity
         changelog = get_activity(
-            args.issue_key, limit=args.limit, offset=args.offset, profile=args.profile
+            args.issue_key, limit=args.limit, offset=args.offset
         )
 
         # Parse changelog with filters

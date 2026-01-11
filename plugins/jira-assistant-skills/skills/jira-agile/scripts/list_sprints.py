@@ -24,14 +24,13 @@ from jira_assistant_skills_lib.validators import validate_project_key
 
 
 def get_board_for_project(
-    project_key: str, profile: str | None = None, client=None
+    project_key: str, client=None
 ) -> dict | None:
     """
     Find the first Scrum board for a project.
 
     Args:
         project_key: Project key (e.g., DEMO)
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -41,7 +40,7 @@ def get_board_for_project(
         JiraError: If API call fails
     """
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -67,7 +66,6 @@ def list_sprints(
     project_key: str | None = None,
     state: str | None = None,
     max_results: int = 50,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -78,7 +76,6 @@ def list_sprints(
         project_key: Project key (will find board automatically)
         state: Filter by state (active, closed, future)
         max_results: Maximum sprints to return
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -92,7 +89,7 @@ def list_sprints(
         raise ValidationError("Either --board or --project is required")
 
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -104,7 +101,7 @@ def list_sprints(
         # If project key provided, find the board
         if project_key and not board_id:
             validate_project_key(project_key)
-            board = get_board_for_project(project_key, profile, client)
+            board = get_board_for_project(project_key, client)
             if not board:
                 raise ValidationError(
                     f"No board found for project {project_key}. "
@@ -217,7 +214,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--max-results", "-m", type=int, default=50, help="Maximum sprints to return"
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
@@ -233,7 +229,6 @@ def main(argv: list[str] | None = None):
             project_key=args.project,
             state=args.state,
             max_results=args.max_results,
-            profile=args.profile,
         )
 
         output = format_sprint_list(result, args.output)

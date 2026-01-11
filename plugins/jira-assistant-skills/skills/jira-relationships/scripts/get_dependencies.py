@@ -45,7 +45,6 @@ from jira_assistant_skills_lib import (
 def get_dependencies(
     issue_key: str,
     link_types: list[str] | None = None,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Get all dependencies for an issue.
@@ -53,14 +52,13 @@ def get_dependencies(
     Args:
         issue_key: Issue key
         link_types: Optional list of link type names to filter
-        profile: JIRA profile
 
     Returns:
         Dict with dependencies info
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     try:
         links = client.get_issue_links(issue_key)
@@ -406,7 +404,6 @@ Export formats:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -414,7 +411,7 @@ Export formats:
         link_types = args.link_types.split(",") if args.link_types else None
 
         result = get_dependencies(
-            issue_key=args.issue_key, link_types=link_types, profile=args.profile
+            issue_key=args.issue_key, link_types=link_types
         )
         output = format_dependencies(result, output_format=args.output)
         print(output)

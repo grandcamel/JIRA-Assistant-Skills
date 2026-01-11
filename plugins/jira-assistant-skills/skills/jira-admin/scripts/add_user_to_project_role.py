@@ -202,12 +202,11 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
-        client = get_jira_client(profile=args.profile)
+        client = get_jira_client()
 
         # Resolve role
         role_id, role_name = resolve_role_id(client, args.project, args.role)

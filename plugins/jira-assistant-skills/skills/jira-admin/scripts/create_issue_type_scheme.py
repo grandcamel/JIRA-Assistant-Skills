@@ -26,7 +26,6 @@ def create_issue_type_scheme(
     description: str | None = None,
     default_issue_type_id: str | None = None,
     client=None,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Create a new issue type scheme.
@@ -37,7 +36,6 @@ def create_issue_type_scheme(
         description: Scheme description
         default_issue_type_id: Default issue type ID
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
 
     Returns:
         Created scheme response with issueTypeSchemeId
@@ -56,7 +54,7 @@ def create_issue_type_scheme(
     name = name.strip()
 
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         result = client.create_issue_type_scheme(
@@ -106,7 +104,7 @@ Examples:
   python create_issue_type_scheme.py --name "Test" --issue-type-ids 10001 --format json
 
   # Use specific profile
-  python create_issue_type_scheme.py --name "Test" --issue-type-ids 10001 --profile production
+  python create_issue_type_scheme.py --name "Test" --issue-type-ids 10001
 
 Note:
   Requires 'Administer Jira' global permission.
@@ -130,7 +128,6 @@ Note:
         default="detail",
         help="Output format (default: detail)",
     )
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
@@ -140,7 +137,6 @@ Note:
             issue_type_ids=args.issue_type_ids,
             description=args.description,
             default_issue_type_id=args.default_issue_type_id,
-            profile=args.profile,
         )
 
         output = format_created_scheme(result, args.format)

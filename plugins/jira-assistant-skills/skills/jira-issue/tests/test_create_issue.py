@@ -43,7 +43,7 @@ class TestCreateIssueBasic:
             create_issue_module, "get_jira_client", return_value=mock_jira_client
         ):
             result = create_issue_module.create_issue(
-                project="PROJ", issue_type="Bug", summary="Test Bug", profile=None
+                project="PROJ", issue_type="Bug", summary="Test Bug"
             )
 
         mock_jira_client.create_issue.assert_called_once()
@@ -602,20 +602,3 @@ class TestCreateIssueDescriptionFormats:
 @pytest.mark.unit
 class TestCreateIssueProfile:
     """Tests for profile handling."""
-
-    def test_create_issue_with_profile(self, mock_jira_client, sample_created_issue):
-        """Test creating issue with specific profile."""
-        mock_jira_client.create_issue.return_value = deepcopy(sample_created_issue)
-
-        with patch.object(
-            create_issue_module, "get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            create_issue_module.create_issue(
-                project="PROJ",
-                issue_type="Bug",
-                summary="Profiled Bug",
-                profile="development",
-            )
-
-        # Verify get_jira_client was called with profile
-        mock_get_client.assert_called_with("development")

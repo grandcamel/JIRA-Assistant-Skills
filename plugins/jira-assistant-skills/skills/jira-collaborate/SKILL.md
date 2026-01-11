@@ -137,7 +137,6 @@ All scripts support:
 
 | Option | Description |
 |--------|-------------|
-| `--profile <name>` | JIRA profile to use |
 | `--help`, `-h` | Show detailed help |
 
 For script-specific options, use `--help` on any script:

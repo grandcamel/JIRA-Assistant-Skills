@@ -33,7 +33,7 @@ def parse_account_ids(account_id_string: str) -> list:
 
 
 def remove_users_from_organization_func(
-    organization_id: int, account_ids: list, profile: str | None = None
+    organization_id: int, account_ids: list
 ) -> None:
     """
     Remove users from an organization.
@@ -41,9 +41,8 @@ def remove_users_from_organization_func(
     Args:
         organization_id: Organization ID
         account_ids: List of user account IDs
-        profile: JIRA profile to use
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         client.remove_users_from_organization(organization_id, account_ids)
 
 
@@ -77,7 +76,6 @@ Examples:
         action="store_true",
         help="Show what would be removed without removing",
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -104,7 +102,6 @@ Examples:
         remove_users_from_organization_func(
             organization_id=args.organization_id,
             account_ids=account_ids,
-            profile=args.profile,
         )
 
         print_success(

@@ -28,7 +28,7 @@ class TestReopenIssue:
 
         from reopen_issue import reopen_issue
 
-        reopen_issue("PROJ-123", profile=None)
+        reopen_issue("PROJ-123")
 
         mock_jira_client.transition_issue.assert_called_once()
         call_args = mock_jira_client.transition_issue.call_args
@@ -44,7 +44,7 @@ class TestReopenIssue:
 
         from reopen_issue import reopen_issue
 
-        reopen_issue("PROJ-123", comment="Regression found", profile=None)
+        reopen_issue("PROJ-123", comment="Regression found")
 
         call_args = mock_jira_client.transition_issue.call_args
         assert call_args[1]["fields"] is not None
@@ -60,7 +60,7 @@ class TestReopenIssue:
 
         from reopen_issue import reopen_issue
 
-        reopen_issue("PROJ-123", profile=None)
+        reopen_issue("PROJ-123")
 
         call_args = mock_jira_client.transition_issue.call_args
         assert call_args[0][1] == "11"  # To Do transition ID
@@ -78,7 +78,7 @@ class TestReopenIssue:
 
         from reopen_issue import reopen_issue
 
-        reopen_issue("PROJ-123", profile=None)
+        reopen_issue("PROJ-123")
 
         call_args = mock_jira_client.transition_issue.call_args
         assert call_args[0][1] == "11"  # Backlog transition ID
@@ -94,7 +94,7 @@ class TestReopenIssue:
         from reopen_issue import reopen_issue
 
         with pytest.raises(ValidationError, match="No transitions available"):
-            reopen_issue("PROJ-123", profile=None)
+            reopen_issue("PROJ-123")
 
     @patch("reopen_issue.get_jira_client")
     def test_reopen_issue_no_reopen_transition(self, mock_get_client, mock_jira_client):
@@ -110,7 +110,7 @@ class TestReopenIssue:
         from reopen_issue import reopen_issue
 
         with pytest.raises(ValidationError, match="No reopen transition"):
-            reopen_issue("PROJ-123", profile=None)
+            reopen_issue("PROJ-123")
 
     def test_reopen_issue_invalid_key(self):
         """Test error on invalid issue key."""
@@ -118,7 +118,7 @@ class TestReopenIssue:
         from reopen_issue import reopen_issue
 
         with pytest.raises(ValidationError):
-            reopen_issue("invalid", profile=None)
+            reopen_issue("invalid")
 
 
 @pytest.mark.lifecycle
@@ -139,7 +139,7 @@ class TestReopenIssueErrorHandling:
         from reopen_issue import reopen_issue
 
         with pytest.raises(AuthenticationError):
-            reopen_issue("PROJ-123", profile=None)
+            reopen_issue("PROJ-123")
 
     @patch("reopen_issue.get_jira_client")
     def test_permission_denied(self, mock_get_client, mock_jira_client):
@@ -157,7 +157,7 @@ class TestReopenIssueErrorHandling:
         from reopen_issue import reopen_issue
 
         with pytest.raises(PermissionError):
-            reopen_issue("PROJ-123", profile=None)
+            reopen_issue("PROJ-123")
 
     @patch("reopen_issue.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -172,7 +172,7 @@ class TestReopenIssueErrorHandling:
         from reopen_issue import reopen_issue
 
         with pytest.raises(NotFoundError):
-            reopen_issue("PROJ-999", profile=None)
+            reopen_issue("PROJ-999")
 
     @patch("reopen_issue.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -187,7 +187,7 @@ class TestReopenIssueErrorHandling:
         from reopen_issue import reopen_issue
 
         with pytest.raises(JiraError) as exc_info:
-            reopen_issue("PROJ-123", profile=None)
+            reopen_issue("PROJ-123")
         assert exc_info.value.status_code == 429
 
     @patch("reopen_issue.get_jira_client")
@@ -203,7 +203,7 @@ class TestReopenIssueErrorHandling:
         from reopen_issue import reopen_issue
 
         with pytest.raises(JiraError) as exc_info:
-            reopen_issue("PROJ-123", profile=None)
+            reopen_issue("PROJ-123")
         assert exc_info.value.status_code == 500
 
 
@@ -243,19 +243,6 @@ class TestReopenIssueMain:
         assert call_args[1]["fields"] is not None
 
     @patch("reopen_issue.get_jira_client")
-    def test_main_with_profile(self, mock_get_client, mock_jira_client, capsys):
-        """Test main with --profile."""
-        mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_transitions.return_value = [
-            {"id": "11", "name": "Reopen", "to": {"name": "Open"}}
-        ]
-
-        from reopen_issue import main
-
-        main(["PROJ-123", "--profile", "dev"])
-
-        mock_get_client.assert_called_with("dev")
-
     @patch("reopen_issue.get_jira_client")
     def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):
         """Test main with JIRA API error."""

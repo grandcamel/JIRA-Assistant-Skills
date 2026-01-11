@@ -49,7 +49,7 @@ class TestUploadAttachment:
 
         from upload_attachment import upload_attachment
 
-        result = upload_attachment("PROJ-123", str(test_file), profile=None)
+        result = upload_attachment("PROJ-123", str(test_file))
 
         assert result[0]["filename"] == "test.txt"
         mock_jira_client.upload_file.assert_called_once()
@@ -70,7 +70,7 @@ class TestUploadAttachment:
         from upload_attachment import upload_attachment
 
         upload_attachment(
-            "PROJ-123", str(test_file), file_name="custom_name.txt", profile=None
+            "PROJ-123", str(test_file), file_name="custom_name.txt"
         )
 
         call_args = mock_jira_client.upload_file.call_args
@@ -82,7 +82,7 @@ class TestUploadAttachment:
         from upload_attachment import upload_attachment
 
         with pytest.raises(ValidationError):
-            upload_attachment("PROJ-123", "/nonexistent/file.txt", profile=None)
+            upload_attachment("PROJ-123", "/nonexistent/file.txt")
 
     def test_upload_attachment_invalid_issue_key(self, tmp_path):
         """Test error for invalid issue key."""
@@ -94,7 +94,7 @@ class TestUploadAttachment:
         from upload_attachment import upload_attachment
 
         with pytest.raises(ValidationError):
-            upload_attachment("invalid", str(test_file), profile=None)
+            upload_attachment("invalid", str(test_file))
 
 
 @pytest.mark.collaborate
@@ -118,7 +118,7 @@ class TestUploadAttachmentErrorHandling:
         from upload_attachment import upload_attachment
 
         with pytest.raises(AuthenticationError):
-            upload_attachment("PROJ-123", str(test_file), profile=None)
+            upload_attachment("PROJ-123", str(test_file))
 
     @patch("upload_attachment.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client, tmp_path):
@@ -136,7 +136,7 @@ class TestUploadAttachmentErrorHandling:
         from upload_attachment import upload_attachment
 
         with pytest.raises(PermissionError):
-            upload_attachment("PROJ-123", str(test_file), profile=None)
+            upload_attachment("PROJ-123", str(test_file))
 
     @patch("upload_attachment.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client, tmp_path):
@@ -154,7 +154,7 @@ class TestUploadAttachmentErrorHandling:
         from upload_attachment import upload_attachment
 
         with pytest.raises(NotFoundError):
-            upload_attachment("PROJ-999", str(test_file), profile=None)
+            upload_attachment("PROJ-999", str(test_file))
 
     @patch("upload_attachment.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client, tmp_path):
@@ -172,7 +172,7 @@ class TestUploadAttachmentErrorHandling:
         from upload_attachment import upload_attachment
 
         with pytest.raises(JiraError) as exc_info:
-            upload_attachment("PROJ-123", str(test_file), profile=None)
+            upload_attachment("PROJ-123", str(test_file))
         assert exc_info.value.status_code == 429
 
     @patch("upload_attachment.get_jira_client")
@@ -191,5 +191,5 @@ class TestUploadAttachmentErrorHandling:
         from upload_attachment import upload_attachment
 
         with pytest.raises(JiraError) as exc_info:
-            upload_attachment("PROJ-123", str(test_file), profile=None)
+            upload_attachment("PROJ-123", str(test_file))
         assert exc_info.value.status_code == 500

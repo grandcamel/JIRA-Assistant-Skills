@@ -195,7 +195,6 @@ Examples:
     parser.add_argument(
         "--dry-run", "-n", action="store_true", help="Preview without removing"
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -229,7 +228,7 @@ Examples:
             print("Use --confirm to proceed or --dry-run to preview.", file=sys.stderr)
             sys.exit(1)
 
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         # Remove user from group
         if args.account_id:

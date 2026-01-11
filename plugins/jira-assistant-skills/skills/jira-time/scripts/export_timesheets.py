@@ -243,7 +243,6 @@ Examples:
     parser.add_argument(
         "--output", "-o", help="Output file path (stdout if not specified)"
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -274,7 +273,7 @@ Examples:
 
     try:
         # Get client
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         # Fetch data
         data = fetch_timesheet_data(

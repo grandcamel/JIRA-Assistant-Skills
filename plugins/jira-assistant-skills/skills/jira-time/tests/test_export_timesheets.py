@@ -369,21 +369,6 @@ class TestExportTimesheetsMain:
             captured = capsys.readouterr()
             assert "Issue Key" in captured.out
 
-    def test_main_with_profile(self, mock_jira_client, capsys):
-        """Test main with --profile."""
-        from unittest.mock import patch
-
-        mock_jira_client.search_issues.return_value = {"issues": []}
-
-        with patch(
-            "export_timesheets.get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            from export_timesheets import main
-
-            main(["--profile", "dev"])
-
-            mock_get_client.assert_called_with("dev")
-
     def test_main_jira_error(self, mock_jira_client, capsys):
         """Test main with JIRA API error."""
         from unittest.mock import patch

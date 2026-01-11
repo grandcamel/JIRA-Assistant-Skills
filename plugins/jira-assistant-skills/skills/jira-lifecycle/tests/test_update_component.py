@@ -32,7 +32,7 @@ class TestUpdateComponent:
         from update_component import update_component
 
         result = update_component(
-            component_id="10000", name="New Component Name", profile=None
+            component_id="10000", name="New Component Name"
         )
 
         assert result["name"] == "New Component Name"
@@ -53,7 +53,7 @@ class TestUpdateComponent:
         from update_component import update_component
 
         result = update_component(
-            component_id="10000", description="Updated description", profile=None
+            component_id="10000", description="Updated description"
         )
 
         assert result["description"] == "Updated description"
@@ -78,8 +78,7 @@ class TestUpdateComponent:
         result = update_component(
             component_id="10000",
             lead_account_id="5b10a2844c20165700ede22h",
-            profile=None,
-        )
+                )
 
         assert result["lead"]["accountId"] == "5b10a2844c20165700ede22h"
 
@@ -98,7 +97,7 @@ class TestUpdateComponent:
         from update_component import update_component
 
         result = update_component(
-            component_id="10000", assignee_type="PROJECT_LEAD", profile=None
+            component_id="10000", assignee_type="PROJECT_LEAD"
         )
 
         assert result["assigneeType"] == "PROJECT_LEAD"
@@ -128,8 +127,7 @@ class TestUpdateComponent:
             description="Updated description",
             lead_account_id="5b10a2844c20165700ede22h",
             assignee_type="COMPONENT_LEAD",
-            profile=None,
-        )
+                )
 
         assert result["name"] == "Updated Name"
         assert result["description"] == "Updated description"
@@ -171,7 +169,7 @@ class TestUpdateComponentErrorHandling:
         from update_component import update_component
 
         with pytest.raises(AuthenticationError):
-            update_component(component_id="10000", name="New Name", profile=None)
+            update_component(component_id="10000", name="New Name")
 
     @patch("update_component.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client):
@@ -186,7 +184,7 @@ class TestUpdateComponentErrorHandling:
         from update_component import update_component
 
         with pytest.raises(PermissionError):
-            update_component(component_id="10000", name="New Name", profile=None)
+            update_component(component_id="10000", name="New Name")
 
     @patch("update_component.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -201,7 +199,7 @@ class TestUpdateComponentErrorHandling:
         from update_component import update_component
 
         with pytest.raises(NotFoundError):
-            update_component(component_id="99999", name="New Name", profile=None)
+            update_component(component_id="99999", name="New Name")
 
     @patch("update_component.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -216,7 +214,7 @@ class TestUpdateComponentErrorHandling:
         from update_component import update_component
 
         with pytest.raises(JiraError) as exc_info:
-            update_component(component_id="10000", name="New Name", profile=None)
+            update_component(component_id="10000", name="New Name")
         assert exc_info.value.status_code == 429
 
     @patch("update_component.get_jira_client")
@@ -232,5 +230,5 @@ class TestUpdateComponentErrorHandling:
         from update_component import update_component
 
         with pytest.raises(JiraError) as exc_info:
-            update_component(component_id="10000", name="New Name", profile=None)
+            update_component(component_id="10000", name="New Name")
         assert exc_info.value.status_code == 500

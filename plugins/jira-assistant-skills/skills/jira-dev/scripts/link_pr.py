@@ -146,7 +146,6 @@ def link_pr(
     title: str | None = None,
     status: str | None = None,
     author: str | None = None,
-    profile: str | None = None,
     client=None,
 ) -> dict[str, Any]:
     """
@@ -158,7 +157,6 @@ def link_pr(
         title: PR title
         status: PR status
         author: PR author
-        profile: JIRA profile
         client: Optional JiraClient instance (created if not provided)
 
     Returns:
@@ -182,7 +180,7 @@ def link_pr(
     # Create comment via JIRA API
     close_client = False
     if client is None:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         close_client = True
     try:
         # Convert wiki markup to ADF using shared helper
@@ -224,7 +222,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -235,7 +232,6 @@ def main(argv: list[str] | None = None):
             title=args.title,
             status=args.status,
             author=args.author,
-            profile=args.profile,
         )
 
         if args.output == "json":

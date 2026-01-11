@@ -19,18 +19,17 @@ from jira_assistant_skills_lib import (
 )
 
 
-def get_service_desk(service_desk_id: str, profile: str | None = None) -> dict:
+def get_service_desk(service_desk_id: str) -> dict:
     """
     Get JSM service desk details by ID.
 
     Args:
         service_desk_id: Service desk ID
-        profile: JIRA profile to use
 
     Returns:
         Service desk data
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     service_desk = client.get_service_desk(service_desk_id)
     client.close()
 
@@ -99,13 +98,12 @@ def main(argv: list[str] | None = None):
         action="store_true",
         help="Show request type count",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
         # Fetch service desk
-        service_desk = get_service_desk(args.service_desk_id, profile=args.profile)
+        service_desk = get_service_desk(args.service_desk_id)
 
         # Output results
         if args.output == "json":
@@ -113,7 +111,7 @@ def main(argv: list[str] | None = None):
         else:
             client = None
             if args.show_request_types:
-                client = get_jira_client(args.profile)
+                client = get_jira_client()
             format_service_desk_text(service_desk, args.show_request_types, client)
             if client:
                 client.close()

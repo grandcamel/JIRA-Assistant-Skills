@@ -35,7 +35,6 @@ def create_subtask(
     labels: list | None = None,
     time_estimate: str | None = None,
     custom_fields: dict | None = None,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -50,7 +49,6 @@ def create_subtask(
         labels: List of labels
         time_estimate: Time estimate (e.g., "4h", "2d")
         custom_fields: Additional custom fields
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -71,7 +69,7 @@ def create_subtask(
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -179,7 +177,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument("--estimate", "-e", help="Time estimate (e.g., 4h, 2d, 1w)")
     parser.add_argument("--labels", "-l", help="Comma-separated labels")
     parser.add_argument("--custom-fields", help="Custom fields as JSON string")
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
     parser.add_argument(
         "--output",
         "-o",
@@ -203,7 +200,6 @@ def main(argv: list[str] | None = None):
             labels=labels,
             time_estimate=args.estimate,
             custom_fields=custom_fields,
-            profile=args.profile,
         )
 
         subtask_key = result.get("key")

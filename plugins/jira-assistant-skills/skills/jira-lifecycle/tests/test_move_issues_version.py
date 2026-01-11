@@ -30,7 +30,7 @@ class TestMoveIssuesVersion:
         from move_issues_version import move_issues_to_version
 
         result = move_issues_to_version(
-            jql='fixVersion = "v1.0.0"', target_version="v2.0.0", profile=None
+            jql='fixVersion = "v1.0.0"', target_version="v2.0.0"
         )
 
         # Should have updated both issues
@@ -52,8 +52,7 @@ class TestMoveIssuesVersion:
             project="PROJ",
             source_version="v1.0.0",
             target_version="v1.2.0",
-            profile=None,
-        )
+                )
 
         # Should have moved the issues found by JQL
         assert result["moved"] == 2
@@ -68,7 +67,7 @@ class TestMoveIssuesVersion:
         from move_issues_version import move_specific_issues
 
         result = move_specific_issues(
-            issue_keys=["PROJ-1", "PROJ-2"], target_version="v2.0.0", profile=None
+            issue_keys=["PROJ-1", "PROJ-2"], target_version="v2.0.0"
         )
 
         assert result["moved"] == 2
@@ -87,8 +86,7 @@ class TestMoveIssuesVersion:
             issue_keys=["PROJ-1"],
             target_version="v2.0.0",
             field="fixVersions",
-            profile=None,
-        )
+                )
 
         assert result["moved"] == 1
         call_args = mock_jira_client.update_issue.call_args
@@ -105,7 +103,7 @@ class TestMoveIssuesVersion:
         from move_issues_version import move_issues_dry_run
 
         result = move_issues_dry_run(
-            jql="project = PROJ", target_version="v2.0.0", profile=None
+            jql="project = PROJ", target_version="v2.0.0"
         )
 
         # Should return issue count without updating
@@ -128,7 +126,7 @@ class TestMoveIssuesVersion:
         from move_issues_version import move_issues_with_confirmation
 
         result = move_issues_with_confirmation(
-            jql="project = PROJ", target_version="v2.0.0", profile=None
+            jql="project = PROJ", target_version="v2.0.0"
         )
 
         # Should have moved issues after confirmation
@@ -154,7 +152,7 @@ class TestMoveIssuesVersionErrorHandling:
 
         with pytest.raises(AuthenticationError):
             move_issues_to_version(
-                jql="project = PROJ", target_version="v2.0.0", profile=None
+                jql="project = PROJ", target_version="v2.0.0"
             )
 
     @patch("move_issues_version.get_jira_client")
@@ -176,8 +174,7 @@ class TestMoveIssuesVersionErrorHandling:
         result = move_issues_to_version(
             jql="project = PROJ",
             target_version="v2.0.0",
-            profile=None,
-            show_progress=False,
+                show_progress=False,
         )
 
         assert result["moved"] == 0
@@ -198,7 +195,7 @@ class TestMoveIssuesVersionErrorHandling:
 
         with pytest.raises(NotFoundError):
             move_issues_to_version(
-                jql="issue = PROJ-999", target_version="v2.0.0", profile=None
+                jql="issue = PROJ-999", target_version="v2.0.0"
             )
 
     @patch("move_issues_version.get_jira_client")
@@ -215,7 +212,7 @@ class TestMoveIssuesVersionErrorHandling:
 
         with pytest.raises(JiraError) as exc_info:
             move_issues_to_version(
-                jql="project = PROJ", target_version="v2.0.0", profile=None
+                jql="project = PROJ", target_version="v2.0.0"
             )
         assert exc_info.value.status_code == 429
 
@@ -233,6 +230,6 @@ class TestMoveIssuesVersionErrorHandling:
 
         with pytest.raises(JiraError) as exc_info:
             move_issues_to_version(
-                jql="project = PROJ", target_version="v2.0.0", profile=None
+                jql="project = PROJ", target_version="v2.0.0"
             )
         assert exc_info.value.status_code == 500

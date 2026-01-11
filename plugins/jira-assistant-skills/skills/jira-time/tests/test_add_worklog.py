@@ -444,21 +444,6 @@ class TestAddWorklogMain:
             output = json.loads(captured.out)
             assert output["id"] == "10045"
 
-    def test_main_with_profile(self, mock_jira_client, sample_worklog, capsys):
-        """Test main with --profile."""
-        mock_jira_client.add_worklog.return_value = sample_worklog
-
-        from unittest.mock import patch
-
-        with patch(
-            "add_worklog.get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            from add_worklog import main
-
-            main(["PROJ-123", "--time", "2h", "--profile", "dev"])
-
-            mock_get_client.assert_called_with("dev")
-
     def test_main_jira_error(self, mock_jira_client, capsys):
         """Test main with JIRA API error."""
         from jira_assistant_skills_lib import JiraError

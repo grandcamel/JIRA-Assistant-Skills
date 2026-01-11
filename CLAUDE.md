@@ -97,7 +97,7 @@ jira-as search query "project = PROJ"
 5. Update skill's SKILL.md
 
 **Script utilities** (`shared/scripts/script_utils.py`):
-- `add_common_args(parser)` - Adds `--profile` and `--output` args
+- `add_common_args(parser)` - Adds `--output` arg
 - `add_bulk_args(parser)` - Adds `--dry-run`, `--max-issues`, `--yes` for bulk ops
 - `parse_comma_list(value)` - Parse "a,b,c" → ["a", "b", "c"]
 - `parse_json_arg(value)` - Parse JSON string args
@@ -119,10 +119,10 @@ from script_utils import add_common_args, format_output, run_script
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(...)
-    add_common_args(parser)  # Adds --profile, --output
+    add_common_args(parser)  # Adds --output
     args = parser.parse_args(argv)
 
-    client = get_jira_client(args.profile)
+    client = get_jira_client()
     result = client.get_issue(args.issue_key)
     format_output(result, args.output, success_message=f"Found: {result['key']}")
 

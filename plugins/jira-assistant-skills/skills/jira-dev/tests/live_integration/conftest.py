@@ -2,10 +2,9 @@
 Live Integration Test Configuration for jira-dev skill.
 
 Usage:
-    pytest plugins/jira-assistant-skills/skills/jira-dev/tests/live_integration/ --profile development -v
+    pytest plugins/jira-assistant-skills/skills/jira-dev/tests/live_integration/ -v
 """
 
-import os
 import sys
 import uuid
 from collections.abc import Generator
@@ -25,12 +24,6 @@ from jira_assistant_skills_lib import JiraClient, get_jira_client
 def pytest_addoption(parser):
     """Add custom command line options."""
     parser.addoption(
-        "--profile",
-        action="store",
-        default=os.environ.get("JIRA_PROFILE", "development"),
-        help="JIRA profile to use (default: development)",
-    )
-    parser.addoption(
         "--keep-project",
         action="store_true",
         default=False,
@@ -38,16 +31,9 @@ def pytest_addoption(parser):
     )
     parser.addoption(
         "--project-key",
-        action="store",
         default=None,
         help="Use existing project instead of creating one",
     )
-
-
-@pytest.fixture(scope="session")
-def jira_profile(request) -> str:
-    """Get the JIRA profile from command line."""
-    return request.config.getoption("--profile")
 
 
 @pytest.fixture(scope="session")
@@ -63,9 +49,9 @@ def existing_project_key(request) -> str:
 
 
 @pytest.fixture(scope="session")
-def jira_client(jira_profile) -> Generator[JiraClient, None, None]:
+def jira_client() -> Generator[JiraClient, None, None]:
     """Create a JIRA client for the test session."""
-    client = get_jira_client(jira_profile)
+    client = get_jira_client()
     yield client
     client.close()
 

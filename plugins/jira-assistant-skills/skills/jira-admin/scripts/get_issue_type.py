@@ -18,7 +18,6 @@ from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 def get_issue_type(
     issue_type_id: str,
     client=None,
-    profile: str | None = None,
     show_alternatives: bool = False,
 ) -> dict[str, Any]:
     """
@@ -27,7 +26,6 @@ def get_issue_type(
     Args:
         issue_type_id: Issue type ID
         client: JiraClient instance (for testing)
-        profile: Configuration profile name
         show_alternatives: If True, also fetch alternative types
 
     Returns:
@@ -38,7 +36,7 @@ def get_issue_type(
         NotFoundError: If issue type not found
     """
     if client is None:
-        client = get_jira_client(profile=profile)
+        client = get_jira_client()
 
     try:
         issue_type = client.get_issue_type(issue_type_id)
@@ -114,7 +112,7 @@ Examples:
   python get_issue_type.py 10000 --format json
 
   # Use specific profile
-  python get_issue_type.py 10000 --profile production
+  python get_issue_type.py 10000
 """,
     )
 
@@ -130,14 +128,12 @@ Examples:
         default="detail",
         help="Output format (default: detail)",
     )
-    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args(argv)
 
     try:
         issue_type = get_issue_type(
             issue_type_id=args.issue_type_id,
-            profile=args.profile,
             show_alternatives=args.show_alternatives,
         )
 

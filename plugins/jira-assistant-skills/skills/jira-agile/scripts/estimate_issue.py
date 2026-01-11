@@ -32,7 +32,6 @@ def estimate_issue(
     jql: str | None = None,
     points: float | None = None,
     validate_fibonacci: bool = False,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -43,7 +42,6 @@ def estimate_issue(
         jql: JQL query to find issues
         points: Story point value (0 to clear)
         validate_fibonacci: If True, validate points against Fibonacci sequence
-        profile: JIRA profile to use
         client: JiraClient instance (for testing)
 
     Returns:
@@ -68,7 +66,7 @@ def estimate_issue(
 
     # Initialize client
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -86,7 +84,7 @@ def estimate_issue(
         issue_keys = [validate_issue_key(k) for k in issue_keys]
 
         # Get Story Points field ID from configuration
-        story_points_field = get_agile_field("story_points", profile)
+        story_points_field = get_agile_field("story_points")
 
         # Prepare update data
         # If points is 0, set to None to clear the field
@@ -126,7 +124,6 @@ def main(argv: list[str] | None = None):
         action="store_true",
         help="Validate points against Fibonacci sequence",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
     parser.add_argument(
         "--output", "-o", choices=["text", "json"], default="text", help="Output format"
     )
@@ -144,7 +141,6 @@ def main(argv: list[str] | None = None):
             jql=args.jql,
             points=args.points,
             validate_fibonacci=args.validate_fibonacci,
-            profile=args.profile,
         )
 
         if args.output == "json":

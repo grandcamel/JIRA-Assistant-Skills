@@ -27,7 +27,7 @@ class TestGetComments:
 
         from get_comments import get_comments
 
-        result = get_comments("PROJ-123", profile=None)
+        result = get_comments("PROJ-123")
 
         assert len(result["comments"]) == 3
         assert result["total"] == 3
@@ -46,7 +46,7 @@ class TestGetComments:
 
         from get_comments import get_comments
 
-        get_comments("PROJ-123", limit=10, offset=5, profile=None)
+        get_comments("PROJ-123", limit=10, offset=5)
 
         mock_jira_client.get_comments.assert_called_once_with(
             "PROJ-123", max_results=10, start_at=5, order_by="-created"
@@ -63,13 +63,13 @@ class TestGetComments:
         from get_comments import get_comments
 
         # Default: newest first (-created)
-        get_comments("PROJ-123", profile=None)
+        get_comments("PROJ-123")
         mock_jira_client.get_comments.assert_called_with(
             "PROJ-123", max_results=50, start_at=0, order_by="-created"
         )
 
         # Oldest first (+created)
-        get_comments("PROJ-123", order="asc", profile=None)
+        get_comments("PROJ-123", order="asc")
         assert mock_jira_client.get_comments.call_args[1]["order_by"] == "+created"
 
     @patch("get_comments.get_jira_client")
@@ -85,7 +85,7 @@ class TestGetComments:
 
         from get_comments import get_comments
 
-        result = get_comments("PROJ-123", profile=None)
+        result = get_comments("PROJ-123")
 
         assert result["total"] == 0
         assert len(result["comments"]) == 0
@@ -100,7 +100,7 @@ class TestGetComments:
 
         from get_comments import get_comment_by_id
 
-        result = get_comment_by_id("PROJ-123", "10001", profile=None)
+        result = get_comment_by_id("PROJ-123", "10001")
 
         assert result["id"] == "10001"
         assert result["author"]["displayName"] == "Alice Smith"
@@ -131,7 +131,7 @@ class TestGetComments:
 
         from get_comments import get_comments
 
-        result = get_comments("PROJ-123", profile=None)
+        result = get_comments("PROJ-123")
 
         # Should be JSON serializable
         json_str = json.dumps(result)
@@ -157,7 +157,7 @@ class TestGetCommentsErrorHandling:
         from get_comments import get_comments
 
         with pytest.raises(AuthenticationError):
-            get_comments("PROJ-123", profile=None)
+            get_comments("PROJ-123")
 
     @patch("get_comments.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client):
@@ -172,7 +172,7 @@ class TestGetCommentsErrorHandling:
         from get_comments import get_comments
 
         with pytest.raises(PermissionError):
-            get_comments("PROJ-123", profile=None)
+            get_comments("PROJ-123")
 
     @patch("get_comments.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -187,7 +187,7 @@ class TestGetCommentsErrorHandling:
         from get_comments import get_comments
 
         with pytest.raises(NotFoundError):
-            get_comments("PROJ-999", profile=None)
+            get_comments("PROJ-999")
 
     @patch("get_comments.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -202,7 +202,7 @@ class TestGetCommentsErrorHandling:
         from get_comments import get_comments
 
         with pytest.raises(JiraError) as exc_info:
-            get_comments("PROJ-123", profile=None)
+            get_comments("PROJ-123")
         assert exc_info.value.status_code == 429
 
     @patch("get_comments.get_jira_client")
@@ -218,7 +218,7 @@ class TestGetCommentsErrorHandling:
         from get_comments import get_comments
 
         with pytest.raises(JiraError) as exc_info:
-            get_comments("PROJ-123", profile=None)
+            get_comments("PROJ-123")
         assert exc_info.value.status_code == 500
 
 
@@ -400,20 +400,6 @@ class TestGetCommentsMain:
         captured = capsys.readouterr()
         assert "100 total" in captured.out
         assert "Use --limit" in captured.out
-
-    @patch("get_comments.get_jira_client")
-    def test_main_with_profile(
-        self, mock_get_client, mock_jira_client, sample_comments_list, capsys
-    ):
-        """Test main with --profile flag."""
-        mock_get_client.return_value = mock_jira_client
-        mock_jira_client.get_comments.return_value = sample_comments_list
-
-        from get_comments import main
-
-        main(["PROJ-123", "--profile", "development"])
-
-        mock_get_client.assert_called_with("development")
 
     @patch("get_comments.get_jira_client")
     def test_main_jira_error(self, mock_get_client, mock_jira_client):

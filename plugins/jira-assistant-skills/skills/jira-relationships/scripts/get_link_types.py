@@ -16,19 +16,18 @@ from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
 def get_link_types(
-    filter_pattern: str | None = None, profile: str | None = None
+    filter_pattern: str | None = None
 ) -> list:
     """
     Get all available issue link types.
 
     Args:
         filter_pattern: Optional pattern to filter link types by name
-        profile: JIRA profile to use
 
     Returns:
         List of link type objects
     """
-    client = get_jira_client(profile)
+    client = get_jira_client()
     link_types = client.get_link_types()
     client.close()
 
@@ -109,12 +108,11 @@ def main(argv: list[str] | None = None):
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
-        link_types = get_link_types(filter_pattern=args.filter, profile=args.profile)
+        link_types = get_link_types(filter_pattern=args.filter)
         output = format_link_types(link_types, output_format=args.output)
         print(output)
 

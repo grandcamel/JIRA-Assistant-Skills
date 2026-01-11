@@ -332,12 +332,11 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         if args.list:
             handle_list_permissions(client, args)

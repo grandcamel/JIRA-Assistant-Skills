@@ -80,19 +80,6 @@ class TestListFieldsCLI:
                         if e.code == 2:
                             pytest.fail(f"--output {fmt} should be valid")
 
-    def test_profile_option(self):
-        """Test --profile option."""
-        import list_fields
-
-        with patch("sys.argv", ["list_fields.py", "--profile", "development"]):
-            with patch.object(list_fields, "get_jira_client") as mock_client:
-                mock_client.return_value.get.return_value = []
-                mock_client.return_value.close = Mock()
-                try:
-                    list_fields.main()
-                except SystemExit as e:
-                    if e.code == 2:
-                        pytest.fail("--profile should be valid")
 
 
 @pytest.mark.fields
@@ -225,21 +212,3 @@ class TestConfigureAgileFieldsCLI:
                             "positional project with auto-discovery should be valid"
                         )
 
-    def test_profile_option(self):
-        """Test --profile option with positional project."""
-        import configure_agile_fields
-
-        with (
-            patch(
-                "sys.argv",
-                ["configure_agile_fields.py", "PROJ", "--profile", "development"],
-            ),
-            patch.object(configure_agile_fields, "get_jira_client") as mock_client,
-        ):
-            mock_client.return_value.get.return_value = []
-            mock_client.return_value.close = Mock()
-            try:
-                configure_agile_fields.main()
-            except SystemExit as e:
-                if e.code == 2:
-                    pytest.fail("--profile should be valid")

@@ -14,18 +14,17 @@ import sys
 from jira_assistant_skills_lib import JiraError, get_jira_client, print_error
 
 
-def get_organization_func(organization_id: int, profile: str | None = None) -> dict:
+def get_organization_func(organization_id: int) -> dict:
     """
     Get organization details.
 
     Args:
         organization_id: Organization ID
-        profile: JIRA profile to use
 
     Returns:
         Organization data
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         return client.get_organization(organization_id)
 
 
@@ -51,7 +50,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Show full API response"
     )
@@ -60,7 +58,7 @@ Examples:
 
     try:
         organization = get_organization_func(
-            organization_id=args.organization_id, profile=args.profile
+            organization_id=args.organization_id
         )
 
         if args.output == "json":

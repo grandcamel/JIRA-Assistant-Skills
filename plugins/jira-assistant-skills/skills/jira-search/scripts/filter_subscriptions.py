@@ -63,12 +63,11 @@ Note: Creating/editing subscriptions is only available via the JIRA UI.
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", "-p", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
     try:
-        client = get_jira_client(args.profile)
+        client = get_jira_client()
 
         filter_data = get_subscriptions(client, args.filter_id)
         subscriptions = filter_data.get("subscriptions", {})

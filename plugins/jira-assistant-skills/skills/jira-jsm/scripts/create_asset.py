@@ -84,7 +84,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--dry-run", action="store_true", help="Preview changes without creating"
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 

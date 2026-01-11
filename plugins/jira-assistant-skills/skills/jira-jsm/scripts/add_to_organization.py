@@ -33,7 +33,7 @@ def parse_account_ids(account_id_string: str) -> list:
 
 
 def add_users_to_organization_func(
-    organization_id: int, account_ids: list, profile: str | None = None
+    organization_id: int, account_ids: list
 ) -> None:
     """
     Add users to an organization.
@@ -41,9 +41,8 @@ def add_users_to_organization_func(
     Args:
         organization_id: Organization ID
         account_ids: List of user account IDs
-        profile: JIRA profile to use
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         client.add_users_to_organization(organization_id, account_ids)
 
 
@@ -72,7 +71,6 @@ Examples:
     parser.add_argument(
         "--dry-run", action="store_true", help="Show what would be added without adding"
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -95,7 +93,6 @@ Examples:
         add_users_to_organization_func(
             organization_id=args.organization_id,
             account_ids=account_ids,
-            profile=args.profile,
         )
 
         print_success(

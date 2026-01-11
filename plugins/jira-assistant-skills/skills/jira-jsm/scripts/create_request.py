@@ -30,7 +30,6 @@ def create_service_request(
     custom_fields: dict[str, Any] | None = None,
     participants: list[str] | None = None,
     on_behalf_of: str | None = None,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Create a service request.
@@ -43,7 +42,6 @@ def create_service_request(
         custom_fields: Additional custom fields
         participants: List of participant email addresses
         on_behalf_of: Create on behalf of user email
-        profile: JIRA profile to use
 
     Returns:
         Created request data
@@ -65,7 +63,7 @@ def create_service_request(
     if custom_fields:
         fields.update(custom_fields)
 
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         return client.create_request(
             service_desk_id=service_desk_id,
             request_type_id=request_type_id,
@@ -145,7 +143,6 @@ Examples:
         action="store_true",
         help="Show what would be created without creating",
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -189,7 +186,6 @@ Examples:
             custom_fields=custom_fields,
             participants=participants,
             on_behalf_of=args.on_behalf_of,
-            profile=args.profile,
         )
 
         if args.output == "json":

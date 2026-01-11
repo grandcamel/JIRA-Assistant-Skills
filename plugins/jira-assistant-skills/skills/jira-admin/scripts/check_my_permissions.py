@@ -272,7 +272,6 @@ Examples:
         action="store_true",
         help="Skip summary line",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -281,7 +280,7 @@ Examples:
         parser.error("--only-have and --only-missing are mutually exclusive")
 
     try:
-        client = get_jira_client(profile=args.profile)
+        client = get_jira_client()
 
         # Parse permissions if provided
         permissions = None

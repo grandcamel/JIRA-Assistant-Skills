@@ -167,20 +167,6 @@ class TestSearchIssues:
                 next_page_token="abc123",
             )
 
-    def test_search_with_profile(self, mock_jira_client, sample_search_results):
-        """Test search with specific profile."""
-        mock_jira_client.search_issues.return_value = sample_search_results
-
-        with patch(
-            "jql_search.get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            from jql_search import search_issues
-
-            search_issues("project = PROJ", profile="development")
-
-            mock_get_client.assert_called_with("development")
-
-
 @pytest.mark.search
 @pytest.mark.unit
 class TestGetJqlFromFilter:

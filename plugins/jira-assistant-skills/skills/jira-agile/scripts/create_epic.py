@@ -52,7 +52,6 @@ def create_epic(
     assignee: str | None = None,
     labels: list | None = None,
     custom_fields: dict | None = None,
-    profile: str | None = None,
     client=None,
 ) -> dict:
     """
@@ -68,7 +67,6 @@ def create_epic(
         assignee: Assignee account ID or "self"
         labels: List of labels
         custom_fields: Additional custom fields
-        profile: JIRA profile to use
 
     Returns:
         Created epic data from JIRA API
@@ -120,7 +118,7 @@ def create_epic(
     # Add assignee
     if assignee:
         if assignee.lower() == "self":
-            temp_client = client or get_jira_client(profile)
+            temp_client = client or get_jira_client()
             account_id = temp_client.get_current_user_id()
             fields["assignee"] = {"accountId": account_id}
             if not client:
@@ -135,7 +133,7 @@ def create_epic(
         fields["labels"] = labels
 
     # Get Agile field IDs from configuration
-    agile_fields = get_agile_fields(profile)
+    agile_fields = get_agile_fields()
 
     # Add epic-specific custom fields
     if epic_name:
@@ -150,7 +148,7 @@ def create_epic(
 
     # Create the epic
     if not client:
-        client = get_jira_client(profile)
+        client = get_jira_client()
         should_close = True
     else:
         should_close = False
@@ -191,7 +189,6 @@ def main(argv: list[str] | None = None):
     )
     parser.add_argument("--labels", "-l", help="Comma-separated labels")
     parser.add_argument("--custom-fields", help="Custom fields as JSON string")
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
     parser.add_argument(
         "--output",
         "-o",
@@ -216,7 +213,6 @@ def main(argv: list[str] | None = None):
             assignee=args.assignee,
             labels=labels,
             custom_fields=custom_fields,
-            profile=args.profile,
         )
 
         epic_key = result.get("key")

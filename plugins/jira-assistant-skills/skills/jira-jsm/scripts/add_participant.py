@@ -36,7 +36,6 @@ def add_participant_func(
     issue_key: str,
     account_ids: list | None = None,
     usernames: list | None = None,
-    profile: str | None = None,
 ) -> dict:
     """
     Add participants to a request.
@@ -45,12 +44,11 @@ def add_participant_func(
         issue_key: Request issue key
         account_ids: List of user account IDs
         usernames: List of usernames (legacy)
-        profile: JIRA profile to use
 
     Returns:
         Updated participants data
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         return client.add_request_participants(
             issue_key, account_ids=account_ids, usernames=usernames
         )
@@ -80,7 +78,6 @@ Examples:
     parser.add_argument(
         "--dry-run", action="store_true", help="Show what would be added without adding"
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
@@ -117,7 +114,6 @@ Examples:
             issue_key=args.issue_key,
             account_ids=account_ids,
             usernames=usernames,
-            profile=args.profile,
         )
 
         count = (len(account_ids) if account_ids else 0) + (

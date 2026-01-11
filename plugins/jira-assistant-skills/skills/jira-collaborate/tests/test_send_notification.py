@@ -30,8 +30,7 @@ class TestSendNotification:
             subject="Test Subject",
             body="Test body",
             watchers=True,
-            profile=None,
-        )
+                )
 
         mock_jira_client.notify_issue.assert_called_once()
         call_args = mock_jira_client.notify_issue.call_args
@@ -47,7 +46,7 @@ class TestSendNotification:
         from send_notification import send_notification
 
         send_notification(
-            "PROJ-123", subject="Test", body="Body", assignee=True, profile=None
+            "PROJ-123", subject="Test", body="Body", assignee=True
         )
 
         call_args = mock_jira_client.notify_issue.call_args
@@ -62,7 +61,7 @@ class TestSendNotification:
         from send_notification import send_notification
 
         send_notification(
-            "PROJ-123", subject="Test", body="Body", reporter=True, profile=None
+            "PROJ-123", subject="Test", body="Body", reporter=True
         )
 
         call_args = mock_jira_client.notify_issue.call_args
@@ -81,8 +80,7 @@ class TestSendNotification:
             subject="Test",
             body="Body",
             users=["5b10a2844c20165700ede21g", "5b10a2844c20165700ede22h"],
-            profile=None,
-        )
+                )
 
         call_args = mock_jira_client.notify_issue.call_args
         assert len(call_args[1]["to"]["users"]) == 2
@@ -97,7 +95,7 @@ class TestSendNotification:
         from send_notification import send_notification
 
         send_notification(
-            "PROJ-123", subject="Test", body="Body", groups=["developers"], profile=None
+            "PROJ-123", subject="Test", body="Body", groups=["developers"]
         )
 
         call_args = mock_jira_client.notify_issue.call_args
@@ -117,8 +115,7 @@ class TestSendNotification:
             subject="Action Required",
             body="Please review this issue",
             watchers=True,
-            profile=None,
-        )
+                )
 
         call_args = mock_jira_client.notify_issue.call_args
         assert call_args[1]["subject"] == "Action Required"
@@ -137,8 +134,7 @@ class TestSendNotification:
             body="Body",
             watchers=True,
             assignee=True,
-            profile=None,
-        )
+                )
 
         # Should return notification details without sending
         assert result["issue_key"] == "PROJ-123"
@@ -167,7 +163,7 @@ class TestSendNotificationErrorHandling:
 
         with pytest.raises(AuthenticationError):
             send_notification(
-                "PROJ-123", subject="Test", body="Body", watchers=True, profile=None
+                "PROJ-123", subject="Test", body="Body", watchers=True
             )
 
     @patch("send_notification.get_jira_client")
@@ -184,7 +180,7 @@ class TestSendNotificationErrorHandling:
 
         with pytest.raises(PermissionError):
             send_notification(
-                "PROJ-123", subject="Test", body="Body", watchers=True, profile=None
+                "PROJ-123", subject="Test", body="Body", watchers=True
             )
 
     @patch("send_notification.get_jira_client")
@@ -201,7 +197,7 @@ class TestSendNotificationErrorHandling:
 
         with pytest.raises(NotFoundError):
             send_notification(
-                "PROJ-999", subject="Test", body="Body", watchers=True, profile=None
+                "PROJ-999", subject="Test", body="Body", watchers=True
             )
 
     @patch("send_notification.get_jira_client")
@@ -218,7 +214,7 @@ class TestSendNotificationErrorHandling:
 
         with pytest.raises(JiraError) as exc_info:
             send_notification(
-                "PROJ-123", subject="Test", body="Body", watchers=True, profile=None
+                "PROJ-123", subject="Test", body="Body", watchers=True
             )
         assert exc_info.value.status_code == 429
 
@@ -236,7 +232,7 @@ class TestSendNotificationErrorHandling:
 
         with pytest.raises(JiraError) as exc_info:
             send_notification(
-                "PROJ-123", subject="Test", body="Body", watchers=True, profile=None
+                "PROJ-123", subject="Test", body="Body", watchers=True
             )
         assert exc_info.value.status_code == 500
 
@@ -453,15 +449,3 @@ class TestSendNotificationMain:
             main(["PROJ-123", "--watchers"])
 
         assert exc_info.value.code == 1
-
-    @patch("send_notification.get_jira_client")
-    def test_main_with_profile(self, mock_get_client, mock_jira_client, capsys):
-        """Test main with --profile flag."""
-        mock_get_client.return_value = mock_jira_client
-        mock_jira_client.notify_issue.return_value = None
-
-        from send_notification import main
-
-        main(["PROJ-123", "--watchers", "--profile", "development"])
-
-        mock_get_client.assert_called_with("development")

@@ -26,7 +26,7 @@ class TestDeleteComment:
         from delete_comment import delete_comment
 
         # Should succeed without error
-        delete_comment("PROJ-123", "10001", profile=None)
+        delete_comment("PROJ-123", "10001")
 
         mock_jira_client.delete_comment.assert_called_once_with("PROJ-123", "10001")
 
@@ -43,7 +43,7 @@ class TestDeleteComment:
         from delete_comment import delete_comment
 
         with pytest.raises(PermissionError):
-            delete_comment("PROJ-123", "10001", profile=None)
+            delete_comment("PROJ-123", "10001")
 
     @patch("delete_comment.get_jira_client")
     def test_delete_comment_not_found(self, mock_get_client, mock_jira_client):
@@ -58,7 +58,7 @@ class TestDeleteComment:
         from delete_comment import delete_comment
 
         with pytest.raises(NotFoundError):
-            delete_comment("PROJ-123", "99999", profile=None)
+            delete_comment("PROJ-123", "99999")
 
     @patch("delete_comment.get_jira_client")
     @patch("builtins.input", return_value="yes")
@@ -72,7 +72,7 @@ class TestDeleteComment:
 
         from delete_comment import delete_comment_with_confirm
 
-        result = delete_comment_with_confirm("PROJ-123", "10001", profile=None)
+        result = delete_comment_with_confirm("PROJ-123", "10001")
 
         assert result is True
         mock_input.assert_called_once()
@@ -86,7 +86,7 @@ class TestDeleteComment:
 
         from delete_comment import delete_comment_dry_run
 
-        result = delete_comment_dry_run("PROJ-123", "10001", profile=None)
+        result = delete_comment_dry_run("PROJ-123", "10001")
 
         # Should return comment info but not delete
         assert result["id"] == "10001"
@@ -112,7 +112,7 @@ class TestDeleteCommentErrorHandling:
         from delete_comment import delete_comment
 
         with pytest.raises(AuthenticationError):
-            delete_comment("PROJ-123", "10001", profile=None)
+            delete_comment("PROJ-123", "10001")
 
     @patch("delete_comment.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -127,7 +127,7 @@ class TestDeleteCommentErrorHandling:
         from delete_comment import delete_comment
 
         with pytest.raises(JiraError) as exc_info:
-            delete_comment("PROJ-123", "10001", profile=None)
+            delete_comment("PROJ-123", "10001")
         assert exc_info.value.status_code == 429
 
     @patch("delete_comment.get_jira_client")
@@ -143,5 +143,5 @@ class TestDeleteCommentErrorHandling:
         from delete_comment import delete_comment
 
         with pytest.raises(JiraError) as exc_info:
-            delete_comment("PROJ-123", "10001", profile=None)
+            delete_comment("PROJ-123", "10001")
         assert exc_info.value.status_code == 500

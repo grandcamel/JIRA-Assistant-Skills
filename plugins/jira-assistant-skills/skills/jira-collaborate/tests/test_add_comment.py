@@ -97,20 +97,6 @@ class TestAddComment:
             assert result["id"] == "10001"
             mock_jira_client.add_comment.assert_called_once()
 
-    def test_add_comment_with_profile(self, mock_jira_client, sample_comment_response):
-        """Test adding comment with specific profile."""
-        mock_jira_client.add_comment.return_value = sample_comment_response
-
-        with patch(
-            "add_comment.get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            from add_comment import add_comment
-
-            add_comment("PROJ-123", "Comment", profile="development")
-
-            mock_get_client.assert_called_with("development")
-
-
 @pytest.mark.collaborate
 @pytest.mark.unit
 class TestAddCommentWithVisibility:
@@ -295,19 +281,6 @@ class TestAddCommentMain:
                 )
 
             assert exc_info.value.code == 1
-
-    def test_main_with_profile(self, mock_jira_client, sample_comment_response, capsys):
-        """Test main with --profile flag."""
-        mock_jira_client.add_comment.return_value = sample_comment_response
-
-        with patch(
-            "add_comment.get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            from add_comment import main
-
-            main(["PROJ-123", "--body", "Comment", "--profile", "development"])
-
-            mock_get_client.assert_called_with("development")
 
     def test_main_jira_error(self, mock_jira_client, capsys):
         """Test main with JIRA API error."""

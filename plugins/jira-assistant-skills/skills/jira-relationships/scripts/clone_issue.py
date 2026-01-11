@@ -118,7 +118,6 @@ def clone_issue(
     include_subtasks: bool = False,
     include_links: bool = False,
     create_clone_link: bool = True,
-    profile: str | None = None,
 ) -> dict[str, Any]:
     """
     Clone a JIRA issue.
@@ -130,14 +129,13 @@ def clone_issue(
         include_subtasks: Clone subtasks as well
         include_links: Copy links from original
         create_clone_link: Create 'clones' link to original
-        profile: JIRA profile
 
     Returns:
         Dict with clone result
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     try:
         # Get original issue
@@ -282,7 +280,6 @@ def main(argv: list[str] | None = None):
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -294,7 +291,6 @@ def main(argv: list[str] | None = None):
             include_subtasks=args.include_subtasks,
             include_links=args.include_links,
             create_clone_link=not args.no_link,
-            profile=args.profile,
         )
 
         output = format_clone_result(result, output_format=args.output)

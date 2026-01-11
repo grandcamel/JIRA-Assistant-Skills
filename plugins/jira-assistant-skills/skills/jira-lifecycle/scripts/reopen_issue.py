@@ -27,7 +27,7 @@ REOPEN_KEYWORDS = ["reopen", "to do", "todo", "open", "backlog"]
 
 
 def reopen_issue(
-    issue_key: str, comment: str | None = None, profile: str | None = None
+    issue_key: str, comment: str | None = None
 ) -> None:
     """
     Reopen a closed or resolved issue.
@@ -37,11 +37,10 @@ def reopen_issue(
     Args:
         issue_key: Issue key (e.g., PROJ-123)
         comment: Optional comment explaining why issue was reopened
-        profile: JIRA profile to use
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     transitions = client.get_transitions(issue_key)
 
@@ -86,13 +85,12 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--comment", "-c", help="Comment explaining why issue was reopened"
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
     try:
         reopen_issue(
-            issue_key=args.issue_key, comment=args.comment, profile=args.profile
+            issue_key=args.issue_key, comment=args.comment
         )
 
         print_success(f"Reopened {args.issue_key}")

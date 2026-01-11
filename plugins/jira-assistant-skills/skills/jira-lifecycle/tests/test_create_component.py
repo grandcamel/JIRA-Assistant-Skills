@@ -28,7 +28,7 @@ class TestCreateComponent:
 
         from create_component import create_component
 
-        result = create_component(project="PROJ", name="Backend API", profile=None)
+        result = create_component(project="PROJ", name="Backend API")
 
         assert result["name"] == "Backend API"
         assert result["project"] == "PROJ"
@@ -53,8 +53,7 @@ class TestCreateComponent:
             project="PROJ",
             name="Frontend UI",
             description="User interface components",
-            profile=None,
-        )
+                )
 
         assert result["description"] == "User interface components"
 
@@ -79,8 +78,7 @@ class TestCreateComponent:
             project="PROJ",
             name="Database",
             lead_account_id="5b10a2844c20165700ede21g",
-            profile=None,
-        )
+                )
 
         assert result["lead"]["accountId"] == "5b10a2844c20165700ede21g"
 
@@ -104,8 +102,7 @@ class TestCreateComponent:
             project="PROJ",
             name="Infrastructure",
             assignee_type="COMPONENT_LEAD",
-            profile=None,
-        )
+                )
 
         assert result["assigneeType"] == "COMPONENT_LEAD"
 
@@ -134,8 +131,7 @@ class TestCreateComponent:
             description="Security and authentication",
             lead_account_id="5b10a2844c20165700ede22h",
             assignee_type="PROJECT_LEAD",
-            profile=None,
-        )
+                )
 
         assert result["name"] == "Security"
         assert result["description"] == "Security and authentication"
@@ -181,7 +177,7 @@ class TestCreateComponentErrorHandling:
         from create_component import create_component
 
         with pytest.raises(AuthenticationError):
-            create_component(project="PROJ", name="Test", profile=None)
+            create_component(project="PROJ", name="Test")
 
     @patch("create_component.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client):
@@ -196,7 +192,7 @@ class TestCreateComponentErrorHandling:
         from create_component import create_component
 
         with pytest.raises(PermissionError):
-            create_component(project="PROJ", name="Test", profile=None)
+            create_component(project="PROJ", name="Test")
 
     @patch("create_component.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -211,7 +207,7 @@ class TestCreateComponentErrorHandling:
         from create_component import create_component
 
         with pytest.raises(NotFoundError):
-            create_component(project="INVALID", name="Test", profile=None)
+            create_component(project="INVALID", name="Test")
 
     @patch("create_component.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -226,7 +222,7 @@ class TestCreateComponentErrorHandling:
         from create_component import create_component
 
         with pytest.raises(JiraError) as exc_info:
-            create_component(project="PROJ", name="Test", profile=None)
+            create_component(project="PROJ", name="Test")
         assert exc_info.value.status_code == 429
 
     @patch("create_component.get_jira_client")
@@ -242,7 +238,7 @@ class TestCreateComponentErrorHandling:
         from create_component import create_component
 
         with pytest.raises(JiraError) as exc_info:
-            create_component(project="PROJ", name="Test", profile=None)
+            create_component(project="PROJ", name="Test")
         assert exc_info.value.status_code == 500
 
 
@@ -363,20 +359,6 @@ class TestCreateComponentMain:
         assert "Desc" in captured.out
         assert "abc123" in captured.out
         assert "PROJECT_LEAD" in captured.out
-
-    @patch("create_component.get_jira_client")
-    def test_main_with_profile(
-        self, mock_get_client, mock_jira_client, sample_component, capsys
-    ):
-        """Test main with --profile."""
-        mock_get_client.return_value = mock_jira_client
-        mock_jira_client.create_component.return_value = copy.deepcopy(sample_component)
-
-        from create_component import main
-
-        main(["PROJ", "--name", "Backend", "--profile", "dev"])
-
-        mock_get_client.assert_called_with("dev")
 
     @patch("create_component.get_jira_client")
     def test_main_jira_error(self, mock_get_client, mock_jira_client, capsys):

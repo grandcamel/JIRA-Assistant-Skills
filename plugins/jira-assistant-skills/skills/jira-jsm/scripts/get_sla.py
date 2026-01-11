@@ -26,7 +26,7 @@ from jira_assistant_skills_lib import (
 
 
 def get_slas(
-    issue_key: str, sla_id: str | None = None, profile: str | None = None
+    issue_key: str, sla_id: str | None = None
 ) -> dict[str, Any]:
     """
     Get SLA information for a service request.
@@ -34,7 +34,6 @@ def get_slas(
     Args:
         issue_key: Request key (e.g., 'SD-123')
         sla_id: Specific SLA ID to retrieve (optional)
-        profile: JIRA profile to use
 
     Returns:
         SLA data
@@ -42,7 +41,7 @@ def get_slas(
     Raises:
         NotFoundError: If request doesn't exist
     """
-    with get_jira_client(profile) as client:
+    with get_jira_client() as client:
         if sla_id:
             return client.get_request_sla(issue_key, sla_id)
         else:
@@ -144,13 +143,12 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use from config")
 
     args = parser.parse_args(argv)
 
     try:
         sla_data = get_slas(
-            issue_key=args.request_key, sla_id=args.sla_id, profile=args.profile
+            issue_key=args.request_key, sla_id=args.sla_id
         )
 
         if args.output == "json":

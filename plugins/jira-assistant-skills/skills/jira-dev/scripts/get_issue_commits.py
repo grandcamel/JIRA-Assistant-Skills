@@ -31,7 +31,6 @@ def get_issue_commits(
     issue_key: str,
     detailed: bool = False,
     repo_filter: str | None = None,
-    profile: str | None = None,
 ) -> list[dict[str, Any]]:
     """
     Get commits linked to a JIRA issue via Development Information API.
@@ -40,14 +39,13 @@ def get_issue_commits(
         issue_key: JIRA issue key
         detailed: Include commit message and author details
         repo_filter: Only return commits from this repository
-        profile: JIRA profile to use
 
     Returns:
         List of commit dictionaries
     """
     issue_key = validate_issue_key(issue_key)
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
     try:
         # First, get the issue ID (numeric)
         issue = client.get_issue(issue_key, fields=["id"])
@@ -193,7 +191,6 @@ def main(argv: list[str] | None = None):
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use")
 
     args = parser.parse_args(argv)
 
@@ -202,7 +199,6 @@ def main(argv: list[str] | None = None):
             issue_key=args.issue_key,
             detailed=args.detailed,
             repo_filter=args.repo,
-            profile=args.profile,
         )
 
         output = format_output(commits, args.output, args.detailed)

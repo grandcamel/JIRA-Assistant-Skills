@@ -390,7 +390,6 @@ Examples:
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (with --run)")
 
     args = parser.parse_args(argv)
 
@@ -428,7 +427,7 @@ Examples:
             update_query_usage(query["id"])
 
             # Execute the query
-            client = get_jira_client(args.profile)
+            client = get_jira_client()
             results = client.search_issues(
                 jql,
                 fields=[

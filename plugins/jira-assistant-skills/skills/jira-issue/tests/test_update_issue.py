@@ -481,16 +481,3 @@ class TestUpdateIssueErrors:
 @pytest.mark.unit
 class TestUpdateIssueProfile:
     """Tests for profile handling."""
-
-    def test_update_issue_with_profile(self, mock_jira_client):
-        """Test updating issue with specific profile."""
-        mock_jira_client.update_issue.return_value = None
-
-        with patch.object(
-            update_issue_module, "get_jira_client", return_value=mock_jira_client
-        ) as mock_get_client:
-            update_issue_module.update_issue(
-                issue_key="PROJ-123", summary="Profiled Update", profile="development"
-            )
-
-        mock_get_client.assert_called_with("development")

@@ -25,7 +25,6 @@ def run_filter(
     filter_id: str | None = None,
     filter_name: str | None = None,
     max_results: int = 50,
-    profile: str | None = None,
 ) -> dict:
     """
     Execute a saved filter.
@@ -34,7 +33,6 @@ def run_filter(
         filter_id: Filter ID
         filter_name: Filter name (alternative to ID)
         max_results: Maximum results
-        profile: JIRA profile to use
 
     Returns:
         Search results
@@ -42,7 +40,7 @@ def run_filter(
     if not filter_id and not filter_name:
         raise ValidationError("Either --id or --name must be specified")
 
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     if filter_name:
         filters = client.get("/rest/api/3/filter/my", operation="get filters")
@@ -94,7 +92,6 @@ def main(argv: list[str] | None = None):
         default="text",
         help="Output format (default: text)",
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -103,7 +100,6 @@ def main(argv: list[str] | None = None):
             filter_id=args.id,
             filter_name=args.name,
             max_results=args.max_results,
-            profile=args.profile,
         )
 
         issues = results.get("issues", [])

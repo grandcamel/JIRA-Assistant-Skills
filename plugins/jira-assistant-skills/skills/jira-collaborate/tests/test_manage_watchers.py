@@ -44,7 +44,7 @@ class TestListWatchers:
 
         from manage_watchers import list_watchers
 
-        result = list_watchers("PROJ-123", profile=None)
+        result = list_watchers("PROJ-123")
 
         assert len(result) == 2
         assert result[0]["displayName"] == "Alice Smith"
@@ -58,7 +58,7 @@ class TestListWatchers:
 
         from manage_watchers import list_watchers
 
-        result = list_watchers("PROJ-123", profile=None)
+        result = list_watchers("PROJ-123")
 
         assert len(result) == 0
 
@@ -68,7 +68,7 @@ class TestListWatchers:
         from manage_watchers import list_watchers
 
         with pytest.raises(ValidationError):
-            list_watchers("invalid", profile=None)
+            list_watchers("invalid")
 
 
 @pytest.mark.collaborate
@@ -84,7 +84,7 @@ class TestAddWatcher:
 
         from manage_watchers import add_watcher
 
-        add_watcher("PROJ-123", "5b10a2844c20165700ede21g", profile=None)
+        add_watcher("PROJ-123", "5b10a2844c20165700ede21g")
 
         mock_jira_client.post.assert_called_once()
 
@@ -99,7 +99,7 @@ class TestAddWatcher:
 
         from manage_watchers import add_watcher
 
-        add_watcher("PROJ-123", "alice@company.com", profile=None)
+        add_watcher("PROJ-123", "alice@company.com")
 
         mock_jira_client.search_users.assert_called_once()
         mock_jira_client.post.assert_called_once()
@@ -115,7 +115,7 @@ class TestAddWatcher:
         from manage_watchers import add_watcher
 
         with pytest.raises(ValidationError):
-            add_watcher("PROJ-123", "nonexistent@company.com", profile=None)
+            add_watcher("PROJ-123", "nonexistent@company.com")
 
 
 @pytest.mark.collaborate
@@ -131,7 +131,7 @@ class TestRemoveWatcher:
 
         from manage_watchers import remove_watcher
 
-        remove_watcher("PROJ-123", "5b10a2844c20165700ede21g", profile=None)
+        remove_watcher("PROJ-123", "5b10a2844c20165700ede21g")
 
         mock_jira_client.delete.assert_called_once()
 
@@ -146,7 +146,7 @@ class TestRemoveWatcher:
 
         from manage_watchers import remove_watcher
 
-        remove_watcher("PROJ-123", "alice@company.com", profile=None)
+        remove_watcher("PROJ-123", "alice@company.com")
 
         mock_jira_client.search_users.assert_called_once()
         mock_jira_client.delete.assert_called_once()
@@ -168,7 +168,7 @@ class TestManageWatchersErrorHandling:
         from manage_watchers import list_watchers
 
         with pytest.raises(AuthenticationError):
-            list_watchers("PROJ-123", profile=None)
+            list_watchers("PROJ-123")
 
     @patch("manage_watchers.get_jira_client")
     def test_permission_error(self, mock_get_client, mock_jira_client):
@@ -183,7 +183,7 @@ class TestManageWatchersErrorHandling:
         from manage_watchers import add_watcher
 
         with pytest.raises(PermissionError):
-            add_watcher("PROJ-123", "5b10a2844c20165700ede21g", profile=None)
+            add_watcher("PROJ-123", "5b10a2844c20165700ede21g")
 
     @patch("manage_watchers.get_jira_client")
     def test_not_found_error(self, mock_get_client, mock_jira_client):
@@ -196,7 +196,7 @@ class TestManageWatchersErrorHandling:
         from manage_watchers import list_watchers
 
         with pytest.raises(NotFoundError):
-            list_watchers("PROJ-999", profile=None)
+            list_watchers("PROJ-999")
 
     @patch("manage_watchers.get_jira_client")
     def test_rate_limit_error(self, mock_get_client, mock_jira_client):
@@ -211,7 +211,7 @@ class TestManageWatchersErrorHandling:
         from manage_watchers import list_watchers
 
         with pytest.raises(JiraError) as exc_info:
-            list_watchers("PROJ-123", profile=None)
+            list_watchers("PROJ-123")
         assert exc_info.value.status_code == 429
 
     @patch("manage_watchers.get_jira_client")
@@ -227,5 +227,5 @@ class TestManageWatchersErrorHandling:
         from manage_watchers import list_watchers
 
         with pytest.raises(JiraError) as exc_info:
-            list_watchers("PROJ-123", profile=None)
+            list_watchers("PROJ-123")
         assert exc_info.value.status_code == 500

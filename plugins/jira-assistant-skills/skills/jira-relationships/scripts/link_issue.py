@@ -84,7 +84,6 @@ def link_issue(
     target_issue: str | None = None,
     comment: str | None = None,
     dry_run: bool = False,
-    profile: str | None = None,
 ) -> dict:
     """
     Create a link between two issues.
@@ -102,7 +101,6 @@ def link_issue(
         target_issue: Target issue when using explicit type
         comment: Optional comment
         dry_run: Preview without creating
-        profile: JIRA profile to use
 
     Returns:
         Dict with link info (for dry-run) or None
@@ -155,7 +153,7 @@ def link_issue(
         raise ValidationError("Cannot link an issue to itself")
 
     # Get client and validate link type exists
-    client = get_jira_client(profile)
+    client = get_jira_client()
 
     try:
         link_types = client.get_link_types()
@@ -267,7 +265,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--dry-run", "-n", action="store_true", help="Preview without creating the link"
     )
-    parser.add_argument("--profile", help="JIRA profile to use (default: from config)")
 
     args = parser.parse_args(argv)
 
@@ -285,7 +282,6 @@ def main(argv: list[str] | None = None):
             target_issue=args.target_issue,
             comment=args.comment,
             dry_run=args.dry_run,
-            profile=args.profile,
         )
 
         if args.dry_run and result:
