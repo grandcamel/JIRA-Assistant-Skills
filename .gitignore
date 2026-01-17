@@ -211,3 +211,6 @@ local/
 
 # Pre-commit
 .pre-commit-config.yaml.bak
+
+# Separate git repo (PyPI package)
+jira-assistant-skills-lib/
