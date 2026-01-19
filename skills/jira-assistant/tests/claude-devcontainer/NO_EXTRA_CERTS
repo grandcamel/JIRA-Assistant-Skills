@@ -1,0 +1,2 @@
+# Placeholder file for Docker builds without custom CA certificates
+# This file is intentionally empty and is used as a default for EXTRA_CA_CERT build arg

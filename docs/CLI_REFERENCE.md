@@ -78,7 +78,7 @@ _JIRA_COMPLETE=fish_source jira | source
 |------|-------|
 | `VERSION` | Source of truth |
 | `pyproject.toml` | `version` |
-| `plugins/jira-assistant-skills/plugin.json` | `"version"` |
+| `.claude-plugin/plugin.json` | `"version"` |
 | `.claude-plugin/marketplace.json` | `"metadata.version"`, `"plugins[0].version"` |
 | `.release-please-manifest.json` | `"."` |
 

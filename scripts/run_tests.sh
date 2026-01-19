@@ -20,7 +20,7 @@ NC='\033[0m' # No Color
 # Script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-SKILLS_ROOT="$PROJECT_ROOT/plugins/jira-assistant-skills/skills"
+SKILLS_ROOT="$PROJECT_ROOT/skills"
 
 # All skills to test
 ALL_SKILLS=(

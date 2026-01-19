@@ -1,0 +1,79 @@
+# Team Container Configuration - Private Registry Example
+# ========================================================
+#
+# This example shows how to configure a team container for
+# publishing to a private registry (Harbor, Nexus, GitLab, etc.)
+#
+# Workflow:
+#   1. Edit this file with your team's packages
+#   2. Create a git tag: git tag v1.0.0
+#   3. Publish: ./scripts/publish-to-registry.sh -c team-config.yaml -r harbor.company.com
+#
+# Team members then pull with:
+#   docker pull harbor.company.com/platform/dev-container:1.0.0
+
+# Image settings
+image:
+  # Base image (use enhanced for full tooling)
+  base: grandcamel/claude-devcontainer:enhanced
+
+  # Image name (without registry prefix - added by publish script)
+  # This becomes: harbor.company.com/platform/dev-container
+  name: platform/dev-container
+
+  # Default tag (overridden by git tag during publish)
+  tag: latest
+
+# Corporate proxy certificate
+# Place your certificate file in the same directory as this config
+certificate:
+  file: corporate-ca.crt
+  description: "Corporate proxy certificate (Zscaler/BlueCoat)"
+
+# Python packages - add your team's standard libraries
+pip:
+  # Web frameworks
+  - flask
+  - fastapi
+  - uvicorn
+  # Database
+  - sqlalchemy
+  - psycopg2-binary
+  - redis
+  # AWS
+  - boto3
+  - aws-cdk-lib
+  # Data
+  - pandas
+  - numpy
+  # Testing
+  - pytest
+  - pytest-cov
+  - httpx
+
+# Node.js packages - add your team's standard tools
+npm:
+  - typescript
+  - ts-node
+  - "@types/node"
+  - aws-cdk
+  - serverless
+
+# System packages - add dependencies for your stack
+apt:
+  - graphviz
+  - libpq-dev
+  - libmagic1
+  - postgresql-client
+
+# Environment variables for your team
+environment:
+  TEAM_NAME: "Platform Engineering"
+  AWS_DEFAULT_REGION: "us-west-2"
+  LOG_LEVEL: "INFO"
+
+# Image labels for tracking
+labels:
+  maintainer: "platform-team@company.com"
+  team: "platform-engineering"
+  org.opencontainers.image.vendor: "ACME Corp"

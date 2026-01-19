@@ -12,7 +12,7 @@ git submodule update --init --recursive
 git submodule update --remote claude-devcontainer
 ```
 
-Location: `plugins/jira-assistant-skills/skills/jira-assistant/tests/claude-devcontainer/`
+Location: `skills/jira-assistant/tests/claude-devcontainer/`
 
 Docker Hub images:
 - `grandcamel/claude-devcontainer:latest` - Base image
@@ -20,7 +20,7 @@ Docker Hub images:
 
 ## Container Test Runners
 
-All scripts in `plugins/jira-assistant-skills/skills/jira-assistant/tests/`:
+All scripts in `skills/jira-assistant/tests/`:
 
 | Script | Purpose |
 |--------|---------|
@@ -40,7 +40,7 @@ Common options:
 ## Standard Container Tests
 
 ```bash
-cd plugins/jira-assistant-skills/skills/jira-assistant/tests
+cd skills/jira-assistant/tests
 
 # Run all routing tests
 ./run_container_tests.sh

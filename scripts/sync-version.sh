@@ -12,7 +12,7 @@
 #
 # Files synced:
 #   - VERSION (source of truth)
-#   - plugins/jira-assistant-skills/plugin.json
+#   - .claude-plugin/plugin.json
 #   - .claude-plugin/marketplace.json
 #   - .release-please-manifest.json
 #   - pyproject.toml (main project)
@@ -34,7 +34,7 @@ NC='\033[0m' # No Color
 
 # Files to sync
 VERSION_FILE="$PROJECT_ROOT/VERSION"
-PLUGIN_JSON="$PROJECT_ROOT/plugins/jira-assistant-skills/plugin.json"
+PLUGIN_JSON="$PROJECT_ROOT/.claude-plugin/plugin.json"
 MARKETPLACE_JSON="$PROJECT_ROOT/.claude-plugin/marketplace.json"
 RELEASE_MANIFEST="$PROJECT_ROOT/.release-please-manifest.json"
 PYPROJECT="$PROJECT_ROOT/pyproject.toml"
@@ -270,7 +270,7 @@ main() {
             echo ""
             echo "Files synchronized:"
             echo "  - VERSION (source of truth)"
-            echo "  - plugins/jira-assistant-skills/plugin.json"
+            echo "  - .claude-plugin/plugin.json"
             echo "  - .claude-plugin/marketplace.json"
             echo "  - .release-please-manifest.json"
             echo "  - pyproject.toml"

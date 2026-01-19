@@ -402,7 +402,7 @@ New Alerting Rules:
 
 ### A. Dashboard File Locations
 ```
-plugins/jira-assistant-skills/skills/jira-assistant/tests/dashboards/
+skills/jira-assistant/tests/dashboards/
 ├── executive-summary.json
 ├── qa-test-engineer.json
 ├── skills-engineer-ab.json
@@ -411,7 +411,7 @@ plugins/jira-assistant-skills/skills/jira-assistant/tests/dashboards/
 
 ### B. OTel Configuration
 ```
-plugins/jira-assistant-skills/skills/jira-assistant/tests/
+skills/jira-assistant/tests/
 ├── otel_metrics.py          # Instrumentation
 ├── conftest.py              # pytest hooks for OTel
 └── otel-collector-config.yaml  # Collector configuration

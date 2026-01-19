@@ -63,7 +63,7 @@ src/jira_assistant_skills/tests/
 Live integration tests remain in the skills directory:
 
 ```
-plugins/jira-assistant-skills/skills/<skill>/
+skills/<skill>/
 └── tests/live_integration/        # Live API tests (excluded from unit tests)
 ```
 
@@ -102,13 +102,13 @@ Tests against real JIRA instances:
 
 ```bash
 # Core skills
-pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/ --profile development -v
+pytest skills/shared/tests/live_integration/ --profile development -v
 
 # JSM skills
-pytest plugins/jira-assistant-skills/skills/jira-jsm/tests/live_integration/ --profile development --skip-premium -v
+pytest skills/jira-jsm/tests/live_integration/ --profile development --skip-premium -v
 
 # Specific modules
-pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/test_issue_lifecycle.py -v
+pytest skills/shared/tests/live_integration/test_issue_lifecycle.py -v
 ```
 
 **Profile requirement**: Live tests require `--profile development`.
@@ -123,7 +123,7 @@ pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/test_i
 Validate Claude routes prompts to correct skills:
 
 ```bash
-cd plugins/jira-assistant-skills/skills/jira-assistant/tests
+cd skills/jira-assistant/tests
 
 # Run all routing tests
 pytest test_routing.py -v

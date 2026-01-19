@@ -32,7 +32,7 @@ This project provides 14 specialized skills for interacting with JIRA via natura
 ├── settings.example.json      # Example config (copy to settings.local.json)
 └── settings.local.json        # Personal credentials (gitignored)
 
-plugins/jira-assistant-skills/ # Plugin package
+./ # Plugin package
 ├── plugin.json                # Plugin manifest
 ├── commands/                  # Slash commands
 ├── config/                    # Configuration examples
@@ -500,14 +500,14 @@ export JIRA_TEST_PROJECT="SKILLSTEST"  # Test project key
 
 ```bash
 # Run all live integration tests
-pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/ -v
+pytest skills/shared/tests/live_integration/ -v
 
 # Run with specific markers
 pytest -m "live" -v
 pytest -m "live and not destructive" -v
 
 # Run single test class
-pytest plugins/jira-assistant-skills/skills/shared/tests/live_integration/test_utils.py::TestIssueBuilder -v
+pytest skills/shared/tests/live_integration/test_utils.py::TestIssueBuilder -v
 ```
 
 ### Test Markers
@@ -669,7 +669,7 @@ success = wait_for_assignment(client, "PROJ-123", "abc123", timeout=10)
 ### Required Files
 
 ```
-plugins/jira-assistant-skills/skills/new-skill/
+skills/new-skill/
 ├── SKILL.md              # Skill documentation
 ├── docs/                 # Guides and documentation
 ├── references/           # API docs (optional)
@@ -890,9 +890,9 @@ Solutions:
 | Document | Content |
 |----------|---------|
 | `jira-assistant-skills-lib/CLAUDE.md` | Library implementation details |
-| `plugins/jira-assistant-skills/skills/shared/docs/DECISION_TREE.md` | Skill routing logic |
-| `plugins/jira-assistant-skills/skills/shared/docs/SAFEGUARDS.md` | Safety procedures |
-| `plugins/jira-assistant-skills/skills/shared/docs/QUICK_REFERENCE.md` | JQL cheat sheet |
+| `skills/shared/docs/DECISION_TREE.md` | Skill routing logic |
+| `skills/shared/docs/SAFEGUARDS.md` | Safety procedures |
+| `skills/shared/docs/QUICK_REFERENCE.md` | JQL cheat sheet |
 | `docs/ARCHITECTURE.md` | System architecture |
 | `docs/quick-start.md` | Getting started guide |
 | `docs/troubleshooting.md` | Detailed troubleshooting |

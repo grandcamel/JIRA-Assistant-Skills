@@ -13,7 +13,7 @@
   "plugins": [
     {
       "name": "jira-assistant-skills",
-      "source": "./plugins/jira-assistant-skills",
+      "source": "./",
       "description": "Complete JIRA automation suite with 14 specialized skills - issue management, agile workflows, time tracking, service management, bulk operations, and more",
       "version": "4.0.0",
       "category": "productivity",

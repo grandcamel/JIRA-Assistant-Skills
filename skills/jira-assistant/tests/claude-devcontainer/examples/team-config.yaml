@@ -1,0 +1,59 @@
+# Team Container Configuration
+# ============================
+# Use this file to customize your team's developer container.
+# Run: ./scripts/build-team-image.sh --config team-config.yaml
+#
+# The generated Dockerfile.team can be committed to version control
+# for reproducible builds across your team.
+
+# Image settings
+image:
+  # Base image to extend (default: grandcamel/claude-devcontainer:enhanced)
+  base: grandcamel/claude-devcontainer:enhanced
+
+  # Your team's image name and tag
+  name: my-company/dev-container
+  tag: latest
+
+# Corporate proxy certificate (optional)
+# Place your certificate file in the same directory as this config
+certificate:
+  # Path to CA certificate file (e.g., zscaler.crt, corporate-ca.pem)
+  file: zscaler.crt
+
+  # Description shown in generated Dockerfile
+  description: "Zscaler corporate proxy certificate"
+
+# Python packages (installed via pip)
+pip:
+  - flask
+  - sqlalchemy
+  - requests
+  - boto3
+  - pandas
+  # Add your team's Python dependencies here
+
+# Node.js packages (installed globally via npm)
+npm:
+  - typescript
+  - ts-node
+  - "@types/node"
+  # Add your team's Node.js dependencies here
+
+# System packages (installed via apt)
+apt:
+  - graphviz
+  - libpq-dev
+  - libmagic1
+  # Add your team's system dependencies here
+
+# Environment variables (optional)
+environment:
+  TEAM_NAME: "Platform Engineering"
+  # Add team-specific environment variables here
+
+# Labels for image metadata (optional)
+labels:
+  maintainer: "platform-team@company.com"
+  team: "platform-engineering"
+  # Add custom labels here

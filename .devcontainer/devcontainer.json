@@ -48,7 +48,7 @@
     "codespaces": {
       "openFiles": [
         "README.md",
-        "plugins/jira-assistant-skills/skills/jira-issue/SKILL.md"
+        "skills/jira-issue/SKILL.md"
       ]
     }
   },
@@ -65,7 +65,7 @@
     "JIRA_EMAIL": "${localEnv:JIRA_EMAIL}",
     "JIRA_API_TOKEN": "${localEnv:JIRA_API_TOKEN}",
     "JIRA_PROFILE": "development",
-    "PYTHONPATH": "/workspace/plugins/jira-assistant-skills/skills/shared/scripts/lib"
+    "PYTHONPATH": "/workspace/skills/shared/scripts/lib"
   },
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
   "workspaceFolder": "/workspace",

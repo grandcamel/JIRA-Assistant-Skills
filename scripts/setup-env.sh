@@ -618,7 +618,7 @@ main() {
     echo ""
     print_info "Next steps:"
     echo "  1. Test JIRA connection:"
-    echo "     python plugins/jira-assistant-skills/skills/jira-issue/scripts/get_issue.py PROJ-123"
+    echo "     python skills/jira-issue/scripts/get_issue.py PROJ-123"
     echo ""
     echo "  2. Run E2E tests (if Anthropic key configured):"
     echo "     ./scripts/run-e2e-tests.sh --local"

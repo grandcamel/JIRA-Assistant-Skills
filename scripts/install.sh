@@ -86,7 +86,7 @@ check_python_version() {
 
 # Check if we're in the repo already
 check_in_repo() {
-    if [ -f "pyproject.toml" ] && [ -d "plugins/jira-assistant-skills/skills" ]; then
+    if [ -f "pyproject.toml" ] && [ -d "skills" ]; then
         return 0
     fi
     return 1

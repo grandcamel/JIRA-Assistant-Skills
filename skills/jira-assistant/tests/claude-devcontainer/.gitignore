@@ -1,0 +1,28 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Credentials (never commit)
+*.pem
+*.key
+.credentials.json
+.env
+.env.local
+
+# Corporate CA certificates (user-specific)
+*.crt
+!NO_EXTRA_CERTS
+
+# Build artifacts
+*.log
+*.tmp
+
+# Docker
+docker-compose.override.yml

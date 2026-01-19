@@ -1,0 +1,341 @@
+# =============================================================================
+# Enhanced Developer Container - Batteries Included
+# =============================================================================
+#
+# Pre-built image with all enhanced CLI tools for instant startup.
+# Build with: ./scripts/build-enhanced.sh
+# Use with:   ./scripts/run.sh --use-enhanced
+#
+# Includes everything from Dockerfile.dev PLUS:
+#   - Starship prompt (fast, customizable)
+#   - eza (modern ls), bat (cat with highlighting)
+#   - delta (better git diff), zoxide (smart cd)
+#   - btop (system monitor), lazygit (git TUI)
+#   - tmux (configured), neovim + kickstart
+#   - direnv (per-directory environments)
+#
+FROM node:20-bookworm
+
+LABEL maintainer="jasonkrue@gmail.com"
+LABEL description="Enhanced developer container with pre-installed modern CLI tools"
+LABEL version="1.0.0"
+
+# =============================================================================
+# Optional Corporate CA Certificate Injection (e.g., Zscaler)
+# =============================================================================
+ARG EXTRA_CA_CERT=NO_EXTRA_CERTS
+COPY ${EXTRA_CA_CERT} /tmp/maybe-cert
+
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && if grep -q "BEGIN CERTIFICATE" /tmp/maybe-cert 2>/dev/null; then \
+         cp /tmp/maybe-cert /usr/local/share/ca-certificates/extra-ca.crt && \
+         update-ca-certificates && \
+         echo "✓ Custom CA certificate installed"; \
+       else \
+         echo "○ No custom CA certificate (using system defaults)"; \
+       fi \
+    && rm -f /tmp/maybe-cert \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+
+# =============================================================================
+# Core Development Tools + Enhanced Tools
+# =============================================================================
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Python ecosystem
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-dev \
+    # Build essentials
+    build-essential \
+    cmake \
+    pkg-config \
+    # Version control
+    git \
+    git-lfs \
+    # Network tools
+    curl \
+    wget \
+    httpie \
+    openssh-client \
+    # JSON/YAML processing
+    jq \
+    yq \
+    # Text processing
+    ripgrep \
+    fd-find \
+    fzf \
+    tree \
+    less \
+    vim-tiny \
+    # System utilities
+    htop \
+    procps \
+    lsof \
+    # Archive tools
+    zip \
+    unzip \
+    tar \
+    gzip \
+    # Shell utilities
+    bash-completion \
+    shellcheck \
+    # Database clients
+    postgresql-client \
+    default-mysql-client \
+    redis-tools \
+    sqlite3 \
+    # Enhanced tools (pre-installed)
+    tmux \
+    neovim \
+    direnv \
+    btop \
+    bat \
+    # Misc
+    gnupg \
+    ca-certificates \
+    sudo \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
+    && ln -sf /usr/bin/batcat /usr/local/bin/bat
+
+# =============================================================================
+# Go Language
+# =============================================================================
+ARG GO_VERSION=1.22.0
+RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xzf -
+ENV PATH="/usr/local/go/bin:$PATH"
+ENV GOPATH="/home/devuser/go"
+ENV PATH="$GOPATH/bin:$PATH"
+
+# =============================================================================
+# Rust Language
+# =============================================================================
+ENV RUSTUP_HOME=/usr/local/rustup
+ENV CARGO_HOME=/usr/local/cargo
+ENV PATH="/usr/local/cargo/bin:$PATH"
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal \
+    && chmod -R a+rwx $RUSTUP_HOME $CARGO_HOME
+
+# =============================================================================
+# Node.js Global Tools
+# =============================================================================
+RUN npm install -g \
+    @anthropic-ai/claude-code \
+    typescript \
+    ts-node \
+    eslint \
+    prettier \
+    pnpm
+
+# =============================================================================
+# Python Global Tools
+# =============================================================================
+RUN pip3 install --no-cache-dir --break-system-packages \
+    pipx \
+    uv \
+    poetry \
+    black \
+    ruff \
+    mypy \
+    pytest \
+    pytest-asyncio \
+    pytest-xdist \
+    httpx \
+    rich \
+    typer \
+    pyyaml \
+    tabulate
+
+ENV PATH="/root/.local/bin:$PATH"
+
+# =============================================================================
+# Cloud CLI Tools
+# =============================================================================
+RUN curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip" \
+    && unzip -q /tmp/awscliv2.zip -d /tmp \
+    && /tmp/aws/install \
+    && rm -rf /tmp/aws /tmp/awscliv2.zip
+
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y gh \
+    && rm -rf /var/lib/apt/lists/*
+
+# =============================================================================
+# Docker CLI
+# =============================================================================
+RUN curl -fsSL https://get.docker.com | sh \
+    && rm -rf /var/lib/apt/lists/*
+
+# =============================================================================
+# Enhanced CLI Tools (Rust-based - installed globally)
+# =============================================================================
+
+# Starship prompt
+RUN curl -sS https://starship.rs/install.sh | sh -s -- -y
+
+# eza (modern ls) - install via cargo
+RUN cargo install eza
+
+# delta (better git diff)
+RUN cargo install git-delta
+
+# zoxide (smart cd)
+RUN cargo install zoxide
+
+# lazygit
+RUN LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*') \
+    && curl -sLo /tmp/lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" \
+    && tar -xzf /tmp/lazygit.tar.gz -C /usr/local/bin lazygit \
+    && rm /tmp/lazygit.tar.gz
+
+# =============================================================================
+# Create Non-root User
+# =============================================================================
+ARG USERNAME=devuser
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+RUN if ! getent group $USER_GID >/dev/null; then groupadd --gid $USER_GID $USERNAME; fi \
+    && if ! id -u $USER_UID >/dev/null 2>&1; then \
+         useradd --uid $USER_UID --gid $USER_GID -m -s /bin/bash $USERNAME; \
+       else \
+         existing_user=$(getent passwd $USER_UID | cut -d: -f1); \
+         if [ "$existing_user" != "$USERNAME" ]; then \
+           usermod -l $USERNAME -d /home/$USERNAME -m $existing_user 2>/dev/null || true; \
+         fi; \
+       fi \
+    && mkdir -p /home/$USERNAME/.claude \
+    && mkdir -p /home/$USERNAME/go \
+    && mkdir -p /home/$USERNAME/.config \
+    && chown -R $USER_UID:$USER_GID /home/$USERNAME
+
+RUN usermod -aG docker $USERNAME 2>/dev/null || true
+
+RUN echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# =============================================================================
+# Copy Enhanced Configurations
+# =============================================================================
+COPY config/starship.toml /home/$USERNAME/.config/starship.toml
+COPY config/tmux.conf /home/$USERNAME/.tmux.conf
+
+# Set ownership
+RUN chown -R $USER_UID:$USER_GID /home/$USERNAME/.config /home/$USERNAME/.tmux.conf
+
+USER $USERNAME
+WORKDIR /home/$USERNAME
+
+# =============================================================================
+# User Python Environment
+# =============================================================================
+RUN python3 -m venv /home/$USERNAME/venv
+ENV PATH="/home/$USERNAME/venv/bin:$PATH"
+ENV VIRTUAL_ENV="/home/$USERNAME/venv"
+
+RUN pip install --no-cache-dir \
+    ipython \
+    jupyter \
+    requests \
+    httpx \
+    aiohttp \
+    boto3 \
+    pandas \
+    numpy
+
+# =============================================================================
+# Neovim Kickstart Configuration
+# =============================================================================
+RUN git clone --depth 1 https://github.com/nvim-lua/kickstart.nvim.git /home/$USERNAME/.config/nvim
+
+# =============================================================================
+# Configure Git to use delta
+# =============================================================================
+RUN git config --global core.pager delta \
+    && git config --global interactive.diffFilter "delta --color-only" \
+    && git config --global delta.navigate true \
+    && git config --global delta.light false \
+    && git config --global delta.line-numbers true \
+    && git config --global delta.side-by-side false \
+    && git config --global merge.conflictStyle diff3 \
+    && git config --global diff.colorMoved default
+
+# =============================================================================
+# Shell Configuration with Enhanced Tools
+# =============================================================================
+RUN echo '' >> ~/.bashrc && \
+    echo '# =============================================================================' >> ~/.bashrc && \
+    echo '# Enhanced Developer Environment (Pre-configured)' >> ~/.bashrc && \
+    echo '# =============================================================================' >> ~/.bashrc && \
+    echo '' >> ~/.bashrc && \
+    echo '# Starship prompt' >> ~/.bashrc && \
+    echo 'eval "$(starship init bash)"' >> ~/.bashrc && \
+    echo '' >> ~/.bashrc && \
+    echo '# Zoxide (smart cd)' >> ~/.bashrc && \
+    echo 'eval "$(zoxide init bash)"' >> ~/.bashrc && \
+    echo 'alias cd="z"' >> ~/.bashrc && \
+    echo '' >> ~/.bashrc && \
+    echo '# Direnv' >> ~/.bashrc && \
+    echo 'eval "$(direnv hook bash)"' >> ~/.bashrc && \
+    echo '' >> ~/.bashrc && \
+    echo '# Modern CLI aliases' >> ~/.bashrc && \
+    echo 'alias ls="eza --icons"' >> ~/.bashrc && \
+    echo 'alias ll="eza -la --icons --git"' >> ~/.bashrc && \
+    echo 'alias la="eza -a --icons"' >> ~/.bashrc && \
+    echo 'alias lt="eza --tree --icons --level=2"' >> ~/.bashrc && \
+    echo 'alias tree="eza --tree --icons"' >> ~/.bashrc && \
+    echo '' >> ~/.bashrc && \
+    echo 'alias cat="bat --paging=never"' >> ~/.bashrc && \
+    echo 'alias catp="bat"' >> ~/.bashrc && \
+    echo 'export MANPAGER="sh -c '\''col -bx | bat -l man -p'\''"' >> ~/.bashrc && \
+    echo '' >> ~/.bashrc && \
+    echo 'alias top="btop"' >> ~/.bashrc && \
+    echo '' >> ~/.bashrc && \
+    echo '# Git aliases' >> ~/.bashrc && \
+    echo 'alias lg="lazygit"' >> ~/.bashrc && \
+    echo 'alias gst="git status"' >> ~/.bashrc && \
+    echo 'alias gd="git diff"' >> ~/.bashrc && \
+    echo 'alias gds="git diff --staged"' >> ~/.bashrc && \
+    echo 'alias glog="git log --oneline --graph --decorate -20"' >> ~/.bashrc && \
+    echo '' >> ~/.bashrc && \
+    echo '# Useful shortcuts' >> ~/.bashrc && \
+    echo 'alias cls="clear"' >> ~/.bashrc && \
+    echo 'alias ..="cd .."' >> ~/.bashrc && \
+    echo 'alias ...="cd ../.."' >> ~/.bashrc && \
+    echo 'alias ....="cd ../../.."' >> ~/.bashrc && \
+    echo 'alias mkdir="mkdir -pv"' >> ~/.bashrc && \
+    echo 'alias path="echo -e \${PATH//:/\\\\n}"' >> ~/.bashrc && \
+    echo '' >> ~/.bashrc && \
+    echo '# Enhanced history' >> ~/.bashrc && \
+    echo 'export HISTSIZE=10000' >> ~/.bashrc && \
+    echo 'export HISTFILESIZE=20000' >> ~/.bashrc && \
+    echo 'export HISTCONTROL=ignoreboth:erasedups' >> ~/.bashrc && \
+    echo 'shopt -s histappend' >> ~/.bashrc && \
+    echo '' >> ~/.bashrc && \
+    echo '# Better tab completion' >> ~/.bashrc && \
+    echo "bind 'set show-all-if-ambiguous on'" >> ~/.bashrc && \
+    echo "bind 'set completion-ignore-case on'" >> ~/.bashrc && \
+    echo "bind 'TAB:menu-complete'" >> ~/.bashrc
+
+# Claude Code config
+ENV CLAUDE_CONFIG_DIR=/home/$USERNAME/.claude
+ENV CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+
+# Mark as enhanced image
+ENV JIRA_SKILLS_DEV_ENHANCED=true
+
+# =============================================================================
+# Working Directory & Entrypoint
+# =============================================================================
+WORKDIR /workspace
+
+ENTRYPOINT ["/bin/bash"]
+CMD ["-l"]

@@ -56,10 +56,10 @@ Do NOT add the file to git.
 
 ```bash
 # Check for output files
-find plugins/jira-assistant-skills/skills -name "SKILL_FIX_PLAN.md" -type f
+find skills -name "SKILL_FIX_PLAN.md" -type f
 
 # Review each plan
-cat plugins/jira-assistant-skills/skills/*/SKILL_FIX_PLAN.md
+cat skills/*/SKILL_FIX_PLAN.md
 ```
 
 ## Multi-Agent Coordination
@@ -107,7 +107,7 @@ Place `.claude/rules.md` in each worktree:
 
 ```markdown
 ## Allowed
-- Modify files in plugins/jira-assistant-skills/skills/jira-issue/
+- Modify files in skills/jira-issue/
 - Update SKILL.md documentation
 
 ## Off-Limits

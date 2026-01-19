@@ -4,7 +4,7 @@
 
 set -e
 
-SKILLS_PATH="plugins/jira-assistant-skills/skills"
+SKILLS_PATH="skills"
 
 echo "========================================"
 echo "  JIRA Assistant Skills Sandbox Setup"
@@ -24,7 +24,7 @@ python3 -c "import requests, tabulate, colorama, tqdm; print('      All dependen
 # Install Claude Code plugin
 echo "[3/4] Installing JIRA Assistant Skills plugin..."
 if command -v claude &> /dev/null; then
-    claude plugin install ./plugins/jira-assistant-skills 2>/dev/null || echo "      Plugin install skipped (may already be installed)"
+    claude plugin install ./. 2>/dev/null || echo "      Plugin install skipped (may already be installed)"
     echo "      Done."
 else
     echo "      Claude Code not found, skipping plugin install."

@@ -19,7 +19,7 @@ Three optimizations reduce cycle time from 22 minutes to **1-4 minutes**:
 ## Quick Start
 
 ```bash
-cd plugins/jira-assistant-skills/skills/jira-assistant/tests
+cd skills/jira-assistant/tests
 
 # Fast iteration on a single skill (recommended workflow)
 ./fast_test.sh --skill agile --fast --parallel 2
@@ -166,7 +166,7 @@ The `--fast` flag uses Claude Haiku which is faster but may route slightly diffe
 
 Run from the tests directory:
 ```bash
-cd plugins/jira-assistant-skills/skills/jira-assistant/tests
+cd skills/jira-assistant/tests
 ./fast_test.sh --smoke
 ```
 
@@ -294,10 +294,10 @@ For development iteration with OAuth (free), use host-based testing:
 
 ```bash
 # Terminal 1: Edit SKILL.md
-vim plugins/jira-assistant-skills/skills/jira-agile/SKILL.md
+vim skills/jira-agile/SKILL.md
 
 # Terminal 2: Run tests directly on host
-cd plugins/jira-assistant-skills/skills/jira-assistant/tests
+cd skills/jira-assistant/tests
 ./fast_test.sh --skill agile --fast
 
 # Repeat until tests pass
@@ -326,7 +326,7 @@ For isolated, restricted testing scenarios, use the sandboxed container runner.
 ### Quick Start
 
 ```bash
-cd plugins/jira-assistant-skills/skills/jira-assistant/tests
+cd skills/jira-assistant/tests
 
 # List available profiles
 ./run_sandboxed.sh --list-profiles
@@ -391,7 +391,7 @@ For hybrid file + JIRA workflows, use the workspace runner to mount a local proj
 ### Quick Start
 
 ```bash
-cd plugins/jira-assistant-skills/skills/jira-assistant/tests
+cd skills/jira-assistant/tests
 
 # Organize docs and close JIRA ticket
 ./run_workspace.sh --project ~/myproject \

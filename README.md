@@ -534,7 +534,7 @@ See [tests/e2e/README.md](tests/e2e/README.md) for details.
 Run tests with restricted tool access for safe demos and focused testing:
 
 ```bash
-cd plugins/jira-assistant-skills/skills/jira-assistant/tests
+cd skills/jira-assistant/tests
 
 # Safe demo mode (view/search only)
 ./run_sandboxed.sh --profile read-only
@@ -569,7 +569,7 @@ pip install jira-assistant-skills-lib>=0.1.5 pytest pytest-asyncio
 pip install -e .  # Install CLI in editable mode
 
 # Run tests (uses root pytest.ini configuration)
-pytest plugins/jira-assistant-skills/skills/*/tests/*.py -v
+pytest skills/*/tests/*.py -v
 
 # Verify CLI is working
 jira-as --version

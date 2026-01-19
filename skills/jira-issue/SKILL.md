@@ -232,7 +232,7 @@ Requires JIRA credentials via environment variables (`JIRA_SITE_URL`, `JIRA_EMAI
 
 ## Related Resources
 
-Resources in the skill directory (`plugins/jira-assistant-skills/skills/jira-issue/`):
+Resources in the skill directory (`skills/jira-issue/`):
 - `docs/BEST_PRACTICES.md` - Issue content and metadata guidance
 - `references/field_formats.md` - ADF and field format details
 - `references/api_reference.md` - REST API endpoints

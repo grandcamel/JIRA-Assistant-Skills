@@ -1,0 +1,126 @@
+# Starship Prompt Configuration
+# https://starship.rs/config/
+
+# Timeout for commands executed by starship (ms)
+command_timeout = 1000
+
+# Insert blank line between shell prompts
+add_newline = true
+
+# =============================================================================
+# Prompt Format
+# =============================================================================
+format = """
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$python\
+$nodejs\
+$rust\
+$golang\
+$docker_context\
+$cmd_duration\
+$line_break\
+$character"""
+
+# =============================================================================
+# Core Modules
+# =============================================================================
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+vimcmd_symbol = "[❮](bold green)"
+
+[directory]
+truncation_length = 4
+truncate_to_repo = true
+style = "bold cyan"
+format = "[$path]($style)[$read_only]($read_only_style) "
+read_only = " 🔒"
+
+[username]
+show_always = false
+style_user = "bold yellow"
+format = "[$user]($style)@"
+
+[hostname]
+ssh_only = true
+style = "bold yellow"
+format = "[$hostname]($style):"
+
+# =============================================================================
+# Git
+# =============================================================================
+
+[git_branch]
+symbol = " "
+style = "bold purple"
+format = "[$symbol$branch(:$remote_branch)]($style) "
+
+[git_status]
+style = "bold red"
+format = '([$all_status$ahead_behind]($style) )'
+conflicted = "⚔️ "
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+untracked = "?${count}"
+stashed = "📦"
+modified = "!${count}"
+staged = "+${count}"
+renamed = "»${count}"
+deleted = "✘${count}"
+
+# =============================================================================
+# Languages & Tools
+# =============================================================================
+
+[python]
+symbol = "🐍 "
+style = "bold yellow"
+format = '[${symbol}${pyenv_prefix}(${version})(\($virtualenv\))]($style) '
+detect_extensions = ["py"]
+detect_files = ["requirements.txt", "pyproject.toml", "setup.py", ".python-version"]
+
+[nodejs]
+symbol = "⬢ "
+style = "bold green"
+format = "[$symbol($version)]($style) "
+detect_extensions = ["js", "mjs", "cjs", "ts"]
+detect_files = ["package.json", ".node-version"]
+
+[rust]
+symbol = "🦀 "
+style = "bold red"
+format = "[$symbol($version)]($style) "
+
+[golang]
+symbol = "🐹 "
+style = "bold cyan"
+format = "[$symbol($version)]($style) "
+
+[docker_context]
+symbol = "🐳 "
+style = "bold blue"
+format = "[$symbol$context]($style) "
+only_with_files = true
+detect_files = ["docker-compose.yml", "docker-compose.yaml", "Dockerfile"]
+
+# =============================================================================
+# Status & Duration
+# =============================================================================
+
+[cmd_duration]
+min_time = 2000
+style = "bold yellow"
+format = "[⏱ $duration]($style) "
+show_milliseconds = false
+
+[status]
+disabled = false
+symbol = "✖ "
+style = "bold red"
+format = "[$symbol$status]($style) "
