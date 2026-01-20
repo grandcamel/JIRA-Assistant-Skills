@@ -312,3 +312,138 @@ jira-as search query "updatedBy = currentUser() AND updated >= -1h"
 6. **Keep backups** of export data before modifications
 7. **Document** what was changed for audit purposes
 8. **Test with single item** before bulk operations
+
+---
+
+<!-- PERMISSIONS
+permissions:
+  cli: jira-as
+  operations:
+    # Safe - Read-only operations
+    - pattern: "jira-as issue get *"
+      risk: safe
+    - pattern: "jira-as issue view *"
+      risk: safe
+    - pattern: "jira-as search query *"
+      risk: safe
+    - pattern: "jira-as search jql *"
+      risk: safe
+    - pattern: "jira-as search list *"
+      risk: safe
+    - pattern: "jira-as agile sprint list *"
+      risk: safe
+    - pattern: "jira-as agile board list *"
+      risk: safe
+    - pattern: "jira-as agile epic list *"
+      risk: safe
+    - pattern: "jira-as agile backlog *"
+      risk: safe
+    - pattern: "jira-as collaborate activity *"
+      risk: safe
+    - pattern: "jira-as collaborate comment list *"
+      risk: safe
+    - pattern: "jira-as time list *"
+      risk: safe
+    - pattern: "jira-as time report *"
+      risk: safe
+    - pattern: "jira-as relationships list *"
+      risk: safe
+    - pattern: "jira-as relationships view *"
+      risk: safe
+    - pattern: "jira-as lifecycle status *"
+      risk: safe
+    - pattern: "jira-as lifecycle transitions *"
+      risk: safe
+    - pattern: "jira-as fields list *"
+      risk: safe
+    - pattern: "jira-as admin user search *"
+      risk: safe
+    - pattern: "jira-as admin permissions check *"
+      risk: safe
+    - pattern: "jira-as admin project list *"
+      risk: safe
+    - pattern: "jira-as jsm request list *"
+      risk: safe
+    - pattern: "jira-as jsm customer list *"
+      risk: safe
+
+    # Caution - Modifiable but easily reversible
+    - pattern: "jira-as issue create *"
+      risk: caution
+    - pattern: "jira-as issue update *"
+      risk: caution
+    - pattern: "jira-as lifecycle transition *"
+      risk: caution
+    - pattern: "jira-as lifecycle assign *"
+      risk: caution
+    - pattern: "jira-as agile sprint create *"
+      risk: caution
+    - pattern: "jira-as agile sprint start *"
+      risk: caution
+    - pattern: "jira-as agile sprint move-issues *"
+      risk: caution
+    - pattern: "jira-as agile epic create *"
+      risk: caution
+    - pattern: "jira-as agile epic add-issues *"
+      risk: caution
+    - pattern: "jira-as agile epic remove-issues *"
+      risk: caution
+    - pattern: "jira-as collaborate comment add *"
+      risk: caution
+    - pattern: "jira-as collaborate comment update *"
+      risk: caution
+    - pattern: "jira-as collaborate attach *"
+      risk: caution
+    - pattern: "jira-as time log *"
+      risk: caution
+    - pattern: "jira-as time estimate *"
+      risk: caution
+    - pattern: "jira-as time update-worklog *"
+      risk: caution
+    - pattern: "jira-as relationships link *"
+      risk: caution
+    - pattern: "jira-as relationships unlink *"
+      risk: caution
+    - pattern: "jira-as jsm request create *"
+      risk: caution
+    - pattern: "jira-as jsm customer add *"
+      risk: caution
+    - pattern: "jira-as admin automation enable *"
+      risk: caution
+    - pattern: "jira-as admin automation disable *"
+      risk: caution
+
+    # Warning - Destructive but potentially recoverable
+    - pattern: "jira-as issue delete *"
+      risk: warning
+    - pattern: "jira-as agile sprint close *"
+      risk: warning
+    - pattern: "jira-as agile sprint delete *"
+      risk: warning
+    - pattern: "jira-as agile epic delete *"
+      risk: warning
+    - pattern: "jira-as collaborate comment delete *"
+      risk: warning
+    - pattern: "jira-as collaborate attachment delete *"
+      risk: warning
+    - pattern: "jira-as time delete-worklog *"
+      risk: warning
+    - pattern: "jira-as lifecycle component delete *"
+      risk: warning
+    - pattern: "jira-as lifecycle version delete *"
+      risk: warning
+    - pattern: "jira-as jsm customer remove *"
+      risk: warning
+    - pattern: "jira-as admin group delete *"
+      risk: warning
+
+    # Danger - IRREVERSIBLE operations
+    - pattern: "jira-as issue force-delete *"
+      risk: danger
+    - pattern: "jira-as bulk delete *"
+      risk: danger
+    - pattern: "jira-as admin project delete *"
+      risk: danger
+    - pattern: "jira-as jsm organization delete *"
+      risk: danger
+-->
