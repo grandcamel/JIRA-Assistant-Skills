@@ -26,7 +26,7 @@
 </table>
 
 <p align="center">
-  <a href="https://pypi.org/project/jira-assistant-skills-lib/"><img src="https://img.shields.io/pypi/v/jira-assistant-skills-lib?logo=pypi&logoColor=white" alt="PyPI"></a>
+  <a href="https://pypi.org/project/jira-as/"><img src="https://img.shields.io/pypi/v/jira-as?logo=pypi&logoColor=white" alt="PyPI"></a>
   <img src="https://img.shields.io/badge/tests-1644%20passing-brightgreen?logo=pytest" alt="Tests">
   <img src="https://img.shields.io/badge/python-3.10+-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/skills-14-FF6B6B" alt="Skills">
@@ -128,7 +128,7 @@ cd jira-assistant-skills
 ### 2. Install Dependencies
 
 ```bash
-pip install jira-assistant-skills-lib
+pip install jira-as
 pip install -e .  # Install the jira-as CLI
 ```
 
@@ -565,7 +565,7 @@ git clone https://github.com/grandcamel/jira-assistant-skills.git
 cd jira-assistant-skills
 
 # Install dependencies and CLI
-pip install jira-assistant-skills-lib>=0.1.5 pytest pytest-asyncio
+pip install jira-as>=0.1.5 pytest pytest-asyncio
 pip install -e .  # Install CLI in editable mode
 
 # Run tests (uses root pytest.ini configuration)

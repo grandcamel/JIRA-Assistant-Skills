@@ -1,5 +1,5 @@
 # This project is a Claude Code plugin (documentation only)
-# The CLI is now distributed via jira-assistant-skills-lib
+# The CLI is now distributed via jira-as
 # This file provides development tooling configuration
 
 [project]
@@ -12,7 +12,7 @@ license = "MIT"
 
 # CLI is installed via the library
 dependencies = [
-    "jira-assistant-skills>=1.0.0",
+    "jira-as>=1.0.0",
 ]
 
 [project.optional-dependencies]

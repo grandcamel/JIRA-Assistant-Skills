@@ -58,8 +58,8 @@ skills/                        # Skills (autodiscovered at project root)
         ├── docs/
         └── tests/
 
-jira-assistant-skills-lib/     # PyPI library (source)
-├── src/jira_assistant_skills_lib/
+jira-as/                       # PyPI library (source)
+├── src/jira_as/
 │   ├── cli/                   # CLI implementation
 │   │   ├── main.py            # Entry point
 │   │   ├── cli_utils.py       # Shared utilities
@@ -74,10 +74,10 @@ Paths in `.claude-plugin/plugin.json` are relative to project root.
 
 ### Shared Library Pattern
 
-All scripts import from the [jira-assistant-skills-lib](https://pypi.org/project/jira-assistant-skills-lib/) PyPI package:
+All scripts import from the [jira-as](https://pypi.org/project/jira-as/) PyPI package:
 
 ```python
-from jira_assistant_skills_lib import (
+from jira_as import (
     get_jira_client,
     JiraError,
     ValidationError,
@@ -88,7 +88,7 @@ from jira_assistant_skills_lib import (
 
 ### Shared Library Components
 
-The `jira-assistant-skills-lib` package provides:
+The `jira-as` package provides:
 
 | Module | Purpose |
 |--------|---------|
@@ -111,7 +111,7 @@ The project provides a unified CLI via the `jira-as` command:
 
 ```bash
 # Install in development mode
-pip install -e jira-assistant-skills-lib/
+pip install -e jira-as/
 
 # Verify installation
 jira-as --version
@@ -256,7 +256,7 @@ JiraError (base)
 ### Using the Error Decorator
 
 ```python
-from jira_assistant_skills_lib.cli.cli_utils import handle_jira_errors
+from jira_as.cli.cli_utils import handle_jira_errors
 
 @handle_jira_errors
 def main():
@@ -358,7 +358,7 @@ resolved >= -7d AND assignee IN membersOf("dev-team")
 ### Context Manager Pattern (Required)
 
 ```python
-from jira_assistant_skills_lib import get_jira_client
+from jira_as import get_jira_client
 
 # Correct - context manager handles cleanup
 with get_jira_client() as client:
@@ -408,7 +408,7 @@ with get_jira_client() as client:
 The mock client uses mixin composition for modularity:
 
 ```
-jira-assistant-skills-lib/src/jira_assistant_skills_lib/mock/
+jira-as/src/jira_as/mock/
 ├── __init__.py      # Exports MockJiraClient, is_mock_mode
 ├── base.py          # MockJiraClientBase with core operations
 ├── clients.py       # Composed client (Base + all mixins)
@@ -476,16 +476,16 @@ Tests are configured via `pytest.ini` at the project root:
 
 ```bash
 # Install dependencies
-pip install -e "jira-assistant-skills-lib/[dev]"
+pip install -e "jira-as/[dev]"
 
 # Run all unit tests
-pytest jira-assistant-skills-lib/tests/ -v
+pytest jira-as/tests/ -v
 
 # Run tests for specific module
-pytest jira-assistant-skills-lib/tests/test_jira_client.py -v
+pytest jira-as/tests/test_jira_client.py -v
 
 # Run with coverage
-pytest jira-assistant-skills-lib/tests/ --cov=jira_assistant_skills_lib -v
+pytest jira-as/tests/ --cov=jira_as -v
 ```
 
 ### Live Integration Tests
@@ -721,7 +721,7 @@ Example usage scenarios.
 
 ### Adding CLI Commands
 
-1. Add command module in `jira-assistant-skills-lib/src/jira_assistant_skills_lib/cli/commands/`
+1. Add command module in `jira-as/src/jira_as/cli/commands/`
 2. Register in `cli/main.py`
 3. Add tests in `tests/commands/`
 4. Update SKILL.md documentation
@@ -894,7 +894,7 @@ Solutions:
 
 | Document | Content |
 |----------|---------|
-| `jira-assistant-skills-lib/CLAUDE.md` | Library implementation details |
+| `jira-as/CLAUDE.md` | Library implementation details |
 | `skills/shared/docs/DECISION_TREE.md` | Skill routing logic |
 | `skills/shared/docs/SAFEGUARDS.md` | Safety procedures |
 | `skills/shared/docs/QUICK_REFERENCE.md` | JQL cheat sheet |

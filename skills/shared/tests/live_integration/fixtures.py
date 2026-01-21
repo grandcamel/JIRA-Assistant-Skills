@@ -62,9 +62,9 @@ def jira_client(jira_connection: JiraConnection):
     Provides a configured client for API operations.
     """
     try:
-        from jira_assistant_skills_lib import JiraClient
+        from jira_as import JiraClient
     except ImportError:
-        from jira_assistant_skills_lib.jira_client import JiraClient
+        from jira_as.jira_client import JiraClient
 
     client = JiraClient(
         base_url=jira_connection.base_url,

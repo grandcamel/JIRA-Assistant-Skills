@@ -160,7 +160,7 @@ See [Configuration Guide](docs/CONFIG.md) for details.
 
 ## Shared Libraries
 
-This skill uses shared infrastructure from `jira-assistant-skills-lib`:
+This skill uses shared infrastructure from `jira-as`:
 
 | Library | Description |
 |---------|-------------|

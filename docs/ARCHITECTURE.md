@@ -4,10 +4,10 @@ This document covers the technical architecture of the JIRA Assistant Skills plu
 
 ## Shared Library Pattern
 
-All skills depend on the `jira-assistant-skills-lib` PyPI package:
+All skills depend on the `jira-as` PyPI package:
 
 ```bash
-pip install jira-assistant-skills-lib>=0.2.0
+pip install jira-as>=0.2.0
 ```
 
 ### Core Modules
@@ -37,7 +37,7 @@ pip install jira-assistant-skills-lib>=0.2.0
 | `resolve_user_to_account_id`, `get_user_display_info` | User resolution |
 | `parse_time_string`, `format_seconds` | Time parsing and formatting |
 
-**Import pattern**: `from jira_assistant_skills_lib import ...`
+**Import pattern**: `from jira_as import ...`
 
 ## Configuration System
 

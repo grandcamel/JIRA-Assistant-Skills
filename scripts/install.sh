@@ -132,7 +132,7 @@ install_dependencies() {
     if $python_cmd -m pip install --user -e . 2>/dev/null; then
         print_ok "Package installed"
         # Also install the library
-        if $python_cmd -m pip install --user jira-assistant-skills-lib 2>/dev/null; then
+        if $python_cmd -m pip install --user jira-as 2>/dev/null; then
             print_ok "Library installed"
             return 0
         fi
@@ -140,11 +140,11 @@ install_dependencies() {
         print_warn "pip install failed, trying without --user flag..."
         if $python_cmd -m pip install -e . 2>/dev/null; then
             print_ok "Package installed"
-            $python_cmd -m pip install jira-assistant-skills-lib 2>/dev/null
+            $python_cmd -m pip install jira-as 2>/dev/null
             return 0
         else
             print_error "Failed to install dependencies"
-            print_info "Try manually: $python_cmd -m pip install -e . && pip install jira-assistant-skills-lib"
+            print_info "Try manually: $python_cmd -m pip install -e . && pip install jira-as"
             return 1
         fi
     fi

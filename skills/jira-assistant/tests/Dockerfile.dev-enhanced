@@ -150,7 +150,7 @@ RUN pip3 install --no-cache-dir --break-system-packages \
     typer \
     pyyaml \
     tabulate \
-    jira-assistant-skills-lib
+    jira-as
 
 ENV PATH="/root/.local/bin:$PATH"
 

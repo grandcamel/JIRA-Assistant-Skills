@@ -62,7 +62,7 @@ jobs:
 
       - name: Run mypy on library
         run: |
-          mypy jira-assistant-skills-lib/src/jira_assistant_skills_lib \
+          mypy jira-as/src/jira_as \
             --config-file=pyproject.toml \
             --ignore-missing-imports \
             || true  # Non-blocking for gradual adoption
@@ -90,7 +90,7 @@ jobs:
 
       - name: Run bandit security scan
         run: |
-          bandit -r jira-assistant-skills-lib/src \
+          bandit -r jira-as/src \
             -c pyproject.toml \
             -f sarif \
             -o bandit-results.sarif \
@@ -150,7 +150,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install jira-assistant-skills-lib pytest pytest-asyncio pytest-cov pyyaml
+          pip install jira-as pytest pytest-asyncio pytest-cov pyyaml
 
       - name: Run unit tests
         run: |
@@ -176,8 +176,8 @@ jobs:
 
       - name: Run library tests
         run: |
-          if [ -d "jira-assistant-skills-lib/tests" ]; then
-            python -m pytest jira-assistant-skills-lib/tests -v || true
+          if [ -d "jira-as/tests" ]; then
+            python -m pytest jira-as/tests -v || true
           fi
         continue-on-error: true
 

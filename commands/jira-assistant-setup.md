@@ -15,14 +15,14 @@ First, verify the environment:
 python3 --version
 ```
 
-Check if the jira-assistant-skills-lib package is installed:
+Check if the jira-as package is installed:
 ```bash
-pip show jira-assistant-skills-lib 2>/dev/null && echo "Library installed" || echo "Library missing"
+pip show jira-as 2>/dev/null && echo "Library installed" || echo "Library missing"
 ```
 
 If the library is missing, install it:
 ```bash
-pip install jira-assistant-skills-lib>=0.1.5
+pip install jira-as>=0.1.5
 ```
 
 ## Step 2: Get API Token
@@ -89,7 +89,7 @@ jira-as issue get {any_issue_key}
 Or test with a Python script:
 ```bash
 python3 -c "
-from jira_assistant_skills_lib import get_jira_client
+from jira_as import get_jira_client
 client = get_jira_client()
 me = client.get('/rest/api/3/myself')
 print(f'Connected as: {me.get(\"displayName\", \"Unknown\")}')
@@ -127,4 +127,4 @@ If the CLI is not found:
 - Or use direct script execution: `python "${CLAUDE_PLUGIN_ROOT}/skills/jira-issue/scripts/get_issue.py" PROJ-123`
 
 If import errors occur:
-- Ensure the library is installed: `pip install jira-assistant-skills-lib>=0.1.5`
+- Ensure the library is installed: `pip install jira-as>=0.1.5`

@@ -184,7 +184,7 @@ python transition_issue.py PROJ-123 --id 31
 **Solution:**
 Install the shared library:
 ```bash
-pip install jira-assistant-skills-lib
+pip install jira-as
 ```
 
 ### Error: "File not found" for templates or references
@@ -210,7 +210,7 @@ export JIRA_DEBUG=1
 
 ```python
 python -c "
-from jira_assistant_skills_lib import ConfigManager
+from jira_as import ConfigManager
 config = ConfigManager()
 print('Profiles:', config.list_profiles())
 print('Default:', config.profile)
@@ -221,7 +221,7 @@ print('Default:', config.profile)
 
 ```python
 python -c "
-from jira_assistant_skills_lib import get_jira_client
+from jira_as import get_jira_client
 client = get_jira_client()
 print('Testing connection...')
 result = client.get('/rest/api/3/myself')

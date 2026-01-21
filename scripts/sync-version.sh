@@ -16,8 +16,8 @@
 #   - .claude-plugin/marketplace.json
 #   - .release-please-manifest.json
 #   - pyproject.toml (main project)
-#   - jira-assistant-skills-lib/pyproject.toml (if updating lib)
-#   - jira-assistant-skills-lib/src/jira_assistant_skills_lib/__init__.py
+#   - jira-as/pyproject.toml (if updating lib)
+#   - jira-as/src/jira_as/__init__.py
 # ==============================================================================
 
 set -euo pipefail
@@ -38,8 +38,8 @@ PLUGIN_JSON="$PROJECT_ROOT/.claude-plugin/plugin.json"
 MARKETPLACE_JSON="$PROJECT_ROOT/.claude-plugin/marketplace.json"
 RELEASE_MANIFEST="$PROJECT_ROOT/.release-please-manifest.json"
 PYPROJECT="$PROJECT_ROOT/pyproject.toml"
-LIB_PYPROJECT="$PROJECT_ROOT/jira-assistant-skills-lib/pyproject.toml"
-LIB_INIT="$PROJECT_ROOT/jira-assistant-skills-lib/src/jira_assistant_skills_lib/__init__.py"
+LIB_PYPROJECT="$PROJECT_ROOT/jira-as/pyproject.toml"
+LIB_INIT="$PROJECT_ROOT/jira-as/src/jira_as/__init__.py"
 
 # Helper functions
 info() { echo -e "${BLUE}[INFO]${NC} $*"; }

@@ -55,7 +55,7 @@ If you prefer manual configuration, follow these steps:
 ### Step 1: Install Dependencies
 
 ```bash
-pip install jira-assistant-skills-lib
+pip install jira-as
 ```
 
 This installs all required dependencies including requests, tabulate, colorama, and python-dotenv.
