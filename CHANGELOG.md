@@ -1,5 +1,32 @@
 # Changelog
 
+## [5.0.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v4.0.0...v5.0.0) (2026-01-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* The PyPI package has been renamed from `jira-assistant-skills-lib` to `jira-as` for brevity.
+* CLI moved to jira-assistant-skills package
+
+### Features
+
+* add skill_count metadata to plugin.json ([93f63c4](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/93f63c4e2d01c754c2dd7256eb61606e38372fa1))
+* implement assistant-skills alignment (phases 1-4) ([57ce5c1](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/57ce5c10a0abe94f368c23bc3375c49a385148ef))
+* **safeguards:** add permission block for claude-safe integration ([7cecb4b](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/7cecb4b9a6202a24e9fd6c82525b43fdb72b6a8b))
+
+
+### Bug Fixes
+
+* remove broken submodule reference to jira-assistant-skills-lib ([25f5a77](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/25f5a772e479b6c821d651bf1b5e78829bc1b81e))
+* remove unrecognized skill_count key from plugin.json ([20f015e](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/20f015e18d04ef61c331869fc0e2c1033016568a))
+* use dynamic version from package metadata in CLI ([ccd0b66](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/ccd0b66535e26b57c55a8302b04f3d83baf9e957))
+
+
+### Code Refactoring
+
+* make this plugin-only, CLI now in jira-assistant-skills package ([f486431](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/f4864316aeb27752eeaf7e2066067d54bd448a24))
+* update dependency from jira-assistant-skills-lib to jira-as ([69689c5](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/69689c5728eca8ee0fa37666380c0b949004542d))
+
 ## [3.0.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v2.2.7...v3.0.0) (2026-01-10)
 
 
