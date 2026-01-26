@@ -1,0 +1,65 @@
+name: Sync to Marketplace
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.claude-plugin/plugin.json'
+
+jobs:
+  sync-marketplace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout plugin repo
+        uses: actions/checkout@v4
+
+      - name: Get plugin version
+        id: version
+        run: |
+          VERSION=$(jq -r '.version' .claude-plugin/plugin.json)
+          NAME=$(jq -r '.name' .claude-plugin/plugin.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+
+      - name: Checkout as-plugins
+        uses: actions/checkout@v4
+        with:
+          repository: grandcamel/as-plugins
+          token: ${{ secrets.MARKETPLACE_PAT }}
+          path: as-plugins
+
+      - name: Update marketplace.json
+        run: |
+          cd as-plugins
+          PLUGIN_NAME="${{ steps.version.outputs.name }}"
+          NEW_VERSION="${{ steps.version.outputs.version }}"
+
+          # Update version in marketplace.json using jq
+          jq --arg name "$PLUGIN_NAME" --arg ver "$NEW_VERSION" \
+            '(.plugins[] | select(.name == $name)).version = $ver' \
+            .claude-plugin/marketplace.json > tmp.json && mv tmp.json .claude-plugin/marketplace.json
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          path: as-plugins
+          token: ${{ secrets.MARKETPLACE_PAT }}
+          commit-message: "chore: bump ${{ steps.version.outputs.name }} to ${{ steps.version.outputs.version }}"
+          title: "chore: bump ${{ steps.version.outputs.name }} to ${{ steps.version.outputs.version }}"
+          body: |
+            Automated version sync from [${{ github.repository }}](${{ github.server_url }}/${{ github.repository }}).
+
+            - Plugin: `${{ steps.version.outputs.name }}`
+            - Version: `${{ steps.version.outputs.version }}`
+            - Triggered by: ${{ github.sha }}
+          branch: "sync/${{ steps.version.outputs.name }}-${{ steps.version.outputs.version }}"
+          delete-branch: true
+
+      - name: Auto-merge PR
+        if: steps.cpr.outputs.pull-request-number
+        run: |
+          cd as-plugins
+          gh pr merge ${{ steps.cpr.outputs.pull-request-number }} --squash --auto
+        env:
+          GH_TOKEN: ${{ secrets.MARKETPLACE_PAT }}
