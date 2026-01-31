@@ -102,7 +102,7 @@ All commands support `--help` for full documentation.
 # Add a comment
 jira-as collaborate comment add PROJ-123 --body "Starting work on this now"
 
-# Rich text comment
+# Rich text comment (--format supports: markdown, wiki, adf)
 jira-as collaborate comment add PROJ-123 --body "**Bold** text" --format markdown
 
 # Internal comment (role-restricted)
@@ -111,9 +111,9 @@ jira-as collaborate comment add PROJ-123 --body "Internal note" --visibility-rol
 # Internal comment (group-restricted)
 jira-as collaborate comment add PROJ-123 --body "Team only" --visibility-group jira-developers
 
-# List comments
+# List comments (supports --order asc or desc)
 jira-as collaborate comment list PROJ-123
-jira-as collaborate comment list PROJ-123 -l 10 --order asc
+jira-as collaborate comment list PROJ-123 -l 10 --order desc
 
 # Get specific comment by ID
 jira-as collaborate comment list PROJ-123 --id 10001
@@ -130,32 +130,34 @@ jira-as collaborate comment delete PROJ-123 --id 10001 --dry-run
 # Delete a comment (confirmed)
 jira-as collaborate comment delete PROJ-123 --id 10001 --yes
 
-# Upload attachment
+# Upload attachment (-f is short for --file)
+jira-as collaborate attachment upload PROJ-123 -f screenshot.png
 jira-as collaborate attachment upload PROJ-123 --file screenshot.png
 
-# Upload attachment with custom name
-jira-as collaborate attachment upload PROJ-123 --file screenshot.png --name evidence-2024.png
+# Upload attachment with custom name (-n is short for --name)
+jira-as collaborate attachment upload PROJ-123 -f screenshot.png -n evidence-2024.png
 
 # List attachments on issue
 jira-as collaborate attachment list PROJ-123
 
-# Download attachment by ID (use attachment ID from issue details)
-jira-as collaborate attachment download PROJ-123 --id 12345 --output-dir ./downloads/
+# Download attachment by ID (-o is short for --output-dir)
+jira-as collaborate attachment download PROJ-123 --id 12345 -o ./downloads/
 
 # Download attachment by filename
-jira-as collaborate attachment download PROJ-123 --name error.log --output-dir ./downloads/
+jira-as collaborate attachment download PROJ-123 --name error.log -o ./downloads/
 
 # Download all attachments from issue
-jira-as collaborate attachment download PROJ-123 --all --output-dir ./backups/
+jira-as collaborate attachment download PROJ-123 --all -o ./backups/
 
-# List watchers
+# List watchers (-l is short for --list)
+jira-as collaborate watchers PROJ-123 -l
 jira-as collaborate watchers PROJ-123 --list
 
-# Add watcher
-jira-as collaborate watchers PROJ-123 --add user@example.com
+# Add watcher (-a is short for --add)
+jira-as collaborate watchers PROJ-123 -a user@example.com
 
-# Remove watcher
-jira-as collaborate watchers PROJ-123 --remove user@example.com
+# Remove watcher (-r is short for --remove)
+jira-as collaborate watchers PROJ-123 -r user@example.com
 
 # Send notification to watchers
 jira-as collaborate notify PROJ-123 --watchers --subject "Update" --body "Issue resolved"
