@@ -124,7 +124,9 @@ class JiraContainer:
                     self._container.with_bind_ports(container_port, host_port)
 
                 # JIRA requires specific environment variables
-                self._container.with_env("ATL_JDBC_URL", "jdbc:h2:file:/var/jira/dbconfig")
+                self._container.with_env(
+                    "ATL_JDBC_URL", "jdbc:h2:file:/var/jira/dbconfig"
+                )
                 self._container.with_env("JVM_MINIMUM_MEMORY", "1024m")
                 self._container.with_env("JVM_MAXIMUM_MEMORY", "2048m")
 

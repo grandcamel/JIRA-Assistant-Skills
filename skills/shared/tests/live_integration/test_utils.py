@@ -127,7 +127,9 @@ class IssueBuilder:
         """
         # Generate summary if not set
         if "summary" not in self._fields:
-            self._fields["summary"] = f"[Test] {self._fields['issuetype']['name']} - {_random_suffix()}"
+            self._fields["summary"] = (
+                f"[Test] {self._fields['issuetype']['name']} - {_random_suffix()}"
+            )
 
         issue = self._client.post("/rest/api/3/issue", json={"fields": self._fields})
 

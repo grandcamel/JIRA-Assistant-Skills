@@ -166,7 +166,9 @@ def test_issue(jira_client, test_project: Dict[str, Any]) -> Dict[str, Any]:
 
 
 @pytest.fixture
-def fresh_test_issue(jira_client, test_project: Dict[str, Any]) -> Generator[Dict[str, Any], None, None]:
+def fresh_test_issue(
+    jira_client, test_project: Dict[str, Any]
+) -> Generator[Dict[str, Any], None, None]:
     """
     Function-scoped isolated test issue.
 
@@ -256,7 +258,9 @@ class IssueHelper:
 
 
 @pytest.fixture
-def issue_helper(jira_client, test_project: Dict[str, Any]) -> Generator[IssueHelper, None, None]:
+def issue_helper(
+    jira_client, test_project: Dict[str, Any]
+) -> Generator[IssueHelper, None, None]:
     """
     Issue creation helper with auto-cleanup.
 
