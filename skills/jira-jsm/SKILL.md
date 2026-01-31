@@ -76,7 +76,7 @@ This skill provides comprehensive JSM operations organized into 6 key ITSM capab
 |------------|-------------|--------------|
 | **Service Desk Core** | Manage service desks, portals, request types | `jira-as jsm service-desk list`, `jira-as jsm request-type fields` |
 | **Request Management** | Create and manage customer-facing requests | `jira-as jsm request create`, `jira-as jsm request get`, `jira-as jsm request transition` |
-| **Customer & Organization** | Manage customers, organizations, participants | `jira-as jsm customer create`, `jira-as jsm participant add` |
+| **Customer & Organization** | Manage customers, organizations, participants | `jira-as jsm customer create`, `jira-as jsm request add-participant` |
 | **SLA & Queue** | Track SLAs, manage queues | `jira-as jsm sla get`, `jira-as jsm sla report`, `jira-as jsm queue list` |
 | **Comments & Approvals** | Collaboration and approval workflows | `jira-as jsm request comment`, `jira-as jsm approval approve` |
 | **Knowledge Base & Assets** | KB search, asset management | `jira-as jsm kb search`, `jira-as jsm kb suggest`, `jira-as jsm asset create` |
@@ -90,8 +90,14 @@ jira-as jsm service-desk list
 # 2. List request types for your service desk
 jira-as jsm request-type list 1
 
-# 3. Create an incident (both summary AND description are required)
+# 3. Create an incident (--summary is required, --description is optional)
 jira-as jsm request create 1 10 --summary "Email service down" --description "Production email server is not responding to connections"
+
+# 3a. Create request on behalf of a customer
+jira-as jsm request create 1 10 --summary "Password reset" --on-behalf-of "customer@example.com"
+
+# 3b. Preview request creation without executing (dry-run)
+jira-as jsm request create 1 10 --summary "Test request" --dry-run
 
 # 4. Check SLA status
 jira-as jsm sla get SD-123
@@ -102,11 +108,17 @@ jira-as jsm request comment SD-123 "Looking into this issue now"
 # 6. Add an internal comment (agent-only, not visible to customers)
 jira-as jsm request comment SD-123 "Escalating to Tier 2 support" --internal
 
-# 7. Approve a pending request (issue_key, approval_id)
-jira-as jsm approval approve SD-124 1001 --comment "Approved" --yes
+# 7. Approve a pending request
+jira-as jsm approval approve SD-124 --approval-id 1001 --yes
 
 # 8. Preview approval without executing (dry-run)
-jira-as jsm approval approve SD-124 1001 --dry-run
+jira-as jsm approval approve SD-124 --approval-id 1001 --dry-run
+
+# 9. Decline a pending request
+jira-as jsm approval decline SD-124 --approval-id 1001 --yes
+
+# 9a. Preview decline without executing (dry-run)
+jira-as jsm approval decline SD-124 --approval-id 1001 --dry-run
 ```
 
 For detailed setup instructions, see [docs/QUICK_START.md](docs/QUICK_START.md).
@@ -141,9 +153,9 @@ All commands support `--help` for full documentation.
 | `jira-as jsm customer list` | List service desk customers |
 | `jira-as jsm customer add` | Add customer to service desk |
 | `jira-as jsm customer remove` | Remove customer from service desk |
-| `jira-as jsm participant add` | Add participant to request |
-| `jira-as jsm participant remove` | Remove participant from request |
-| `jira-as jsm participant list` | List request participants |
+| `jira-as jsm request add-participant` | Add participant to request |
+| `jira-as jsm request remove-participant` | Remove participant from request |
+| `jira-as jsm request participants` | List request participants |
 
 ### Organization Management
 | Command | Description |
@@ -186,7 +198,7 @@ All commands support `--help` for full documentation.
 | `jira-as jsm asset get` | Get asset details |
 | `jira-as jsm asset update` | Update asset attributes |
 | `jira-as jsm asset link` | Link asset to request |
-| `jira-as jsm asset affected` | Find assets affected by request |
+| `jira-as jsm asset find-affected` | Find assets affected by request |
 
 ## Common Options
 

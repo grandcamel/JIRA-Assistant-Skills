@@ -55,7 +55,7 @@ Comprehensive administration tools for JIRA Cloud covering 8 major subsystems.
 | **Project Management** | Create, configure, archive, restore projects and categories |
 | **Automation Rules** | Discover, manage, invoke automation rules and templates |
 | **Permission Schemes** | Control who can do what across projects |
-| **Permission Diagnostics** | Check permissions, diagnose 403 errors, manage project roles |
+| **Permission Diagnostics** | Check permissions, diagnose 403 errors |
 | **User & Group Management** | Find users, create groups, manage membership |
 | **Notification Schemes** | Configure who receives what notifications |
 | **Screen Management** | Control which fields appear in issue workflows |
@@ -99,8 +99,6 @@ Reach for this skill when you need to:
 **Diagnosing permission issues:**
 - Check which permissions you have on a project
 - Identify why a 403 Forbidden error occurred
-- List project role memberships
-- Add or remove users from project roles
 
 **Automating work:**
 - List, enable, disable, or invoke automation rules
@@ -159,10 +157,13 @@ jira-as admin category assign PROJ            # Assign category to project
 ```bash
 jira-as admin automation list --project PROJ  # List automation rules
 jira-as admin automation get RULE_ID          # Get rule details
+jira-as admin automation search --query "term"  # Search automation rules
 jira-as admin automation enable RULE_ID       # Enable a rule
 jira-as admin automation disable RULE_ID      # Disable a rule
+jira-as admin automation toggle RULE_ID       # Toggle rule enabled state
 jira-as admin automation invoke RULE_ID       # Invoke manual rule
 jira-as admin automation-template list        # List rule templates
+jira-as admin automation-template get TEMPLATE_ID  # Get template details
 ```
 
 ### Permission Schemes
@@ -177,17 +178,7 @@ jira-as admin permission list                 # List available permissions
 ### Permission Diagnostics
 ```bash
 # Check your permissions on a project
-jira-as admin permissions check --project DEMO
-jira-as admin permissions check --project DEMO --permission DELETE_ISSUES
-jira-as admin permissions check --project DEMO --only-missing
-
-# List project role memberships
-jira-as admin project roles --project DEMO
-jira-as admin project roles --project DEMO --role Administrators
-
-# Manage project role membership
-jira-as admin project role add --project DEMO --role Administrators --user user@example.com
-jira-as admin project role remove --project DEMO --role Administrators --user user@example.com
+jira-as admin permission check --project DEMO
 ```
 
 ### User & Group Management
@@ -220,6 +211,7 @@ jira-as admin screen fields ID                # Get fields on screen
 jira-as admin screen add-field SCREEN_ID FIELD_ID  # Add field to screen
 jira-as admin screen remove-field SCREEN_ID FIELD_ID  # Remove field from screen
 jira-as admin screen-scheme list              # List screen schemes
+jira-as admin screen-scheme get SCHEME_ID     # Get screen scheme details
 ```
 
 ### Issue Types
@@ -245,6 +237,7 @@ jira-as admin issue-type-scheme project       # Get project's scheme
 jira-as admin workflow list                   # List workflows
 jira-as admin workflow get --name "Name"      # Get workflow details
 jira-as admin workflow search --query "term"  # Search workflows
+jira-as admin workflow for-issue ISSUE_KEY    # Get workflow for specific issue
 jira-as admin workflow-scheme list            # List workflow schemes
 jira-as admin workflow-scheme get --id ID     # Get scheme details
 jira-as admin workflow-scheme assign          # Assign to project
@@ -331,19 +324,7 @@ jira-as admin workflow get --name "Workflow" --output json
 ### Diagnose 403 Forbidden Errors
 ```bash
 # Check what permissions you have on a project
-jira-as admin permissions check --project DEMO
-
-# Show only permissions you're missing
-jira-as admin permissions check --project DEMO --only-missing
-
-# Check specific permission (e.g., DELETE_ISSUES)
-jira-as admin permissions check --project DEMO --permission DELETE_ISSUES
-
-# See who has access via project roles
-jira-as admin project roles --project DEMO
-
-# Add yourself to Administrators role if needed
-jira-as admin project role add --project DEMO --role Administrators --user your@email.com
+jira-as admin permission check --project DEMO
 ```
 
 ### Verify Permissions
