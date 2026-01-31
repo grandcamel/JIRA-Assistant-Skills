@@ -159,7 +159,7 @@ jira-as bulk transition --jql "project=PROJ" --to Done
 
 jira-as bulk assign --jql "project=PROJ" --assignee self --dry-run
 jira-as bulk set-priority --jql "type=Bug" --priority High --dry-run
-jira-as bulk clone --jql "sprint='Sprint 42'" --include-subtasks --dry-run
+jira-as bulk clone --jql "sprint=\"Sprint 42\"" --include-subtasks --dry-run
 jira-as bulk delete --jql "project=CLEANUP" --dry-run  # DANGER!
 ```
 

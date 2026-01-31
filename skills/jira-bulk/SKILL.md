@@ -48,10 +48,10 @@ Use this skill when you need to:
 
 ```bash
 # Preview before making changes
-jira-as bulk transition --jql "project=PROJ AND status='In Progress'" --to "Done" --dry-run
+jira-as bulk transition --jql "project=PROJ AND status=\"In Progress\"" --to Done --dry-run
 
 # Execute the transition
-jira-as bulk transition --jql "project=PROJ AND status='In Progress'" --to "Done"
+jira-as bulk transition --jql "project=PROJ AND status=\"In Progress\"" --to Done
 ```
 
 For more patterns, see [Quick Start Guide](docs/QUICK_START.md).
@@ -94,13 +94,13 @@ These options are only available for `jira-as bulk transition`:
 
 ```bash
 # By issue keys
-jira-as bulk transition --issues PROJ-1,PROJ-2,PROJ-3 --to "Done"
+jira-as bulk transition --issues PROJ-1,PROJ-2,PROJ-3 --to Done
 
 # By JQL query
-jira-as bulk transition --jql "project=PROJ AND status='In Progress'" --to "Done"
+jira-as bulk transition --jql "project=PROJ AND status=\"In Progress\"" --to Done
 
 # With resolution
-jira-as bulk transition --jql "type=Bug AND status='Verified'" --to "Closed" --resolution "Fixed"
+jira-as bulk transition --jql "type=Bug AND status=Verified" --to Closed --resolution Fixed
 ```
 
 ### Bulk Assign
@@ -129,10 +129,10 @@ jira-as bulk set-priority --jql "type=Bug" --priority High --dry-run -o json
 
 ```bash
 # ALWAYS preview first with dry-run (cloning creates many issues)
-jira-as bulk clone --jql "sprint='Sprint 42'" --include-subtasks --dry-run
+jira-as bulk clone --jql "sprint=\"Sprint 42\"" --include-subtasks --dry-run
 
 # After reviewing the preview, execute without --dry-run
-jira-as bulk clone --jql "sprint='Sprint 42'" --include-subtasks --include-links
+jira-as bulk clone --jql "sprint=\"Sprint 42\"" --include-subtasks --include-links
 
 # Clone to different project
 jira-as bulk clone --issues PROJ-1,PROJ-2 --target-project NEWPROJ --prefix "[Clone]"
