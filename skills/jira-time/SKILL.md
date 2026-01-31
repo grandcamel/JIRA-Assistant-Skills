@@ -247,6 +247,9 @@ jira-as time report -p PROJ --period this-week -g day
 
 # Group by user for team summary
 jira-as time report -p PROJ --period this-month -g user -f json
+
+# JSON output for scripting (pipe to jq for processing)
+jira-as time report -p PROJ --period this-week -f json | jq ".worklogs[] | {user: .author, hours: .timeSpentSeconds/3600}"
 ```
 
 ### Export timesheets

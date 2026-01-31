@@ -122,6 +122,7 @@ jira-as agile sprint move-issues --sprint 456 --jql "project = PROJ AND sprint I
 jira-as agile sprint move-issues --backlog --issues PROJ-101,PROJ-102  # Move to backlog
 jira-as agile sprint manage --sprint 456 --start
 jira-as agile sprint manage --sprint 456 --close --move-incomplete-to 457
+jira-as agile sprint manage --sprint 456 --name "Sprint 42 - Revised" --goal "Updated goal"
 ```
 
 ### Backlog Management

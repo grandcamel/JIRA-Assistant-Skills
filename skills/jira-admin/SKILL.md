@@ -156,6 +156,8 @@ jira-as admin category assign PROJ            # Assign category to project
 ### Automation Rules
 ```bash
 jira-as admin automation list --project PROJ  # List automation rules
+jira-as admin automation list --state enabled # Filter by state (enabled, disabled)
+jira-as admin automation list --project PROJ --state enabled  # Combined filters
 jira-as admin automation get RULE_ID          # Get rule details
 jira-as admin automation search --query "term"  # Search automation rules
 jira-as admin automation enable RULE_ID       # Enable a rule
