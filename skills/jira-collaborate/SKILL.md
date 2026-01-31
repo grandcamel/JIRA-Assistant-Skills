@@ -78,8 +78,9 @@ Use this skill when you need to:
 ### Attachments
 | Command | Description |
 |---------|-------------|
+| `jira-as collaborate attachment list` | List attachments on issue |
 | `jira-as collaborate attachment upload` | Upload file to issue |
-| `jira-as collaborate attachment download` | Download or list attachments |
+| `jira-as collaborate attachment download` | Download attachments |
 
 ### Notifications & Activity
 | Command | Description |
@@ -107,21 +108,45 @@ jira-as collaborate comment add PROJ-123 --body "**Bold** text" --format markdow
 # Internal comment (role-restricted)
 jira-as collaborate comment add PROJ-123 --body "Internal note" --visibility-role Administrators
 
+# Internal comment (group-restricted)
+jira-as collaborate comment add PROJ-123 --body "Team only" --visibility-group jira-developers
+
 # List comments
 jira-as collaborate comment list PROJ-123
-jira-as collaborate comment list PROJ-123 --limit 10 --order asc
+jira-as collaborate comment list PROJ-123 -l 10 --order asc
+
+# Get specific comment by ID
+jira-as collaborate comment list PROJ-123 --id 10001
+
+# List comments with pagination
+jira-as collaborate comment list PROJ-123 -l 10 --offset 20
 
 # Update a comment (requires comment ID)
 jira-as collaborate comment update PROJ-123 --id 10001 --body "Updated text"
 
-# Delete a comment
+# Delete a comment (preview first)
+jira-as collaborate comment delete PROJ-123 --id 10001 --dry-run
+
+# Delete a comment (confirmed)
 jira-as collaborate comment delete PROJ-123 --id 10001 --yes
 
 # Upload attachment
 jira-as collaborate attachment upload PROJ-123 --file screenshot.png
 
-# Download attachment (use attachment ID from issue details)
-jira-as collaborate attachment download PROJ-123 12345 --output ./downloads/
+# Upload attachment with custom name
+jira-as collaborate attachment upload PROJ-123 --file screenshot.png --name evidence-2024.png
+
+# List attachments on issue
+jira-as collaborate attachment list PROJ-123
+
+# Download attachment by ID (use attachment ID from issue details)
+jira-as collaborate attachment download PROJ-123 --id 12345 --output-dir ./downloads/
+
+# Download attachment by filename
+jira-as collaborate attachment download PROJ-123 --name error.log --output-dir ./downloads/
+
+# Download all attachments from issue
+jira-as collaborate attachment download PROJ-123 --all --output-dir ./backups/
 
 # List watchers
 jira-as collaborate watchers PROJ-123 --list
@@ -134,6 +159,12 @@ jira-as collaborate watchers PROJ-123 --remove user@example.com
 
 # Send notification to watchers
 jira-as collaborate notify PROJ-123 --watchers --subject "Update" --body "Issue resolved"
+
+# Send notification to voters
+jira-as collaborate notify PROJ-123 --voters --subject "Vote counted"
+
+# Send notification to a group
+jira-as collaborate notify PROJ-123 --group developers --subject "Team update"
 
 # Send notification to specific users (use account IDs)
 jira-as collaborate notify PROJ-123 --user 5b10a2844c20165700ede21g --subject "Review needed"
@@ -150,6 +181,9 @@ jira-as collaborate activity PROJ-123
 # View activity with filters
 jira-as collaborate activity PROJ-123 --field status --field assignee --output table
 jira-as collaborate activity PROJ-123 --field-type custom --limit 10
+
+# View activity with pagination
+jira-as collaborate activity PROJ-123 --limit 10 --offset 20
 ```
 
 ## Common Options

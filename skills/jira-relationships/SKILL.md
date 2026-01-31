@@ -144,8 +144,8 @@ jira-as relationships unlink PROJ-1 PROJ-2 --dry-run
 jira-as relationships unlink PROJ-1 --type blocks --all
 
 # Clone an issue with its relationships
-jira-as relationships clone PROJ-123 --clone-subtasks --clone-links
-jira-as relationships clone PROJ-123 --to-project OTHER
+jira-as relationships clone PROJ-123 --clone-subtasks -l  # -l is short for --clone-links
+jira-as relationships clone PROJ-123 -p OTHER  # -p is short for --to-project
 jira-as relationships clone PROJ-123 --summary "Custom summary"
 jira-as relationships clone PROJ-123 --no-link  # Skip creating "clones" link
 ```
@@ -156,20 +156,26 @@ jira-as relationships clone PROJ-123 --no-link  # Skip creating "clones" link
 # Find blocker chains for sprint planning
 jira-as relationships get-blockers PROJ-123 --recursive
 jira-as relationships get-blockers PROJ-123 --recursive --include-done
+jira-as relationships get-blockers PROJ-123 -r --depth 3  # Limit recursion depth
+jira-as relationships get-blockers PROJ-123 -d inward  # -d/--direction: inward or outward
 
 # Analyze dependencies (with link type filtering)
 jira-as relationships get-dependencies PROJ-123
-jira-as relationships get-dependencies PROJ-123 --type blocks,relates
+jira-as relationships get-dependencies PROJ-123 -t blocks,relates  # -t/--type for filtering
 
 # Link statistics - multiple modes
-jira-as relationships stats PROJ-123                       # Single issue stats
-jira-as relationships stats --project PROJ                 # Project-wide stats
+# KEY_OR_PROJECT: optional positional argument for issue key or project key
+# -p/--project: alternative option to specify project for project-wide analysis
+jira-as relationships stats PROJ-123                       # Single issue stats (positional arg)
+jira-as relationships stats PROJ                           # Project-wide stats (positional arg)
+jira-as relationships stats -p PROJ                        # Project-wide stats (-p/--project option)
 jira-as relationships stats --jql "type = Epic"            # JQL-filtered stats
-jira-as relationships stats --project PROJ --top 20        # Show top 20 connected
+jira-as relationships stats -p PROJ -t 20                  # Show top 20 connected (-t/--top)
 
 # Bulk link issues from JQL query
 jira-as relationships bulk-link --jql "project=PROJ AND fixVersion=1.0" --relates-to PROJ-500 --dry-run
 jira-as relationships bulk-link --issues PROJ-1,PROJ-2,PROJ-3 --blocks PROJ-100
+jira-as relationships bulk-link --jql "sprint in openSprints()" --relates-to PROJ-500 --skip-existing  # Skip already linked
 ```
 
 ### Visualization - Dependency Graphs

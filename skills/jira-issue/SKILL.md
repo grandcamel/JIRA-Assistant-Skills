@@ -76,6 +76,19 @@ Pre-configured templates for common issue types:
 - `task_template.json` - Task template
 - `story_template.json` - User story template
 
+Use the `--template` option to apply a template during issue creation:
+
+```bash
+# Quick bug report using template
+jira-as issue create --project PROJ --template bug --summary "Login page error"
+
+# Quick task using template
+jira-as issue create --project PROJ --template task --summary "Update documentation"
+
+# Quick story using template
+jira-as issue create --project PROJ --template story --summary "User can reset password"
+```
+
 ## Common Patterns
 
 ### Create Issues
@@ -84,13 +97,25 @@ Pre-configured templates for common issue types:
 # Basic issue creation
 jira-as issue create --project PROJ --type Bug --summary "Login fails on mobile"
 
-# With agile fields (--points is an alias for --story-points)
+# With description
+jira-as issue create --project PROJ --type Bug --summary "Login fails on mobile" \
+  --description "Users report 500 error when logging in from mobile browsers. See attached screenshot."
+
+# With assignee (use 'self' for current user)
+jira-as issue create --project PROJ --type Task --summary "Review PR #42" \
+  --assignee self
+
+# With agile fields
 jira-as issue create --project PROJ --type Story --summary "User login" \
   --epic PROJ-100 --story-points 5
 
 # With relationships and time estimate
 jira-as issue create --project PROJ --type Task --summary "Setup database" \
   --blocks PROJ-123 --estimate "2d"
+
+# With 'relates to' links
+jira-as issue create --project PROJ --type Task --summary "Related feature" \
+  --relates-to PROJ-456,PROJ-789
 
 # With labels and components
 jira-as issue create --project PROJ --type Task --summary "Setup CI pipeline" \
@@ -131,6 +156,9 @@ jira-as issue get PROJ-123 --output json
 ```bash
 # Update priority and assignee
 jira-as issue update PROJ-123 --priority Critical --assignee self
+
+# Update description
+jira-as issue update PROJ-123 --description "Updated description with **markdown** support"
 
 # Update without notifications
 jira-as issue update PROJ-123 --summary "Updated title" --no-notify
