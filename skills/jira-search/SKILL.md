@@ -124,11 +124,14 @@ jira-as search query "project = PROJ" --max-results 50
 ### JQL Building
 
 ```bash
-# Validate syntax
+# Validate syntax (--show-structure shows parse tree, --output for format)
 jira-as search validate "project = PROJ AND status = Open"
+jira-as search validate "project = PROJ" --show-structure
+jira-as search validate "project = PROJ" --output json
 
-# Build JQL from clauses
+# Build JQL from clauses (--operator selects AND or OR between clauses)
 jira-as search build --clause "project = PROJ" --clause "status = Open" --validate
+jira-as search build --clause "status = Open" --clause "status = Closed" --operator OR
 jira-as search build --clause "assignee = currentUser()" --order-by created --desc
 jira-as search build --template sprint-backlog  # Use a predefined template
 jira-as search build --list-templates           # List available templates
@@ -146,8 +149,9 @@ jira-as search fields --custom-only             # Only custom fields
 jira-as search fields --system-only             # Only system fields
 jira-as search fields --filter priority         # Filter by name
 
-# List available JQL functions
+# List available JQL functions (-t is short for --type)
 jira-as search functions
+jira-as search functions -t list                # Only list-returning functions
 jira-as search functions --list-only            # Only list-returning functions
 jira-as search functions --with-examples        # Include usage examples
 ```
@@ -169,6 +173,7 @@ jira-as search filter list --project PROJ        # By project scope
 # Run filter (use --id or --name option)
 jira-as search filter run --id 10042
 jira-as search filter run --name "Sprint Issues"
+jira-as search filter run --id 10042 --max-results 50  # Limit results
 
 # Update filter
 jira-as search filter update 10042 --name "New Name" --jql "updated JQL"

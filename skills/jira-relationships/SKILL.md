@@ -132,7 +132,9 @@ jira-as relationships link-types --output json
 
 # Create links using semantic flags
 jira-as relationships link PROJ-1 --blocks PROJ-2
+jira-as relationships link PROJ-1 --is-blocked-by PROJ-2   # Inverse direction
 jira-as relationships link PROJ-1 --duplicates PROJ-2
+jira-as relationships link PROJ-1 --clones PROJ-2          # Mark as clone
 jira-as relationships link PROJ-1 --relates-to PROJ-2
 jira-as relationships link PROJ-1 --type "Blocks" --to PROJ-2
 
@@ -156,7 +158,8 @@ jira-as relationships clone PROJ-123 --no-link  # Skip creating "clones" link
 # Find blocker chains for sprint planning
 jira-as relationships get-blockers PROJ-123 --recursive
 jira-as relationships get-blockers PROJ-123 --recursive --include-done
-jira-as relationships get-blockers PROJ-123 -r --depth 3  # Limit recursion depth
+jira-as relationships get-blockers PROJ-123 -r --depth 3  # Limit recursion depth (0 = unlimited)
+jira-as relationships get-blockers PROJ-123 -r --depth 0  # Unlimited depth
 jira-as relationships get-blockers PROJ-123 -d inward  # -d/--direction: inward or outward
 
 # Analyze dependencies (with link type filtering)
@@ -171,10 +174,12 @@ jira-as relationships stats PROJ                           # Project-wide stats 
 jira-as relationships stats -p PROJ                        # Project-wide stats (-p/--project option)
 jira-as relationships stats --jql "type = Epic"            # JQL-filtered stats
 jira-as relationships stats -p PROJ -t 20                  # Show top 20 connected (-t/--top)
+jira-as relationships stats -p PROJ --max-results 100      # Limit issues analyzed
 
-# Bulk link issues from JQL query
+# Bulk link issues from JQL query (--output json for JSON output)
 jira-as relationships bulk-link --jql "project=PROJ AND fixVersion=1.0" --relates-to PROJ-500 --dry-run
 jira-as relationships bulk-link --issues PROJ-1,PROJ-2,PROJ-3 --blocks PROJ-100
+jira-as relationships bulk-link --issues PROJ-1,PROJ-2 --blocks PROJ-100 --output json
 jira-as relationships bulk-link --jql "sprint in openSprints()" --relates-to PROJ-500 --skip-existing  # Skip already linked
 ```
 
