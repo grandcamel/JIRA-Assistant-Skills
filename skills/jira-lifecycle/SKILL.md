@@ -63,6 +63,7 @@ jira-as lifecycle transitions PROJ-123                    # List available trans
 jira-as lifecycle transition PROJ-123 --to "In Progress"  # Transition by status name
 jira-as lifecycle transition PROJ-123 --id 31             # Transition by ID
 jira-as lifecycle transition PROJ-123 --to Done --resolution Fixed  # With resolution
+jira-as lifecycle transition PROJ-123 --to "In Progress" --comment "Starting work"  # With comment
 jira-as lifecycle transition PROJ-123 --to "In Progress" --sprint 42  # Move to sprint after transition
 jira-as lifecycle transition PROJ-123 --to Done --dry-run             # Preview without executing
 jira-as lifecycle transition PROJ-123 --to Done --fields '{"customfield_10001": "value"}'  # With custom fields
@@ -77,8 +78,9 @@ jira-as lifecycle assign PROJ-123 --unassign              # Remove assignee
 
 ### Resolution
 ```bash
-jira-as lifecycle resolve PROJ-123                         # Resolve with default resolution (Done)
+jira-as lifecycle resolve PROJ-123                         # Resolve issue (may require --resolution)
 jira-as lifecycle resolve PROJ-123 --resolution Fixed      # Resolve with specific resolution
+jira-as lifecycle resolve PROJ-123 --resolution Fixed --comment "Fixed in v1.2.0"  # With comment
 jira-as lifecycle reopen PROJ-123                          # Reopen issue
 jira-as lifecycle reopen PROJ-123 --comment "Reopening for additional work"  # Reopen with comment
 ```
@@ -87,11 +89,14 @@ jira-as lifecycle reopen PROJ-123 --comment "Reopening for additional work"  # R
 ```bash
 jira-as lifecycle version list PROJ                       # List versions
 jira-as lifecycle version list PROJ --unreleased          # Show only unreleased versions
-jira-as lifecycle version list PROJ --archived            # Filter for archived versions only
+jira-as lifecycle version list PROJ --archived            # Include archived versions
 jira-as lifecycle version create PROJ --name "v2.0.0"     # Create version
+jira-as lifecycle version create PROJ --name "v2.0.0" --description "Major release"  # With description
 jira-as lifecycle version create PROJ --name "v2.0.0" --start-date 2025-01-01 --release-date 2025-03-01
 jira-as lifecycle version create PROJ --name "v2.0.0" --released --dry-run  # Preview creation
+jira-as lifecycle version create PROJ --name "v2.0.0" --archived  # Create as archived
 jira-as lifecycle version release PROJ "v1.0.0"           # Release a version
+jira-as lifecycle version release PROJ "v1.0.0" --move-unfixed "v1.1.0"  # Move unfixed issues to another version
 jira-as lifecycle version archive PROJ "v0.9.0"           # Archive a version
 ```
 
@@ -102,9 +107,11 @@ jira-as lifecycle version archive PROJ "v0.9.0"           # Archive a version
 ```bash
 jira-as lifecycle component list PROJ                     # List components (shows IDs)
 jira-as lifecycle component create PROJ --name "API"      # Create component
+jira-as lifecycle component create PROJ --name "API" --description "REST API layer"  # With description
 jira-as lifecycle component create PROJ --name "Backend" --lead 5b10a2844c20165700ede21g
 jira-as lifecycle component create PROJ --name "Frontend" --assignee-type COMPONENT_LEAD
 jira-as lifecycle component update --id 10000 --name "New Name"           # Update by ID
+jira-as lifecycle component update --id 10000 --description "Updated description"  # Update description
 jira-as lifecycle component update --id 10000 --lead 5b10a2844c20165700ede22h
 jira-as lifecycle component update --id 10000 --assignee-type PROJECT_LEAD --dry-run
 jira-as lifecycle component delete --id 10000             # Delete with confirmation prompt
@@ -121,7 +128,9 @@ All commands support these options:
 |--------|-------------|
 | `--help` | Show help message and exit |
 
-Query commands (`transitions`, `version list`, `component list`) also support `--output` for `text`, `json`, or `table` output.
+Query commands support `--output`:
+- `transitions`: supports `text` or `json`
+- `version list`, `component list`: supports `table` or `json`
 
 ### Dry Run Support
 

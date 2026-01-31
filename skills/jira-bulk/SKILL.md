@@ -42,7 +42,7 @@ Use this skill when you need to:
 **Scale guidance:**
 - 5-10 issues: Run directly, no special options needed
 - 50-100 issues: Use `--dry-run` first, then execute
-- 500+ issues (transitions only): Use `--batch-size` and `--enable-checkpoint` for reliability
+- 500+ issues: Use `--dry-run`, then execute in smaller batches if needed
 
 ## Quick Start
 
@@ -74,9 +74,10 @@ All commands support these options:
 
 | Option | Purpose | When to Use |
 |--------|---------|-------------|
-| `--dry-run` | Preview changes | Always use for >10 issues |
-| `--force` / `-f` | Skip confirmation | Scripted automation |
-| `--max-issues N` | Limit scope (default: 100) | Testing, large operations |
+| `--dry-run` / `-n` | Preview changes | Always use for >10 issues |
+| `--yes` / `-y` | Skip confirmation | Scripted automation |
+| `--max-issues N` / `-m` | Limit scope (default: 100) | Testing, large operations |
+| `--output` / `-o` | Output format (text/json) | JSON for scripting |
 
 ### Transition-Only Options
 
@@ -84,10 +85,8 @@ These options are only available for `jira-as bulk transition`:
 
 | Option | Purpose | When to Use |
 |--------|---------|-------------|
-| `--batch-size N` | Control batching | 500+ issues or rate limits |
-| `--enable-checkpoint` | Allow resume | 500+ issues, unreliable network |
-| `--resume ID` | Resume from checkpoint | After interrupted operation |
-| `--list-checkpoints` | List pending checkpoints | Before resuming |
+| `--comment` / `-c` | Add comment with transition | Documenting bulk changes |
+| `--resolution` / `-r` | Set resolution (e.g., Fixed) | Closing issues |
 
 ## Examples
 
@@ -126,7 +125,10 @@ jira-as bulk set-priority --jql "type=Bug AND labels=critical" --priority Highes
 ### Bulk Clone
 
 ```bash
-# Clone with subtasks and links
+# ALWAYS preview first with dry-run (cloning creates many issues)
+jira-as bulk clone --jql "sprint='Sprint 42'" --include-subtasks --dry-run
+
+# After reviewing the preview, execute without --dry-run
 jira-as bulk clone --jql "sprint='Sprint 42'" --include-subtasks --include-links
 
 # Clone to different project
@@ -145,7 +147,7 @@ jira-as bulk delete --issues DEMO-1,DEMO-2,DEMO-3 --dry-run
 # Execute deletion (after confirming dry-run output)
 jira-as bulk delete --jql "project=CLEANUP" --yes
 
-# Delete without subtasks
+# Keep subtasks when deleting parent issues (subtasks deleted by default)
 jira-as bulk delete --jql "project=CLEANUP" --no-subtasks --dry-run
 ```
 
@@ -155,22 +157,16 @@ jira-as bulk delete --jql "project=CLEANUP" --no-subtasks --dry-run
 - Default `--max-issues 100` prevents accidental mass deletion
 - Per-issue error tracking with summary of failures
 
-## Parameter Tuning Guide (Transitions Only)
+## Scale Recommendations
 
-The batching and checkpointing features are only available for `jira-as bulk transition`.
-Other commands (assign, set-priority, clone) process issues sequentially with built-in rate limiting.
-
-**How many issues?**
-
-| Issue Count | Recommended Setup |
-|-------------|-------------------|
+| Issue Count | Recommended Approach |
+|-------------|----------------------|
 | <50 | Defaults are fine |
 | 50-500 | `--dry-run` first, then execute |
-| 500-1,000 | `--batch-size 200 --enable-checkpoint` |
-| 1,000+ | `--batch-size 200 --enable-checkpoint` |
+| 500+ | `--dry-run`, then execute in smaller batches if needed |
 
 **Getting rate limit (429) errors?**
-- Reduce batch size: `--batch-size 50`
+- Use `--max-issues` to process in smaller batches
 - Consider running during off-peak hours
 
 ## Exit Codes
@@ -187,9 +183,9 @@ Other commands (assign, set-priority, clone) process issues sequentially with bu
 |-------|----------|
 | `Transition not available` | Check issue status with `jira-as issue get ISSUE-KEY --show-transitions` |
 | `Permission denied` | Verify JIRA project permissions (DELETE_ISSUES required for bulk delete) |
-| `Rate limit (429)` | Reduce `--batch-size` or run during off-peak hours (transitions only) |
+| `Rate limit (429)` | Use `--max-issues` to process in smaller batches or run during off-peak hours |
 | `Invalid JQL` | Test JQL in JIRA search first |
-| `Cannot delete issue with subtasks` | Use `--no-subtasks` or ensure subtask deletion is enabled (default) |
+| `Cannot delete issue with subtasks` | Subtasks are deleted by default; use `--no-subtasks` to keep them |
 
 For detailed error recovery, see [Error Recovery Playbook](docs/ERROR_RECOVERY.md).
 
@@ -199,7 +195,6 @@ For detailed error recovery, see [Error Recovery Playbook](docs/ERROR_RECOVERY.m
 |-------|-------------|
 | [Quick Start](docs/QUICK_START.md) | Get started in 5 minutes |
 | [Operations Guide](docs/OPERATIONS_GUIDE.md) | Choose the right command |
-| [Checkpoint Guide](docs/CHECKPOINT_GUIDE.md) | Resume interrupted operations |
 | [Error Recovery](docs/ERROR_RECOVERY.md) | Handle failures |
 | [Safety Checklist](docs/SAFETY_CHECKLIST.md) | Pre-flight verification |
 | [Best Practices](docs/BEST_PRACTICES.md) | Comprehensive guidance |

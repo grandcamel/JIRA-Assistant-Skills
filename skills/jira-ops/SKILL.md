@@ -89,8 +89,14 @@ jira-as ops cache-warm --projects
 # Cache field definitions
 jira-as ops cache-warm --fields
 
+# Cache assignable users (requires project context)
+jira-as ops cache-warm --users
+
 # Cache all available metadata with verbose output
 jira-as ops cache-warm --all --verbose
+
+# Output as JSON
+jira-as ops cache-warm --all --json
 ```
 
 ### Clear cache
@@ -109,21 +115,24 @@ jira-as ops cache-clear --dry-run
 
 # Clear keys matching pattern
 jira-as ops cache-clear --pattern "PROJ-*" --category issue --force
+
+# Clear specific cache key (requires --category)
+jira-as ops cache-clear --key "PROJ-123" --category issue --force
+
+# Output as JSON
+jira-as ops cache-clear --force --json
 ```
 
 ### Discover project context
 ```bash
-# Discover and save to skill directory (default)
+# Discover and output project context (text format)
 jira-as ops discover-project PROJ
 
-# Save to settings.local.json for personal use
-jira-as ops discover-project PROJ --personal
+# Output as JSON
+jira-as ops discover-project PROJ --output json
 
-# Save to both locations
-jira-as ops discover-project PROJ --both
-
-# Output JSON without saving
-jira-as ops discover-project PROJ --output json --no-save
+# Verbose output with detailed analysis
+jira-as ops discover-project PROJ --verbose
 
 # Custom sample size and period
 jira-as ops discover-project PROJ --sample-size 200 --days 60
