@@ -117,8 +117,22 @@ All commands support these common options:
 
 | Option | Description |
 |--------|-------------|
-| `--output FORMAT` | Output format: text, json (some commands also support mermaid, dot, plantuml, d2) |
+| `-o/--output FORMAT` | Output format (see table below) |
 | `--help` | Show help message and exit |
+
+### Output Formats by Command
+
+| Command | Supported Formats |
+|---------|-------------------|
+| `link-types` | text, json |
+| `link` | text, json |
+| `get-links` | text, json |
+| `unlink` | text, json |
+| `get-blockers` | text, json |
+| `get-dependencies` | text, json, mermaid, dot, plantuml, d2 |
+| `stats` | text, json |
+| `bulk-link` | text, json |
+| `clone` | text, json |
 
 ## Examples
 

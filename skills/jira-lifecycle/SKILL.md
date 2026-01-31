@@ -131,9 +131,19 @@ All commands support these options:
 |--------|-------------|
 | `--help` | Show help message and exit |
 
-Query commands support `--output`:
-- `transitions`: supports `text` or `json`
-- `version list`, `component list`: supports `table` or `json`
+### Output Formats by Command
+
+| Command | Supported Formats |
+|---------|-------------------|
+| `transitions` | text, json |
+| `transition` | text, json |
+| `assign` | text, json |
+| `resolve` | text, json |
+| `reopen` | text, json |
+| `version list` | table, json |
+| `version create/release/archive` | text, json |
+| `component list` | table, json |
+| `component create/update/delete` | text, json |
 
 ### Dry Run Support
 

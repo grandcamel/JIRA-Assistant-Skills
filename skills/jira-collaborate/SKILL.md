@@ -196,6 +196,22 @@ All commands support:
 |--------|-------------|
 | `--help`, `-h` | Show detailed help |
 
+### Output Formats by Command
+
+| Command | Supported Formats |
+|---------|-------------------|
+| `comment add` | text, json |
+| `comment list` | text, json, table |
+| `comment update` | text, json |
+| `comment delete` | text, json |
+| `attachment list` | text, json, table |
+| `attachment upload` | text, json |
+| `attachment download` | text (status only) |
+| `watchers` | text, json, table |
+| `notify` | text, json |
+| `activity` | text, json, table |
+| `update-fields` | text, json |
+
 For command-specific options, use `--help` on any command:
 ```bash
 jira-as collaborate comment add --help
