@@ -54,7 +54,7 @@ jira-as search query "project = PROJ AND type = Bug AND status = Open"
 jira-as search export "project = PROJ" --output report.csv
 
 # Save a filter for reuse
-jira-as search filter create --name "My Bugs" --jql "type = Bug AND assignee = currentUser()" --favourite
+jira-as search filter create -n "My Bugs" -j "type = Bug AND assignee = currentUser()" -f
 ```
 
 For detailed setup, see [docs/QUICK_START.md](docs/QUICK_START.md).
@@ -155,9 +155,9 @@ jira-as search functions --with-examples        # Include usage examples
 ### Saved Filters
 
 ```bash
-# Create filter (use --name and --jql options)
-jira-as search filter create --name "Sprint Issues" --jql "sprint IN openSprints()" --favourite
-jira-as search filter create --name "Team Filter" --jql "project = PROJ" --description "Team issues" --share-project PROJ
+# Create filter (use -n and -j options, or long forms --name and --jql)
+jira-as search filter create -n "Sprint Issues" -j "sprint IN openSprints()" -f
+jira-as search filter create -n "Team Filter" -j "project = PROJ" -d "Team issues" --share-project PROJ
 
 # List filters
 jira-as search filter list --favourites          # Your favourite filters

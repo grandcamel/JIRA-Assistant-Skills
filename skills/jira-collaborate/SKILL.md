@@ -166,8 +166,8 @@ jira-as collaborate notify PROJ-123 --voters --subject "Vote counted"
 # Send notification to a group
 jira-as collaborate notify PROJ-123 --group developers --subject "Team update"
 
-# Send notification to specific users (use account IDs)
-jira-as collaborate notify PROJ-123 --user 5b10a2844c20165700ede21g --subject "Review needed"
+# Send notification to specific users (use account IDs or emails)
+jira-as collaborate notify PROJ-123 --user user@example.com --subject "Review needed"
 
 # Send notification to assignee and reporter
 jira-as collaborate notify PROJ-123 --assignee --reporter --subject "Please review"

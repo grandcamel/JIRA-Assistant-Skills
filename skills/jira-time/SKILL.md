@@ -91,8 +91,7 @@ All commands support these common options:
 | `-s/--started DATE` | When work was started (default: now) |
 | `--adjust-estimate MODE` | How to adjust remaining estimate: auto, leave, new, manual |
 | `--new-estimate TIME` | New remaining estimate (for adjust=new or adjust=manual) |
-| `--reduce-by TIME` | Amount to reduce estimate (for adjust=manual with log) |
-| `--increase-by TIME` | Amount to increase estimate (for adjust=manual with delete) |
+| `--increase-by TIME` | Amount to increase estimate (for adjust=manual with delete-worklog) |
 | `--visibility-type TYPE` | Worklog visibility: role or group |
 | `--visibility-value TEXT` | Role name or group name for visibility |
 | `-w/--worklog-id ID` | Worklog ID (for update/delete operations) |
@@ -150,9 +149,6 @@ jira-as time log PROJ-123 -t 2h -s yesterday
 
 # Log time without adjusting estimate
 jira-as time log PROJ-123 -t 2h --adjust-estimate leave
-
-# Log time with manual estimate reduction
-jira-as time log PROJ-123 -t 2h --adjust-estimate manual --reduce-by 1h
 
 # Log time and set new remaining estimate
 jira-as time log PROJ-123 -t 2h --adjust-estimate new --new-estimate 4h
