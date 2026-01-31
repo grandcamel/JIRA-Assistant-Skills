@@ -62,7 +62,7 @@ This hub routes requests to specialized JIRA skills. It does not execute JIRA op
    - "branch name", "commit", "PR" → jira-dev
    - "custom field", "field ID" → jira-fields
    - "cache", "warm cache", "project discovery", "diagnostics", "performance", "request batching" → jira-ops
-   - "permissions", "project settings", "automation", "automation rule", "users", "groups", "notifications", "screens", "issue types", "workflows" → jira-admin
+   - "permissions", "project settings", "automation", "automation rule", "users", "groups", "notifications", "screens", "issue types", "workflows", "notification scheme", "permission scheme" → jira-admin
 
 ---
 
