@@ -169,6 +169,7 @@ jira-as search filter list --my                  # Your own filters
 jira-as search filter list --search "Sprint"     # Search by name
 jira-as search filter list --owner "john@co.com" # By owner
 jira-as search filter list --project PROJ        # By project scope
+jira-as search filter list --id 10042            # Get specific filter by ID
 
 # Run filter (use --id or --name option)
 jira-as search filter run --id 10042
