@@ -93,8 +93,8 @@ jira-as jsm request-type list 1
 # 3. Create an incident (--summary is required, --description is optional)
 jira-as jsm request create 1 10 --summary "Email service down" --description "Production email server is not responding to connections"
 
-# 3a. Create request on behalf of a customer
-jira-as jsm request create 1 10 --summary "Password reset" --on-behalf-of "customer@example.com"
+# 3a. Create request on behalf of a customer (requires account ID, not email)
+jira-as jsm request create 1 10 --summary "Password reset" --on-behalf-of "5b10ac8d82e05b22cc7d4ef5"
 
 # 3b. Preview request creation without executing (dry-run)
 jira-as jsm request create 1 10 --summary "Test request" --dry-run

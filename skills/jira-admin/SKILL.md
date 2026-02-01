@@ -187,9 +187,9 @@ jira-as admin permission check --project DEMO
 ```bash
 # User search with filtering options
 jira-as admin user search "name"              # Search for users by name or email
-jira-as admin user search "john" -g developers  # Filter by group (-g/--group)
-jira-as admin user search "" -p PROJ          # Filter by project permission (-p/--project)
-jira-as admin user search "" -a               # Include inactive users (-a/--all)
+jira-as admin user search "john" -g           # Include group memberships in output (-g/--include-groups)
+jira-as admin user search "" -p PROJ -a       # Find users assignable to project (-a/--assignable)
+jira-as admin user search "" --all            # Include inactive users (--all, no short form)
 jira-as admin user search "" --all --max-results 100  # Limit results
 jira-as admin user get ACCOUNT_ID             # Get user details
 
@@ -197,10 +197,10 @@ jira-as admin user get ACCOUNT_ID             # Get user details
 jira-as admin group list                      # List all groups
 jira-as admin group members GROUP_NAME        # Get group members
 jira-as admin group create GROUP_NAME         # Create a group
-jira-as admin group delete GROUP_NAME -y      # Delete with confirmation (-y/--yes)
+jira-as admin group delete GROUP_NAME -y      # Delete with confirmation (-y/--confirm)
 jira-as admin group delete GROUP_NAME --dry-run  # Preview deletion
 jira-as admin group add-user GROUP_NAME --user EMAIL  # Add user to group
-jira-as admin group remove-user GROUP_NAME --user EMAIL -y  # Remove user from group
+jira-as admin group remove-user GROUP_NAME --user EMAIL -y  # Remove user (-y/--confirm)
 ```
 
 ### Notification Schemes
