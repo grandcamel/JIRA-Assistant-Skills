@@ -1,5 +1,47 @@
 # Changelog
 
+## [5.0.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v4.0.0...v5.0.0) (2026-02-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* The PyPI package has been renamed from `jira-assistant-skills-lib` to `jira-as` for brevity.
+* CLI moved to jira-assistant-skills package
+
+### Features
+
+* add skill_count metadata to plugin.json ([93f63c4](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/93f63c4e2d01c754c2dd7256eb61606e38372fa1))
+* **agents:** add skill documentation reviewer agents ([b8a9f1b](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/b8a9f1b3f42124c2867bc246cf2ac7f32a27c153))
+* implement assistant-skills alignment (phases 1-4) ([57ce5c1](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/57ce5c10a0abe94f368c23bc3375c49a385148ef))
+* **safeguards:** add permission block for claude-safe integration ([7cecb4b](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/7cecb4b9a6202a24e9fd6c82525b43fdb72b6a8b))
+
+
+### Bug Fixes
+
+* **ci:** resolve ruff linter and type check failures ([4fa7d61](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/4fa7d615f5860a3d6fd299766e9b3b2856f6187a))
+* **docs:** add missing options to search and relationships ([91bd9c1](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/91bd9c100c0d5a4536a669687e3bfec572460bde))
+* **docs:** add short-form flags to ops, dev, collaborate ([e33aba8](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/e33aba8e1122801867ec4b8f5212da953644d13e))
+* **docs:** address priority-1 audit findings ([8966ff9](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/8966ff9b9d3298719303ea1e410bfefdf0958bc6))
+* **docs:** complete admin, bulk, fields, lifecycle docs ([efc086e](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/efc086e6131b08a5e7e1986ebbe89778468cfa96))
+* **docs:** correct admin and jsm command syntax ([2da7f54](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/2da7f543da41d4e3eb75c0cb73a817e75a2fc21f))
+* **docs:** correct issue, collaborate, and relationships options ([8551fd5](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/8551fd5b07fbc25b9b9aebb111bb937d849491a5))
+* **docs:** correct ops, lifecycle, and bulk command options ([f1c86cb](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/f1c86cb0ef62bdfb91d8b8136eef13520758472d))
+* **docs:** correct search and agile command syntax ([bced611](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/bced611f50eab43cfac80e2c9fc63e1fed39067a))
+* **docs:** document missing options in agile and time ([1af2fc8](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/1af2fc8d9603bfcc56cc2a584ab1d7d66ee5d800))
+* **docs:** expand jira-assistant hub routing keywords ([397fb56](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/397fb569254a444c015e7b56f02228dda914d93c))
+* **docs:** update time, dev, fields, and assistant documentation ([e261b6b](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/e261b6b78c3551d191441e9d022b828ceb48631c))
+* remove broken submodule reference to jira-assistant-skills-lib ([25f5a77](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/25f5a772e479b6c821d651bf1b5e78829bc1b81e))
+* remove invalid agents field from plugin.json ([8740866](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/87408663243e986a4b7437622cdef9200405d15c))
+* remove unrecognized skill_count key from plugin.json ([20f015e](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/20f015e18d04ef61c331869fc0e2c1033016568a))
+* **routing:** improve skill routing accuracy with explicit triggers ([cc79ef2](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/cc79ef2089ec2b6781c0246d296121a91150ebb2))
+* use dynamic version from package metadata in CLI ([ccd0b66](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/ccd0b66535e26b57c55a8302b04f3d83baf9e957))
+
+
+### Code Refactoring
+
+* make this plugin-only, CLI now in jira-assistant-skills package ([f486431](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/f4864316aeb27752eeaf7e2066067d54bd448a24))
+* update dependency from jira-assistant-skills-lib to jira-as ([69689c5](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/69689c5728eca8ee0fa37666380c0b949004542d))
+
 ## [3.0.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v2.2.7...v3.0.0) (2026-01-10)
 
 
