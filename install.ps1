@@ -8,7 +8,7 @@
 
 .EXAMPLE
     # Run directly from GitHub
-    iwr -useb https://raw.githubusercontent.com/YOUR_REPO/main/install.ps1 | iex
+    iwr -useb https://raw.githubusercontent.com/grandcamel/jira-assistant-skills/main/install.ps1 | iex
 
     # Or download and run
     .\install.ps1
@@ -19,7 +19,7 @@ $ErrorActionPreference = "Stop"
 # Configuration
 $MinPythonMajor = 3
 $MinPythonMinor = 8
-$RepoUrl = "https://github.com/YOUR_ORG/jira-assistant-skills.git"
+$RepoUrl = "https://github.com/grandcamel/jira-assistant-skills.git"
 $InstallDir = "jira-assistant-skills"
 
 function Write-Header {
@@ -106,7 +106,7 @@ function Test-PythonVersion {
 }
 
 function Test-InRepository {
-    return (Test-Path "setup.py") -and (Test-Path ".claude\skills")
+    return (Test-Path "pyproject.toml") -and (Test-Path "skills")
 }
 
 function Get-Repository {
@@ -143,23 +143,17 @@ function Get-Repository {
 function Install-Dependencies {
     param([string]$PythonCmd)
 
-    $requirements = ".claude\skills\shared\scripts\lib\requirements.txt"
+    $package = "jira-as>=1.1.3"
 
-    if (-not (Test-Path $requirements)) {
-        Write-Err "Cannot find requirements.txt"
-        Write-Info "Expected at: $requirements"
-        return $false
-    }
-
-    Write-Info "Installing Python dependencies..."
+    Write-Info "Installing jira-as from PyPI..."
 
     try {
         # Handle "py -3" style commands
         $cmdParts = $PythonCmd.Split()
         if ($cmdParts.Length -gt 1) {
-            & $cmdParts[0] $cmdParts[1..99] -m pip install --user -r $requirements 2>$null
+            & $cmdParts[0] $cmdParts[1..99] -m pip install --user $package 2>$null
         } else {
-            & $PythonCmd -m pip install --user -r $requirements 2>$null
+            & $PythonCmd -m pip install --user $package 2>$null
         }
 
         if ($LASTEXITCODE -eq 0) {
@@ -173,9 +167,9 @@ function Install-Dependencies {
     try {
         $cmdParts = $PythonCmd.Split()
         if ($cmdParts.Length -gt 1) {
-            & $cmdParts[0] $cmdParts[1..99] -m pip install -r $requirements 2>$null
+            & $cmdParts[0] $cmdParts[1..99] -m pip install $package 2>$null
         } else {
-            & $PythonCmd -m pip install -r $requirements 2>$null
+            & $PythonCmd -m pip install $package 2>$null
         }
 
         if ($LASTEXITCODE -eq 0) {
@@ -185,7 +179,7 @@ function Install-Dependencies {
     } catch {}
 
     Write-Err "Failed to install dependencies"
-    Write-Info "Try manually: $PythonCmd -m pip install -r $requirements"
+    Write-Info "Try manually: $PythonCmd -m pip install `"$package`""
     return $false
 }
 
@@ -256,7 +250,7 @@ function Main {
         Write-Ok "Installation complete!"
         Write-Host ""
         Write-Host "Quick test:"
-        Write-Host "  $pythonCmd .claude\skills\jira-issue\scripts\get_issue.py PROJ-123"
+        Write-Host "  jira-as issue get PROJ-123"
         Write-Host ""
         Write-Host "Or ask Claude Code:"
         Write-Host '  "Show me my open issues"'

@@ -20,9 +20,9 @@ Check if the jira-as package is installed:
 pip show jira-as 2>/dev/null && echo "Library installed" || echo "Library missing"
 ```
 
-If the library is missing, install it:
+If the library is missing, install it from public PyPI:
 ```bash
-pip install jira-as>=0.1.5
+pip install "jira-as>=1.1.3"
 ```
 
 ## Step 2: Get API Token
@@ -123,8 +123,8 @@ If authentication fails:
 - **Connection error**: Check the URL is correct and reachable.
 
 If the CLI is not found:
-- Ensure the plugin is installed: `pip install -e /path/to/plugin`
-- Or use direct script execution: `python "${CLAUDE_PLUGIN_ROOT}/skills/jira-issue/scripts/get_issue.py" PROJ-123`
+- Ensure the jira-as package is installed: `pip install "jira-as>=1.1.3"`
+- Verify the install and its location: `pip show jira-as` and `which jira-as` (the pip scripts directory must be on PATH)
 
 If import errors occur:
-- Ensure the library is installed: `pip install jira-as>=0.1.5`
+- Ensure the library is installed: `pip install "jira-as>=1.1.3"`

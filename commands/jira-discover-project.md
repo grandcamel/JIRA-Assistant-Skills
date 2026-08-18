@@ -10,9 +10,9 @@ You are helping the user discover and configure JIRA project context. This conte
 ## What Gets Discovered
 
 - **Metadata**: Issue types, components, versions, priorities, assignable users
-- **Workflows**: Valid status transitions for each issue type
-- **Patterns**: Common assignees, labels, priorities based on recent activity
-- **Defaults**: Auto-generated sensible defaults based on patterns
+- **Patterns**: Top assignees, common labels, and per-issue-type breakdowns based on recent activity
+- **Field usage**: Per-field fill rates and value distributions (issue type, status, priority) from sampled issues
+- **Hierarchy**: Parent hierarchy usage (how often sampled issues have a parent)
 
 ## Step 1: Get Project Key
 
@@ -22,36 +22,37 @@ Ask the user which project they want to configure:
 
 If the user provides multiple projects, handle them one at a time.
 
-## Step 2: Confirm Profile
+## Step 2: Run Discovery
 
-Check which JIRA profile to use:
-
-"Which JIRA profile should I use for discovery?"
-
-Options:
-1. Use the default profile (check `JIRA_PROFILE` env var or config)
-2. Specify a profile name (development, production, etc.)
-
-## Step 3: Run Discovery
-
-Run the discovery script using the installed plugin:
+Run discovery with the `jira-as` CLI (credentials come from the environment or settings — run `/jira-assistant-setup` first if not configured):
 
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/jira-ops/scripts/discover_project.py" {PROJECT_KEY} --profile {profile}
+jira-as ops discover-project {PROJECT_KEY}
 ```
 
-Wait for the script to complete and capture the output.
+Useful options:
 
-## Step 4: Review Results
+| Option | Description |
+|--------|-------------|
+| `-s, --sample-size N` | Number of issues to sample for patterns |
+| `-d, --days N` | Sample period in days |
+| `-o, --output [text\|json]` | Output format (`json` returns the full discovery data) |
+| `-v, --verbose` | Verbose output |
+
+The command prints everything to stdout — it does not write any files. Capture the output.
+
+## Step 3: Review Results
 
 After discovery completes, summarize what was found:
 
 **For the user, display:**
 - Number of issue types found
 - Number of components found
-- Number of active versions
-- Top 5 assignees by activity
+- Number of versions
+- Top assignees by activity
 - Most common labels
+- Field fill rates and value distributions worth noting
+- Parent hierarchy usage
 - Sample size and period
 
 Example output:
@@ -61,70 +62,64 @@ Discovery complete for PROJ!
 Discovered:
 - 6 issue types: Bug, Story, Task, Epic, Subtask, Improvement
 - 8 components: Backend, Frontend, API, Database, CI/CD, Docs, Testing, UX
-- 3 active versions: v2.1.0, v2.2.0, v3.0.0-beta
+- 3 versions: v2.1.0, v2.2.0, v3.0.0-beta
 
 Patterns (last 30 days, 85 issues sampled):
 - Top assignees: John Doe (35%), Jane Smith (28%), Bob Wilson (15%)
 - Common labels: backend, needs-review, urgent, regression
 - Priority distribution: High (45%), Medium (35%), Low (20%)
-
-Defaults generated based on patterns.
+- Field fill rates: description 60%, components 40%, duedate 5%
+- Parent hierarchy: 20% of sampled issues have a parent
 ```
 
-## Step 5: Storage Decision
+## Step 4: Save the Context (Optional)
 
-Ask the user how they want to store the context:
+The CLI only prints to stdout, so ask the user whether they want to save the discovery data:
 
-"How would you like to store this project context?
+"Would you like to save this project context for reuse?
 
-1. **Shared (Recommended)**: Save to `.claude/jira-project-{PROJECT_KEY}/`
+1. **Shared (Recommended)**: Save to `.claude/jira-project-{PROJECT_KEY}/context.json`
    - Can be committed to your repo and shared with your team
-   - Already saved by the discovery script
 
-2. **Personal only**: Save to `.claude/settings.local.json`
-   - Private to you (gitignored)
+2. **Personal only**: Save somewhere gitignored (e.g., your local notes)
    - Use if you want different defaults than your team
 
-3. **Both**: Save to both locations
-   - Shared context with personal overrides"
+3. **No**: Just use the results in this conversation"
 
-If they choose personal or both, run:
+To save, re-run discovery with JSON output and redirect it:
+
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/jira-ops/scripts/discover_project.py" {PROJECT_KEY} --personal --profile {profile}
+mkdir -p .claude/jira-project-{PROJECT_KEY}
+jira-as ops discover-project {PROJECT_KEY} -o json > .claude/jira-project-{PROJECT_KEY}/context.json
 ```
 
-## Step 6: Customize Defaults (Optional)
+## Step 5: Customize Defaults (Optional)
 
-Ask if they want to customize the auto-generated defaults:
+Ask if they want to derive default values from the discovered patterns:
 
-"The discovery script generated default values based on your team's patterns. Would you like to customize any defaults?
+"Based on your team's patterns, I can suggest default values for issue creation. Would you like to set any defaults?
 
 For example:
 - Set a default priority for Bug issues
 - Set a default assignee for Story issues
 - Add default labels for all issues"
 
-If yes, help them edit the `defaults.json` file in the project context directory:
+If yes, help them write a `defaults.json` in the project context directory based on the discovered patterns (most common priority, top assignee, frequent labels), then review it together:
 
 ```bash
 # Show current defaults
 cat .claude/jira-project-{PROJECT_KEY}/defaults.json
 ```
 
-Then help them modify the file with their preferred values.
-
-## Step 7: Confirm Success
+## Step 6: Confirm Success
 
 Summarize what was created:
 
 "Project context for {PROJECT_KEY} is now configured!
 
-Created:
-- `.claude/jira-project-{PROJECT_KEY}/SKILL.md` - Skill documentation
-- `.claude/jira-project-{PROJECT_KEY}/context/metadata.json` - Issue types, components, versions
-- `.claude/jira-project-{PROJECT_KEY}/context/workflows.json` - Status transitions
-- `.claude/jira-project-{PROJECT_KEY}/context/patterns.json` - Usage patterns
-- `.claude/jira-project-{PROJECT_KEY}/defaults.json` - Default values
+Created (if saved):
+- `.claude/jira-project-{PROJECT_KEY}/context.json` - Full discovery data (metadata, patterns, field fill rates, distributions, parent hierarchy)
+- `.claude/jira-project-{PROJECT_KEY}/defaults.json` - Default values (if customized)
 
 **Next steps:**
 1. Review and customize `defaults.json` as needed
@@ -135,11 +130,11 @@ To refresh the context later, run:
 ```
 /jira-discover-project
 ```
-or use the jira-ops skill directly."
+or run `jira-as ops discover-project {PROJECT_KEY}` directly."
 
 ## Troubleshooting
 
-**"Profile not found" error:**
+**Authentication errors:**
 - Ensure JIRA credentials are configured (run `/jira-assistant-setup` if needed)
 - Check environment variables: `JIRA_SITE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`
 

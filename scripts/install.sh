@@ -3,12 +3,12 @@
 # JIRA Assistant Skills - Unix Installer
 #
 # One-liner installation:
-#   curl -sSL https://raw.githubusercontent.com/YOUR_REPO/main/install.sh | bash
+#   curl -sSL https://raw.githubusercontent.com/grandcamel/jira-assistant-skills/main/scripts/install.sh | bash
 #
 # Or clone and run:
-#   git clone https://github.com/YOUR_REPO/jira-assistant-skills.git
+#   git clone https://github.com/grandcamel/jira-assistant-skills.git
 #   cd jira-assistant-skills
-#   ./install.sh
+#   ./scripts/install.sh
 #
 
 set -e
@@ -23,7 +23,7 @@ NC='\033[0m' # No Color
 # Configuration
 MIN_PYTHON_MAJOR=3
 MIN_PYTHON_MINOR=8
-REPO_URL="https://github.com/YOUR_ORG/jira-assistant-skills.git"
+REPO_URL="https://github.com/grandcamel/jira-assistant-skills.git"
 INSTALL_DIR="jira-assistant-skills"
 
 print_header() {
@@ -131,8 +131,8 @@ install_dependencies() {
     # Install the package and its dependencies
     if $python_cmd -m pip install --user -e . 2>/dev/null; then
         print_ok "Package installed"
-        # Also install the library
-        if $python_cmd -m pip install --user jira-as 2>/dev/null; then
+        # Also install the library from public PyPI
+        if $python_cmd -m pip install --user "jira-as>=1.1.3" 2>/dev/null; then
             print_ok "Library installed"
             return 0
         fi
@@ -140,11 +140,11 @@ install_dependencies() {
         print_warn "pip install failed, trying without --user flag..."
         if $python_cmd -m pip install -e . 2>/dev/null; then
             print_ok "Package installed"
-            $python_cmd -m pip install jira-as 2>/dev/null
+            $python_cmd -m pip install "jira-as>=1.1.3" 2>/dev/null
             return 0
         else
             print_error "Failed to install dependencies"
-            print_info "Try manually: $python_cmd -m pip install -e . && pip install jira-as"
+            print_info "Try manually: $python_cmd -m pip install -e . && pip install \"jira-as>=1.1.3\""
             return 1
         fi
     fi

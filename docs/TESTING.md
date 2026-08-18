@@ -47,24 +47,14 @@ Use the single test runner for rapid iteration:
 
 ## Test Organization
 
-Unit tests are located in the CLI package:
+CLI unit tests live in the [jira-as](https://github.com/grandcamel/jira-as)
+library repository, which ships the `jira-as` CLI this plugin documents.
+
+Live integration tests remain in this repository:
 
 ```
-src/jira_assistant_skills/tests/
-├── conftest.py                    # Shared test fixtures
-└── commands/
-    ├── conftest.py                # Command test fixtures
-    ├── test_issue_cmds.py         # Issue command tests
-    ├── test_lifecycle_cmds.py     # Lifecycle command tests
-    ├── test_search_cmds.py        # Search command tests
-    └── ...                        # Other command tests
-```
-
-Live integration tests remain in the skills directory:
-
-```
-skills/<skill>/
-└── tests/live_integration/        # Live API tests (excluded from unit tests)
+skills/shared/tests/
+└── live_integration/              # Live API tests (excluded from unit tests)
 ```
 
 ## Test Coverage
@@ -101,22 +91,21 @@ skills/<skill>/
 Tests against real JIRA instances:
 
 ```bash
-# Core skills
-pytest skills/shared/tests/live_integration/ --profile development -v
+# Configure the test instance (required)
+export JIRA_TEST_URL="https://your-site.atlassian.net"
+export JIRA_TEST_EMAIL="your@email.com"
+export JIRA_TEST_TOKEN="your-api-token"
+export JIRA_TEST_PROJECT="SKILLSTEST"   # optional, default SKILLSTEST
 
-# JSM skills
-pytest skills/jira-jsm/tests/live_integration/ --profile development --skip-premium -v
+# Core skills
+pytest skills/shared/tests/live_integration/ -v
 
 # Specific modules
-pytest skills/shared/tests/live_integration/test_issue_lifecycle.py -v
+pytest skills/shared/tests/live_integration/test_utils.py -v
 ```
 
-**Profile requirement**: Live tests require `--profile development`.
-
-**JSM test options**:
-- `--skip-premium`: Skip tests requiring JSM Premium license
-- `--service-desk-id N`: Use existing service desk
-- `--keep-project`: Keep test service desk after tests
+Without `JIRA_TEST_URL`, the suite falls back to a Docker-based JIRA
+container when Docker is available, and skips otherwise.
 
 ## Routing Tests
 

@@ -7,7 +7,7 @@ This document covers the technical architecture of the JIRA Assistant Skills plu
 All skills depend on the `jira-as` PyPI package:
 
 ```bash
-pip install jira-as>=0.2.0
+pip install "jira-as>=1.1.3"
 ```
 
 ### Core Modules

@@ -1,42 +1,42 @@
 # CLI Reference
 
-The unified `jira` CLI entry point for all JIRA operations.
+The unified `jira-as` CLI entry point for all JIRA operations.
 
 ## Installation
 
 ```bash
-pip install -e .  # Editable mode for development
+pip install "jira-as>=1.1.3"  # From public PyPI
 ```
 
 ## Command Groups
 
 | Group | Purpose |
 |-------|---------|
-| `jira issue` | CRUD operations for issues |
-| `jira search` | JQL queries and filters |
-| `jira lifecycle` | Workflow transitions, versions, components |
-| `jira agile` | Epics, sprints, backlog management |
-| `jira collaborate` | Comments, attachments, watchers |
-| `jira relationships` | Issue links and dependencies |
-| `jira time` | Time tracking and worklogs |
-| `jira bulk` | Bulk operations |
-| `jira dev` | Git/PR integration |
-| `jira fields` | Custom field management |
-| `jira ops` | Cache and operational utilities |
-| `jira jsm` | Jira Service Management |
-| `jira admin` | Project and permission administration |
+| `jira-as issue` | CRUD operations for issues |
+| `jira-as search` | JQL queries and filters |
+| `jira-as lifecycle` | Workflow transitions, versions, components |
+| `jira-as agile` | Epics, sprints, backlog management |
+| `jira-as collaborate` | Comments, attachments, watchers |
+| `jira-as relationships` | Issue links and dependencies |
+| `jira-as time` | Time tracking and worklogs |
+| `jira-as bulk` | Bulk operations |
+| `jira-as dev` | Git/PR integration |
+| `jira-as fields` | Custom field management |
+| `jira-as ops` | Cache and operational utilities |
+| `jira-as jsm` | Jira Service Management |
+| `jira-as admin` | Project and permission administration |
 
 ```bash
 # Get help
-jira --help
-jira issue --help
-jira issue get --help
+jira-as --help
+jira-as issue --help
+jira-as issue get --help
 ```
 
 ## Global Options
 
 All commands support:
-- `--profile, -p`: JIRA profile to use (from config)
+- `--version`: Show the version and exit
 - `--output, -o`: Output format (text, json, table)
 - `--verbose, -v`: Enable verbose output
 - `--quiet, -q`: Suppress non-essential output
@@ -46,17 +46,17 @@ All commands support:
 
 **Bash** (add to ~/.bashrc):
 ```bash
-eval "$(_JIRA_COMPLETE=bash_source jira)"
+eval "$(_JIRA_AS_COMPLETE=bash_source jira-as)"
 ```
 
 **Zsh** (add to ~/.zshrc):
 ```bash
-eval "$(_JIRA_COMPLETE=zsh_source jira)"
+eval "$(_JIRA_AS_COMPLETE=zsh_source jira-as)"
 ```
 
-**Fish** (add to ~/.config/fish/completions/jira.fish):
+**Fish** (add to ~/.config/fish/completions/jira-as.fish):
 ```bash
-_JIRA_COMPLETE=fish_source jira | source
+_JIRA_AS_COMPLETE=fish_source jira-as | source
 ```
 
 ## Version Management
@@ -86,11 +86,11 @@ _JIRA_COMPLETE=fish_source jira | source
 
 | Channel | Package | Install Command | Use Case |
 |---------|---------|-----------------|----------|
-| **PyPI** | `jira-assistant-skills` | `pip install jira-assistant-skills` | CLI tool |
+| **PyPI** | `jira-as` | `pip install "jira-as>=1.1.3"` | CLI tool + shared library |
 | **GitHub** | Plugin manifest | `claude plugin marketplace add https://github.com/grandcamel/jira-assistant-skills.git#main` | Claude Code plugin |
 
 **Both must be updated when releasing:**
-1. PyPI: `twine upload`
+1. PyPI: release `jira-as` from https://github.com/grandcamel/jira-as
 2. GitHub: `git push` (main branch or tag)
 
 ## Environment Setup
