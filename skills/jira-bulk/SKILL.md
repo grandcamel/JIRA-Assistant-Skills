@@ -40,18 +40,18 @@ Use this skill when you need to:
 - Handle **partial failures** gracefully with progress tracking
 
 **Scale guidance:**
-- 5-10 issues: Run directly, no special options needed
-- 50-100 issues: Use `--dry-run` first, then execute
+- 5-10 issues: Preview (default behavior), then re-run with `--yes`
+- 50-100 issues: Use `--dry-run` first, then execute with `--yes`
 - 500+ issues: Use `--dry-run`, then execute in smaller batches if needed
 
 ## Quick Start
 
 ```bash
-# Preview before making changes
+# Preview before making changes (bulk commands run as a preview by default)
 jira-as bulk transition --jql "project=PROJ AND status=\"In Progress\"" --to Done --dry-run
 
-# Execute the transition
-jira-as bulk transition --jql "project=PROJ AND status=\"In Progress\"" --to Done
+# Execute the transition (--yes is required to apply changes)
+jira-as bulk transition --jql "project=PROJ AND status=\"In Progress\"" --to Done --yes
 ```
 
 For more patterns, see [Quick Start Guide](docs/QUICK_START.md).
@@ -74,8 +74,10 @@ All commands support these options:
 
 | Option | Purpose | When to Use |
 |--------|---------|-------------|
+| `-q/--jql QUERY` | Select issues by JQL | Mutually exclusive with `--issues` |
+| `-i/--issues KEYS` | Comma-separated issue keys | Mutually exclusive with `--jql` |
 | `-n/--dry-run` | Preview changes | Always use for >10 issues |
-| `-y/--yes` | Skip confirmation | Scripted automation |
+| `-y/--yes` | Apply changes (without it, the command only previews) | Required to execute any bulk change |
 | `-m/--max-issues N` | Limit scope (default: 100) | Testing, large operations |
 | `-o/--output FORMAT` | Output format: text (default), json | JSON for scripting |
 
@@ -94,32 +96,32 @@ These options are only available for `jira-as bulk transition`:
 
 ```bash
 # By issue keys
-jira-as bulk transition --issues PROJ-1,PROJ-2,PROJ-3 --to Done
+jira-as bulk transition --issues PROJ-1,PROJ-2,PROJ-3 --to Done --yes
 
 # By JQL query
-jira-as bulk transition --jql "project=PROJ AND status=\"In Progress\"" --to Done
+jira-as bulk transition --jql "project=PROJ AND status=\"In Progress\"" --to Done --yes
 
 # With resolution
-jira-as bulk transition --jql "type=Bug AND status=Verified" --to Closed --resolution Fixed
+jira-as bulk transition --jql "type=Bug AND status=Verified" --to Closed --resolution Fixed --yes
 ```
 
 ### Bulk Assign
 
 ```bash
 # Assign to user
-jira-as bulk assign --jql "project=PROJ AND status=Open" --assignee "john.doe"
+jira-as bulk assign --jql "project=PROJ AND status=Open" --assignee "john.doe" --yes
 
 # Assign to self
-jira-as bulk assign --jql "project=PROJ AND assignee IS EMPTY" --assignee self
+jira-as bulk assign --jql "project=PROJ AND assignee IS EMPTY" --assignee self --yes
 
 # Unassign
-jira-as bulk assign --jql "assignee=john.leaving" --unassign
+jira-as bulk assign --jql "assignee=john.leaving" --unassign --yes
 ```
 
 ### Bulk Set Priority
 
 ```bash
-jira-as bulk set-priority --jql "type=Bug AND labels=critical" --priority Highest
+jira-as bulk set-priority --jql "type=Bug AND labels=critical" --priority Highest --yes
 
 # Output as JSON
 jira-as bulk set-priority --jql "type=Bug" --priority High --dry-run -o json
@@ -131,11 +133,11 @@ jira-as bulk set-priority --jql "type=Bug" --priority High --dry-run -o json
 # ALWAYS preview first with dry-run (cloning creates many issues)
 jira-as bulk clone --jql "sprint=\"Sprint 42\"" --include-subtasks --dry-run
 
-# After reviewing the preview, execute without --dry-run
-jira-as bulk clone --jql "sprint=\"Sprint 42\"" --include-subtasks --include-links
+# After reviewing the preview, execute with --yes
+jira-as bulk clone --jql "sprint=\"Sprint 42\"" --include-subtasks --include-links --yes
 
 # Clone to different project
-jira-as bulk clone --issues PROJ-1,PROJ-2 --target-project NEWPROJ --prefix "[Clone]"
+jira-as bulk clone --issues PROJ-1,PROJ-2 --target-project MYAPP --prefix "[Clone]" --yes
 ```
 
 ### Bulk Delete (DESTRUCTIVE)
@@ -156,7 +158,7 @@ jira-as bulk delete --jql "project=CLEANUP" --no-subtasks --dry-run
 
 **Safety features:**
 - `--dry-run` shows exactly what will be deleted before making changes
-- Confirmation required for >10 issues (lower than other operations)
+- Without `--yes`, every run is a preview - `--yes` is required to actually delete (a warning is printed first)
 - Default `--max-issues 100` prevents accidental mass deletion
 - Per-issue error tracking with summary of failures
 
@@ -184,7 +186,7 @@ jira-as bulk delete --jql "project=CLEANUP" --no-subtasks --dry-run
 
 | Error | Solution |
 |-------|----------|
-| `Transition not available` | Check issue status with `jira-as issue get ISSUE-KEY --show-transitions` |
+| `Transition not available` | Check available transitions with `jira-as lifecycle transitions ISSUE-KEY` |
 | `Permission denied` | Verify JIRA project permissions (DELETE_ISSUES required for bulk delete) |
 | `Rate limit (429)` | Use `--max-issues` to process in smaller batches or run during off-peak hours |
 | `Invalid JQL` | Test JQL in JIRA search first |

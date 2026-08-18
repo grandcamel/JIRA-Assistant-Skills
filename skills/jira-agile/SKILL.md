@@ -15,7 +15,7 @@ Agile and Scrum workflow management for JIRA - epics, sprints, backlogs, and sto
 
 | Operation | Risk | Notes |
 |-----------|------|-------|
-| List sprints/epics | `-` | Read-only |
+| List boards/sprints/epics | `-` | Read-only |
 | Get backlog/velocity | `-` | Read-only |
 | Create epic | `-` | Easily reversible (can delete) |
 | Create subtask | `-` | Easily reversible (can delete) |
@@ -32,6 +32,7 @@ Agile and Scrum workflow management for JIRA - epics, sprints, backlogs, and sto
 ## When to use this skill
 
 Use this skill when you need to:
+- Discover boards and board IDs for a project
 - Create and manage epics for organizing large features
 - Link issues to epics for hierarchical planning
 - Create subtasks under parent issues
@@ -65,9 +66,9 @@ See [epic examples](examples/epic-management.md) for detailed usage.
 
 Create subtasks linked to parent issues with automatic project inheritance and time estimate support.
 
-### 3. Sprint Management
+### 3. Board Discovery and Sprint Management
 
-List and discover sprints for a project, create sprints with dates and goals, manage sprint lifecycle (start/close), move issues to sprints or backlog, and track sprint progress.
+Discover board IDs with `agile board list` (filter by project or board type), list and discover sprints for a project, create sprints with dates and goals, manage sprint lifecycle (start/close), move issues to sprints or backlog, and track sprint progress.
 
 See [sprint examples](examples/sprint-lifecycle.md) for detailed usage.
 
@@ -99,13 +100,23 @@ jira-as agile epic add-issues --epic PROJ-100 --jql "project = PROJ AND type = S
 jira-as agile epic add-issues --epic PROJ-100 --issues PROJ-101 --dry-run  # Preview changes
 ```
 
-**Note:** To remove issues from an epic, move them to a different epic or use `jira-as issue update PROJ-103 --epic none` to clear the epic link.
+**Note:** To remove issues from an epic, move them to a different epic or use `jira-as issue update PROJ-103 --parent none` to clear the epic/parent link (`issue update` manages the epic through `--parent`; the `--epic` flag exists only on `issue create`).
 
 ### Subtask Management
 ```bash
 jira-as agile subtask --parent PROJ-101 --summary "Implement login API"
 jira-as agile subtask --parent PROJ-101 --summary "Task" --assignee self --estimate 4h
 ```
+
+### Board Discovery
+```bash
+jira-as agile board list                                    # List all boards
+jira-as agile board list --project PROJ                     # Boards for a project
+jira-as agile board list --type scrum                       # Filter by type (scrum or kanban)
+jira-as agile board list --type kanban --output json        # JSON output
+```
+
+**Multi-board projects:** Commands that accept `--project` instead of `--board` (e.g. `sprint list`, `backlog`, `velocity`) find a board automatically, preferring Scrum boards. If the project has more than one board, a warning on stderr names the boards and which one was chosen — run `jira-as agile board list --project PROJ` to see the candidates and pass `--board` to pick a specific one.
 
 ### Sprint Management
 ```bash
@@ -129,6 +140,7 @@ jira-as agile sprint manage --sprint 456 --name "Sprint 42 - Revised" --goal "Up
 ```bash
 jira-as agile backlog --board 123
 jira-as agile backlog --board 123 --group-by epic
+jira-as agile backlog --board 123 --filter "type = Bug"     # Narrow with a JQL filter
 jira-as agile backlog --project PROJ                        # Use project instead of board
 jira-as agile rank PROJ-101 --before PROJ-100
 jira-as agile rank PROJ-101 --after PROJ-102
@@ -136,12 +148,14 @@ jira-as agile rank PROJ-101 --top --board 123               # Move to top (requi
 jira-as agile rank PROJ-101 --bottom --board 123            # Move to bottom (requires --board)
 ```
 
+**Kanban and no-backlog boards:** Kanban and team-managed boards may not expose the backlog API at all. When that happens, `agile backlog` automatically falls back to listing the board's issues instead, and JSON output is marked with `"backlog_fallback": "board_issues"`. Sprint-based commands (`sprint`, `velocity`, sprint-scoped `estimates`) require a Scrum board — Kanban boards have no sprints.
+
 ### Story Points and Estimation
 ```bash
 jira-as agile estimate PROJ-101 --points 5
 jira-as agile estimates --project PROJ
 jira-as agile estimates --sprint 456 --group-by assignee
-jira-as agile estimates --epic "Mobile MVP" --group-by status  # Filter by epic name
+jira-as agile estimates --epic PROJ-100 --group-by status   # Filter by epic key
 ```
 
 ### Velocity Tracking

@@ -45,7 +45,7 @@ Use this skill when you need to:
 
 **IMPORTANT:** Always use the `jira-as` CLI. Never run Python scripts directly.
 
-- **Project Discovery**: Discover project metadata, workflows, and patterns for intelligent defaults
+- **Project Discovery**: Discover project metadata and usage patterns (field fill rates, value distributions, parent hierarchy) for intelligent defaults
 - **Cache Status Monitoring**: Display cache statistics (size, entries, hit rates)
 - **Cache Clearing**: Remove cache entries by category, pattern, or all at once
 - **Cache Warming**: Pre-load project metadata and field definitions
@@ -54,7 +54,7 @@ Use this skill when you need to:
 ## Quick Start
 
 ```bash
-# Discover project context (saves to skill directory by default)
+# Discover project context (prints to stdout)
 jira-as ops discover-project PROJ
 
 # Check cache status
@@ -129,7 +129,7 @@ jira-as ops cache-clear -f --json
 
 ### Discover project context
 ```bash
-# Discover and output project context (text format)
+# Discover and print project context to stdout (text format)
 jira-as ops discover-project PROJ
 
 # Output as JSON (-o is short for --output)
@@ -142,7 +142,16 @@ jira-as ops discover-project PROJ -v
 # Custom sample size and period (-s, -d are short forms)
 jira-as ops discover-project PROJ -s 200 -d 60
 jira-as ops discover-project PROJ --sample-size 200 --days 60
+
+# Output goes to stdout only; redirect to save the full discovery data
+jira-as ops discover-project PROJ -o json > project-context.json
 ```
+
+Discovery output includes project metadata (issue types, components, versions,
+assignable users) plus pattern analysis of sampled issues: top assignees,
+common labels, per-field fill rates, value distributions (issue type, status,
+priority), and parent hierarchy usage. Use `--output json` to get the full
+discovery data.
 
 See [Commands Guide](docs/COMMANDS.md) for complete documentation.
 
@@ -152,7 +161,7 @@ All commands support `--help` for full documentation.
 
 | Command | Description |
 |---------|-------------|
-| `jira-as ops discover-project` | Discover project metadata, workflows, and patterns |
+| `jira-as ops discover-project` | Discover project configuration and usage patterns (stdout only) |
 | `jira-as ops cache-status` | Display cache statistics (size, entries, hit rate) |
 | `jira-as ops cache-clear` | Clear cache entries (all, by category, or by pattern) |
 | `jira-as ops cache-warm` | Pre-warm cache with commonly accessed data |
@@ -162,10 +171,14 @@ All commands support `--help` for full documentation.
 | Code | Meaning |
 |------|---------|
 | 0 | Success |
-| 1 | General error |
-| 2 | Configuration error |
-| 3 | Cache database error |
-| 4 | Network error |
+| 1 | Validation or general error |
+| 2 | Authentication error |
+| 3 | Permission denied |
+| 4 | Resource not found |
+| 5 | Rate limit exceeded |
+| 6 | Conflict error |
+| 7 | Server error |
+| 130 | Cancelled (Ctrl+C) |
 
 ## Configuration
 

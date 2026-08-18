@@ -70,6 +70,8 @@ jira-as lifecycle transition PROJ-123 --to Done --dry-run             # Preview 
 jira-as lifecycle transition PROJ-123 --to Done --fields '{"customfield_10001": "value"}'  # With custom fields
 ```
 
+**Tip:** `jira-as issue transition` and `jira-as issue transitions` are aliases for these two commands, with the same options (see the jira-issue skill).
+
 ### Assignments
 ```bash
 jira-as lifecycle assign PROJ-123 --self                  # Assign to yourself
@@ -133,21 +135,19 @@ All commands support these options:
 
 ### Output Formats by Command
 
+Only the listing commands accept `-o, --output`:
+
 | Command | Supported Formats |
 |---------|-------------------|
 | `transitions` | text, json |
-| `transition` | text, json |
-| `assign` | text, json |
-| `resolve` | text, json |
-| `reopen` | text, json |
 | `version list` | table, json |
-| `version create/release/archive` | text, json |
 | `component list` | table, json |
-| `component create/update/delete` | text, json |
+
+All other commands print plain-text output and do not accept `--output`.
 
 ### Dry Run Support
 
-Most modification commands support `--dry-run` to preview changes without executing:
+These commands support `--dry-run` to preview changes without executing (`transition` and `assign` also accept the short flag `-n`):
 
 ```bash
 jira-as lifecycle transition PROJ-123 --to Done --dry-run
@@ -157,6 +157,8 @@ jira-as lifecycle component create PROJ --name "API" --dry-run
 jira-as lifecycle component update --id 10000 --name "New Name" --dry-run
 jira-as lifecycle component delete --id 10000 --dry-run
 ```
+
+**Note:** `resolve`, `reopen`, `version release`, and `version archive` do not support `--dry-run`.
 
 ## Exit Codes
 

@@ -19,7 +19,7 @@ Core CRUD operations for JIRA issues - create, read, update, and delete tickets.
 | Create issue | `-` | Easily reversible (can delete) |
 | Update fields | `!` | Can be undone via edit |
 | Delete issue | `!!` | Recoverable from trash (30 days) |
-| Delete with --force | `!!!` | **IRREVERSIBLE** - bypasses trash |
+| Delete with --force | `!!` | Skips the confirmation prompt (still recoverable from trash) |
 
 **Risk Legend**: `-` Safe, read-only | `!` Caution, modifiable | `!!` Warning, destructive but recoverable | `!!!` Danger, irreversible
 
@@ -61,13 +61,15 @@ This skill provides the following commands via the `jira-as issue` CLI:
 - `jira-as issue get`: Retrieve issue details
 - `jira-as issue update`: Modify issue fields
 - `jira-as issue delete`: Remove issues
+- `jira-as issue transition`: Transition an issue to a new status (alias for `jira-as lifecycle transition`)
+- `jira-as issue transitions`: List available transitions, read-only (alias for `jira-as lifecycle transitions`)
+- `jira-as issue comment`: Add a comment to an issue (alias for `jira-as collaborate comment add`)
 
 All commands support `--help` for full option documentation.
 
-### Global Options
+### Output Options
 
-All commands inherit global options from the parent `jira-as` command:
-- `--output, -o`: Output format for `get` and `create` commands (text, json)
+`-o, --output [text|json]` is available on `issue get`, `issue create`, and `issue transitions`. Other `issue` commands print plain-text output.
 
 ## Templates
 
@@ -129,6 +131,18 @@ jira-as issue create --project PROJ --type Bug --summary "Critical bug" \
 jira-as issue create --project PROJ --type Story --summary "Feature X" \
   --sprint 42
 
+# Create as a child of an epic or parent task
+jira-as issue create --project PROJ --type Task --summary "Child task" \
+  --parent PROJ-100
+
+# For workflows that reject a parent at create time: create without the
+# parent, then set it in a follow-up update
+jira-as issue create --project PROJ --type Task --summary "Child task" \
+  --parent PROJ-100 --parent-via-update
+
+# Preview the payload that would be sent without creating the issue
+jira-as issue create --project PROJ --type Bug --summary "Bug" --dry-run
+
 # Create without project context defaults
 jira-as issue create --project PROJ --type Bug --summary "Bug" --no-defaults
 ```
@@ -169,6 +183,12 @@ jira-as issue update PROJ-123 --assignee none
 # Update labels and components (replaces existing)
 jira-as issue update PROJ-123 --labels "urgent,reviewed" --components "API"
 
+# Move issue under a new parent (epic or parent task)
+jira-as issue update PROJ-123 --parent PROJ-100
+
+# Remove the parent
+jira-as issue update PROJ-123 --parent none
+
 # Update custom fields
 jira-as issue update PROJ-123 --custom-fields '{"customfield_10050": "staging"}'
 ```
@@ -177,13 +197,49 @@ jira-as issue update PROJ-123 --custom-fields '{"customfield_10050": "staging"}'
 - `self`: Assigns to the current authenticated user
 - `none` or `unassigned`: Removes the assignee
 
+**Notification suppression (`--no-notify`):** Suppressing watcher notifications requires the "Administer Jira" global permission. For non-admin users JIRA rejects the whole request with a 403, so the CLI automatically retries without suppression: the update still lands, watchers are notified, and a warning is printed on stderr.
+
+### Rich-Text Custom Fields (ADF)
+
+JIRA Cloud stores rich text as Atlassian Document Format (ADF). The CLI automatically wraps plain-string values for the built-in rich-text fields (`description`, `environment`) in ADF, converting markdown so formatting survives. If your instance has rich-text *custom* fields, list their IDs in the `JIRA_ADF_CUSTOM_FIELDS` environment variable (comma-separated) and their values are auto-wrapped too, on both create and update:
+
+```bash
+export JIRA_ADF_CUSTOM_FIELDS="customfield_10050,customfield_10051"
+
+jira-as issue update PROJ-123 \
+  --custom-fields '{"customfield_10050": "Deployed to **staging**"}'
+```
+
+Values that are already ADF documents pass through untouched.
+
+### Transition and Comment Aliases
+
+For convenience, common lifecycle and collaboration operations are aliased under `issue`, with the same options as the underlying commands:
+
+```bash
+# List available transitions (alias for `jira-as lifecycle transitions`)
+jira-as issue transitions PROJ-123
+jira-as issue transitions PROJ-123 --output json
+
+# Transition to a new status (alias for `jira-as lifecycle transition`)
+jira-as issue transition PROJ-123 --to "In Progress"
+jira-as issue transition PROJ-123 --to Done --resolution Fixed
+jira-as issue transition PROJ-123 --id 31 --dry-run
+
+# Add a comment (alias for `jira-as collaborate comment add`)
+jira-as issue comment PROJ-123 --body "Starting work"
+jira-as issue comment PROJ-123 --body "**Done**" --format markdown
+```
+
+This supports the common create → work → transition → comment flow without switching command groups. For advanced workflow and comment operations (editing/deleting comments, attachments, versions, components), use the full `jira-as lifecycle` and `jira-as collaborate` groups.
+
 ### Delete Issues
 
 ```bash
 # Delete with confirmation
 jira-as issue delete PROJ-456
 
-# Force delete (no prompt)
+# Force delete (skip confirmation prompt)
 jira-as issue delete PROJ-456 --force
 ```
 
@@ -257,6 +313,35 @@ For credential setup, generate tokens at: `https://id.atlassian.com/manage-profi
 ## Configuration
 
 Requires JIRA credentials via environment variables (`JIRA_SITE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`).
+
+### Agile Field IDs (story points, sprint, epic link)
+
+Custom field IDs for Agile fields often differ per instance — and per project. The `--story-points`, `--sprint`, and `--epic` options resolve their field IDs in priority order (highest first):
+
+1. Per-project overrides in settings: `jira.projects.<KEY>.agile_fields`
+2. Global settings block: `jira.agile_fields`
+3. Environment variables (`JIRA_STORY_POINTS_FIELD`, `JIRA_SPRINT_FIELD`, `JIRA_EPIC_LINK_FIELD`)
+4. Built-in defaults
+
+Example settings entry with a per-project story points override:
+
+```json
+{
+  "jira": {
+    "agile_fields": {
+      "story_points": "customfield_10016"
+    },
+    "projects": {
+      "MYAPP": {
+        "agile_fields": {
+          "story_points": "customfield_10116",
+          "sprint": "customfield_10120"
+        }
+      }
+    }
+  }
+}
+```
 
 ## Related Resources
 

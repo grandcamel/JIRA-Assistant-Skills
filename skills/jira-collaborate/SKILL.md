@@ -102,7 +102,7 @@ All commands support `--help` for full documentation.
 # Add a comment
 jira-as collaborate comment add PROJ-123 --body "Starting work on this now"
 
-# Rich text comment (--format supports: markdown, wiki, adf)
+# Rich text comment (-f/--format supports: text, markdown, adf)
 jira-as collaborate comment add PROJ-123 --body "**Bold** text" --format markdown
 
 # Internal comment (role-restricted)
@@ -203,23 +203,21 @@ All commands support:
 
 | Option | Description |
 |--------|-------------|
-| `--help`, `-h` | Show detailed help |
+| `--help` | Show detailed help |
 
 ### Output Formats by Command
 
+Only these commands accept `-o`/`--output`:
+
 | Command | Supported Formats |
 |---------|-------------------|
-| `comment add` | text, json |
-| `comment list` | text, json, table |
-| `comment update` | text, json |
-| `comment delete` | text, json |
-| `attachment list` | text, json, table |
-| `attachment upload` | text, json |
-| `attachment download` | text (status only) |
-| `watchers` | text, json, table |
-| `notify` | text, json |
-| `activity` | text, json, table |
-| `update-fields` | text, json |
+| `comment list` | text, json |
+| `attachment list` | text, json |
+| `activity` | table, json |
+
+All other collaborate commands print plain text status output and have no
+output-format option. Note: for `attachment download`, `-o` is short for
+`--output-dir` (download destination), not an output format.
 
 For command-specific options, use `--help` on any command:
 ```bash
@@ -241,7 +239,7 @@ See [references/SCRIPT_OPTIONS.md](references/SCRIPT_OPTIONS.md) for full option
 | Error | Solution |
 |-------|----------|
 | "Comment not found" | Verify comment ID with `jira-as collaborate comment list ISSUE-KEY` |
-| "Attachment not found" | Use `--list` to see available attachments |
+| "Attachment not found" | Use `jira-as collaborate attachment list ISSUE-KEY` to see available attachments |
 | "Permission denied" | Check visibility role/group permissions |
 | "User not found" | Use account ID (not email) for watchers |
 | "Notification not received" | Use `--dry-run` to verify recipients |

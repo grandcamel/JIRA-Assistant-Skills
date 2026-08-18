@@ -86,6 +86,7 @@ All commands support `--help` for full documentation.
 jira-as dev branch-name PROJ-123
 
 # Generate branch name with explicit prefix (-p is short for --prefix)
+# Valid prefixes: feature, bugfix, hotfix, task, epic, spike, chore, docs
 jira-as dev branch-name PROJ-123 -p bugfix
 jira-as dev branch-name PROJ-123 --prefix bugfix
 

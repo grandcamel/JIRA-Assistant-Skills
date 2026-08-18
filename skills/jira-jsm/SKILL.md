@@ -90,14 +90,18 @@ jira-as jsm service-desk list
 # 2. List request types for your service desk
 jira-as jsm request-type list 1
 
-# 3. Create an incident (--summary is required, --description is optional)
+# 3. Create an incident (--summary is optional; some request types derive it from other fields)
 jira-as jsm request create 1 10 --summary "Email service down" --description "Production email server is not responding to connections"
 
-# 3a. Create request on behalf of a customer (requires account ID, not email)
+# 3a. Create with priority and labels
+jira-as jsm request create 1 10 --summary "VPN outage" --priority High --labels "network,urgent"
+
+# 3b. Create request on behalf of a customer (requires account ID, not email)
 jira-as jsm request create 1 10 --summary "Password reset" --on-behalf-of "5b10ac8d82e05b22cc7d4ef5"
 
-# 3b. Preview request creation without executing (dry-run)
+# 3c. Preview request creation without executing (dry-run); use -o json for machine-readable output
 jira-as jsm request create 1 10 --summary "Test request" --dry-run
+jira-as jsm request create 1 10 --summary "Test request" -o json
 
 # 4. Check SLA status
 jira-as jsm sla get SD-123
@@ -107,6 +111,12 @@ jira-as jsm request comment SD-123 "Looking into this issue now"
 
 # 6. Add an internal comment (agent-only, not visible to customers)
 jira-as jsm request comment SD-123 "Escalating to Tier 2 support" --internal
+
+# 6a. Post a customer-visible comment in Jira wiki markup
+jira-as jsm request comment SD-123 "*Root cause* identified — fix in progress. See {{KB-42}} for the workaround." --format wiki
+
+# 6b. Preview a comment without posting it
+jira-as jsm request comment SD-123 "Draft reply" --dry-run
 
 # 7. Approve a pending request
 jira-as jsm approval approve SD-124 --approval-id 1001 --yes
@@ -142,7 +152,7 @@ All commands support `--help` for full documentation.
 |---------|-------------|
 | `jira-as jsm request create` | Create service request |
 | `jira-as jsm request get` | Get request details |
-| `jira-as jsm request status` | Get request status/lifecycle |
+| `jira-as jsm request status` | Get current request status and category |
 | `jira-as jsm request transition` | Transition request through workflow |
 | `jira-as jsm request list` | List requests with filtering |
 
@@ -200,45 +210,65 @@ All commands support `--help` for full documentation.
 | `jira-as jsm asset link` | Link asset to request |
 | `jira-as jsm asset find-affected` | Find assets affected by request |
 
+## Behavior Notes
+
+### Request Types and Issue Types
+
+Every JSM request type is backed by a standard JIRA issue type:
+
+```bash
+# Show the underlying JIRA issue type for each request type
+jira-as jsm request-type list 1 --show-issue-types
+
+# Discover which fields a request type accepts through the API
+jira-as jsm request-type fields 1 10
+```
+
+- `--summary` is optional on `request create` — some request types derive the summary from other fields.
+- If `request create` fails with a field error, run `request-type fields` first: the JSM request API only accepts the fields configured on that request type's portal form, and some portal-only widgets (e.g., Assets/CMDB object pickers) cannot be populated through `--fields`.
+- **Portal bypass**: because JSM requests are standard JIRA issues, `jira-as issue create` with the bound issue type can create the issue directly when the API accepts those fields. The result may lack a request type and portal context (it will not appear as a customer-facing portal request), so prefer `jsm request create` for customer-facing requests.
+
+### Customer Comments
+
+`jira-as jsm request comment` sends the body verbatim in both formats; `--format wiki` declares that the body is Jira wiki markup so the portal renders the formatting. JSM comments are never converted to ADF.
+
+### Output Shapes
+
+- `jira-as jsm request status` prints the current status and its category (JSON: `{"status": ..., "statusCategory": ...}`), not a status history.
+- `jira-as jsm request comments` and `jira-as jsm request participants` print plain JSON arrays with `-o json` — the JSM API's paginated `values` envelope is unwrapped for you.
+
 ## Common Options
 
-All scripts support these common options:
+Most commands support these options:
 
 | Option | Description | Example |
 |--------|-------------|---------|
-| `--help` | Show help and exit | `jira-as <command> --help` |
-| `--output FORMAT` | Output format: text, json, table | `--output json` |
-| `--service-desk ID` | Service desk ID (numeric) | `--service-desk 1` |
+| `--help` | Show help and exit | `jira-as jsm <command> --help` |
+| `-o, --output FORMAT` | Output format: text (default) or json; `organization list` and `sla report` also accept csv | `-o json` |
+| `--dry-run` | Preview a mutating command without executing it | `jira-as jsm request create 1 10 --summary "Test" --dry-run` |
 
 ## Exit Codes
 
 | Code | Meaning | Description |
 |------|---------|-------------|
 | 0 | Success | Operation completed |
-| 1 | General Error | Unspecified error |
-| 2 | Validation Error | Invalid input parameters |
-| 3 | Authentication Error | Invalid or expired API token |
-| 4 | Permission Error | User lacks permissions |
-| 5 | Not Found | Resource not found |
+| 1 | General/Validation Error | Invalid input or unspecified error |
+| 2 | Authentication Error | Invalid or expired API token |
+| 3 | Permission Error | User lacks permissions |
+| 4 | Not Found | Resource not found |
+| 5 | Rate Limit Error | API limit exceeded |
 | 6 | Conflict Error | Duplicate or state conflict |
-| 7 | Rate Limit Error | API limit exceeded |
+| 7 | Server Error | JIRA server-side error (5xx) |
+| 130 | Cancelled | Interrupted with Ctrl+C |
 
 ## Configuration
 
 ### Environment Variables
 
 ```bash
-export JIRA_URL="https://your-domain.atlassian.net"
+export JIRA_SITE_URL="https://your-domain.atlassian.net"
 export JIRA_EMAIL="your-email@example.com"
 export JIRA_API_TOKEN="your-api-token"
-
-# Optional: Default service desk
-export JSM_DEFAULT_SERVICE_DESK="1"
-```
-
-### Profile Support
-
-```bash
 ```
 
 For full configuration options, see [references/CONFIG_REFERENCE.md](references/CONFIG_REFERENCE.md).

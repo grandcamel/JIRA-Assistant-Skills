@@ -20,6 +20,7 @@ Issue linking and dependency management for JIRA - create, view, and analyze iss
 | Get dependencies | `-` | Read-only |
 | Link statistics | `-` | Read-only |
 | Create link | `-` | Easily reversible (can unlink) |
+| Create remote link | `-` | Adds a web link to the issue |
 | Remove link | `!` | Link data lost, can recreate |
 | Bulk link | `!` | Many links created, can remove |
 | Clone issue | `-` | Creates new issue, can delete |
@@ -52,6 +53,7 @@ This skill provides issue relationship operations:
 2. **Link Issues**: Create relationships between issues
    - Semantic flags for common types (--blocks, --relates-to, etc.)
    - Support for all JIRA link types
+   - Remote (web) links to any URL via --remote-url
    - Optional comment on link creation
    - Dry-run mode for preview
 
@@ -100,7 +102,7 @@ This skill provides issue relationship operations:
 | Command | Description |
 |---------|-------------|
 | `jira-as relationships link-types` | List available link types |
-| `jira-as relationships link` | Create link between issues |
+| `jira-as relationships link` | Create link between issues, or a remote (web) link to a URL |
 | `jira-as relationships get-links` | View links for an issue |
 | `jira-as relationships unlink` | Remove issue links |
 | `jira-as relationships get-blockers` | Find blocker chain (recursive) |
@@ -113,26 +115,26 @@ All commands support `--help` for full documentation.
 
 ## Common Options
 
-All commands support these common options:
+Most commands support these common options:
 
 | Option | Description |
 |--------|-------------|
 | `-o/--output FORMAT` | Output format (see table below) |
-| `--help` | Show help message and exit |
+| `--help` | Show help message and exit (all commands) |
 
 ### Output Formats by Command
 
 | Command | Supported Formats |
 |---------|-------------------|
 | `link-types` | text, json |
-| `link` | text, json |
 | `get-links` | text, json |
-| `unlink` | text, json |
 | `get-blockers` | text, json |
 | `get-dependencies` | text, json, mermaid, dot, plantuml, d2 |
 | `stats` | text, json |
 | `bulk-link` | text, json |
 | `clone` | text, json |
+
+> **Note:** `link` and `unlink` produce text output only - they do not accept `-o/--output`.
 
 ## Examples
 
@@ -152,6 +154,10 @@ jira-as relationships link PROJ-1 --clones PROJ-2          # Mark as clone
 jira-as relationships link PROJ-1 --relates-to PROJ-2
 jira-as relationships link PROJ-1 --type "Blocks" --to PROJ-2
 
+# Create a remote (web) link to any URL instead of a native issue link
+jira-as relationships link PROJ-1 --remote-url https://example.com/runbook
+jira-as relationships link PROJ-1 --remote-url https://example.com/spec --remote-title "Design spec" --remote-relationship "documented by"
+
 # View and remove links
 jira-as relationships get-links PROJ-123
 jira-as relationships get-links PROJ-123 --direction outward
@@ -161,7 +167,7 @@ jira-as relationships unlink PROJ-1 --type blocks --all
 
 # Clone an issue with its relationships
 jira-as relationships clone PROJ-123 --clone-subtasks -l  # -l is short for --clone-links
-jira-as relationships clone PROJ-123 -p OTHER  # -p is short for --to-project
+jira-as relationships clone PROJ-123 -p MYAPP  # -p is short for --to-project
 jira-as relationships clone PROJ-123 --summary "Custom summary"
 jira-as relationships clone PROJ-123 --no-link  # Skip creating "clones" link
 ```
@@ -237,6 +243,17 @@ Standard JIRA link types and when to use them:
 Use `--blocks` when source issue blocks target; use `--is-blocked-by` when source is blocked by target.
 
 **Note:** Issue links are labels only - they do not enforce workflow rules. Combine with automation or team discipline.
+
+### Native Links vs Remote Links
+
+| | Native issue link | Remote (web) link |
+|---|-------------------|-------------------|
+| Target | Another JIRA issue | Any URL (docs, wikis, JSM portal views, external trackers) |
+| Flags | `--blocks`, `--relates-to`, ..., or `--type` + `--to` | `--remote-url` (+ optional `--remote-title`, `--remote-relationship`) |
+| Typed and directional | Yes (see link types above) | No - free-form relationship text (e.g., "documented by") |
+| Traversable by blocker/dependency analysis | Yes | No |
+
+Use a **native link** when both ends are JIRA issues, so `get-links`, `get-blockers`, and dependency graphs can traverse the relationship. Use `--remote-url` when the target is not a JIRA issue - a web page, documentation, or a JSM portal request view. `--remote-title` sets the display text (defaults to the URL) and `--remote-relationship` sets the relationship label shown on the issue.
 
 ## Exit Codes
 

@@ -87,24 +87,25 @@ All commands support `--help` for full documentation.
 
 1. **JQL Search**: Execute custom queries with sorting, pagination, field selection
 2. **JQL Builder**: Build and validate queries interactively
-3. **Query History**: Save queries locally for quick reuse
-4. **Saved Filters**: Full CRUD on JIRA filters with sharing
-5. **Filter Subscriptions**: View email subscriptions on filters
-6. **Export Results**: CSV, JSON, JSON Lines with streaming for large datasets
-7. **Bulk Updates**: Update multiple issues from search results
+3. **Save Searches**: Turn a query into a saved filter with `--save-as`
+4. **Saved Filters**: Full CRUD on JIRA filters with sharing and favourites
+5. **Export Results**: CSV or JSON files with auto-pagination (JSON keeps nested field objects)
+6. **Bulk Updates**: Update multiple issues from search results
 
 ## Common Options
 
 | Option | Description |
 |--------|-------------|
-| `--help`, `-h` | Show help message and usage |
+| `--help` | Show help message and usage |
 | `--output`, `-o` | Output format: `text` (default), `json` |
-| `--max-results`, `-m` | Maximum results to return |
+| `--max-results`, `-m` | Maximum results (query default: 50, export default: 1000); values over 100 auto-paginate |
 | `--fields` | Comma-separated list of fields |
 | `--show-links`, `-l` | Show issue links in output |
 | `--show-time`, `-t` | Show time tracking info |
 | `--show-agile`, `-a` | Show agile fields (story points, sprint) |
-| `--page-token`, `-p` | Pagination token for large results |
+| `--page-token`, `-p` | Pagination token for manual paging (query only) |
+
+**Note:** For `search export`, `-o`/`--output` is the output *file path* (required) and `-f`/`--format` selects `csv` or `json`.
 
 ## Examples by Category
 
@@ -119,6 +120,13 @@ jira-as search query "project = PROJ" --fields key,summary,status,assignee
 
 # With result limit
 jira-as search query "project = PROJ" --max-results 50
+
+# Large result sets: --max-results over 100 auto-paginates across API pages
+jira-as search query "project = PROJ" --max-results 250
+
+# Manual paging: --page-token fetches exactly one page (disables auto-pagination);
+# the token is printed with the previous page's results
+jira-as search query "project = PROJ" --page-token "TOKEN"
 ```
 
 ### JQL Building
@@ -167,7 +175,7 @@ jira-as search filter create -n "Team Filter" -j "project = PROJ" -d "Team issue
 jira-as search filter list --favourites          # Your favourite filters
 jira-as search filter list --my                  # Your own filters
 jira-as search filter list --search "Sprint"     # Search by name
-jira-as search filter list --owner "john@co.com" # By owner
+jira-as search filter list --owner self          # By owner (account ID or "self")
 jira-as search filter list --project PROJ        # By project scope
 jira-as search filter list --id 10042            # Get specific filter by ID
 
@@ -217,18 +225,20 @@ jira-as search bulk-update "project = PROJ" --add-labels batch1 --max-issues 50 
 ### Export
 
 ```bash
-# CSV export
+# CSV export (objects flatten to their display name)
 jira-as search export "project = PROJ" -o report.csv
 
-# JSON export
+# JSON export (keeps nested field objects: status, assignee, priority, ...)
 jira-as search export "project = PROJ" -o data.json --format json
 
 # Export specific fields
 jira-as search export "project = PROJ" -o report.csv --fields key,summary,status,assignee
 
-# Limit results
+# Limit results (default: 1000; auto-paginates past the 100-issue API page size)
 jira-as search export "project = PROJ" -o report.csv --max-results 500
 ```
+
+**Empty results are not an error:** an export that matches zero issues still succeeds (exit 0) — CSV gets a header-only file, JSON gets `{"issues": [], "total": 0}`.
 
 ### Using Filters in Queries
 
@@ -245,12 +255,12 @@ jira-as search query "project = PROJ" --save-as "My New Filter"
 
 ## Exporting Large Datasets
 
-For large exports, optimize your query and field selection:
+Prefer `search export` over `search query --output json` when pulling results to a file: it defaults to `--max-results 1000` and auto-paginates past the 100-issue API page size, so one command collects the full result set. For large exports, optimize your query and field selection:
 
 | Result Size | Recommendation |
 |-------------|----------------|
 | < 1000 | `jira-as search export "JQL" -o file.csv` |
-| 1000-5000 | `jira-as search export "JQL" -o file.csv --fields key,summary,status` |
+| 1000-5000 | `jira-as search export "JQL" -o file.csv --max-results 5000 --fields key,summary,status` |
 | > 5000 | Split by date ranges using created/updated filters |
 
 ```bash
