@@ -4,7 +4,7 @@
 
 [project]
 name = "jira-assistant-skills-plugin"
-version = "4.1.0"
+version = "4.0.1"
 description = "Claude Code plugin for JIRA automation - provides skill documentation for the jira-as CLI"
 readme = "README.md"
 requires-python = ">=3.10"
