@@ -1,5 +1,36 @@
 # Changelog
 
+## [4.3.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v4.2.0...v4.3.0) (2026-08-18)
+
+
+### Documentation
+
+* align all skills with the jira-as 1.1.3 CLI surface: `issue` parent flags (`--parent`, `--parent-via-update`), `--dry-run` on create, `issue transition`/`transitions`/`comment` aliases, `--no-notify` degrade behavior, and ADF auto-wrap for rich-text custom fields (`JIRA_ADF_CUSTOM_FIELDS`)
+* **jira-agile:** document board discovery via `agile board list` and backlog API fallback caveats
+* **jira-jsm:** document optional `--summary`, `--priority`, `--labels` on `request create`; `request comment --format text|wiki`; portal-only field behavior
+* **jira-ops:** match `ops discover-project` interface (stdout-only, `--output json`, `--sample-size`, `--days`) in skill and slash command
+* **jira-relationships:** document remote links (`link --remote-url`, `--remote-title`, `--remote-relationship`) with native-vs-remote guidance
+* **jira-search:** document query auto-pagination above 100 results, empty-export success, and export guidance for large pulls
+* **docs:** point CLI reference, architecture, troubleshooting, and install docs at public PyPI jira-as 1.1.3 and github.com/grandcamel
+
+
+### Miscellaneous Chores
+
+* **deps:** require `jira-as>=1.1.3` in pyproject and e2e requirements
+
+## [4.2.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v4.0.0...v4.2.0) (2026-08-18)
+
+
+### Documentation
+
+* exhaustive SKILL.md alignment with `jira-as` CLI ground truth across all 14 skills (two alignment passes plus a doc-tail sweep; ~36 CLI/doc mismatches corrected: option names, short flags, and command groups)
+* **jira-admin:** repaired admin command documentation; `issue-type-scheme create` requires `--issue-types`
+
+
+### Miscellaneous Chores
+
+* reconcile version bookkeeping across `VERSION`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.release-please-manifest.json`, and `pyproject.toml`
+
 ## [3.0.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v2.2.7...v3.0.0) (2026-01-10)
 
 
