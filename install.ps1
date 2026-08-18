@@ -18,7 +18,7 @@ $ErrorActionPreference = "Stop"
 
 # Configuration
 $MinPythonMajor = 3
-$MinPythonMinor = 8
+$MinPythonMinor = 10
 $RepoUrl = "https://github.com/grandcamel/jira-assistant-skills.git"
 $InstallDir = "jira-assistant-skills"
 
@@ -106,7 +106,7 @@ function Test-PythonVersion {
 }
 
 function Test-InRepository {
-    return (Test-Path "pyproject.toml") -and (Test-Path "skills")
+    return (Test-Path "pyproject.toml") -and (Test-Path "skills") -and (Test-Path ".claude-plugin/plugin.json")
 }
 
 function Get-Repository {
@@ -130,12 +130,12 @@ function Get-Repository {
             return $true
         } catch {
             Write-Warn "Git clone failed. The repository URL may need to be updated."
-            Write-Info "Please clone the repository manually and run setup.py"
+            Write-Info "Please clone the repository manually and re-run this installer."
             return $false
         }
     } else {
         Write-Warn "Git not found. Please install git or clone the repository manually."
-        Write-Info "Then run: python setup.py"
+        Write-Info "Then re-run: .\install.ps1"
         return $false
     }
 }
@@ -188,9 +188,9 @@ function Main {
 
     Write-Host ""
     Write-Host "This installer will:"
-    Write-Host "  1. Check Python version (3.8+ required)"
-    Write-Host "  2. Install Python dependencies"
-    Write-Host "  3. Run the interactive setup wizard"
+    Write-Host "  1. Check Python version (3.10+ required)"
+    Write-Host "  2. Install Python dependencies (jira-as from public PyPI)"
+    Write-Host "  3. Print the credential setup steps"
     Write-Host ""
 
     # Detect Python
@@ -200,7 +200,7 @@ function Main {
     if (-not $pythonCmd) {
         Write-Err "Python 3 not found"
         Write-Host ""
-        Write-Host "Please install Python 3.8 or higher:"
+        Write-Host "Please install Python 3.10 or higher:"
         Write-Host ""
         Write-Host "  Download from: https://www.python.org/downloads/"
         Write-Host ""
@@ -224,7 +224,7 @@ function Main {
         Write-Host ""
         Write-Host "Please clone the repository manually and run:"
         Write-Host "  cd jira-assistant-skills"
-        Write-Host "  $pythonCmd setup.py"
+        Write-Host "  .\install.ps1"
         exit 1
     }
 
@@ -233,36 +233,26 @@ function Main {
         exit 1
     }
 
-    # Run setup wizard
-    Write-Header "Starting Setup Wizard"
+    # Point at credential setup
+    Write-Header "Configure Credentials"
     Write-Host ""
+    Write-Host "1. Create an API token: https://id.atlassian.com/manage-profile/security/api-tokens"
+    Write-Host "2. Set your credentials (persist via [System.Environment]::SetEnvironmentVariable or your profile):"
+    Write-Host '     $env:JIRA_API_TOKEN = "your-api-token"'
+    Write-Host '     $env:JIRA_EMAIL = "your@email.com"'
+    Write-Host '     $env:JIRA_SITE_URL = "https://your-company.atlassian.net"'
+    Write-Host ""
+    Write-Host "   Or run /jira-assistant-setup inside Claude Code for guided setup."
+    Write-Host ""
+    Write-Ok "Installation complete!"
+    Write-Host ""
+    Write-Host "Quick test:"
+    Write-Host "  jira-as issue get PROJ-123"
+    Write-Host ""
+    Write-Host "Or ask Claude Code:"
+    Write-Host '  "Show me my open issues"'
 
-    $cmdParts = $pythonCmd.Split()
-    if ($cmdParts.Length -gt 1) {
-        & $cmdParts[0] $cmdParts[1..99] setup.py
-    } else {
-        & $pythonCmd setup.py
-    }
-    $exitCode = $LASTEXITCODE
-
-    if ($exitCode -eq 0) {
-        Write-Host ""
-        Write-Ok "Installation complete!"
-        Write-Host ""
-        Write-Host "Quick test:"
-        Write-Host "  jira-as issue get PROJ-123"
-        Write-Host ""
-        Write-Host "Or ask Claude Code:"
-        Write-Host '  "Show me my open issues"'
-    } else {
-        Write-Host ""
-        Write-Warn "Setup wizard exited with code $exitCode"
-        Write-Host ""
-        Write-Host "You can run setup again with:"
-        Write-Host "  $pythonCmd setup.py"
-    }
-
-    exit $exitCode
+    exit 0
 }
 
 # Run main

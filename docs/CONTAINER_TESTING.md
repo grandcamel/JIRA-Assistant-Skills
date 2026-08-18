@@ -79,13 +79,13 @@ Run tests with restricted tool access:
 Hybrid file + JIRA workflows:
 
 ```bash
-# Organize docs and close ticket
+# Organize docs and close ticket (TES is the harness's seed project)
 ./run_workspace.sh --project ~/myproject \
-  --prompt "Organize docs/ and close PROJ-123"
+  --prompt "Organize docs/ and close TES-123"
 
 # Code review with JIRA comment
 ./run_workspace.sh --project ~/myproject --profile code-review \
-  --prompt "Review src/auth.py and comment on PROJ-456"
+  --prompt "Review src/auth.py and comment on TES-456"
 ```
 
 | Profile | Use Case | Allowed Operations |

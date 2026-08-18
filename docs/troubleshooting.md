@@ -73,19 +73,19 @@ pip install "jira-as>=1.1.3"
 **Solution:**
 - Verify issue key format: `PROJ-123`
 - Check project access permissions
-- Ensure issue exists in specified profile's JIRA instance
+- Ensure the issue exists on the JIRA instance `JIRA_SITE_URL` points at
 
 ---
 
-## Profile Issues
+## Configuration Issues
 
-### "Profile not found"
+### "JIRA URL not configured" / "credentials not configured"
 
-**Cause:** Profile name doesn't match configuration.
+**Cause:** No credentials found in environment variables, keychain, or settings files.
 
 **Solution:**
-1. Check `settings.json` or `settings.local.json` for profile names
-2. Profile names are case-sensitive
+1. Set `JIRA_SITE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN` environment variables
+2. Or add a `jira.credentials` block to `.claude/settings.local.json` (see `config/settings.local.json.example`)
 3. Verify JSON syntax is valid
 
 ---

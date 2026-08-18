@@ -48,9 +48,8 @@ Configuration is loaded from environment variables (recommended):
 | `JIRA_API_TOKEN` | API token from id.atlassian.com/manage-profile/security/api-tokens |
 | `JIRA_EMAIL` | Atlassian account email |
 | `JIRA_SITE_URL` | JIRA instance URL (e.g., https://company.atlassian.net) |
-| `JIRA_PROFILE` | Optional profile name for multi-instance support |
 
-See `config/settings.example.json` for profile-based configuration.
+See `config/settings.example.json` for file-based configuration.
 
 ## Error Handling Strategy
 

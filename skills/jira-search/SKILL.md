@@ -278,7 +278,7 @@ jira-as search export "project = PROJ AND created >= -60d AND created < -30d" -o
 |------|---------|
 | 0 | Success |
 | 1 | General error (API, validation) |
-| 2 | Invalid arguments |
+| 2 | Usage error (invalid arguments); also used for authentication errors |
 | 130 | User interrupted (Ctrl+C) |
 
 ## Troubleshooting

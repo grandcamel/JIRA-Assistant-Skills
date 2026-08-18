@@ -22,7 +22,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 MIN_PYTHON_MAJOR=3
-MIN_PYTHON_MINOR=8
+MIN_PYTHON_MINOR=10
 REPO_URL="https://github.com/grandcamel/jira-assistant-skills.git"
 INSTALL_DIR="jira-assistant-skills"
 
@@ -86,7 +86,7 @@ check_python_version() {
 
 # Check if we're in the repo already
 check_in_repo() {
-    if [ -f "pyproject.toml" ] && [ -d "skills" ]; then
+    if [ -f "pyproject.toml" ] && [ -d "skills" ] && [ -f ".claude-plugin/plugin.json" ]; then
         return 0
     fi
     return 1
@@ -109,13 +109,13 @@ get_repository() {
         print_info "Cloning repository..."
         git clone "$REPO_URL" "$INSTALL_DIR" 2>/dev/null || {
             print_warn "Git clone failed. The repository URL may need to be updated."
-            print_info "Please clone the repository manually and run setup.py"
+            print_info "Please clone the repository manually and re-run this installer."
             return 1
         }
         cd "$INSTALL_DIR"
     else
         print_warn "Git not found. Please install git or clone the repository manually."
-        print_info "Then run: python setup.py"
+        print_info "Then re-run: ./scripts/install.sh"
         return 1
     fi
 
@@ -136,12 +136,25 @@ install_dependencies() {
             print_ok "Library installed"
             return 0
         fi
+        print_warn "Library install with --user failed, retrying without --user..."
+        if $python_cmd -m pip install "jira-as>=1.1.3"; then
+            print_ok "Library installed"
+            return 0
+        fi
+        print_error "Failed to install jira-as"
+        print_info "Try manually: $python_cmd -m pip install \"jira-as>=1.1.3\""
+        return 1
     else
         print_warn "pip install failed, trying without --user flag..."
         if $python_cmd -m pip install -e . 2>/dev/null; then
             print_ok "Package installed"
-            $python_cmd -m pip install "jira-as>=1.1.3" 2>/dev/null
-            return 0
+            if $python_cmd -m pip install "jira-as>=1.1.3"; then
+                print_ok "Library installed"
+                return 0
+            fi
+            print_error "Failed to install jira-as"
+            print_info "Try manually: $python_cmd -m pip install \"jira-as>=1.1.3\""
+            return 1
         else
             print_error "Failed to install dependencies"
             print_info "Try manually: $python_cmd -m pip install -e . && pip install \"jira-as>=1.1.3\""
@@ -156,9 +169,9 @@ main() {
 
     echo ""
     echo "This installer will:"
-    echo "  1. Check Python version (3.8+ required)"
-    echo "  2. Install Python dependencies"
-    echo "  3. Run the interactive setup wizard"
+    echo "  1. Check Python version (3.10+ required)"
+    echo "  2. Install Python dependencies (jira-as from public PyPI)"
+    echo "  3. Print the credential setup steps"
     echo ""
 
     # Detect Python
@@ -168,7 +181,7 @@ main() {
     if [ -z "$PYTHON_CMD" ]; then
         print_error "Python 3 not found"
         echo ""
-        echo "Please install Python 3.8 or higher:"
+        echo "Please install Python 3.10 or higher:"
         echo ""
         case "$(uname -s)" in
             Darwin)
@@ -202,7 +215,7 @@ main() {
         echo ""
         echo "Please clone the repository manually and run:"
         echo "  cd jira-assistant-skills"
-        echo "  $PYTHON_CMD setup.py"
+        echo "  ./scripts/install.sh"
         exit 1
     fi
 
@@ -211,31 +224,26 @@ main() {
         exit 1
     fi
 
-    # Run setup wizard
-    print_header "Starting Setup Wizard"
+    # Point at credential setup
+    print_header "Configure Credentials"
     echo ""
+    echo "1. Create an API token: https://id.atlassian.com/manage-profile/security/api-tokens"
+    echo "2. Export your credentials (add to your shell profile to persist):"
+    echo '     export JIRA_API_TOKEN="your-api-token"'
+    echo '     export JIRA_EMAIL="your@email.com"'
+    echo '     export JIRA_SITE_URL="https://your-company.atlassian.net"'
+    echo ""
+    echo "   Or run /jira-assistant-setup inside Claude Code for guided setup."
+    echo ""
+    print_ok "Installation complete!"
+    echo ""
+    echo "Quick test:"
+    echo "  jira-as issue get PROJ-123"
+    echo ""
+    echo "Or ask Claude Code:"
+    echo '  "Show me my open issues"'
 
-    $PYTHON_CMD setup.py
-    EXIT_CODE=$?
-
-    if [ $EXIT_CODE -eq 0 ]; then
-        echo ""
-        print_ok "Installation complete!"
-        echo ""
-        echo "Quick test:"
-        echo "  jira-as issue get PROJ-123"
-        echo ""
-        echo "Or ask Claude Code:"
-        echo '  "Show me my open issues"'
-    else
-        echo ""
-        print_warn "Setup wizard exited with code $EXIT_CODE"
-        echo ""
-        echo "You can run setup again with:"
-        echo "  $PYTHON_CMD setup.py"
-    fi
-
-    exit $EXIT_CODE
+    exit 0
 }
 
 # Run main

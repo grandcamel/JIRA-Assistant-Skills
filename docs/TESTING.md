@@ -1,18 +1,29 @@
 # Testing
 
-**IMPORTANT: All unit tests must pass before merging to main.** Enforced by CI.
+**IMPORTANT: All CI checks must pass before merging to main.**
 
-## Running All Unit Tests
+This repository is documentation-first: the CLI's unit tests (950+) live in
+the [jira-as](https://github.com/grandcamel/jira-as) library repository. The
+test suites in this repo are:
+
+| Suite | Location | Needs |
+|-------|----------|-------|
+| Routing tests | `skills/jira-assistant/tests/` | Claude CLI (live, billed) |
+| Live integration | `skills/shared/tests/live_integration/` | JIRA instance or Docker |
+| Plugin E2E | `tests/e2e/` | Claude CLI credentials |
+
+## Running Tests
 
 ```bash
-# Run all unit tests (required before merge)
+# Run the per-skill unit-test loop (most skills have no unit tests here;
+# suites that require live services are excluded by default)
 ./scripts/run_tests.sh
 
 # Run with verbose output
 ./scripts/run_tests.sh --verbose
 
 # Run tests for a specific skill only
-./scripts/run_tests.sh --skill jira-bulk
+./scripts/run_tests.sh --skill jira-assistant
 
 # Stop on first skill failure
 ./scripts/run_tests.sh --fail-fast
@@ -24,25 +35,16 @@ Use the single test runner for rapid iteration:
 
 ```bash
 # Run all tests in a file
-./scripts/run_single_test.sh jira-bulk test_bulk_assign.py
-
-# Run a specific test class
-./scripts/run_single_test.sh jira-bulk test_bulk_assign.py::TestBulkAssignToUser
-
-# Run a specific test method
-./scripts/run_single_test.sh jira-bulk test_bulk_assign.py::TestBulkAssignToUser::test_bulk_assign_to_user_by_account_id
+./scripts/run_single_test.sh jira-assistant test_sandbox_validation.py
 
 # Run tests matching a keyword
-./scripts/run_single_test.sh jira-search -k "validate"
-
-# Run with verbose output and full traceback
-./scripts/run_single_test.sh jira-admin test_list_projects.py -v --tb=long
+./scripts/run_single_test.sh jira-assistant -k "sandbox"
 
 # Re-run only failed tests from last run
-./scripts/run_single_test.sh jira-admin --lf
+./scripts/run_single_test.sh jira-assistant --lf
 
 # Drop into debugger on failure
-./scripts/run_single_test.sh jira-bulk test_bulk_assign.py --pdb
+./scripts/run_single_test.sh jira-assistant test_sandbox_validation.py --pdb
 ```
 
 ## Test Organization
@@ -59,7 +61,8 @@ skills/shared/tests/
 
 ## Test Coverage
 
-**Requirement: 95% test coverage is required for all PRs.**
+Coverage requirements apply to the [jira-as](https://github.com/grandcamel/jira-as)
+library, where the CLI's unit tests live. For suites in this repo:
 
 ```bash
 # Run tests with coverage collection

@@ -144,7 +144,7 @@ All commands return standard exit codes:
 |------|---------|
 | 0 | Success - operation completed successfully |
 | 1 | Error - operation failed (check error message for details) |
-| 2 | Invalid arguments - incorrect command-line usage |
+| 2 | Usage error (invalid arguments); also used for authentication errors |
 
 ## Examples
 
