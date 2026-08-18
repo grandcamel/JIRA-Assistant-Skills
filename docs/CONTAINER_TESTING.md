@@ -69,9 +69,9 @@ Run tests with restricted tool access:
 
 | Profile | Use Case | Allowed Operations |
 |---------|----------|-------------------|
-| `read-only` | Safe demos | `jira issue get`, `jira search`, `jira fields list/get` |
-| `search-only` | JQL workshops | `jira search` only |
-| `issue-only` | CRUD training | All `jira issue` commands |
+| `read-only` | Safe demos | `jira-as issue get`, `jira-as search`, `jira-as fields list/get` |
+| `search-only` | JQL workshops | `jira-as search` only |
+| `issue-only` | CRUD training | All `jira-as issue` commands |
 | `full` | Full testing | No restrictions |
 
 ## Workspace Runner
@@ -81,17 +81,17 @@ Hybrid file + JIRA workflows:
 ```bash
 # Organize docs and close ticket
 ./run_workspace.sh --project ~/myproject \
-  --prompt "Organize docs/ and close TES-123"
+  --prompt "Organize docs/ and close PROJ-123"
 
 # Code review with JIRA comment
 ./run_workspace.sh --project ~/myproject --profile code-review \
-  --prompt "Review src/auth.py and comment on TES-456"
+  --prompt "Review src/auth.py and comment on PROJ-456"
 ```
 
 | Profile | Use Case | Allowed Operations |
 |---------|----------|-------------------|
-| `docs-jira` | Default | File ops + `jira issue` + `jira lifecycle` |
-| `code-review` | Reviews | Read files + `jira collaborate` |
+| `docs-jira` | Default | File ops + `jira-as issue` + `jira-as lifecycle` |
+| `code-review` | Reviews | Read files + `jira-as collaborate` |
 | `docs-only` | File work | File operations only |
 | `full-access` | Everything | No restrictions |
 

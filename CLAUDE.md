@@ -110,8 +110,8 @@ The `jira-as` package provides:
 The project provides a unified CLI via the `jira-as` command:
 
 ```bash
-# Install in development mode
-pip install -e jira-as/
+# Install from public PyPI
+pip install "jira-as>=1.1.3"
 
 # Verify installation
 jira-as --version
@@ -126,7 +126,7 @@ jira-as issue --help
 
 # Issue operations
 jira-as issue get PROJ-123
-jira-as issue create PROJ --type Bug --summary "Fix login"
+jira-as issue create --project PROJ --type Bug --summary "Fix login"
 jira-as issue update PROJ-123 --priority High
 jira-as issue delete PROJ-123
 
@@ -136,22 +136,22 @@ jira-as search query "assignee = currentUser()" --max-results 50
 
 # Workflow transitions
 jira-as lifecycle transitions PROJ-123
-jira-as lifecycle transition PROJ-123 "In Progress"
+jira-as lifecycle transition PROJ-123 --to "In Progress"
 
 # Agile operations
-jira-as agile sprints --board 1
-jira-as agile move-to-sprint PROJ-123 --sprint 42
+jira-as agile sprint list --board 1
+jira-as agile sprint move-issues --issues PROJ-123 --sprint 42
 
 # Time tracking
 jira-as time log PROJ-123 --time "2h 30m" --comment "Code review"
 jira-as time worklogs PROJ-123
 
 # Bulk operations
-jira-as bulk transition "project = PROJ AND status = Open" "In Progress" --dry-run
+jira-as bulk transition --jql "project = PROJ AND status = Open" --to "In Progress" --dry-run
 
 # Administration
-jira-as admin projects
-jira-as admin users --project PROJ
+jira-as admin project list
+jira-as admin user search "jane" --project PROJ --assignable
 ```
 
 #### Available Command Groups
@@ -269,13 +269,14 @@ def main():
 | Code | Error Type |
 |------|------------|
 | 0 | Success |
-| 1 | General error |
-| 2 | Validation error |
-| 3 | Authentication error |
-| 4 | Permission error |
-| 5 | Not found error |
-| 6 | Rate limit error |
+| 1 | Validation or general error |
+| 2 | Authentication error |
+| 3 | Permission error |
+| 4 | Not found error |
+| 5 | Rate limit error |
+| 6 | Conflict error |
 | 7 | Server error |
+| 130 | Cancelled (Ctrl+C) |
 
 ## JQL Query Patterns
 

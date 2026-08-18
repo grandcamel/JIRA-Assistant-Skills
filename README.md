@@ -26,7 +26,7 @@
 </table>
 
 <p align="center">
-  <a href="https://pypi.org/project/jira-as/"><img src="https://img.shields.io/pypi/v/jira-as?logo=pypi&logoColor=white" alt="PyPI"></a>
+  <a href="https://pypi.org/project/jira-as/"><img src="https://img.shields.io/badge/jira--as-1.1.3-3775A9?logo=pypi&logoColor=white" alt="jira-as 1.1.3 on PyPI"></a>
   <img src="https://img.shields.io/badge/tests-1644%20passing-brightgreen?logo=pytest" alt="Tests">
   <img src="https://img.shields.io/badge/python-3.10+-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/skills-14-FF6B6B" alt="Skills">
@@ -128,8 +128,7 @@ cd jira-assistant-skills
 ### 2. Install Dependencies
 
 ```bash
-pip install jira-as
-pip install -e .  # Install the jira-as CLI
+pip install "jira-as>=1.1.3"  # jira-as CLI + shared library from public PyPI
 ```
 
 ### 3. Get API Token
@@ -156,7 +155,7 @@ claude "What's blocking the release?"
 # Or use the CLI directly
 jira-as issue get PROJ-123
 jira-as search query "project = PROJ AND status = Open"
-jira-as time log PROJ-123 2h
+jira-as time log PROJ-123 --time 2h
 ```
 
 **That's it.** Claude now has full JIRA access via natural language, and you can use the `jira-as` CLI directly from your terminal.
@@ -278,7 +277,7 @@ Claude provides a formatted summary with everything she needs.
 | **jira-admin** | Project admin | "List project permissions" |
 
 <p align="center">
-  <a href="docs/scripts-reference.md"><strong>Full Scripts Reference →</strong></a>
+  <a href="docs/CLI_REFERENCE.md"><strong>Full CLI Reference →</strong></a>
 </p>
 
 ---
@@ -505,7 +504,7 @@ One-click cloud environment with all dependencies pre-installed.
 |----------|-------------|
 | [Quick Start Guide](docs/quick-start.md) | Get up and running in 5 minutes |
 | [Configuration Guide](docs/configuration.md) | Multi-profile setup and options |
-| [Scripts Reference](docs/scripts-reference.md) | Complete CLI documentation |
+| [CLI Reference](docs/CLI_REFERENCE.md) | Complete CLI documentation |
 | [Troubleshooting](docs/troubleshooting.md) | Common issues and solutions |
 
 ### Need Help?
@@ -565,8 +564,8 @@ git clone https://github.com/grandcamel/jira-assistant-skills.git
 cd jira-assistant-skills
 
 # Install dependencies and CLI
-pip install jira-as>=0.1.5 pytest pytest-asyncio
-pip install -e .  # Install CLI in editable mode
+pip install "jira-as>=1.1.3" pytest pytest-asyncio
+pip install -e .  # Install the plugin package in editable mode
 
 # Run tests (uses root pytest.ini configuration)
 pytest skills/*/tests/*.py -v

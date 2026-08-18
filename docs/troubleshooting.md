@@ -63,7 +63,7 @@ echo $JIRA_SITE_URL
 
 **Solution:**
 ```bash
-pip install -r .claude/skills/shared/scripts/lib/requirements.txt
+pip install "jira-as>=1.1.3"
 ```
 
 ### "Issue not found"
@@ -119,13 +119,13 @@ env | grep JIRA
 ### Test basic connectivity
 
 ```bash
-python .claude/skills/jira-issue/scripts/get_issue.py KNOWN-ISSUE --profile development
+jira-as issue get PROJ-123
 ```
 
 ### Enable verbose output
 
 ```bash
-python script.py --verbose
+jira-as --verbose issue get PROJ-123
 ```
 
 ---
@@ -141,4 +141,4 @@ python script.py --verbose
 
 - [Quick Start Guide](quick-start.md)
 - [Configuration Guide](configuration.md)
-- [Scripts Reference](scripts-reference.md)
+- [CLI Reference](CLI_REFERENCE.md)
