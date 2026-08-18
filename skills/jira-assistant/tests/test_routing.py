@@ -326,7 +326,7 @@ def run_claude_routing(
 
     # Verbose output for debugging (disable with ROUTING_TEST_QUIET=1)
     if not os.environ.get("ROUTING_TEST_QUIET"):
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"INPUT: {input_text}")
         print(f"SESSION: {session_id}")
         print(f"SKILL DETECTED: {skill_loaded}")
@@ -334,7 +334,7 @@ def run_claude_routing(
         print(f"RESPONSE:\n{response_text}")
         if permission_denials:
             print(f"PERMISSION DENIALS: {json.dumps(permission_denials, indent=2)}")
-        print(f"{'='*70}\n")
+        print(f"{'=' * 70}\n")
 
     return RoutingResult(
         skill_loaded=skill_loaded,
@@ -789,7 +789,9 @@ def test_edge_cases(test_case, record_otel):
             )
         elif expected_action == "show_quick_reference":
             # Capability queries are flexible - asking clarification is acceptable
-            assert result.skill_loaded == expected_skill or result.asked_clarification, (
+            assert (
+                result.skill_loaded == expected_skill or result.asked_clarification
+            ), (
                 f"Expected {expected_skill} or clarification, got {result.skill_loaded}\n"
                 f"Input: '{input_text}'"
             )
