@@ -237,7 +237,7 @@ jira-as admin issue-type delete ID            # Delete issue type
 ```bash
 jira-as admin issue-type-scheme list          # List schemes
 jira-as admin issue-type-scheme get ID        # Get scheme details
-jira-as admin issue-type-scheme create        # Create new scheme
+jira-as admin issue-type-scheme create --name "Name" --issue-types 10001,10002  # Create new scheme (-i/--issue-types required: comma-separated issue type IDs, at least one)
 jira-as admin issue-type-scheme assign        # Assign to project
 jira-as admin issue-type-scheme project       # Get project's scheme
 ```
@@ -294,10 +294,6 @@ jira-as admin permission-scheme assign --project PROJ --scheme 10050 --dry-run
 ```bash
 jira-as admin project list --output json
 jira-as admin workflow get --name "Workflow" --output json
-```
-
-### Profile Selection
-```bash
 ```
 
 ---

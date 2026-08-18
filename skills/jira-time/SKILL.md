@@ -82,6 +82,8 @@ All commands support these common options:
 | `-f/--format` | Output format: text, json, csv | report (text/csv/json), export (csv/json only) |
 | `--help` | Show help message with all available options | All commands |
 
+> **Note:** For `estimate`, use the long form `--output` - on that command `-o` is short for `--original`. For `export`, `-o/--output` is the output *file path* (see export-specific options below).
+
 ### Worklog-specific options
 
 | Option | Description |
@@ -91,6 +93,7 @@ All commands support these common options:
 | `-s/--started DATE` | When work was started (default: now) |
 | `--adjust-estimate MODE` | How to adjust remaining estimate: auto, leave, new, manual (see note below) |
 | `--new-estimate TIME` | New remaining estimate (for adjust=new or adjust=manual) |
+| `--reduce-by TIME` | Amount to reduce estimate (for adjust=manual with log) |
 | `--increase-by TIME` | Amount to increase estimate (for adjust=manual with delete-worklog) |
 | `--visibility-type TYPE` | Worklog visibility: role or group |
 | `--visibility-value TEXT` | Role name or group name for visibility |
@@ -110,7 +113,7 @@ All commands support these common options:
 
 | Option | Description |
 |--------|-------------|
-| `--period PERIOD` | Time period: today, yesterday, this-week, last-week, this-month, last-month, or YYYY-MM format |
+| `--period PERIOD` | Time period: today, yesterday, this-week, last-week, this-month, last-month (YYYY-MM format is only accepted by `export`, not `report`) |
 | `-u/--user USER` | Filter by user (use currentUser() for yourself) |
 | `-p/--project PROJECT` | Filter by project key |
 | `-s/--since DATE` | Start date for filtering |
@@ -238,8 +241,9 @@ jira-as time report -u currentUser() --period last-week
 # Project time for this month
 jira-as time report -p PROJ --period this-month
 
-# Report for specific month using YYYY-MM format
-jira-as time report -p PROJ --period 2025-01
+# Report for a specific month using an explicit date range
+# (report does not accept YYYY-MM for --period; use `time export` for that)
+jira-as time report -p PROJ -s 2025-01-01 --until 2025-01-31
 
 # Export to CSV for billing
 jira-as time report -p PROJ -s 2025-01-01 --until 2025-01-31 -f csv > timesheet.csv

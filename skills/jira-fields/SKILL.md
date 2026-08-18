@@ -79,7 +79,7 @@ All commands support `--help` for full documentation.
 
 | Command | Description |
 |---------|-------------|
-| `jira-as fields list` | List all custom fields in the JIRA instance |
+| `jira-as fields list` | List available fields (instance-wide, or scoped to a project's create screen) |
 | `jira-as fields check-project` | Check field availability for a specific project |
 | `jira-as fields configure-agile` | Configure Agile fields for a company-managed project |
 | `jira-as fields create` | Create a new custom field (requires admin) |
@@ -98,7 +98,19 @@ jira-as fields list --agile
 
 # Show all fields (including system fields)
 jira-as fields list --all
+
+# Scope to the fields on a project's create screen (-p is short for --project)
+jira-as fields list --project PROJ
+jira-as fields list -p PROJ
+
+# Scope further to one issue type (-t is short for --issue-type; requires --project)
+jira-as fields list --project PROJ --issue-type Bug
+jira-as fields list -p PROJ -t Bug
 ```
+
+Without `--project`, `fields list` shows the whole instance field catalogue.
+With `--project` (and optionally `--issue-type`), it lists only the fields you
+can actually set when creating an issue there.
 
 ### Check Project Fields
 ```bash
@@ -269,6 +281,9 @@ jira-as fields configure-agile NEWPROJ --story-points customfield_10016 --epic-l
 ```bash
 # Filter for fields by name
 jira-as fields list --filter "story"
+
+# List only the fields settable on the project's create screen
+jira-as fields list --project PROJ --issue-type Story
 
 # Check what's available for the project
 jira-as fields check-project PROJ
