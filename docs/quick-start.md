@@ -6,23 +6,20 @@ Get up and running with JIRA Assistant Skills in 5 minutes.
 
 ## Prerequisites
 
-- **Python 3.8+** — Check with `python --version`
+- **Python 3.10+** — Check with `python --version`
 - **Claude Code** — The Anthropic CLI tool
 - **JIRA Cloud account** — With API token permissions
 
 ---
 
-## Step 1: Install Dependencies
+## Step 1: Install the CLI
 
 ```bash
-pip install -r .claude/skills/shared/scripts/lib/requirements.txt
+pip install "jira-as>=1.1.3"
 ```
 
-This installs:
-- `requests` — HTTP client
-- `tabulate` — Table formatting
-- `colorama` — Colored terminal output
-- `python-dotenv` — Environment variable management
+This installs the `jira-as` command-line tool and shared library from
+public PyPI — everything the skills need.
 
 ---
 
@@ -54,19 +51,17 @@ Create `.claude/settings.local.json` (gitignored):
 ```json
 {
   "jira": {
-    "default_profile": "production",
-    "profiles": {
-      "production": {
-        "url": "https://your-company.atlassian.net",
-        "email": "your@email.com",
-        "api_token": "your-api-token",
-        "project_keys": ["PROJ", "TEAM"],
-        "default_project": "PROJ"
-      }
-    }
+    "credentials": {
+      "url": "https://your-company.atlassian.net",
+      "email": "your@email.com",
+      "api_token": "your-api-token"
+    },
+    "default_project": "PROJ"
   }
 }
 ```
+
+Or run `/jira-assistant-setup` inside Claude Code for guided setup.
 
 ---
 
@@ -74,7 +69,7 @@ Create `.claude/settings.local.json` (gitignored):
 
 ```bash
 # Test with a known issue key
-python .claude/skills/jira-issue/scripts/get_issue.py PROJ-123
+jira-as issue get PROJ-123
 ```
 
 You should see issue details. If not, check [Troubleshooting](troubleshooting.md).
@@ -102,6 +97,6 @@ For dev/staging/prod environments, see [Configuration Guide](configuration.md).
 
 ## Next Steps
 
-- [Scripts Reference](scripts-reference.md) — All available commands
+- [CLI Reference](CLI_REFERENCE.md) — All available commands
 - [Configuration Guide](configuration.md) — Advanced setup
 - [Troubleshooting](troubleshooting.md) — Common issues

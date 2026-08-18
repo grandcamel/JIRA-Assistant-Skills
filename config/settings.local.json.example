@@ -1,16 +1,9 @@
 {
   "jira": {
-    "default_profile": "development",
     "credentials": {
-      "production": {
-        "email": "your-email@company.com"
-      },
-      "development": {
-        "email": "your-email@company.com"
-      },
-      "staging": {
-        "email": "your-email@company.com"
-      }
+      "url": "https://your-company.atlassian.net",
+      "email": "your-email@company.com",
+      "api_token": "your-api-token"
     }
   }
 }

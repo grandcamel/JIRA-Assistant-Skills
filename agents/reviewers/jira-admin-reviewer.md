@@ -35,21 +35,24 @@ Extract all documented `jira-as admin ...` command patterns, options, and exampl
 Get actual CLI commands and options. This is a large command group with ~16 subgroups and ~40 commands:
 ```bash
 jira-as admin --help
-jira-as admin projects --help
-jira-as admin users --help
-jira-as admin roles --help
-jira-as admin permissions --help
-jira-as admin schemes --help
-jira-as admin workflows --help
-jira-as admin screens --help
-jira-as admin issue-types --help
-jira-as admin priorities --help
-jira-as admin resolutions --help
-jira-as admin statuses --help
-jira-as admin security --help
-jira-as admin notifications --help
-jira-as admin fields --help
-jira-as admin audit --help
+jira-as admin project --help
+jira-as admin user --help
+jira-as admin group --help
+jira-as admin category --help
+jira-as admin config --help
+jira-as admin automation --help
+jira-as admin automation-template --help
+jira-as admin permission --help
+jira-as admin permission-scheme --help
+jira-as admin workflow --help
+jira-as admin workflow-scheme --help
+jira-as admin screen --help
+jira-as admin screen-scheme --help
+jira-as admin issue-type --help
+jira-as admin issue-type-scheme --help
+jira-as admin notification --help
+jira-as admin notification-scheme --help
+jira-as admin status --help
 ```
 
 Explore all subcommands thoroughly.
@@ -113,21 +116,18 @@ Write findings to `agents/reviewers/findings/jira-admin.json`:
 ## Expected CLI Command Groups
 
 Based on the CLI, expect command groups including:
-- `jira-as admin projects` - Project management
-- `jira-as admin users` - User management
-- `jira-as admin roles` - Role management
-- `jira-as admin permissions` - Permission schemes
-- `jira-as admin schemes` - Various scheme management
-- `jira-as admin workflows` - Workflow administration
-- `jira-as admin screens` - Screen schemes
-- `jira-as admin issue-types` - Issue type management
-- `jira-as admin priorities` - Priority levels
-- `jira-as admin resolutions` - Resolution types
-- `jira-as admin statuses` - Status management
-- `jira-as admin security` - Security levels
-- `jira-as admin notifications` - Notification schemes
-- `jira-as admin fields` - Field configurations
-- `jira-as admin audit` - Audit log access
+- `jira-as admin project` - Project management (list, create, update, delete, archive, restore)
+- `jira-as admin user` - User lookup (get, search)
+- `jira-as admin group` - Group management
+- `jira-as admin category` - Project categories
+- `jira-as admin config` - Project configuration
+- `jira-as admin automation` / `automation-template` - Automation rules
+- `jira-as admin permission` / `permission-scheme` - Permissions and schemes
+- `jira-as admin workflow` / `workflow-scheme` - Workflow administration
+- `jira-as admin screen` / `screen-scheme` - Screens and screen schemes
+- `jira-as admin issue-type` / `issue-type-scheme` - Issue types and schemes
+- `jira-as admin notification` / `notification-scheme` - Notification schemes
+- `jira-as admin status` - Status listing
 
 ## Note
 

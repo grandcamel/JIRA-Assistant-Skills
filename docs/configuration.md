@@ -14,6 +14,10 @@ Settings are merged from multiple sources (highest priority first):
 4. **settings.json** — Team defaults (committed)
 5. **Hardcoded defaults** — Fallback values
 
+> **Note:** This order applies to credentials. Agile field IDs resolve in the
+> opposite direction — settings-file values override the env vars — see
+> [Agile Field Mapping](#agile-field-mapping) below.
+
 ---
 
 ## Settings File

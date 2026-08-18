@@ -278,6 +278,11 @@ def main():
 | 7 | Server error |
 | 130 | Cancelled (Ctrl+C) |
 
+Notes: malformed command lines (unknown flags, missing arguments) also exit 2
+via argument parsing. The core `issue get/create/update/delete` commands
+report all API failures as exit 1; the `issue transition`/`transitions`/
+`comment` aliases and the other command groups use the full table above.
+
 ## JQL Query Patterns
 
 ### Basic Queries
@@ -475,7 +480,14 @@ Tests are configured via `pytest.ini` at the project root:
 
 ### Unit Tests
 
+The library's unit tests live in the separate
+[jira-as repository](https://github.com/grandcamel/jira-as). To run them,
+clone it side-by-side into `jira-as/` (the path is gitignored here):
+
 ```bash
+# One-time: clone the library repo into this directory
+git clone https://github.com/grandcamel/jira-as.git jira-as
+
 # Install dependencies
 pip install -e "jira-as/[dev]"
 

@@ -174,7 +174,7 @@ Requires JIRA credentials via environment variables:
 |------|---------|
 | 0 | Success |
 | 1 | Error (validation, API, config) |
-| 2 | Invalid arguments |
+| 2 | Usage error (invalid arguments); also used for authentication errors |
 
 ## Troubleshooting
 

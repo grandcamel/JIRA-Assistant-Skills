@@ -192,7 +192,7 @@ claude-as  # Runs Claude with Assistant Skills venv activated
 | `JIRA_SITE_URL` | Yes | Jira instance base URL (e.g., `https://company.atlassian.net`) |
 | `JIRA_EMAIL` | Yes | Atlassian account email for authentication |
 | `JIRA_API_TOKEN` | Yes | Atlassian API token ([generate here](https://id.atlassian.com/manage-profile/security/api-tokens)) |
-| `JIRA_PROFILE` | No | Configuration profile for multi-instance support (defaults to `production`) |
+| `JIRA_MOCK_MODE` | No | Set to `true` to use the mock client (no API calls) |
 
 ### Getting Your API Token
 
@@ -460,7 +460,7 @@ flowchart TD
 
 - **Shared Library Pattern** — DRY architecture with common utilities
 - **4-Layer Error Handling** — Validation → API → Retry → User messages
-- **Profile-Based Config** — Multi-instance support built-in
+- **Layered Config** — Env vars, system keychain, and settings files
 - **ADF Support** — Native Atlassian Document Format handling
 - **Exponential Backoff** — Automatic retry on rate limits
 
@@ -503,7 +503,7 @@ One-click cloud environment with all dependencies pre-installed.
 | Resource | Description |
 |----------|-------------|
 | [Quick Start Guide](docs/quick-start.md) | Get up and running in 5 minutes |
-| [Configuration Guide](docs/configuration.md) | Multi-profile setup and options |
+| [Configuration Guide](docs/configuration.md) | Credentials, settings files, and Agile field mapping |
 | [CLI Reference](docs/CLI_REFERENCE.md) | Complete CLI documentation |
 | [Troubleshooting](docs/troubleshooting.md) | Common issues and solutions |
 

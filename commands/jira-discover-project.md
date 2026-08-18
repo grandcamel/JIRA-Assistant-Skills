@@ -1,11 +1,11 @@
 ---
 name: jira-discover-project
-description: Discover JIRA project context for intelligent defaults and workflow understanding
+description: Discover JIRA project context for intelligent defaults and usage patterns
 ---
 
 # JIRA Project Discovery
 
-You are helping the user discover and configure JIRA project context. This context enables intelligent defaults when creating issues and understanding workflows.
+You are helping the user discover and configure JIRA project context. This context enables intelligent defaults when creating issues.
 
 ## What Gets Discovered
 

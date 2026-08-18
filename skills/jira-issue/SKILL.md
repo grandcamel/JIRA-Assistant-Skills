@@ -18,8 +18,8 @@ Core CRUD operations for JIRA issues - create, read, update, and delete tickets.
 | Get/view issue | `-` | Read-only |
 | Create issue | `-` | Easily reversible (can delete) |
 | Update fields | `!` | Can be undone via edit |
-| Delete issue | `!!` | Recoverable from trash (30 days) |
-| Delete with --force | `!!` | Skips the confirmation prompt (still recoverable from trash) |
+| Delete issue | `!!!` | **PERMANENT** — JIRA Cloud has no issue trash; a confirmation prompt is required |
+| Delete with --force | `!!!` | **PERMANENT**, and skips the confirmation prompt |
 
 **Risk Legend**: `-` Safe, read-only | `!` Caution, modifiable | `!!` Warning, destructive but recoverable | `!!!` Danger, irreversible
 
@@ -239,7 +239,7 @@ This supports the common create → work → transition → comment flow without
 # Delete with confirmation
 jira-as issue delete PROJ-456
 
-# Force delete (skip confirmation prompt)
+# Force delete (skips confirmation prompt; deletion is PERMANENT)
 jira-as issue delete PROJ-456 --force
 ```
 

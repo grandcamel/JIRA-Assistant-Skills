@@ -35,8 +35,8 @@ Extract all documented `jira-as agile ...` command patterns, options, and exampl
 Get actual CLI commands and options:
 ```bash
 jira-as agile --help
-jira-as agile boards --help
-jira-as agile sprints --help
+jira-as agile board --help
+jira-as agile estimate --help
 jira-as agile epic --help
 jira-as agile sprint --help
 jira-as agile backlog --help
@@ -103,14 +103,14 @@ Write findings to `agents/reviewers/findings/jira-agile.json`:
 ## Expected CLI Commands
 
 Based on the CLI, expect commands including:
-- `jira-as agile boards`
-- `jira-as agile sprints --board <id>`
-- `jira-as agile sprint start <sprint-id>`
-- `jira-as agile sprint complete <sprint-id>`
-- `jira-as agile epic list <project>`
-- `jira-as agile epic create <project> <summary>`
-- `jira-as agile move-to-sprint <issue-key> --sprint <id>`
-- `jira-as agile backlog <board-id>`
+- `jira-as agile board list --project <key>`
+- `jira-as agile sprint list --board <id>`
+- `jira-as agile sprint manage <sprint-id> --start`
+- `jira-as agile sprint manage <sprint-id> --close`
+- `jira-as agile epic get <epic-key>`
+- `jira-as agile epic create --project <key> --summary <text>`
+- `jira-as agile sprint move-issues --issues <issue-key> --sprint <id>`
+- `jira-as agile backlog --board <id>`
 
 ## Output
 
