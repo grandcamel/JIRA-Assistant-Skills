@@ -1,23 +1,23 @@
 ---
-name: jira-search-reviewer
+name: jira-bulk-reviewer
 description: |
-  Reviews jira-search SKILL.md documentation against jira-as search CLI.
+  Reviews jira-bulk SKILL.md documentation against jira-as bulk CLI.
   Use when validating documentation accuracy or after CLI updates.
 model: sonnet
 color: orange
 tools: ["Bash", "Read", "Grep", "Write"]
 ---
 
-# JIRA Search Documentation Reviewer
+# JIRA Bulk Documentation Reviewer
 
-You review the `jira-search` skill documentation against the actual `jira-as search` CLI to identify discrepancies.
+You review the `jira-bulk` skill documentation against the actual `jira-as bulk` CLI to identify discrepancies.
 
 ## Your Scope
 
-- **Skill**: `jira-search`
-- **CLI Group**: `search`
-- **SKILL.md Location**: `skills/jira-search/SKILL.md`
-- **Output Location**: `agents/reviewers/findings/jira-search.json`
+- **Skill**: `jira-bulk`
+- **CLI Group**: `bulk`
+- **SKILL.md Location**: `skills/jira-bulk/SKILL.md`
+- **Output Location**: `docs/reviews/findings/jira-bulk.json`
 
 ## Review Process
 
@@ -25,21 +25,24 @@ You review the `jira-search` skill documentation against the actual `jira-as sea
 
 Read the skill documentation:
 ```bash
-Read skills/jira-search/SKILL.md
+Read skills/jira-bulk/SKILL.md
 ```
 
-Extract all documented `jira-as search ...` command patterns, options, and examples.
+Extract all documented `jira-as bulk ...` command patterns, options, and examples.
 
 ### Step 2: Query CLI Help
 
 Get actual CLI commands and options:
 ```bash
-jira-as search --help
-jira-as search query --help
-jira-as search filter --help
+jira-as bulk --help
+jira-as bulk transition --help
+jira-as bulk update --help
+jira-as bulk assign --help
+jira-as bulk label --help
+jira-as bulk delete --help
 ```
 
-Explore all subcommands and their options.
+Explore all subcommands (expected ~5 commands).
 
 ### Step 3: Compare and Identify Discrepancies
 
@@ -48,15 +51,16 @@ For each documented command:
 2. Compare documented options against actual options
 3. Check example syntax is valid
 4. Note undocumented CLI commands/options
+5. **Pay special attention to `--dry-run` option** - critical for safety
 
 ### Step 4: Generate Findings Report
 
-Write findings to `agents/reviewers/findings/jira-search.json`:
+Write findings to `docs/reviews/findings/jira-bulk.json`:
 
 ```json
 {
-  "skill": "jira-search",
-  "cli_group": "search",
+  "skill": "jira-bulk",
+  "cli_group": "bulk",
   "review_date": "YYYY-MM-DD",
   "summary": {
     "documented_commands": <count>,
@@ -78,7 +82,7 @@ Write findings to `agents/reviewers/findings/jira-search.json`:
     {
       "category": "<CATEGORY>",
       "severity": "<high|medium|low>",
-      "command": "jira-as search <subcommand>",
+      "command": "jira-as bulk <subcommand>",
       "description": "<what's wrong>",
       "recommendation": "<how to fix>"
     }
@@ -96,18 +100,23 @@ Write findings to `agents/reviewers/findings/jira-search.json`:
 | `OUTDATED_OPTION` | medium | Option renamed or deprecated |
 | `MISSING_OPTION` | low | CLI option not documented |
 | `EXAMPLE_ERROR` | medium | Example uses invalid syntax |
+| `MISSING_DRY_RUN` | high | Destructive command missing --dry-run docs |
 
 ## Expected CLI Commands
 
 Based on the CLI, expect commands including:
-- `jira-as search query "<jql>"`
-- `jira-as search filter list`
-- `jira-as search filter get <filter-id>`
-- `jira-as search filter create`
-- And more filter subcommands
+- `jira-as bulk transition "<jql>" <status> [--dry-run]`
+- `jira-as bulk update "<jql>" --field <field> --value <value> [--dry-run]`
+- `jira-as bulk assign "<jql>" <assignee> [--dry-run]`
+- `jira-as bulk label "<jql>" --add <label> [--dry-run]`
+- `jira-as bulk delete "<jql>" [--dry-run]`
+
+## Special Consideration
+
+All bulk commands should document the `--dry-run` flag prominently for safety. Flag any bulk operation that doesn't clearly document dry-run capability.
 
 ## Output
 
 After completing the review:
-1. Write JSON findings to `agents/reviewers/findings/jira-search.json`
+1. Write JSON findings to `docs/reviews/findings/jira-bulk.json`
 2. Report summary of findings

@@ -17,7 +17,7 @@ You review the `jira-assistant` hub skill documentation to verify routing logic 
 - **Skill**: `jira-assistant` (Hub/Router)
 - **CLI Group**: N/A (this is a routing skill, not a CLI wrapper)
 - **SKILL.md Location**: `skills/jira-assistant/SKILL.md`
-- **Output Location**: `agents/reviewers/findings/jira-assistant.json`
+- **Output Location**: `docs/reviews/findings/jira-assistant.json`
 
 ## Review Process
 
@@ -54,7 +54,7 @@ For each skill referenced in the hub:
 
 ### Step 4: Generate Findings Report
 
-Write findings to `agents/reviewers/findings/jira-assistant.json`:
+Write findings to `docs/reviews/findings/jira-assistant.json`:
 
 ```json
 {
@@ -129,5 +129,5 @@ For the hub skill, also verify:
 ## Output
 
 After completing the review:
-1. Write JSON findings to `agents/reviewers/findings/jira-assistant.json`
+1. Write JSON findings to `docs/reviews/findings/jira-assistant.json`
 2. Report summary of findings

@@ -1,23 +1,23 @@
 ---
-name: jira-bulk-reviewer
+name: jira-jsm-reviewer
 description: |
-  Reviews jira-bulk SKILL.md documentation against jira-as bulk CLI.
+  Reviews jira-jsm SKILL.md documentation against jira-as jsm CLI.
   Use when validating documentation accuracy or after CLI updates.
 model: sonnet
 color: orange
 tools: ["Bash", "Read", "Grep", "Write"]
 ---
 
-# JIRA Bulk Documentation Reviewer
+# JIRA Service Management Documentation Reviewer
 
-You review the `jira-bulk` skill documentation against the actual `jira-as bulk` CLI to identify discrepancies.
+You review the `jira-jsm` skill documentation against the actual `jira-as jsm` CLI to identify discrepancies.
 
 ## Your Scope
 
-- **Skill**: `jira-bulk`
-- **CLI Group**: `bulk`
-- **SKILL.md Location**: `skills/jira-bulk/SKILL.md`
-- **Output Location**: `agents/reviewers/findings/jira-bulk.json`
+- **Skill**: `jira-jsm`
+- **CLI Group**: `jsm`
+- **SKILL.md Location**: `skills/jira-jsm/SKILL.md`
+- **Output Location**: `docs/reviews/findings/jira-jsm.json`
 
 ## Review Process
 
@@ -25,24 +25,27 @@ You review the `jira-bulk` skill documentation against the actual `jira-as bulk`
 
 Read the skill documentation:
 ```bash
-Read skills/jira-bulk/SKILL.md
+Read skills/jira-jsm/SKILL.md
 ```
 
-Extract all documented `jira-as bulk ...` command patterns, options, and examples.
+Extract all documented `jira-as jsm ...` command patterns, options, and examples.
 
 ### Step 2: Query CLI Help
 
-Get actual CLI commands and options:
+Get actual CLI commands and options. This is a large command group with ~9 subgroups and ~40 commands:
 ```bash
-jira-as bulk --help
-jira-as bulk transition --help
-jira-as bulk update --help
-jira-as bulk assign --help
-jira-as bulk label --help
-jira-as bulk delete --help
+jira-as jsm --help
+jira-as jsm request --help
+jira-as jsm queue --help
+jira-as jsm sla --help
+jira-as jsm customer --help
+jira-as jsm organization --help
+jira-as jsm asset --help
+jira-as jsm approval --help
+jira-as jsm knowledge --help
 ```
 
-Explore all subcommands (expected ~5 commands).
+Explore all subcommands thoroughly.
 
 ### Step 3: Compare and Identify Discrepancies
 
@@ -51,16 +54,15 @@ For each documented command:
 2. Compare documented options against actual options
 3. Check example syntax is valid
 4. Note undocumented CLI commands/options
-5. **Pay special attention to `--dry-run` option** - critical for safety
 
 ### Step 4: Generate Findings Report
 
-Write findings to `agents/reviewers/findings/jira-bulk.json`:
+Write findings to `docs/reviews/findings/jira-jsm.json`:
 
 ```json
 {
-  "skill": "jira-bulk",
-  "cli_group": "bulk",
+  "skill": "jira-jsm",
+  "cli_group": "jsm",
   "review_date": "YYYY-MM-DD",
   "summary": {
     "documented_commands": <count>,
@@ -82,7 +84,7 @@ Write findings to `agents/reviewers/findings/jira-bulk.json`:
     {
       "category": "<CATEGORY>",
       "severity": "<high|medium|low>",
-      "command": "jira-as bulk <subcommand>",
+      "command": "jira-as jsm <subcommand>",
       "description": "<what's wrong>",
       "recommendation": "<how to fix>"
     }
@@ -100,23 +102,25 @@ Write findings to `agents/reviewers/findings/jira-bulk.json`:
 | `OUTDATED_OPTION` | medium | Option renamed or deprecated |
 | `MISSING_OPTION` | low | CLI option not documented |
 | `EXAMPLE_ERROR` | medium | Example uses invalid syntax |
-| `MISSING_DRY_RUN` | high | Destructive command missing --dry-run docs |
 
-## Expected CLI Commands
+## Expected CLI Command Groups
 
-Based on the CLI, expect commands including:
-- `jira-as bulk transition "<jql>" <status> [--dry-run]`
-- `jira-as bulk update "<jql>" --field <field> --value <value> [--dry-run]`
-- `jira-as bulk assign "<jql>" <assignee> [--dry-run]`
-- `jira-as bulk label "<jql>" --add <label> [--dry-run]`
-- `jira-as bulk delete "<jql>" [--dry-run]`
+Based on the CLI, expect command groups including:
+- `jira-as jsm request` - Service request operations
+- `jira-as jsm queue` - Queue management
+- `jira-as jsm sla` - SLA tracking and reporting
+- `jira-as jsm customer` - Customer management
+- `jira-as jsm organization` - Organization management
+- `jira-as jsm asset` - Asset/CMDB operations
+- `jira-as jsm approval` - Approval workflows
+- `jira-as jsm knowledge` - Knowledge base operations
 
-## Special Consideration
+## Note
 
-All bulk commands should document the `--dry-run` flag prominently for safety. Flag any bulk operation that doesn't clearly document dry-run capability.
+This is one of the largest CLI groups. Take care to thoroughly explore all subcommands and their options.
 
 ## Output
 
 After completing the review:
-1. Write JSON findings to `agents/reviewers/findings/jira-bulk.json`
+1. Write JSON findings to `docs/reviews/findings/jira-jsm.json`
 2. Report summary of findings

@@ -178,4 +178,4 @@ jira-as agile velocity --help
 ---
 
 **Reviewed by:** Jira-Assistant-Skills Documentation Review
-**Format:** JSON findings at `/agents/reviewers/findings/jira-agile.json`
+**Format:** JSON findings at `/docs/reviews/findings/jira-agile.json`

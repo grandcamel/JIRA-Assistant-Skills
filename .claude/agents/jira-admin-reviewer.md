@@ -17,7 +17,7 @@ You review the `jira-admin` skill documentation against the actual `jira-as admi
 - **Skill**: `jira-admin`
 - **CLI Group**: `admin`
 - **SKILL.md Location**: `skills/jira-admin/SKILL.md`
-- **Output Location**: `agents/reviewers/findings/jira-admin.json`
+- **Output Location**: `docs/reviews/findings/jira-admin.json`
 
 ## Review Process
 
@@ -67,7 +67,7 @@ For each documented command:
 
 ### Step 4: Generate Findings Report
 
-Write findings to `agents/reviewers/findings/jira-admin.json`:
+Write findings to `docs/reviews/findings/jira-admin.json`:
 
 ```json
 {
@@ -136,5 +136,5 @@ This is one of the largest CLI groups. Take care to thoroughly explore all subco
 ## Output
 
 After completing the review:
-1. Write JSON findings to `agents/reviewers/findings/jira-admin.json`
+1. Write JSON findings to `docs/reviews/findings/jira-admin.json`
 2. Report summary of findings

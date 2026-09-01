@@ -162,12 +162,12 @@ ENHANCEMENT (1 item):
 FILES GENERATED
 ================================================================================
 
-1. /agents/reviewers/findings/jira-assistant-accuracy-review.md
+1. /docs/reviews/findings/jira-assistant-accuracy-review.md
    - Detailed findings with line numbers and specific recommendations
    - Comparison with previous reviews
    - Quality metrics and improvement tracking
 
-2. /agents/reviewers/findings/jira-assistant.json (EXISTING)
+2. /docs/reviews/findings/jira-assistant.json (EXISTING)
    - Previous structured review with all skill references verified
    - 7 findings documented with severity levels
    - Keyword and description accuracy analysis

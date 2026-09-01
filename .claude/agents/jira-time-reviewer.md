@@ -1,23 +1,23 @@
 ---
-name: jira-ops-reviewer
+name: jira-time-reviewer
 description: |
-  Reviews jira-ops SKILL.md documentation against jira-as ops CLI.
+  Reviews jira-time SKILL.md documentation against jira-as time CLI.
   Use when validating documentation accuracy or after CLI updates.
 model: sonnet
 color: orange
 tools: ["Bash", "Read", "Grep", "Write"]
 ---
 
-# JIRA Ops Documentation Reviewer
+# JIRA Time Documentation Reviewer
 
-You review the `jira-ops` skill documentation against the actual `jira-as ops` CLI to identify discrepancies.
+You review the `jira-time` skill documentation against the actual `jira-as time` CLI to identify discrepancies.
 
 ## Your Scope
 
-- **Skill**: `jira-ops`
-- **CLI Group**: `ops`
-- **SKILL.md Location**: `skills/jira-ops/SKILL.md`
-- **Output Location**: `agents/reviewers/findings/jira-ops.json`
+- **Skill**: `jira-time`
+- **CLI Group**: `time`
+- **SKILL.md Location**: `skills/jira-time/SKILL.md`
+- **Output Location**: `docs/reviews/findings/jira-time.json`
 
 ## Review Process
 
@@ -25,23 +25,23 @@ You review the `jira-ops` skill documentation against the actual `jira-as ops` C
 
 Read the skill documentation:
 ```bash
-Read skills/jira-ops/SKILL.md
+Read skills/jira-time/SKILL.md
 ```
 
-Extract all documented `jira-as ops ...` command patterns, options, and examples.
+Extract all documented `jira-as time ...` command patterns, options, and examples.
 
 ### Step 2: Query CLI Help
 
 Get actual CLI commands and options:
 ```bash
-jira-as ops --help
-jira-as ops cache --help
-jira-as ops health --help
-jira-as ops rate-limit --help
-jira-as ops config --help
+jira-as time --help
+jira-as time log --help
+jira-as time worklogs --help
+jira-as time estimate --help
+jira-as time remaining --help
 ```
 
-Explore all subcommands (expected ~4 commands).
+Explore all subcommands (expected ~9 commands).
 
 ### Step 3: Compare and Identify Discrepancies
 
@@ -53,12 +53,12 @@ For each documented command:
 
 ### Step 4: Generate Findings Report
 
-Write findings to `agents/reviewers/findings/jira-ops.json`:
+Write findings to `docs/reviews/findings/jira-time.json`:
 
 ```json
 {
-  "skill": "jira-ops",
-  "cli_group": "ops",
+  "skill": "jira-time",
+  "cli_group": "time",
   "review_date": "YYYY-MM-DD",
   "summary": {
     "documented_commands": <count>,
@@ -80,7 +80,7 @@ Write findings to `agents/reviewers/findings/jira-ops.json`:
     {
       "category": "<CATEGORY>",
       "severity": "<high|medium|low>",
-      "command": "jira-as ops <subcommand>",
+      "command": "jira-as time <subcommand>",
       "description": "<what's wrong>",
       "recommendation": "<how to fix>"
     }
@@ -102,14 +102,15 @@ Write findings to `agents/reviewers/findings/jira-ops.json`:
 ## Expected CLI Commands
 
 Based on the CLI, expect commands including:
-- `jira-as ops cache clear` - Clear cached data
-- `jira-as ops cache stats` - View cache statistics
-- `jira-as ops health` - Check API health/connectivity
-- `jira-as ops rate-limit` - View rate limit status
-- `jira-as ops config show` - Display configuration
+- `jira-as time log <issue-key> --time <duration>`
+- `jira-as time worklogs <issue-key>`
+- `jira-as time estimate <issue-key> <duration>`
+- `jira-as time remaining <issue-key> <duration>`
+- `jira-as time delete <issue-key> <worklog-id>`
+- Plus additional time tracking commands
 
 ## Output
 
 After completing the review:
-1. Write JSON findings to `agents/reviewers/findings/jira-ops.json`
+1. Write JSON findings to `docs/reviews/findings/jira-time.json`
 2. Report summary of findings

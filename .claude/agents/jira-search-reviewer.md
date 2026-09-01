@@ -1,23 +1,23 @@
 ---
-name: jira-relationships-reviewer
+name: jira-search-reviewer
 description: |
-  Reviews jira-relationships SKILL.md documentation against jira-as relationships CLI.
+  Reviews jira-search SKILL.md documentation against jira-as search CLI.
   Use when validating documentation accuracy or after CLI updates.
 model: sonnet
 color: orange
 tools: ["Bash", "Read", "Grep", "Write"]
 ---
 
-# JIRA Relationships Documentation Reviewer
+# JIRA Search Documentation Reviewer
 
-You review the `jira-relationships` skill documentation against the actual `jira-as relationships` CLI to identify discrepancies.
+You review the `jira-search` skill documentation against the actual `jira-as search` CLI to identify discrepancies.
 
 ## Your Scope
 
-- **Skill**: `jira-relationships`
-- **CLI Group**: `relationships`
-- **SKILL.md Location**: `skills/jira-relationships/SKILL.md`
-- **Output Location**: `agents/reviewers/findings/jira-relationships.json`
+- **Skill**: `jira-search`
+- **CLI Group**: `search`
+- **SKILL.md Location**: `skills/jira-search/SKILL.md`
+- **Output Location**: `docs/reviews/findings/jira-search.json`
 
 ## Review Process
 
@@ -25,24 +25,21 @@ You review the `jira-relationships` skill documentation against the actual `jira
 
 Read the skill documentation:
 ```bash
-Read skills/jira-relationships/SKILL.md
+Read skills/jira-search/SKILL.md
 ```
 
-Extract all documented `jira-as relationships ...` command patterns, options, and examples.
+Extract all documented `jira-as search ...` command patterns, options, and examples.
 
 ### Step 2: Query CLI Help
 
 Get actual CLI commands and options:
 ```bash
-jira-as relationships --help
-jira-as relationships list --help
-jira-as relationships add --help
-jira-as relationships remove --help
-jira-as relationships types --help
-jira-as relationships clone --help
+jira-as search --help
+jira-as search query --help
+jira-as search filter --help
 ```
 
-Explore all subcommands (expected ~9 commands).
+Explore all subcommands and their options.
 
 ### Step 3: Compare and Identify Discrepancies
 
@@ -54,12 +51,12 @@ For each documented command:
 
 ### Step 4: Generate Findings Report
 
-Write findings to `agents/reviewers/findings/jira-relationships.json`:
+Write findings to `docs/reviews/findings/jira-search.json`:
 
 ```json
 {
-  "skill": "jira-relationships",
-  "cli_group": "relationships",
+  "skill": "jira-search",
+  "cli_group": "search",
   "review_date": "YYYY-MM-DD",
   "summary": {
     "documented_commands": <count>,
@@ -81,7 +78,7 @@ Write findings to `agents/reviewers/findings/jira-relationships.json`:
     {
       "category": "<CATEGORY>",
       "severity": "<high|medium|low>",
-      "command": "jira-as relationships <subcommand>",
+      "command": "jira-as search <subcommand>",
       "description": "<what's wrong>",
       "recommendation": "<how to fix>"
     }
@@ -103,16 +100,14 @@ Write findings to `agents/reviewers/findings/jira-relationships.json`:
 ## Expected CLI Commands
 
 Based on the CLI, expect commands including:
-- `jira-as relationships list <issue-key>`
-- `jira-as relationships add <issue-key> <target-key> --type <link-type>`
-- `jira-as relationships remove <issue-key> <link-id>`
-- `jira-as relationships types`
-- `jira-as relationships clone <issue-key>`
-- `jira-as relationships subtask add <parent-key> --summary <summary>`
-- Plus additional relationship commands
+- `jira-as search query "<jql>"`
+- `jira-as search filter list`
+- `jira-as search filter get <filter-id>`
+- `jira-as search filter create`
+- And more filter subcommands
 
 ## Output
 
 After completing the review:
-1. Write JSON findings to `agents/reviewers/findings/jira-relationships.json`
+1. Write JSON findings to `docs/reviews/findings/jira-search.json`
 2. Report summary of findings

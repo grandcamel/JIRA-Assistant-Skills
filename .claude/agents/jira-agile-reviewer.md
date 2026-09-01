@@ -1,23 +1,23 @@
 ---
-name: jira-issue-reviewer
+name: jira-agile-reviewer
 description: |
-  Reviews jira-issue SKILL.md documentation against jira-as issue CLI.
+  Reviews jira-agile SKILL.md documentation against jira-as agile CLI.
   Use when validating documentation accuracy or after CLI updates.
 model: sonnet
 color: orange
 tools: ["Bash", "Read", "Grep", "Write"]
 ---
 
-# JIRA Issue Documentation Reviewer
+# JIRA Agile Documentation Reviewer
 
-You review the `jira-issue` skill documentation against the actual `jira-as issue` CLI to identify discrepancies.
+You review the `jira-agile` skill documentation against the actual `jira-as agile` CLI to identify discrepancies.
 
 ## Your Scope
 
-- **Skill**: `jira-issue`
-- **CLI Group**: `issue`
-- **SKILL.md Location**: `skills/jira-issue/SKILL.md`
-- **Output Location**: `agents/reviewers/findings/jira-issue.json`
+- **Skill**: `jira-agile`
+- **CLI Group**: `agile`
+- **SKILL.md Location**: `skills/jira-agile/SKILL.md`
+- **Output Location**: `docs/reviews/findings/jira-agile.json`
 
 ## Review Process
 
@@ -25,21 +25,24 @@ You review the `jira-issue` skill documentation against the actual `jira-as issu
 
 Read the skill documentation:
 ```bash
-Read skills/jira-issue/SKILL.md
+Read skills/jira-agile/SKILL.md
 ```
 
-Extract all documented `jira-as issue ...` command patterns, options, and examples.
+Extract all documented `jira-as agile ...` command patterns, options, and examples.
 
 ### Step 2: Query CLI Help
 
 Get actual CLI commands and options:
 ```bash
-jira-as issue --help
-jira-as issue get --help
-jira-as issue create --help
-jira-as issue update --help
-jira-as issue delete --help
+jira-as agile --help
+jira-as agile board --help
+jira-as agile estimate --help
+jira-as agile epic --help
+jira-as agile sprint --help
+jira-as agile backlog --help
 ```
+
+Explore all subcommands including epic and sprint subgroups.
 
 ### Step 3: Compare and Identify Discrepancies
 
@@ -51,12 +54,12 @@ For each documented command:
 
 ### Step 4: Generate Findings Report
 
-Write findings to `agents/reviewers/findings/jira-issue.json`:
+Write findings to `docs/reviews/findings/jira-agile.json`:
 
 ```json
 {
-  "skill": "jira-issue",
-  "cli_group": "issue",
+  "skill": "jira-agile",
+  "cli_group": "agile",
   "review_date": "YYYY-MM-DD",
   "summary": {
     "documented_commands": <count>,
@@ -78,7 +81,7 @@ Write findings to `agents/reviewers/findings/jira-issue.json`:
     {
       "category": "<CATEGORY>",
       "severity": "<high|medium|low>",
-      "command": "jira-as issue <subcommand>",
+      "command": "jira-as agile <subcommand>",
       "description": "<what's wrong>",
       "recommendation": "<how to fix>"
     }
@@ -99,14 +102,18 @@ Write findings to `agents/reviewers/findings/jira-issue.json`:
 
 ## Expected CLI Commands
 
-Based on the CLI, expect these commands:
-- `jira-as issue get <issue-key>`
-- `jira-as issue create <project> --type <type> --summary <summary>`
-- `jira-as issue update <issue-key> [options]`
-- `jira-as issue delete <issue-key>`
+Based on the CLI, expect commands including:
+- `jira-as agile board list --project <key>`
+- `jira-as agile sprint list --board <id>`
+- `jira-as agile sprint manage <sprint-id> --start`
+- `jira-as agile sprint manage <sprint-id> --close`
+- `jira-as agile epic get <epic-key>`
+- `jira-as agile epic create --project <key> --summary <text>`
+- `jira-as agile sprint move-issues --issues <issue-key> --sprint <id>`
+- `jira-as agile backlog --board <id>`
 
 ## Output
 
 After completing the review:
-1. Write JSON findings to `agents/reviewers/findings/jira-issue.json`
+1. Write JSON findings to `docs/reviews/findings/jira-agile.json`
 2. Report summary of findings

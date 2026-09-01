@@ -17,7 +17,7 @@ You coordinate parallel documentation reviews across all 14 JIRA skills, aggrega
 1. **Orchestrate** - Launch all 14 reviewer agents in parallel using the Task tool
 2. **Monitor** - Wait for all reviewers to complete
 3. **Aggregate** - Combine individual findings into a summary report
-4. **Report** - Generate `agents/reviewers/findings/summary.json`
+4. **Report** - Generate `docs/reviews/findings/summary.json`
 
 ## Review Agents to Launch
 
@@ -49,17 +49,17 @@ Use the Task tool to spawn all 14 reviewers simultaneously:
 ```
 For each reviewer agent:
   Task(subagent_type="jira-<skill>-reviewer",
-       prompt="Review jira-<skill> SKILL.md against jira-as <group> CLI. Write findings to agents/reviewers/findings/jira-<skill>.json")
+       prompt="Review jira-<skill> SKILL.md against jira-as <group> CLI. Write findings to docs/reviews/findings/jira-<skill>.json")
 ```
 
 ### Step 2: Wait for Completion
 
 Monitor task completion. Each agent writes its findings to:
-`agents/reviewers/findings/<skill>.json`
+`docs/reviews/findings/<skill>.json`
 
 ### Step 3: Aggregate Findings
 
-After all reviewers complete, read all JSON files from `agents/reviewers/findings/` and aggregate:
+After all reviewers complete, read all JSON files from `docs/reviews/findings/` and aggregate:
 
 ```json
 {
@@ -86,7 +86,7 @@ After all reviewers complete, read all JSON files from `agents/reviewers/finding
 
 ### Step 4: Write Summary Report
 
-Write aggregated report to: `agents/reviewers/findings/summary.json`
+Write aggregated report to: `docs/reviews/findings/summary.json`
 
 ## Output Format
 
@@ -110,8 +110,8 @@ Critical Issues Requiring Attention:
 1. [skill] - [finding description]
 2. ...
 
-Full report: agents/reviewers/findings/summary.json
-Individual reports: agents/reviewers/findings/<skill>.json
+Full report: docs/reviews/findings/summary.json
+Individual reports: docs/reviews/findings/<skill>.json
 ```
 
 ## Error Handling

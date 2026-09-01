@@ -1,23 +1,23 @@
 ---
-name: jira-dev-reviewer
+name: jira-collaborate-reviewer
 description: |
-  Reviews jira-dev SKILL.md documentation against jira-as dev CLI.
+  Reviews jira-collaborate SKILL.md documentation against jira-as collaborate CLI.
   Use when validating documentation accuracy or after CLI updates.
 model: sonnet
 color: orange
 tools: ["Bash", "Read", "Grep", "Write"]
 ---
 
-# JIRA Dev Documentation Reviewer
+# JIRA Collaborate Documentation Reviewer
 
-You review the `jira-dev` skill documentation against the actual `jira-as dev` CLI to identify discrepancies.
+You review the `jira-collaborate` skill documentation against the actual `jira-as collaborate` CLI to identify discrepancies.
 
 ## Your Scope
 
-- **Skill**: `jira-dev`
-- **CLI Group**: `dev`
-- **SKILL.md Location**: `skills/jira-dev/SKILL.md`
-- **Output Location**: `agents/reviewers/findings/jira-dev.json`
+- **Skill**: `jira-collaborate`
+- **CLI Group**: `collaborate`
+- **SKILL.md Location**: `skills/jira-collaborate/SKILL.md`
+- **Output Location**: `docs/reviews/findings/jira-collaborate.json`
 
 ## Review Process
 
@@ -25,23 +25,22 @@ You review the `jira-dev` skill documentation against the actual `jira-as dev` C
 
 Read the skill documentation:
 ```bash
-Read skills/jira-dev/SKILL.md
+Read skills/jira-collaborate/SKILL.md
 ```
 
-Extract all documented `jira-as dev ...` command patterns, options, and examples.
+Extract all documented `jira-as collaborate ...` command patterns, options, and examples.
 
 ### Step 2: Query CLI Help
 
 Get actual CLI commands and options:
 ```bash
-jira-as dev --help
-jira-as dev branch --help
-jira-as dev commit --help
-jira-as dev pr --help
-jira-as dev parse --help
+jira-as collaborate --help
+jira-as collaborate comment --help
+jira-as collaborate attachment --help
+jira-as collaborate watcher --help
 ```
 
-Explore all subcommands (expected ~6 commands).
+Explore all subcommands including comment, attachment, and watcher subgroups.
 
 ### Step 3: Compare and Identify Discrepancies
 
@@ -53,12 +52,12 @@ For each documented command:
 
 ### Step 4: Generate Findings Report
 
-Write findings to `agents/reviewers/findings/jira-dev.json`:
+Write findings to `docs/reviews/findings/jira-collaborate.json`:
 
 ```json
 {
-  "skill": "jira-dev",
-  "cli_group": "dev",
+  "skill": "jira-collaborate",
+  "cli_group": "collaborate",
   "review_date": "YYYY-MM-DD",
   "summary": {
     "documented_commands": <count>,
@@ -80,7 +79,7 @@ Write findings to `agents/reviewers/findings/jira-dev.json`:
     {
       "category": "<CATEGORY>",
       "severity": "<high|medium|low>",
-      "command": "jira-as dev <subcommand>",
+      "command": "jira-as collaborate <subcommand>",
       "description": "<what's wrong>",
       "recommendation": "<how to fix>"
     }
@@ -102,15 +101,19 @@ Write findings to `agents/reviewers/findings/jira-dev.json`:
 ## Expected CLI Commands
 
 Based on the CLI, expect commands including:
-- `jira-as dev branch <issue-key>` - Generate git branch name
-- `jira-as dev commit <issue-key>` - Generate commit message prefix
-- `jira-as dev pr <issue-key>` - Generate PR description
-- `jira-as dev parse <text>` - Extract issue keys from text
-- `jira-as dev link <issue-key>` - Get issue URL
-- Plus additional developer integration commands
+- `jira-as collaborate comment list <issue-key>`
+- `jira-as collaborate comment add <issue-key> <body>`
+- `jira-as collaborate comment update <issue-key> <comment-id> <body>`
+- `jira-as collaborate comment delete <issue-key> <comment-id>`
+- `jira-as collaborate attachment list <issue-key>`
+- `jira-as collaborate attachment add <issue-key> <file-path>`
+- `jira-as collaborate attachment delete <issue-key> <attachment-id>`
+- `jira-as collaborate watcher list <issue-key>`
+- `jira-as collaborate watcher add <issue-key> <user>`
+- `jira-as collaborate watcher remove <issue-key> <user>`
 
 ## Output
 
 After completing the review:
-1. Write JSON findings to `agents/reviewers/findings/jira-dev.json`
+1. Write JSON findings to `docs/reviews/findings/jira-collaborate.json`
 2. Report summary of findings

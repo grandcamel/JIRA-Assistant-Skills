@@ -1,23 +1,23 @@
 ---
-name: jira-fields-reviewer
+name: jira-issue-reviewer
 description: |
-  Reviews jira-fields SKILL.md documentation against jira-as fields CLI.
+  Reviews jira-issue SKILL.md documentation against jira-as issue CLI.
   Use when validating documentation accuracy or after CLI updates.
 model: sonnet
 color: orange
 tools: ["Bash", "Read", "Grep", "Write"]
 ---
 
-# JIRA Fields Documentation Reviewer
+# JIRA Issue Documentation Reviewer
 
-You review the `jira-fields` skill documentation against the actual `jira-as fields` CLI to identify discrepancies.
+You review the `jira-issue` skill documentation against the actual `jira-as issue` CLI to identify discrepancies.
 
 ## Your Scope
 
-- **Skill**: `jira-fields`
-- **CLI Group**: `fields`
-- **SKILL.md Location**: `skills/jira-fields/SKILL.md`
-- **Output Location**: `agents/reviewers/findings/jira-fields.json`
+- **Skill**: `jira-issue`
+- **CLI Group**: `issue`
+- **SKILL.md Location**: `skills/jira-issue/SKILL.md`
+- **Output Location**: `docs/reviews/findings/jira-issue.json`
 
 ## Review Process
 
@@ -25,23 +25,21 @@ You review the `jira-fields` skill documentation against the actual `jira-as fie
 
 Read the skill documentation:
 ```bash
-Read skills/jira-fields/SKILL.md
+Read skills/jira-issue/SKILL.md
 ```
 
-Extract all documented `jira-as fields ...` command patterns, options, and examples.
+Extract all documented `jira-as issue ...` command patterns, options, and examples.
 
 ### Step 2: Query CLI Help
 
 Get actual CLI commands and options:
 ```bash
-jira-as fields --help
-jira-as fields list --help
-jira-as fields get --help
-jira-as fields options --help
-jira-as fields search --help
+jira-as issue --help
+jira-as issue get --help
+jira-as issue create --help
+jira-as issue update --help
+jira-as issue delete --help
 ```
-
-Explore all subcommands (expected ~4 commands).
 
 ### Step 3: Compare and Identify Discrepancies
 
@@ -53,12 +51,12 @@ For each documented command:
 
 ### Step 4: Generate Findings Report
 
-Write findings to `agents/reviewers/findings/jira-fields.json`:
+Write findings to `docs/reviews/findings/jira-issue.json`:
 
 ```json
 {
-  "skill": "jira-fields",
-  "cli_group": "fields",
+  "skill": "jira-issue",
+  "cli_group": "issue",
   "review_date": "YYYY-MM-DD",
   "summary": {
     "documented_commands": <count>,
@@ -80,7 +78,7 @@ Write findings to `agents/reviewers/findings/jira-fields.json`:
     {
       "category": "<CATEGORY>",
       "severity": "<high|medium|low>",
-      "command": "jira-as fields <subcommand>",
+      "command": "jira-as issue <subcommand>",
       "description": "<what's wrong>",
       "recommendation": "<how to fix>"
     }
@@ -101,14 +99,14 @@ Write findings to `agents/reviewers/findings/jira-fields.json`:
 
 ## Expected CLI Commands
 
-Based on the CLI, expect commands including:
-- `jira-as fields list` - List all fields
-- `jira-as fields get <field-id>` - Get field details
-- `jira-as fields options <field-id>` - Get field options (for select fields)
-- `jira-as fields search <query>` - Search fields by name
+Based on the CLI, expect these commands:
+- `jira-as issue get <issue-key>`
+- `jira-as issue create <project> --type <type> --summary <summary>`
+- `jira-as issue update <issue-key> [options]`
+- `jira-as issue delete <issue-key>`
 
 ## Output
 
 After completing the review:
-1. Write JSON findings to `agents/reviewers/findings/jira-fields.json`
+1. Write JSON findings to `docs/reviews/findings/jira-issue.json`
 2. Report summary of findings

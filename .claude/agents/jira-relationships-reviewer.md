@@ -1,23 +1,23 @@
 ---
-name: jira-agile-reviewer
+name: jira-relationships-reviewer
 description: |
-  Reviews jira-agile SKILL.md documentation against jira-as agile CLI.
+  Reviews jira-relationships SKILL.md documentation against jira-as relationships CLI.
   Use when validating documentation accuracy or after CLI updates.
 model: sonnet
 color: orange
 tools: ["Bash", "Read", "Grep", "Write"]
 ---
 
-# JIRA Agile Documentation Reviewer
+# JIRA Relationships Documentation Reviewer
 
-You review the `jira-agile` skill documentation against the actual `jira-as agile` CLI to identify discrepancies.
+You review the `jira-relationships` skill documentation against the actual `jira-as relationships` CLI to identify discrepancies.
 
 ## Your Scope
 
-- **Skill**: `jira-agile`
-- **CLI Group**: `agile`
-- **SKILL.md Location**: `skills/jira-agile/SKILL.md`
-- **Output Location**: `agents/reviewers/findings/jira-agile.json`
+- **Skill**: `jira-relationships`
+- **CLI Group**: `relationships`
+- **SKILL.md Location**: `skills/jira-relationships/SKILL.md`
+- **Output Location**: `docs/reviews/findings/jira-relationships.json`
 
 ## Review Process
 
@@ -25,24 +25,24 @@ You review the `jira-agile` skill documentation against the actual `jira-as agil
 
 Read the skill documentation:
 ```bash
-Read skills/jira-agile/SKILL.md
+Read skills/jira-relationships/SKILL.md
 ```
 
-Extract all documented `jira-as agile ...` command patterns, options, and examples.
+Extract all documented `jira-as relationships ...` command patterns, options, and examples.
 
 ### Step 2: Query CLI Help
 
 Get actual CLI commands and options:
 ```bash
-jira-as agile --help
-jira-as agile board --help
-jira-as agile estimate --help
-jira-as agile epic --help
-jira-as agile sprint --help
-jira-as agile backlog --help
+jira-as relationships --help
+jira-as relationships list --help
+jira-as relationships add --help
+jira-as relationships remove --help
+jira-as relationships types --help
+jira-as relationships clone --help
 ```
 
-Explore all subcommands including epic and sprint subgroups.
+Explore all subcommands (expected ~9 commands).
 
 ### Step 3: Compare and Identify Discrepancies
 
@@ -54,12 +54,12 @@ For each documented command:
 
 ### Step 4: Generate Findings Report
 
-Write findings to `agents/reviewers/findings/jira-agile.json`:
+Write findings to `docs/reviews/findings/jira-relationships.json`:
 
 ```json
 {
-  "skill": "jira-agile",
-  "cli_group": "agile",
+  "skill": "jira-relationships",
+  "cli_group": "relationships",
   "review_date": "YYYY-MM-DD",
   "summary": {
     "documented_commands": <count>,
@@ -81,7 +81,7 @@ Write findings to `agents/reviewers/findings/jira-agile.json`:
     {
       "category": "<CATEGORY>",
       "severity": "<high|medium|low>",
-      "command": "jira-as agile <subcommand>",
+      "command": "jira-as relationships <subcommand>",
       "description": "<what's wrong>",
       "recommendation": "<how to fix>"
     }
@@ -103,17 +103,16 @@ Write findings to `agents/reviewers/findings/jira-agile.json`:
 ## Expected CLI Commands
 
 Based on the CLI, expect commands including:
-- `jira-as agile board list --project <key>`
-- `jira-as agile sprint list --board <id>`
-- `jira-as agile sprint manage <sprint-id> --start`
-- `jira-as agile sprint manage <sprint-id> --close`
-- `jira-as agile epic get <epic-key>`
-- `jira-as agile epic create --project <key> --summary <text>`
-- `jira-as agile sprint move-issues --issues <issue-key> --sprint <id>`
-- `jira-as agile backlog --board <id>`
+- `jira-as relationships list <issue-key>`
+- `jira-as relationships add <issue-key> <target-key> --type <link-type>`
+- `jira-as relationships remove <issue-key> <link-id>`
+- `jira-as relationships types`
+- `jira-as relationships clone <issue-key>`
+- `jira-as relationships subtask add <parent-key> --summary <summary>`
+- Plus additional relationship commands
 
 ## Output
 
 After completing the review:
-1. Write JSON findings to `agents/reviewers/findings/jira-agile.json`
+1. Write JSON findings to `docs/reviews/findings/jira-relationships.json`
 2. Report summary of findings

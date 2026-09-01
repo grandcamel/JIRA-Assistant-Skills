@@ -26,8 +26,8 @@ The jira-time skill documentation has comprehensive coverage of all 9 CLI comman
 - `jira-time-review.md` - Comprehensive narrative report with detailed explanations and recommendations
 
 **Files Generated:**
-- `/Users/jasonkrueger/IdeaProjects/Jira-Assistant-Skills/agents/reviewers/findings/jira-time.json`
-- `/Users/jasonkrueger/IdeaProjects/Jira-Assistant-Skills/agents/reviewers/findings/jira-time-review.md`
+- `/Users/jasonkrueger/IdeaProjects/Jira-Assistant-Skills/docs/reviews/findings/jira-time.json`
+- `/Users/jasonkrueger/IdeaProjects/Jira-Assistant-Skills/docs/reviews/findings/jira-time-review.md`
 
 ## Review Methodology
 

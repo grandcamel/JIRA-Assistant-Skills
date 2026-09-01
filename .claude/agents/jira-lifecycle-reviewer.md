@@ -17,7 +17,7 @@ You review the `jira-lifecycle` skill documentation against the actual `jira-as 
 - **Skill**: `jira-lifecycle`
 - **CLI Group**: `lifecycle`
 - **SKILL.md Location**: `skills/jira-lifecycle/SKILL.md`
-- **Output Location**: `agents/reviewers/findings/jira-lifecycle.json`
+- **Output Location**: `docs/reviews/findings/jira-lifecycle.json`
 
 ## Review Process
 
@@ -53,7 +53,7 @@ For each documented command:
 
 ### Step 4: Generate Findings Report
 
-Write findings to `agents/reviewers/findings/jira-lifecycle.json`:
+Write findings to `docs/reviews/findings/jira-lifecycle.json`:
 
 ```json
 {
@@ -112,5 +112,5 @@ Based on the CLI, expect commands including:
 ## Output
 
 After completing the review:
-1. Write JSON findings to `agents/reviewers/findings/jira-lifecycle.json`
+1. Write JSON findings to `docs/reviews/findings/jira-lifecycle.json`
 2. Report summary of findings
