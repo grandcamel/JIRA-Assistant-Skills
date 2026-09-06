@@ -1,27 +1,8 @@
-"""
-Session-scoped fixtures for live JIRA integration tests.
+"""SBX live fixtures, runnable through jira-dev-host --suite only.
 
-These fixtures provide real JIRA connections and test data. Import them
-into your skill's live_integration/conftest.py:
-
-    pytest_plugins = ["fixtures"]
-
-Fixtures provided:
-- jira_connection: Session-scoped JIRA connection details
-- jira_client: Session-scoped JiraClient instance
-- jira_info: Server information dictionary
-- test_project: Dedicated test project (auto-created if needed)
-- test_project_key: Test project key string
-- test_issue: Single test issue (function-scoped)
-- fresh_test_issue: Isolated test issue per test
-- issue_helper: Issue creation helper with auto-cleanup
-- search_helper: Simplified search interface
-
-Environment Variables:
-- JIRA_TEST_URL: JIRA instance URL (required)
-- JIRA_TEST_EMAIL: User email (or JIRA_EMAIL)
-- JIRA_TEST_TOKEN: API token (or JIRA_API_TOKEN)
-- JIRA_TEST_PROJECT: Test project key (default: SKILLS_TEST)
+Credentials and project come exclusively from the wrapper environment.
+Fixture names and helper APIs remain available to skill-specific consumers.
+The standalone jira_container module retains its legacy connection API.
 """
 
 import os
@@ -32,7 +13,8 @@ from typing import Any, Dict, Generator, List, Optional
 
 import pytest
 
-from .jira_container import JiraConnection, cleanup_connection, get_jira_connection
+from .jira_container import JiraConnection
+from .sbx_profile import TrackedJiraClient, resolve_sbx_profile
 
 # =============================================================================
 # Connection Fixtures
@@ -40,41 +22,48 @@ from .jira_container import JiraConnection, cleanup_connection, get_jira_connect
 
 
 @pytest.fixture(scope="session")
-def jira_connection() -> Generator[JiraConnection, None, None]:
-    """
-    Session-scoped JIRA connection.
-
-    Yields the connection details for the test JIRA instance.
-    Cleans up container (if used) at session end.
-    """
-    connection = get_jira_connection()
-    yield connection
-    cleanup_connection()
+def sbx_profile():
+    """Fail before client construction when wrapper configuration is absent."""
+    try:
+        return resolve_sbx_profile(os.environ)
+    except ValueError as exc:
+        pytest.fail(str(exc), pytrace=False)
 
 
 @pytest.fixture(scope="session")
-def jira_client(jira_connection: JiraConnection):
-    """
-    Session-scoped JiraClient instance.
-
-    Provides a configured client for API operations.
-    """
+def jira_connection(sbx_profile) -> Generator[JiraConnection, None, None]:
+    connection = JiraConnection(
+        base_url=sbx_profile.base_url,
+        email=sbx_profile.email,
+        api_token=sbx_profile.api_token,
+    ).start()
     try:
-        from jira_as import JiraClient
-    except ImportError:
-        from jira_as.jira_client import JiraClient
+        yield connection
+    finally:
+        connection.stop()
 
-    client = JiraClient(
+
+@pytest.fixture(scope="session")
+def jira_client(jira_connection: JiraConnection, request):
+    """Track all issue creates; verify session cleanup before closing HTTP."""
+    client = TrackedJiraClient(
         base_url=jira_connection.base_url,
         email=jira_connection.email,
         api_token=jira_connection.api_token,
     )
-
-    yield client
-
-    # Cleanup
-    if hasattr(client, "close"):
-        client.close()
+    reporter = request.config.pluginmanager.get_plugin("terminalreporter")
+    if reporter is not None:
+        reporter.write_line(f"SBX live run: run_label={client.run_label}")
+    try:
+        yield client
+    finally:
+        try:
+            request.config._sbx_cleanup_summary = client.cleanup_created_issues()
+        except Exception as exc:
+            request.config._sbx_cleanup_summary = "SBX cleanup FAILED: " + str(exc)
+            pytest.fail(request.config._sbx_cleanup_summary, pytrace=False)
+        finally:
+            client.close()
 
 
 @pytest.fixture(scope="session")
@@ -98,39 +87,19 @@ def jira_info(jira_client) -> Dict[str, Any]:
 
 
 @pytest.fixture(scope="session")
-def test_project_key() -> str:
-    """
-    Get the test project key from environment or use default.
-    """
-    return os.getenv("JIRA_TEST_PROJECT", "SKILLSTEST")
+def test_project_key(sbx_profile) -> str:
+    return sbx_profile.project_key
 
 
 @pytest.fixture(scope="session")
 def test_project(jira_client, test_project_key: str) -> Dict[str, Any]:
-    """
-    Get or create the test project.
-
-    Returns the project data. Creates the project if it doesn't exist.
-    """
-    try:
-        project = jira_client.get(f"/rest/api/3/project/{test_project_key}")
-        return project
-    except Exception:
-        # Project doesn't exist, try to create it
-        try:
-            project = jira_client.post(
-                "/rest/api/3/project",
-                json={
-                    "key": test_project_key,
-                    "name": "JIRA Skills Test Project",
-                    "projectTypeKey": "software",
-                    "projectTemplateKey": "com.pyxis.greenhopper.jira:gh-kanban-template",
-                    "leadAccountId": jira_client.get_current_user_id(),
-                },
-            )
-            return project
-        except Exception as e:
-            pytest.skip(f"Cannot access or create test project {test_project_key}: {e}")
+    """Require the existing Sandbox Project; never create a project."""
+    project = jira_client.get(f"/rest/api/3/project/{test_project_key}")
+    if project.get("key") != "SBX":
+        pytest.fail(
+            "SBX live profile refused: server returned a non-SBX project", pytrace=False
+        )
+    return project
 
 
 # =============================================================================
@@ -147,7 +116,7 @@ def test_issue(jira_client, test_project: Dict[str, Any]) -> Dict[str, Any]:
     """
     issue = jira_client.post(
         "/rest/api/3/issue",
-        json={
+        data={
             "fields": {
                 "project": {"key": test_project["key"]},
                 "summary": f"[Test] Session test issue - {_random_suffix()}",
@@ -177,7 +146,7 @@ def fresh_test_issue(
     """
     issue = jira_client.post(
         "/rest/api/3/issue",
-        json={
+        data={
             "fields": {
                 "project": {"key": test_project["key"]},
                 "summary": f"[Test] Fresh issue - {_random_suffix()}",
@@ -233,7 +202,7 @@ class IssueHelper:
             **fields,
         }
 
-        issue = self._client.post("/rest/api/3/issue", json={"fields": issue_fields})
+        issue = self._client.post("/rest/api/3/issue", data={"fields": issue_fields})
         self._created_issues.append(issue["key"])
         return issue
 
@@ -296,7 +265,7 @@ class SearchHelper:
         """
         response = self._client.post(
             "/rest/api/3/search",
-            json={
+            data={
                 "jql": jql,
                 "fields": fields or ["key", "summary", "status"],
                 "maxResults": max_results,
@@ -308,7 +277,7 @@ class SearchHelper:
         """Get count of issues matching JQL."""
         response = self._client.post(
             "/rest/api/3/search",
-            json={"jql": jql, "maxResults": 0},
+            data={"jql": jql, "maxResults": 0},
         )
         return response.get("total", 0)
 
@@ -385,7 +354,7 @@ def wait_for_indexing(
         try:
             response = client.post(
                 "/rest/api/3/search",
-                json={"jql": jql, "maxResults": 0},
+                data={"jql": jql, "maxResults": 0},
             )
             if response.get("total", 0) >= min_count:
                 return True

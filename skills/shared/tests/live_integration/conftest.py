@@ -10,6 +10,7 @@ from .fixtures import (
     jira_client,
     jira_connection,
     jira_info,
+    sbx_profile,
     search_helper,
     skip_if_cloud,
     skip_if_container,
@@ -30,7 +31,15 @@ __all__ = [
     "fresh_test_issue",
     "issue_helper",
     "search_helper",
+    "sbx_profile",
     "skip_if_no_jira",
     "skip_if_container",
     "skip_if_cloud",
 ]
+
+
+def pytest_terminal_summary(terminalreporter, config):
+    """Keep cleanup acceptance visible even with pytest's default capture."""
+    summary = getattr(config, "_sbx_cleanup_summary", None)
+    if summary:
+        terminalreporter.write_line(summary)

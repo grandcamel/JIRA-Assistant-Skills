@@ -8,8 +8,9 @@ test suites in this repo are:
 
 | Suite | Location | Needs |
 |-------|----------|-------|
+| SBX profile unit tests | `skills/shared/tests/test_live_profile.py` | Offline fakes |
 | Routing tests | `skills/jira-assistant/tests/` | Claude CLI (live, billed) |
-| Live integration | `skills/shared/tests/live_integration/` | JIRA instance or Docker |
+| Live integration | `skills/shared/tests/live_integration/` | Host-approved dev wrapper and existing SBX project |
 | Plugin E2E | `tests/e2e/` | Claude CLI credentials |
 
 ## Running Tests
@@ -91,24 +92,45 @@ library, where the CLI's unit tests live. For suites in this repo:
 
 ## Live Integration Testing
 
-Tests against real JIRA instances:
+In this organization, **all live Jira tests run only through the host-approved
+`jira-dev-host --suite` wrapper**, targeting the existing Sandbox Project
+`SBX`. The shared suite defaults to the SBX profile; no extra pytest flag is
+needed. An operator with host approval runs:
 
 ```bash
-# Configure the test instance (required)
-export JIRA_TEST_URL="https://your-site.atlassian.net"
-export JIRA_TEST_EMAIL="your@email.com"
-export JIRA_TEST_TOKEN="your-api-token"
-export JIRA_TEST_PROJECT="SKILLSTEST"   # optional, default SKILLSTEST
-
-# Core skills
-pytest skills/shared/tests/live_integration/ -v
-
-# Specific modules
-pytest skills/shared/tests/live_integration/test_utils.py -v
+lane=/absolute/path/to/JIRA-Assistant-Skills
+/Users/jasonkrueger/projects/grand-camel-platform/scripts/jira-dev-host "$lane" --suite \
+  "$lane/.venv/bin/python" -m pytest \
+  "$lane/skills/shared/tests/live_integration" -q -p no:cacheprovider
 ```
 
-Without `JIRA_TEST_URL`, the suite falls back to a Docker-based JIRA
-container when Docker is available, and skips otherwise.
+Use absolute paths: the wrapper supplies a private working directory and HOME.
+The lane must already have its `.venv/bin/jira-as` and pytest dependencies.
+The wrapper injects `JIRA_SITE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` and
+`JIRA_DEFAULT_PROJECT=SBX`. The profile reads only those environment names,
+never credentials or a project from settings files or the keychain. It refuses
+missing credentials and any project other than exact `SBX` before constructing
+a client. It never falls back to Docker and never creates a project.
+
+The smoke tests create issues through the session fixture, helper and direct
+client API. The fixture client tracks created keys and attaches a unique run
+label. Session teardown attempts deletion of every tracked issue and verifies
+with a final run-label search. The terminal output must include
+`SBX cleanup verified:` with `remaining=0`; survivors or an unverifiable search
+fail the session. Cleanup runs even after a test failure. A killed process or
+machine outage cannot guarantee teardown; use the run label in the test output
+to reconcile interrupted runs before acceptance.
+
+The standalone `jira_container` API retains its legacy `JIRA_TEST_*` and Docker
+behavior for compatibility. Those paths are not an approved way to run live
+tests in this organization. The older `scripts/run_live_tests.sh` and examples
+in other files do not replace the wrapper requirement above.
+
+Offline profile and cleanup tests use fakes and need no Jira access:
+
+```bash
+.venv/bin/python -m pytest skills/shared/tests/test_live_profile.py -q -p no:cacheprovider
+```
 
 ## Routing Tests
 

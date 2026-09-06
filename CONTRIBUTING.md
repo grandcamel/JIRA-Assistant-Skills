@@ -54,29 +54,16 @@ pip install -r .claude/skills/shared/scripts/lib/requirements.txt
 pip install pytest pytest-cov responses
 ```
 
-### Configuration
+### Live-Test Configuration
 
-```bash
-export JIRA_API_TOKEN="your-token"
-export JIRA_EMAIL="you@company.com"
-export JIRA_SITE_URL="https://your-site.atlassian.net"
-```
-
-Or create `.claude/settings.local.json` (gitignored):
-```json
-{
-  "jira": {
-    "profiles": {
-      "development": {
-        "url": "https://your-site.atlassian.net",
-        "email": "you@company.com",
-        "default_project": "TEST"
-      }
-    },
-    "default_profile": "development"
-  }
-}
-```
+In this organization, live Jira tests run only through the host-approved
+`jira-dev-host --suite` wrapper against the existing Sandbox Project `SBX`.
+The default SBX profile reads credentials and `JIRA_DEFAULT_PROJECT=SBX` only
+from the wrapper environment; do not put live-test credentials in settings
+files or export them into worker sessions. The profile refuses missing
+credentials or a non-SBX project, never creates a project, and verifies issue
+cleanup at session teardown. See [Testing](docs/TESTING.md#live-integration-testing)
+for the operator command and required cleanup output.
 
 ## Project Structure
 
@@ -172,8 +159,11 @@ pytest .claude/skills/jira-issue/tests/ -v
 # Run with coverage
 pytest .claude/skills/*/tests/ --cov=.claude/skills -v
 
-# Run live integration tests (requires JIRA credentials)
-pytest .claude/skills/shared/tests/live_integration/ --profile development -v
+# Live integration: host-approved operator only (absolute paths required)
+lane=/absolute/path/to/JIRA-Assistant-Skills
+/Users/jasonkrueger/projects/grand-camel-platform/scripts/jira-dev-host "$lane" --suite \
+  "$lane/.venv/bin/python" -m pytest \
+  "$lane/skills/shared/tests/live_integration" -q -p no:cacheprovider
 ```
 
 ### Test Requirements
@@ -181,7 +171,7 @@ pytest .claude/skills/shared/tests/live_integration/ --profile development -v
 - All new scripts must have corresponding unit tests
 - Tests should mock external API calls using `responses` library
 - Aim for >80% coverage on new code
-- Live integration tests are optional but appreciated
+- Live integration tests require the dev wrapper and SBX; acceptance includes verified teardown
 
 ### TDD Best Practices
 

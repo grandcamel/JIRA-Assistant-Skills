@@ -1,18 +1,9 @@
-"""
-Live integration test infrastructure for JIRA Assistant Skills.
+"""SBX live integration fixtures and compatible legacy test utilities.
 
-This package provides fixtures and utilities for testing against a real
-JIRA instance (Cloud or Data Center).
-
-Usage in skill tests:
-    # In your skill's tests/live_integration/conftest.py
-    pytest_plugins = ["fixtures"]
-
-Environment Variables:
-    JIRA_TEST_URL: JIRA instance URL
-    JIRA_TEST_EMAIL: User email for authentication
-    JIRA_TEST_TOKEN: API token for authentication
-    JIRA_TEST_PROJECT: Test project key (default: SKILLSTEST)
+Run this suite only through jira-dev-host --suite. The default SBX profile
+reads JIRA_SITE_URL, JIRA_EMAIL, JIRA_API_TOKEN and JIRA_DEFAULT_PROJECT
+from the wrapper environment. Standalone legacy container helpers remain
+exported for compatibility; the SBX fixtures never call them.
 """
 
 from .fixtures import (

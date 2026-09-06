@@ -20,6 +20,24 @@ Settings are merged from multiple sources (highest priority first):
 
 ---
 
+## SBX Live-Test Profile
+
+Live Jira tests in this organization run **only through the host-approved
+`jira-dev-host <lane> --suite ...` wrapper**, with the existing `SBX` project.
+See [the exact live-suite command](TESTING.md#live-integration-testing).
+The shared live suite defaults to this profile without a command-line flag.
+
+This profile is separate from the CLI credential priority above. It reads only
+`JIRA_SITE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` and `JIRA_DEFAULT_PROJECT` from
+the wrapper's child environment. It never reads settings files or the keychain,
+never uses `JIRA_TEST_*`, and refuses a missing credential or any project other
+than exact `SBX`. Do not configure live-test credentials in a lane's settings:
+the wrapper rejects a `jira.credentials` block or a non-SBX default project.
+The profile cannot create a project. It tracks its created issues, deletes
+them during session teardown and requires a final search proving none remain.
+
+---
+
 ## Settings File
 
 Credentials and defaults live under the `jira` key in
