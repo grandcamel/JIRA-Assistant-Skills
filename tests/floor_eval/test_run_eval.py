@@ -499,3 +499,104 @@ def test_interrupt_marks_run_incomplete_and_resumes_collected_calls(tmp_path):
         if child.poll() is None:
             child.kill()
             child.communicate(timeout=10)
+
+
+@pytest.mark.parametrize(
+    "prefix,suffix",
+    [
+        (" \n```json\n", "\n```\n "),
+        ("```\n", "\n```"),
+        ("Here is the verdict:\n", "\nEnd of verdict."),
+    ],
+)
+def test_wrapped_judge_matches_bare_json_and_resumes(tmp_path, prefix, suffix):
+    inventory, fixtures, output = setup(tmp_path, "all_correct")
+    configure(
+        fixtures,
+        {
+            "models": {
+                "sonnet": {
+                    "correct": [True] * 5,
+                    "judge_prefix": prefix,
+                    "judge_suffix": suffix,
+                },
+                "terra": "all_correct",
+            }
+        },
+    )
+    run = invoke(inventory, fixtures, output)
+    assert run.returncode == 0, run.stdout + run.stderr
+    wrapped = json.loads((output / "raw/judge/G001_sonnet.json").read_text())
+    bare = json.loads((output / "raw/judge/G001_terra.json").read_text())
+    assert wrapped["parsed"] == bare["parsed"]
+    assert result(output)["facts"][0]["verdict"] == "floor"
+    raw = (output / "raw/judge/G001_sonnet.raw.txt").read_text()
+    assert raw.startswith(prefix)
+    assert wrapped["answer_hash"] == hashlib.sha256(raw.encode()).hexdigest()
+    before = (output / "fake-invocations.jsonl").read_bytes()
+    # First reuse the canonical receipt; then recover the wrapped raw attempt.
+    for missing in (False, True):
+        if missing:
+            (output / "raw/judge/G001_sonnet.json").unlink()
+        resumed = invoke(inventory, fixtures, output, "--resume")
+        assert resumed.returncode == 0, resumed.stdout + resumed.stderr
+        assert summary(output)["total_calls"] == 0
+        assert summary(output)["reused"] == 12
+        assert (output / "fake-invocations.jsonl").read_bytes() == before
+
+
+def test_non_json_judge_records_parse_error(tmp_path):
+    inventory, fixtures, output = setup(tmp_path, "all_correct")
+    configure(fixtures, {"correct": [True] * 5, "inject": "malformed_judge"})
+    run = invoke(inventory, fixtures, output)
+    assert run.returncode == 1, run.stdout + run.stderr
+    assert summary(output)["judge_calls"] == 4
+    assert summary(output)["incomplete_fact_ids"] == ["G001"]
+    for model in ("sonnet", "terra"):
+        receipt = json.loads((output / f"raw/judge/G001_{model}.json").read_text())
+        assert receipt["complete"] is False
+        assert receipt["parsed"] is None
+        assert receipt["error"] == "Expecting value: line 1 column 1 (char 0)"
+        assert (output / f"raw/judge/G001_{model}.raw.txt").read_text() == "not json\n"
+
+
+def test_resume_reasks_pre_fix_failed_fenced_judge_only(tmp_path):
+    inventory, fixtures, output = setup(tmp_path, "all_correct")
+    configure(
+        fixtures,
+        {
+            "correct": [True] * 5,
+            "judge_prefix": "```json\n",
+            "judge_suffix": "\n```",
+        },
+    )
+    data = json.loads(inventory.read_text())
+    data["facts"].append(fact("G002"))
+    inventory.write_text(json.dumps(data))
+    assert invoke(inventory, fixtures, output).returncode == 0
+    # Reproduce pre-fix receipt state, preserving original raw bytes and hashes.
+    paths = [output / "raw/judge/G001_sonnet.json"] + list(
+        (output / "raw/attempts/judge/sonnet/G001_t0").glob("*.json")
+    )
+    for path in paths:
+        receipt = json.loads(path.read_text())
+        receipt.update(
+            complete=False,
+            parsed=None,
+            error="Expecting value: line 1 column 1 (char 0)",
+        )
+        path.write_text(json.dumps(receipt))
+    attempts = {path: path.read_bytes() for path in paths[1:]}
+    before = (output / "fake-invocations.jsonl").read_text().splitlines()
+    resumed = invoke(inventory, fixtures, output, "--resume")
+    assert resumed.returncode == 0, resumed.stdout + resumed.stderr
+    assert summary(output)["complete"] is True
+    assert summary(output)["trial_calls"] == 0
+    assert summary(output)["judge_calls"] == 1
+    assert summary(output)["reused"] == 23
+    calls = (output / "fake-invocations.jsonl").read_text().splitlines()
+    assert calls[: len(before)] == before
+    assert len(calls) == len(before) + 1
+    call = json.loads(calls[-1])
+    assert (call["kind"], call["fact_id"], call["model"]) == ("judge", "G001", "sonnet")
+    assert all(path.read_bytes() == raw for path, raw in attempts.items())

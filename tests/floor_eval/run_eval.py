@@ -208,6 +208,17 @@ def judge_prompt(fact: dict[str, Any], answers: list[str]) -> str:
     )
 
 
+def parse_judge_json(text: str) -> Any:
+    """Remove a surrounding code fence or prose before decoding a judge answer."""
+    text = text.strip()
+    fenced = re.fullmatch(r"```\w*[^\S\n]*\n(.*?)\n```", text, re.DOTALL)
+    if fenced:
+        text = fenced.group(1).strip()
+    elif "{" in text:
+        text = text[text.index("{") : text.rfind("}") + 1]
+    return json.loads(text)
+
+
 def valid_judge(parsed: Any, trials: int) -> bool:
     if not isinstance(parsed, dict) or not isinstance(parsed.get("reason"), str):
         return False
@@ -429,7 +440,7 @@ class Runner:
                 try:
                     cached = load_json(path)
                     answer = path.with_suffix(".txt").read_text(encoding="utf-8")
-                    parsed = json.loads(answer) if judge else None
+                    parsed = parse_judge_json(answer) if judge else None
                     if (
                         isinstance(cached, dict)
                         and cached.get("fingerprint") == fingerprint
@@ -449,7 +460,7 @@ class Runner:
             parsed, error = None, None
             if result["ok"] and judge:
                 try:
-                    parsed = json.loads(result["answer"])
+                    parsed = parse_judge_json(result["answer"])
                     if not valid_judge(parsed, 5):
                         raise ValueError(
                             "judge schema: expected five boolean scores and valid contradiction states"
@@ -539,7 +550,7 @@ class Runner:
         try:
             payload = load_json(path)
             raw = path.with_suffix(".raw.txt").read_text(encoding="utf-8")
-            parsed = json.loads(raw)
+            parsed = parse_judge_json(raw)
             if (
                 isinstance(payload, dict)
                 and payload.get("complete") is True

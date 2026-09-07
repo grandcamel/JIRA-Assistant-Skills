@@ -80,7 +80,8 @@ def main() -> int:
             ],
         )
         print(
-            json.dumps(
+            spec.get("judge_prefix", "")
+            + json.dumps(
                 {
                     "correct": correct,
                     "reason": "fixture scoring",
@@ -96,6 +97,7 @@ def main() -> int:
                     "certainty": spec.get("certainty", "certain"),
                 }
             )
+            + spec.get("judge_suffix", "")
         )
     else:
         correct = spec["correct"][request["trial"] - 1]
