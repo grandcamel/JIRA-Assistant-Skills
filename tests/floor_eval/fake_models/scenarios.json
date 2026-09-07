@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "default": "all_correct",
+  "scenarios": {
+    "all_correct": {
+      "correct": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "contradiction": false,
+      "certainty": "certain"
+    },
+    "four_of_five": {
+      "correct": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "contradiction": false,
+      "certainty": "uncertain"
+    },
+    "three_of_five": {
+      "correct": [
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      "contradiction": false,
+      "certainty": "uncertain"
+    },
+    "confident_contradiction": {
+      "correct": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "contradiction": true,
+      "certainty": "certain"
+    },
+    "uncertain": {
+      "correct": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "contradiction": false,
+      "certainty": "uncertain"
+    }
+  },
+  "facts": {
+    "G001": "four_of_five",
+    "G002": "three_of_five",
+    "G003": "confident_contradiction",
+    "G004": "uncertain"
+  }
+}

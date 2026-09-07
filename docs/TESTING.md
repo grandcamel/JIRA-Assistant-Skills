@@ -184,3 +184,46 @@ pytest test_routing.py --otel --otlp-endpoint http://localhost:4318 -v
    ```
 3. **Include test counts**: `feat(jira-agile): implement sprint create command (6/6 tests passing)`
 4. **Never commit failing tests** - main branch should always have passing tests
+
+## Before each plugin release
+
+Before merging the release-please release PR, run the shared Knowledge Floor
+job on the host and archive its results with the release review. Run it again
+whenever a model change in the organization's
+`docs/agents/standing/fleet-posture.json` changes the floor models or judge;
+update the model IDs in `tests/floor_eval/commands.json` first and use a new
+output directory. This is a host-triggered release check: **never run the real
+model job in GitHub Actions**, whose runners do not have the headless CLIs or
+model credentials. It requires no Jira or Confluence site access.
+
+From this repository, with Python 3.10+ and authenticated host `claude` and
+`codex` CLIs:
+
+```bash
+python3 tests/floor_eval/run_eval.py \
+  --output tests/floor_eval/runs/pre-release
+# After interruption, use the same inputs and output directory:
+python3 tests/floor_eval/run_eval.py \
+  --output tests/floor_eval/runs/pre-release --resume
+```
+
+Use a distinct output directory for each release or changed evaluation input.
+The full run evaluates all 153 Jira and Confluence inventory facts, with five
+cold trials on Sonnet 5 and GPT-5.6 Terra and Opus 5 judging. Archive
+`classification.json`, `flipped-to-floor.md`, `stale-facts.md`,
+`run_summary.json`, the manifest and all `raw/` receipts. A fact is floor only
+when both models score at least four of five; incomplete facts require resume.
+Fake runs and filtered smoke runs do not establish the full cut list. Review
+model disagreements and citation-audit notes by hand, and reverify every
+stale-fact candidate against live authoritative sources before applying the
+cut list or releasing. The evaluator does not perform that live verification.
+
+The same job serves the Confluence plugin; `--repo confluence` provides its
+focused run after the full inventory baseline has been established. See
+[the job README](../tests/floor_eval/README.md) for filters, recovery, source
+snapshots and offline tests. The existing GitHub test loop does not discover
+this root-level suite; run its offline tests explicitly:
+
+```bash
+python3 -m pytest tests/floor_eval -q -p no:cacheprovider
+```

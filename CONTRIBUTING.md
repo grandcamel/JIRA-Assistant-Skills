@@ -147,6 +147,8 @@ BREAKING CHANGE: settings.json is now settings.yaml
 
 ## Testing
 
+See [Before each plugin release](docs/TESTING.md#before-each-plugin-release) for the host-run Knowledge Floor check and model-policy trigger.
+
 ### Running Tests
 
 ```bash
