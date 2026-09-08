@@ -108,7 +108,9 @@ def test_project(jira_client, test_project_key: str) -> Dict[str, Any]:
 
 
 @pytest.fixture(scope="session")
-def test_issue(jira_client, test_project: Dict[str, Any]) -> Dict[str, Any]:
+def test_issue(
+    jira_client, test_project: Dict[str, Any]
+) -> Generator[Dict[str, Any], None, None]:
     """
     Session-scoped test issue.
 

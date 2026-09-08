@@ -16,7 +16,10 @@ import os
 import threading
 import time
 from dataclasses import dataclass
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from testcontainers.core.container import DockerContainer
 
 # Global singleton state
 _shared_connection: Optional["JiraConnection"] = None
@@ -99,7 +102,7 @@ class JiraContainer:
             os.getenv("JIRA_TEST_HEALTH_INTERVAL", health_interval)
         )
 
-        self._container = None
+        self._container: Optional["DockerContainer"] = None
         self._ref_count = 0
         self._lock = threading.Lock()
         self._is_started = False

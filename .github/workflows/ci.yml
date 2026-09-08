@@ -64,8 +64,6 @@ jobs:
           python -m mypy skills tests \
             --explicit-package-bases \
             --ignore-missing-imports
-        # Existing typing errors remain visible during gradual adoption.
-        continue-on-error: true
 
   # ==========================================================================
   # Security Scanning

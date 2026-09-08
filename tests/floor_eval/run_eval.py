@@ -27,7 +27,7 @@ import threading
 import time
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 HERE = Path(__file__).resolve().parent
 # mkdtemp creates a private random directory here, outside all project roots.
@@ -527,8 +527,10 @@ class Runner:
         trials = [self.read_trial(fact, model, trial) for trial in range(1, 6)]
         if any(trial is None for trial in trials):
             return None
-        prompt = judge_prompt(fact, [trial["answer"] for trial in trials])
-        dependencies = [trial["answer_hash"] for trial in trials]
+        # The all-trials check above excludes every missing receipt.
+        complete_trials = cast(list[dict[str, Any]], trials)
+        prompt = judge_prompt(fact, [trial["answer"] for trial in complete_trials])
+        dependencies = [trial["answer_hash"] for trial in complete_trials]
         fingerprint = digest(
             {
                 "fact": fact,
@@ -649,7 +651,10 @@ def classifications(
         verdict = (
             (
                 "floor"
-                if all(model["correct"] >= 4 for model in models.values())
+                if all(
+                    model["correct"] is not None and model["correct"] >= 4
+                    for model in models.values()
+                )
                 else "gotcha"
             )
             if ready

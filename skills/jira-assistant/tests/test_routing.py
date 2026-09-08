@@ -31,7 +31,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import NamedTuple
+from typing import Callable, NamedTuple
 
 import pytest
 import yaml
@@ -45,6 +45,10 @@ if str(TESTS_DIR) not in sys.path:
     sys.path.insert(0, str(TESTS_DIR))
 
 # OpenTelemetry integration (optional)
+init_telemetry: Callable[[], bool] | None
+record_test_result: Callable[..., None] | None
+record_test_session_summary: Callable[..., None] | None
+otel_shutdown: Callable[[], None] | None
 try:
     from otel_metrics import (  # noqa: I001
         OTEL_AVAILABLE,

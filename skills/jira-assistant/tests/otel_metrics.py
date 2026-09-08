@@ -32,6 +32,10 @@ import subprocess
 import time
 from contextlib import contextmanager
 from pathlib import Path
+from typing import TYPE_CHECKING, cast
+
+if TYPE_CHECKING:
+    from opentelemetry.metrics import Counter, Histogram
 
 # OpenTelemetry imports
 try:
@@ -69,7 +73,7 @@ GOLDEN_YAML = TESTS_DIR / "routing_golden.yaml"
 _meter = None
 _tracer = None
 _metrics_initialized = False
-_resource_attributes = {}
+_resource_attributes: dict[str, str] = {}
 
 # Suite span state (for parent-child hierarchy)
 _suite_span = None
@@ -94,7 +98,7 @@ _accuracy_value = {"value": 0.0}
 _tool_use_accuracy_value = {"value": 0.0}
 
 
-def _get_git_info() -> dict:
+def _get_git_info() -> dict[str, str]:
     """Get git commit SHA and branch."""
     info = {"commit": "unknown", "branch": "unknown"}
     try:
@@ -172,7 +176,7 @@ def _get_claude_version() -> str:
     return "unknown"
 
 
-def _build_resource_attributes() -> dict:
+def _build_resource_attributes() -> dict[str, str]:
     """Build comprehensive resource attributes."""
     git_info = _get_git_info()
 
@@ -212,7 +216,7 @@ def _build_resource_attributes() -> dict:
     return attrs
 
 
-def get_resource_attributes() -> dict:
+def get_resource_attributes() -> dict[str, str]:
     """Get cached resource attributes."""
     global _resource_attributes
     if not _resource_attributes:
@@ -376,7 +380,7 @@ def record_test_result(
     tool_use_accuracy: float | None = None,
     tool_use_matched: int | None = None,
     tool_use_total: int | None = None,
-):
+) -> None:
     """
     Record a single test result with comprehensive context.
 
@@ -432,17 +436,20 @@ def record_test_result(
     if error_type:
         metric_labels["error_type"] = error_type
 
+    # Initialization sets all three instruments before _metrics_initialized.
     # Record counter
-    _test_counter.add(1, metric_labels)
+    cast("Counter", _test_counter).add(1, metric_labels)
 
     # Record duration (convert ms to seconds for standard units)
-    _duration_histogram.record(
+    cast("Histogram", _duration_histogram).record(
         duration_ms / 1000.0, {"category": category, "result": result, "model": model}
     )
 
     # Record cost
     if cost_usd > 0:
-        _cost_histogram.record(cost_usd, {"category": category, "model": model})
+        cast("Histogram", _cost_histogram).record(
+            cost_usd, {"category": category, "model": model}
+        )
 
     # Create detailed trace span with correct duration
     # Backdate the span start time so spanmetrics captures the actual test duration
@@ -647,7 +654,7 @@ def start_suite_span(
         _suite_token = context.attach(_suite_context)
 
         # Serialize context for xdist workers
-        carrier = {}
+        carrier: dict[str, str] = {}
         TraceContextTextMapPropagator().inject(carrier, _suite_context)
         traceparent = carrier.get("traceparent", "")
 

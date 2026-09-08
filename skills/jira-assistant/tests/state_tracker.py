@@ -152,7 +152,7 @@ class StateTracker:
     def get_test_state(self, test_id: str) -> TestState:
         """Get state for a specific test, creating if needed."""
         if self.state is None:
-            self.load()
+            self.state = self.load()
 
         if test_id not in self.state.tests:
             self.state.tests[test_id] = TestState()
@@ -198,7 +198,7 @@ class StateTracker:
     def set_baseline(self, passing: list[str], failing: list[str]) -> None:
         """Set the baseline test results."""
         if self.state is None:
-            self.load()
+            self.state = self.load()
 
         self.state.baseline_passing = passing
         self.state.initial_failures = failing
@@ -214,7 +214,7 @@ class StateTracker:
     def update_current_failures(self, failures: list[str]) -> None:
         """Update the current list of failing tests."""
         if self.state is None:
-            self.load()
+            self.state = self.load()
 
         self.state.current_failures = failures
         self.save()
@@ -222,7 +222,7 @@ class StateTracker:
     def increment_iteration(self) -> int:
         """Increment the iteration counter."""
         if self.state is None:
-            self.load()
+            self.state = self.load()
 
         self.state.iteration += 1
         self.save()
@@ -231,7 +231,7 @@ class StateTracker:
     def mark_completed(self) -> None:
         """Mark the remediation as completed."""
         if self.state is None:
-            self.load()
+            self.state = self.load()
 
         self.state.completed = True
         self.state.completed_at = datetime.now().isoformat()
@@ -240,7 +240,7 @@ class StateTracker:
     def get_pending_tests(self) -> list[str]:
         """Get list of tests that still need remediation."""
         if self.state is None:
-            self.load()
+            self.state = self.load()
 
         return [
             test_id
@@ -254,7 +254,7 @@ class StateTracker:
     def get_unfixable_tests(self) -> list[str]:
         """Get list of tests that exceeded max attempts."""
         if self.state is None:
-            self.load()
+            self.state = self.load()
 
         return [
             test_id
@@ -266,7 +266,7 @@ class StateTracker:
     def get_fixed_tests(self) -> list[str]:
         """Get list of successfully fixed tests."""
         if self.state is None:
-            self.load()
+            self.state = self.load()
 
         return [
             test_id
@@ -277,7 +277,7 @@ class StateTracker:
     def get_summary(self) -> dict[str, Any]:
         """Get a summary of the current state."""
         if self.state is None:
-            self.load()
+            self.state = self.load()
 
         return {
             "run_id": self.state.run_id,

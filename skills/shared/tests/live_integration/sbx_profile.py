@@ -6,7 +6,7 @@ import re
 import time
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import Any, Mapping, cast
 from uuid import uuid4
 
 from jira_as import JiraClient
@@ -111,7 +111,8 @@ class TrackedJiraClient(JiraClient):
             not isinstance(fields, dict) for fields in fields_list
         ):
             raise ValueError("SBX live profile refused: issue payload requires fields")
-        for fields in fields_list:
+        # The validation above establishes every entry is a fields object.
+        for fields in cast(list[dict[str, Any]], fields_list):
             self._require_sbx_project(fields)
             labels = fields.get("labels", [])
             if not isinstance(labels, list):
@@ -180,6 +181,7 @@ class TrackedJiraClient(JiraClient):
 
     def _require_sbx_project(self, fields: dict[str, Any]) -> None:
         project = fields.get("project")
+        project_key: object
         if isinstance(project, str):
             project_key = project
         elif isinstance(project, Mapping):

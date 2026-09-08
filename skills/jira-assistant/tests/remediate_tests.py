@@ -16,13 +16,14 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import cast
 
 # Add tests directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from claude_analyzer import ClaudeAnalyzer, FixProposal, TestCase
 from skill_editor import SkillEditor
-from state_tracker import StateTracker, TestStatus
+from state_tracker import RemediationState, StateTracker, TestStatus
 from test_runner import TestRunner, TestSuiteResult
 
 
@@ -193,7 +194,7 @@ class RemediationEngine:
 
         while iteration < max_iterations:
             iteration += 1
-            self.state_tracker.state.iteration = iteration
+            state.iteration = iteration
             self.state_tracker.save()
 
             self.logger.info(f"\n{'=' * 60}")
@@ -248,7 +249,7 @@ class RemediationEngine:
 
             # Check if any progress was made
             if iteration > 1:
-                prev_failures = len(self.state_tracker.state.initial_failures)
+                prev_failures = len(state.initial_failures)
                 curr_failures = len(failing_ids)
                 if curr_failures >= prev_failures:
                     self.logger.warning("No progress made this iteration")
@@ -393,7 +394,9 @@ class RemediationEngine:
             timeout=self.suite_timeout,
         )
 
-        baseline_passing = self.state_tracker.state.baseline_passing
+        # get_test_state() above has already loaded the remediation state.
+        state = cast(RemediationState, self.state_tracker.state)
+        baseline_passing = state.baseline_passing
         regressions = self.test_runner.detect_regressions(
             baseline_passing, regression_result
         )
@@ -432,7 +435,7 @@ class RemediationEngine:
         self.skill_editor.cleanup_backups(keep_latest=0)
 
         # Update baseline to include this test as passing
-        self.state_tracker.state.baseline_passing.append(test_id)
+        state.baseline_passing.append(test_id)
         self.state_tracker.save()
 
         if self.otel_enabled:
@@ -549,7 +552,9 @@ class RemediationEngine:
             timeout=self.suite_timeout,
         )
 
-        baseline = self.state_tracker.state.baseline_passing
+        # Conflict resolution is entered from the initialized remediation run.
+        state = cast(RemediationState, self.state_tracker.state)
+        baseline = state.baseline_passing
         new_regressions = self.test_runner.detect_regressions(
             baseline, regression_result
         )

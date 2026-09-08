@@ -4,6 +4,7 @@ import os
 import sys
 import time
 from pathlib import Path
+from typing import Callable
 
 import pytest
 
@@ -13,6 +14,15 @@ if str(TESTS_DIR) not in sys.path:
     sys.path.insert(0, str(TESTS_DIR))
 
 # OpenTelemetry integration (optional)
+init_telemetry: Callable[[], bool] | None
+record_test_result: Callable[..., None] | None
+record_test_session_summary: Callable[..., None] | None
+otel_shutdown: Callable[[], None] | None
+start_suite_span: Callable[..., str | None] | None
+end_suite_span: Callable[..., None] | None
+set_suite_context_from_traceparent: Callable[[str], bool] | None
+start_worker_span: Callable[[str], bool] | None
+end_worker_span: Callable[..., None] | None
 try:
     from otel_metrics import (
         OTEL_AVAILABLE,
@@ -220,7 +230,7 @@ def claude_model(request):
 
 
 # Module-level config storage for access from test_routing.py
-_test_config = {}
+_test_config: dict[str, str | None] = {}
 
 
 @pytest.fixture(scope="session", autouse=True)
