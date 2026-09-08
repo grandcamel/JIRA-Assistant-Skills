@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.3.1](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v4.3.0...v4.3.1) (2026-09-08)
+
+
+### Bug Fixes
+
+* **agents:** stop shipping doc-review agents with the plugin ([203d3aa](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/203d3aa19cd168ff2e80a1f48613d8abb4d1c9c4))
+
 ## [4.3.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v4.2.0...v4.3.0) (2026-08-18)
 
 
