@@ -30,7 +30,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install ruff
-        run: pip install ruff
+        run: pip install ruff==0.16.6
 
       - name: Run ruff linter
         run: ruff check . --output-format=github

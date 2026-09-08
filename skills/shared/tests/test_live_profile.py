@@ -245,7 +245,9 @@ def test_client_fixture_finalizes_on_test_error_and_closes(monkeypatch, cleanup_
     config = SimpleNamespace(pluginmanager=Mock())
     config.pluginmanager.get_plugin.return_value = None
     connection = SimpleNamespace(
-        base_url="https://example.invalid", email="a", api_token="b"  # nosec B106
+        base_url="https://example.invalid",
+        email="a",
+        api_token="b",  # nosec B106
     )
     fixture = live_fixtures.jira_client.__wrapped__(
         connection, SimpleNamespace(config=config)
