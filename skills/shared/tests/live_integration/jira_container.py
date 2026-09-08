@@ -255,7 +255,7 @@ def get_jira_connection() -> JiraConnection:
             _shared_connection = JiraConnection(
                 base_url=container.base_url,
                 email="admin",  # Default JIRA admin
-                api_token="admin",  # Default password for container
+                api_token="admin",  # Default password for container  # nosec B106
                 is_container=True,
                 container=container,
             )

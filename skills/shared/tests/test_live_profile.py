@@ -20,7 +20,7 @@ def _environment(**updates):
         "JIRA_DEFAULT_PROJECT": "SBX",
         "JIRA_SITE_URL": "https://example.invalid",
         "JIRA_EMAIL": "tester@example.invalid",
-        "JIRA_API_TOKEN": "secret",
+        "JIRA_API_TOKEN": "secret",  # nosec B105
     }
     values.update(updates)
     return values
@@ -245,7 +245,7 @@ def test_client_fixture_finalizes_on_test_error_and_closes(monkeypatch, cleanup_
     config = SimpleNamespace(pluginmanager=Mock())
     config.pluginmanager.get_plugin.return_value = None
     connection = SimpleNamespace(
-        base_url="https://example.invalid", email="a", api_token="b"
+        base_url="https://example.invalid", email="a", api_token="b"  # nosec B106
     )
     fixture = live_fixtures.jira_client.__wrapped__(
         connection, SimpleNamespace(config=config)

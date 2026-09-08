@@ -50,3 +50,20 @@ ignore = [
 quote-style = "double"
 indent-style = "space"
 line-ending = "lf"
+
+# =============================================================================
+# Bandit - Plugin test and evaluation tooling (all skills/ and tests/ Python)
+# =============================================================================
+[tool.bandit]
+# Reviewed JAS-66 baseline; keep all paths and the default severity threshold.
+# These rule exceptions also suppress future instances; all other rules gate CI.
+skips = [
+    "B101",  # Pytest assertions express test expectations.
+    "B110",  # Best-effort test cleanup, readiness polling and telemetry metadata.
+    "B310",  # Test connectivity to the configured OTLP endpoint/local Jira container.
+    "B311",  # Random test identifiers, not security tokens.
+    "B404",  # Subprocess imports are required by CLI/model test harnesses.
+    "B405",  # ElementTree constructs JUnit XML; it does not parse input XML.
+    "B603",  # Harness argument-list subprocesses; shell=True remains checked.
+    "B607",  # Test harnesses resolve installed git/claude commands through PATH.
+]

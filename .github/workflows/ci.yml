@@ -58,14 +58,13 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install mypy types-requests types-tabulate
-          pip install -e ".[dev]"
 
-      - name: Run mypy on library
+      - name: Run mypy on plugin Python
         run: |
-          mypy jira-as/src/jira_as \
-            --config-file=pyproject.toml \
-            --ignore-missing-imports \
-            || true  # Non-blocking for gradual adoption
+          python -m mypy skills tests \
+            --explicit-package-bases \
+            --ignore-missing-imports
+        # Existing typing errors remain visible during gradual adoption.
         continue-on-error: true
 
   # ==========================================================================
@@ -86,15 +85,14 @@ jobs:
           python-version: "3.11"
 
       - name: Install bandit
-        run: pip install "bandit[toml]"
+        run: pip install "bandit[toml,sarif]"
 
       - name: Run bandit security scan
         run: |
-          bandit -r jira-as/src \
+          python -m bandit -r skills tests \
             -c pyproject.toml \
             -f sarif \
-            -o bandit-results.sarif \
-            || true
+            -o bandit-results.sarif
 
       - name: Upload SARIF results
         uses: github/codeql-action/upload-sarif@v3
