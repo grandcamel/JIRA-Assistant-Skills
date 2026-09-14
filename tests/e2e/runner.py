@@ -8,25 +8,36 @@ tool. A `jira-as` binary is on PATH, forced into its `simulation`
 transport, with no Jira credentials in the environment -- so nothing the
 model runs can reach a live site.
 
+Confinement (review fix): `--tools Bash` restricts the available tool set
+(unlike `--allowedTools`, which only pre-approves permissions for tools
+that are otherwise still available -- Read/Glob/Grep/WebFetch would stay
+reachable under `--allowedTools` alone). Each trial also runs with `cwd`
+set to a fresh, empty temporary directory, so Claude Code does not load
+this repository's own CLAUDE.md or any other file as project context;
+the plugin is still loaded via an absolute `--plugin-dir` path, which
+does not depend on the process's working directory.
+
 For each task, this:
-  1. Sends the plain-English prompt to Claude Code and captures its full
-     tool-use transcript (--output-format stream-json).
+  1. Sends the plain-English prompt to Claude Code from an empty temp
+     directory and captures its full tool-use transcript
+     (--output-format stream-json --verbose).
   2. Extracts the LAST `jira-as ...` command the model ran as a Bash tool
-     call.
+     call, from that tool_use block's `input.command` field -- never from
+     answer text.
   3. Re-runs that exact command in the harness, under the same simulation
      transport, and checks whether jira-as accepts it (exit 0, including a
      preview of a risk-tagged call).
 
 A trial is "well-formed" only on that exit-0 re-run -- there is no
-assertion on business content (spec L94's sufficiency test is about
-whether the CLI accepts the shape of the call, not whether the result is
-"right").
+assertion on business content (the sufficiency test is about whether the
+CLI accepts the shape of the call, not whether the result is "right").
 """
 
 import json
 import re
 import shlex
 import subprocess
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -44,18 +55,36 @@ class TrialResult:
     transcript_error: str = ""
 
 
-# Matches a `jira-as ...` invocation as its own command, or chained after
-# `;`, `&&`, `|`, or a leading shell prompt -- not merely mentioned in prose.
-JIRA_AS_COMMAND_RE = re.compile(r"(?:^|[;&|]|\btime\b)\s*jira-as\b.*", re.MULTILINE)
+# Captures a jira-as invocation from the `jira-as` token up to the next
+# command separator (`;`, `&`, `|`), redirect (`>`), or newline -- never
+# merely "mentioned" elsewhere in a larger command string. Anchored so it
+# only matches jira-as as its own command (start of string, after a
+# separator, or after a `time` prefix), not a substring of another word.
+JIRA_AS_COMMAND_RE = re.compile(r"(?:^|[;&|]\s*|\btime\s+)(jira-as\b[^;&|>\n]*)")
+
+# A backslash immediately followed by a newline: a shell line continuation.
+# The extraction regex above stops at the first newline, so a continued
+# command would otherwise be silently truncated to its first line -- that
+# is a different, shorter command than the one the model actually ran, so
+# it must be rejected rather than tested as if it were complete.
+LINE_CONTINUATION_RE = re.compile(r"\\\s*\r?\n")
 
 
-def extract_last_jira_as_command(transcript_lines: list[str]) -> str | None:
+def extract_last_jira_as_command(
+    transcript_lines: list[str],
+) -> tuple[str | None, str | None]:
     """
-    Parse a Claude Code `--output-format stream-json` transcript (one JSON
-    object per line) and return the LAST `jira-as ...` Bash command the
-    model ran, or None if it never ran one.
+    Parse a Claude Code `--output-format stream-json --verbose` transcript
+    (one JSON object per line) and return `(command, error)` for the LAST
+    `jira-as ...` command the model ran as a Bash tool call.
+
+    `command` is None when no jira-as command was ever run, or when the
+    last Bash command containing one uses a backslash line continuation
+    (rejected, not truncated). `error` names the reason in either case;
+    it is None only when `command` is not None.
     """
     last_command: str | None = None
+    last_error: str | None = "model never ran a jira-as command"
 
     for line in transcript_lines:
         line = line.strip()
@@ -76,12 +105,24 @@ def extract_last_jira_as_command(transcript_lines: list[str]) -> str | None:
             if block.get("name") != "Bash":
                 continue
 
-            command = (block.get("input") or {}).get("command", "")
-            match = JIRA_AS_COMMAND_RE.search(command)
-            if match:
-                last_command = match.group(0).strip()
+            raw_command = (block.get("input") or {}).get("command", "")
+            match = JIRA_AS_COMMAND_RE.search(raw_command)
+            if not match:
+                continue
 
-    return last_command
+            if LINE_CONTINUATION_RE.search(raw_command):
+                last_command = None
+                last_error = (
+                    "the model's last jira-as command uses a backslash line "
+                    "continuation; rejected rather than silently truncated "
+                    f"at the newline: {raw_command!r}"
+                )
+                continue
+
+            last_command = match.group(1).strip()
+            last_error = None
+
+    return last_command, last_error
 
 
 class SufficiencyRunner:
@@ -94,15 +135,18 @@ class SufficiencyRunner:
         model: str = "claude-sonnet-5",
         env: dict[str, str] | None = None,
     ):
-        self.plugin_dir = plugin_dir
+        # Always absolute: --plugin-dir must resolve independently of the
+        # empty temp cwd each trial runs from.
+        self.plugin_dir = Path(plugin_dir).resolve()
         self.timeout = timeout
         self.model = model
         self.env = env or {}
 
-    def _run_claude(self, prompt: str) -> tuple[list[str], str]:
+    def _run_claude(self, prompt: str, cwd: str) -> tuple[list[str], str]:
         """
         Send one prompt to Claude Code, restricted to the shipped plugin
-        and the Bash tool. Returns (transcript_lines, stderr).
+        and the Bash tool, running from `cwd` (a fresh empty directory,
+        never this repository). Returns (transcript_lines, stderr).
         """
         cmd = [
             "claude",
@@ -112,7 +156,7 @@ class SufficiencyRunner:
             "--verbose",
             "--permission-mode",
             "dontAsk",
-            "--allowedTools",
+            "--tools",
             "Bash",
             "--plugin-dir",
             str(self.plugin_dir),
@@ -127,38 +171,41 @@ class SufficiencyRunner:
             text=True,
             timeout=self.timeout,
             env=self.env,
-            cwd=self.plugin_dir,
+            cwd=cwd,
         )
 
         return result.stdout.splitlines(), result.stderr
 
     def run_trial(self, task_id: str, prompt: str) -> TrialResult:
-        """Run one cold trial: one fresh `claude` invocation, then a
-        same-transport re-run of the last jira-as command it produced."""
+        """Run one cold trial: one fresh `claude` invocation from an empty
+        temp directory, then a same-transport re-run of the last jira-as
+        command it produced."""
         start = time.time()
 
-        try:
-            transcript_lines, stderr = self._run_claude(prompt)
-        except subprocess.TimeoutExpired:
-            return TrialResult(
-                task_id=task_id,
-                command=None,
-                exit_code=None,
-                well_formed=False,
-                duration=time.time() - start,
-                transcript_error=f"claude timed out after {self.timeout}s",
-            )
+        with tempfile.TemporaryDirectory(prefix="jas55-sufficiency-") as scratch_dir:
+            try:
+                transcript_lines, stderr = self._run_claude(prompt, cwd=scratch_dir)
+            except subprocess.TimeoutExpired:
+                return TrialResult(
+                    task_id=task_id,
+                    command=None,
+                    exit_code=None,
+                    well_formed=False,
+                    duration=time.time() - start,
+                    transcript_error=f"claude timed out after {self.timeout}s",
+                )
 
-        command = extract_last_jira_as_command(transcript_lines)
-        if not command:
-            return TrialResult(
-                task_id=task_id,
-                command=None,
-                exit_code=None,
-                well_formed=False,
-                duration=time.time() - start,
-                transcript_error=f"model never ran a jira-as command; stderr={stderr[:500]}",
-            )
+            command, error = extract_last_jira_as_command(transcript_lines)
+            if not command:
+                reason = error or "model never ran a jira-as command"
+                return TrialResult(
+                    task_id=task_id,
+                    command=None,
+                    exit_code=None,
+                    well_formed=False,
+                    duration=time.time() - start,
+                    transcript_error=f"{reason}; stderr={stderr[:500]}",
+                )
 
         exit_code = self._replay_command(command)
 

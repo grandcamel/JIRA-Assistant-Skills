@@ -15,7 +15,7 @@ Get up and running with JIRA Assistant Skills in 5 minutes.
 ## Step 1: Install the CLI
 
 ```bash
-pip install "jira-as>=1.1.3"
+pip install "jira-as>=2,<3"
 ```
 
 This installs the `jira-as` command-line tool and shared library from

@@ -63,7 +63,7 @@ echo $JIRA_SITE_URL
 
 **Solution:**
 ```bash
-pip install "jira-as>=1.1.3"
+pip install "jira-as>=2,<3"
 ```
 
 ### "Issue not found"

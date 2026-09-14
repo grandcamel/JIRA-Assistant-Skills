@@ -146,7 +146,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install jira-as pytest pyyaml requests
+          pip install "jira-as>=2,<3" pytest pyyaml requests
 
       - name: Run offline tests
         run: |

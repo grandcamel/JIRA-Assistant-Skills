@@ -10,9 +10,18 @@ skills inside a single plugin is moot. What remains worth checking is
 get this right consistently across cold trials?
 
 This runs Claude Code non-interactively with BOTH plugin directories
-installed (this repo, plus the confluence-stub fixture) and inspects the
-debug log to see which skill loaded, the same mechanism the retired
-intra-plugin routing test used.
+installed (this repo, plus the confluence-stub fixture) and observes which
+skill loaded ONLY from a `Skill` tool_use block in the
+`--output-format stream-json --verbose` transcript (review fix: the prior
+version grepped a debug log for a "skill is loading" string that appears
+in 0 debug logs on a real host, silently falling through to a keyword
+guess over the model's answer text -- that made every one of the eight
+product prompts pass whether or not either skill actually loaded, since
+the prompt itself names the product and the answer echoes it). A trial
+where no `Skill` tool_use block appears is treated as the skill loading
+being unobserved, never guessed at: for the four jira and four confluence
+prompts this correctly counts as a miss; for the two unrelated prompts
+"no skill observed" is the correct, expected outcome.
 
 Usage:
     # Run the full routing check (five cold trials per prompt)
@@ -28,7 +37,6 @@ tests/e2e/README.md for the host-triggered process this check belongs to.
 """
 
 import json
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -53,7 +61,6 @@ REPO_ROOT = TESTS_DIR.parents[2]
 CONFLUENCE_STUB_DIR = REPO_ROOT / "tests" / "fixtures" / "confluence-stub"
 
 GOLDEN_FILE = TESTS_DIR / "routing_golden.yaml"
-DEBUG_DIR = Path.home() / ".claude" / "debug"
 
 DEFAULT_MODEL = "claude-sonnet-5"
 TRIALS_PER_PROMPT = 5
@@ -66,8 +73,7 @@ class RoutingResult(NamedTuple):
     """Result of one cold trial."""
 
     skill_loaded: str | None
-    session_id: str
-    response_text: str
+    observation_error: str = ""
 
 
 def load_golden_tests() -> list[dict]:
@@ -83,28 +89,57 @@ def normalize_skill_name(skill: str) -> str | None:
     return skill if skill in KNOWN_SKILLS else None
 
 
-def infer_skill_from_response(response_text: str) -> str | None:
+def extract_loaded_skill(transcript_lines: list[str]) -> str | None:
     """
-    Fallback: infer the loaded skill from response content when the debug
-    log doesn't show an explicit Skill-tool invocation.
+    Parse a `--output-format stream-json --verbose` transcript (one JSON
+    object per line) and return the skill named by the FIRST `Skill`
+    tool_use block, or None if the model never invoked the Skill tool.
 
-    Only two candidate skills exist now, so this just needs to discriminate
-    jira content from confluence content in what Claude actually said/ran.
+    This is the ONLY source of truth for which skill loaded. There is no
+    fallback that infers a skill from the model's answer text: a prompt
+    that names its product ("Jira"/"Confluence") makes the answer text an
+    unreliable signal, since the model can echo the product name whether
+    or not it actually loaded the corresponding skill.
     """
-    text = response_text.lower()
-    jira_hit = bool(re.search(r"\bjira-as\b|\bjira\b", text))
-    confluence_hit = bool(re.search(r"\bconfluence\b", text))
-    if jira_hit and not confluence_hit:
-        return "jira"
-    if confluence_hit and not jira_hit:
-        return "confluence"
+    for line in transcript_lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+
+        if event.get("type") != "assistant":
+            continue
+
+        message = event.get("message", {})
+        for block in message.get("content", []) or []:
+            if not isinstance(block, dict) or block.get("type") != "tool_use":
+                continue
+            if block.get("name") != "Skill":
+                continue
+
+            tool_input = block.get("input") or {}
+            skill_name = (
+                tool_input.get("name")
+                or tool_input.get("skill_name")
+                or tool_input.get("skill")
+                or tool_input.get("command")
+            )
+            if skill_name:
+                normalized = normalize_skill_name(str(skill_name))
+                if normalized:
+                    return normalized
+
     return None
 
 
 def run_claude_routing(input_text: str, timeout: int = 60) -> RoutingResult:
     """
     Run Claude Code non-interactively with both plugin directories loaded
-    and return which skill (if any) it routed to for this one cold trial.
+    and return which skill (if any) it was OBSERVED to load, for this one
+    cold trial.
     """
     model = get_test_model() or DEFAULT_MODEL
 
@@ -114,8 +149,8 @@ def run_claude_routing(input_text: str, timeout: int = 60) -> RoutingResult:
         "--permission-mode",
         "dontAsk",
         "--output-format",
-        "json",
-        "--debug",
+        "stream-json",
+        "--verbose",
         "--plugin-dir",
         str(REPO_ROOT),
         "--plugin-dir",
@@ -124,47 +159,30 @@ def run_claude_routing(input_text: str, timeout: int = 60) -> RoutingResult:
         model,
     ]
 
-    result = subprocess.run(
-        cmd,
-        input=input_text,
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-    )
-
     try:
-        output = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        pytest.fail(f"Failed to parse Claude output: {result.stdout[:500]}")
-
-    session_id = output.get("session_id", "")
-    response_text = output.get("result", "")
-
-    skill_loaded = None
-
-    # Method 1 (kept from the retired intra-plugin routing test): look for
-    # an explicit Skill-tool invocation in the debug log.
-    debug_file = DEBUG_DIR / f"{session_id}.txt"
-    if debug_file.exists():
-        debug_content = debug_file.read_text()
-        skill_match = re.search(
-            r"skill is loading.*?\b(jira|confluence)\b",
-            debug_content,
-            re.IGNORECASE,
+        result = subprocess.run(
+            cmd,
+            input=input_text,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
         )
-        if skill_match:
-            skill_loaded = normalize_skill_name(skill_match.group(1))
+    except subprocess.TimeoutExpired:
+        return RoutingResult(
+            skill_loaded=None,
+            observation_error=f"claude timed out after {timeout}s",
+        )
 
-    # Method 2: infer from response content when the debug log is silent
-    # (e.g. Claude answered from cached knowledge without the Skill tool).
-    if not skill_loaded:
-        skill_loaded = infer_skill_from_response(response_text)
+    transcript_lines = result.stdout.splitlines()
+    skill_loaded = extract_loaded_skill(transcript_lines)
 
-    return RoutingResult(
-        skill_loaded=skill_loaded,
-        session_id=session_id,
-        response_text=response_text,
-    )
+    observation_error = ""
+    if skill_loaded is None:
+        observation_error = (
+            "skill load not observed (no Skill tool_use block in transcript)"
+        )
+
+    return RoutingResult(skill_loaded=skill_loaded, observation_error=observation_error)
 
 
 # Load tests at module level for parametrization
@@ -178,8 +196,10 @@ def test_routing(test_case):
 
     A prompt passes at MIN_CORRECT_TRIALS or more matching trials out of
     TRIALS_PER_PROMPT. `expected_skill: null` means the prompt should load
-    neither skill. The routing check as a whole (this module) passes only
-    when every prompt passes.
+    neither skill -- for those prompts, "skill load not observed" IS the
+    correct, expected outcome, since no Skill tool_use block should ever
+    appear. The routing check as a whole (this module) passes only when
+    every prompt passes.
     """
     input_text = test_case["input"]
     expected_skill = test_case.get("expected_skill")  # None means "neither"
@@ -189,7 +209,7 @@ def test_routing(test_case):
     observed = []
     for _ in range(TRIALS_PER_PROMPT):
         result = run_claude_routing(input_text)
-        observed.append(result.skill_loaded)
+        observed.append(result.skill_loaded or f"<{result.observation_error}>")
         if result.skill_loaded == expected_skill:
             correct += 1
 

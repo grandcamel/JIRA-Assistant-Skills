@@ -7,6 +7,13 @@
 # tests/fixtures/confluence-stub/ fixture both installed, does Claude Code
 # load the right one (or neither, for unrelated prompts)?
 #
+# test_routing.py observes which skill loaded ONLY from a `Skill` tool_use
+# block in a `--output-format stream-json --verbose` transcript -- never
+# from a debug-log grep or a keyword guess over the model's answer text.
+# For the eight jira/confluence prompts below, no observed Skill tool_use
+# is a miss; for the two "neither" prompts, no observed Skill tool_use is
+# the correct, expected outcome.
+#
 # expected_skill: "jira" | "confluence" | null (null = should load neither)
 version: "2.0"
 tests:

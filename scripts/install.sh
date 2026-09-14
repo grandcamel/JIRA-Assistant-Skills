@@ -132,32 +132,32 @@ install_dependencies() {
     if $python_cmd -m pip install --user -e . 2>/dev/null; then
         print_ok "Package installed"
         # Also install the library from public PyPI
-        if $python_cmd -m pip install --user "jira-as>=1.1.3" 2>/dev/null; then
+        if $python_cmd -m pip install --user "jira-as>=2,<3" 2>/dev/null; then
             print_ok "Library installed"
             return 0
         fi
         print_warn "Library install with --user failed, retrying without --user..."
-        if $python_cmd -m pip install "jira-as>=1.1.3"; then
+        if $python_cmd -m pip install "jira-as>=2,<3"; then
             print_ok "Library installed"
             return 0
         fi
         print_error "Failed to install jira-as"
-        print_info "Try manually: $python_cmd -m pip install \"jira-as>=1.1.3\""
+        print_info "Try manually: $python_cmd -m pip install \"jira-as>=2,<3\""
         return 1
     else
         print_warn "pip install failed, trying without --user flag..."
         if $python_cmd -m pip install -e . 2>/dev/null; then
             print_ok "Package installed"
-            if $python_cmd -m pip install "jira-as>=1.1.3"; then
+            if $python_cmd -m pip install "jira-as>=2,<3"; then
                 print_ok "Library installed"
                 return 0
             fi
             print_error "Failed to install jira-as"
-            print_info "Try manually: $python_cmd -m pip install \"jira-as>=1.1.3\""
+            print_info "Try manually: $python_cmd -m pip install \"jira-as>=2,<3\""
             return 1
         else
             print_error "Failed to install dependencies"
-            print_info "Try manually: $python_cmd -m pip install -e . && pip install \"jira-as>=1.1.3\""
+            print_info "Try manually: $python_cmd -m pip install -e . && pip install \"jira-as>=2,<3\""
             return 1
         fi
     fi

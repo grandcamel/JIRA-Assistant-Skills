@@ -5,7 +5,7 @@ The unified `jira-as` CLI entry point for all JIRA operations.
 ## Installation
 
 ```bash
-pip install "jira-as>=1.1.3"  # From public PyPI
+pip install "jira-as>=2,<3"  # From public PyPI
 ```
 
 ## Command Groups
@@ -86,7 +86,7 @@ _JIRA_AS_COMPLETE=fish_source jira-as | source
 
 | Channel | Package | Install Command | Use Case |
 |---------|---------|-----------------|----------|
-| **PyPI** | `jira-as` | `pip install "jira-as>=1.1.3"` | CLI tool + shared library |
+| **PyPI** | `jira-as` | `pip install "jira-as>=2,<3"` | CLI tool + shared library |
 | **GitHub** | Plugin manifest | `claude plugin marketplace add https://github.com/grandcamel/jira-assistant-skills.git#main` | Claude Code plugin |
 
 **Both must be updated when releasing:**

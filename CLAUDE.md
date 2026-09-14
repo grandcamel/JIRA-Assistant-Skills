@@ -25,18 +25,17 @@ with the CLI.
 ├── plugin.json                # Plugin manifest
 └── marketplace.json           # Marketplace registry
 
-.claude/
-├── settings.example.json      # Example config (copy to settings.local.json)
-└── settings.local.json        # Personal credentials (gitignored)
-
 commands/                      # Slash commands (at project root)
-config/                        # Example settings files
+config/                        # Example settings files (settings.example.json,
+                                # settings.local.json.example)
 skills/                        # Skills (autodiscovered at project root)
     ├── jira/                  # The one skill: the Entry-Point Hint
     │   ├── SKILL.md
     │   └── tests/             # Routing check + sandbox validation
     └── shared/                # Shared engineering test infrastructure
-        └── tests/             # SBX live-profile + live_integration suite
+        ├── references/        # Pre-jira-as-CLI setup/troubleshooting docs
+        │                       # (stale; kept pending inventory re-sourcing)
+        └── tests/              # SBX live-profile + live_integration suite
 
 tests/
 ├── e2e/                       # Help-only sufficiency arm

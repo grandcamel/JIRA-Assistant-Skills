@@ -143,7 +143,7 @@ function Get-Repository {
 function Install-Dependencies {
     param([string]$PythonCmd)
 
-    $package = "jira-as>=1.1.3"
+    $package = "jira-as>=2,<3"
 
     Write-Info "Installing jira-as from PyPI..."
 

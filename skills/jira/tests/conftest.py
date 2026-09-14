@@ -78,18 +78,6 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     """Register custom markers and initialize telemetry."""
-    config.addinivalue_line("markers", "direct: Direct routing tests (high certainty)")
-    config.addinivalue_line(
-        "markers", "disambiguation: Disambiguation tests (ask for clarification)"
-    )
-    config.addinivalue_line(
-        "markers", "negative: Negative trigger tests (should NOT route to skill)"
-    )
-    config.addinivalue_line(
-        "markers", "context: Context-dependent tests (require session state)"
-    )
-    config.addinivalue_line("markers", "workflow: Multi-skill workflow tests")
-    config.addinivalue_line("markers", "edge: Edge case tests")
     config.addinivalue_line("markers", "slow: Slow tests (each test calls Claude API)")
 
     # Initialize OpenTelemetry if requested
@@ -288,10 +276,10 @@ def record_otel(request, otel_enabled, cost_tracker):
         def test_something(record_otel):
             result = run_test()
             record_otel(
-                test_id="TC001",
-                category="direct",
-                input_text="create a bug",
-                expected_skill="jira-issue",
+                test_id="jira-01",
+                category="routing",
+                input_text="search Jira for open bugs",
+                expected_skill="jira",
                 actual_skill=result.skill_loaded,
                 passed=True,
                 duration_ms=result.duration_ms,

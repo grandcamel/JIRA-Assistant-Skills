@@ -16,36 +16,40 @@ test suites in this repo are:
 ## Running Tests
 
 ```bash
-# Run the per-skill unit-test loop (most skills have no unit tests here;
-# suites that require live services are excluded by default)
-./scripts/run_tests.sh
+# Run the full offline suite, exactly as CI does (the three live/host-run
+# files below need the Claude CLI and are deselected)
+python -m pytest -q \
+  --deselect skills/jira/tests/test_routing.py \
+  --deselect skills/jira/tests/test_sandbox_validation.py \
+  --deselect tests/e2e/test_plugin_e2e.py
 
 # Run with verbose output
-./scripts/run_tests.sh --verbose
-
-# Run tests for a specific skill only
-./scripts/run_tests.sh --skill jira
-
-# Stop on first skill failure
-./scripts/run_tests.sh --fail-fast
+python -m pytest -v \
+  --deselect skills/jira/tests/test_routing.py \
+  --deselect skills/jira/tests/test_sandbox_validation.py \
+  --deselect tests/e2e/test_plugin_e2e.py
 ```
+
+(`scripts/run_tests.sh`/`run_single_test.sh` still hardcode the retired
+per-domain skill names and reject `jira`; that is a tracked follow-up, not
+fixed here -- use the `pytest` invocations above and below instead.)
 
 ## Running Single Tests
 
-Use the single test runner for rapid iteration:
+Use `pytest` directly for rapid iteration on the offline suite:
 
 ```bash
 # Run all tests in a file
-./scripts/run_single_test.sh jira test_sandbox_validation.py
+pytest skills/shared/tests/test_live_profile.py -v
 
 # Run tests matching a keyword
-./scripts/run_single_test.sh jira -k "sandbox"
+pytest skills/shared/tests/test_live_profile.py -k "sbx"
 
 # Re-run only failed tests from last run
-./scripts/run_single_test.sh jira --lf
+pytest skills/shared/tests/test_live_profile.py --lf
 
 # Drop into debugger on failure
-./scripts/run_single_test.sh jira test_sandbox_validation.py --pdb
+pytest skills/shared/tests/test_live_profile.py --pdb
 ```
 
 ## Test Organization
@@ -99,7 +103,7 @@ needed. An operator with host approval runs:
 
 ```bash
 lane=/absolute/path/to/JIRA-Assistant-Skills
-# Run from your grand-camel-platform checkout's scripts/jira-dev-host
+# Run the host-approved jira-dev-host wrapper from the checkout that provides it
 scripts/jira-dev-host "$lane" --suite \
   "$lane/.venv/bin/python" -m pytest \
   "$lane/skills/shared/tests/live_integration" -q -p no:cacheprovider

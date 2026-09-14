@@ -1,14 +1,21 @@
 """Pytest configuration and fixtures for the help-only sufficiency arm.
 
-The sufficiency arm answers spec L94's question: is the Entry-Point Hint
-alone (skills/jira/SKILL.md, shipped via the plugin manifest) enough for a
+The sufficiency arm answers: is the Entry-Point Hint alone
+(skills/jira/SKILL.md, shipped via the plugin manifest) enough for a
 model to complete representative jira-as tasks? The model under test gets
-nothing else: no other skill, no other tool besides Bash, and a `jira-as`
-on PATH forced into its `simulation` transport with no credentials in the
-environment, so nothing it runs can reach a live Jira site.
+nothing else: no other skill, no other tool besides Bash, no project
+context from this repository, and a `jira-as` on PATH forced into its
+`simulation` transport with no credentials in the environment, so nothing
+it runs can reach a live Jira site.
+
+This arm launches the real `claude` binary and spends real tokens, so it
+never runs silently: it requires the explicit E2E_SUFFICIENCY=1 opt-in
+(see `_sufficiency_gate` below), rather than inferring "enabled" from
+whatever credentials happen to be present.
 """
 
 import os
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -16,6 +23,13 @@ import pytest
 from .runner import SufficiencyRunner
 
 DEFAULT_MODEL = "claude-sonnet-5"
+
+# Explicit opt-in required to run this arm at all. Do NOT infer "enabled"
+# from ANTHROPIC_API_KEY or ~/.claude/credentials.json: a `claude auth
+# login` keeps OAuth credentials in the system keychain, which would
+# otherwise make the arm look "enabled" and skip silently through some
+# other path, with no visible signal in a test run.
+E2E_SUFFICIENCY_VAR = "E2E_SUFFICIENCY"
 
 # Credential variables that must never reach the sandboxed subprocess.
 CREDENTIAL_ENV_VARS = (
@@ -45,13 +59,57 @@ def pytest_addoption(parser):
 
 @pytest.fixture(scope="session")
 def e2e_enabled():
-    """Check if the sufficiency arm should run (needs `claude` and `jira-as`)."""
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    claude_dir = Path.home() / ".claude"
-    has_claude_auth = bool(api_key) or bool(
-        claude_dir.exists() and (claude_dir / "credentials.json").exists()
-    )
-    return has_claude_auth
+    """
+    Whether the sufficiency arm should run for real -- gated on the
+    explicit E2E_SUFFICIENCY=1 opt-in only. See the module docstring for
+    why this is not inferred from ambient credentials.
+    """
+    return os.environ.get(E2E_SUFFICIENCY_VAR) == "1"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _sufficiency_gate(e2e_enabled):
+    """
+    Never let the arm run silently.
+
+    Without E2E_SUFFICIENCY=1, every test in this directory is skipped
+    with a loud reason naming the variable -- not a quiet pass. With the
+    variable set, this probes `claude --version` once per session and
+    FAILS (not skips) if the binary is missing, times out, or errors: an
+    operator who explicitly opted in asked for a real run, and a missing
+    or broken CLI is a setup defect, not something to quietly skip past.
+    """
+    if not e2e_enabled:
+        pytest.skip(
+            f"Sufficiency arm disabled: set {E2E_SUFFICIENCY_VAR}=1 to run "
+            "it (it launches the real `claude` binary and spends real "
+            "tokens)."
+        )
+
+    try:
+        probe = subprocess.run(
+            ["claude", "--version"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except FileNotFoundError:
+        pytest.fail(
+            f"{E2E_SUFFICIENCY_VAR}=1 was set but the `claude` binary is "
+            "not on PATH; install/authenticate Claude Code before running "
+            "the sufficiency arm."
+        )
+    except subprocess.TimeoutExpired:
+        pytest.fail(
+            f"{E2E_SUFFICIENCY_VAR}=1 was set but `claude --version` did "
+            "not respond within 30s."
+        )
+
+    if probe.returncode != 0:
+        pytest.fail(
+            f"{E2E_SUFFICIENCY_VAR}=1 was set but `claude --version` "
+            f"exited {probe.returncode}: {probe.stderr.strip()[:500]}"
+        )
 
 
 @pytest.fixture(scope="session")
@@ -91,15 +149,17 @@ def simulation_env():
 
 @pytest.fixture(scope="session")
 def sufficiency_runner(
-    repo_root, sufficiency_timeout, sufficiency_model, simulation_env, e2e_enabled
+    repo_root,
+    sufficiency_timeout,
+    sufficiency_model,
+    simulation_env,
+    _sufficiency_gate,
 ):
     """
     Build the runner that drives Claude Code with ONLY the shipped plugin
-    (skills/jira/SKILL.md) and the Bash tool installed.
+    (skills/jira/SKILL.md) and the Bash tool installed. Depending on
+    `_sufficiency_gate` guarantees the opt-in/probe runs first.
     """
-    if not e2e_enabled:
-        pytest.skip("Sufficiency arm disabled (no API key or OAuth credentials)")
-
     return SufficiencyRunner(
         plugin_dir=repo_root,
         timeout=sufficiency_timeout,

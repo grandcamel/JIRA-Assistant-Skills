@@ -166,7 +166,7 @@ pytest skills/jira/tests/ -v
 
 # Live integration: host-approved operator only (absolute paths required)
 lane=/absolute/path/to/JIRA-Assistant-Skills
-# Run from your grand-camel-platform checkout's scripts/jira-dev-host
+# Run the host-approved jira-dev-host wrapper from the checkout that provides it
 scripts/jira-dev-host "$lane" --suite \
   "$lane/.venv/bin/python" -m pytest \
   "$lane/skills/shared/tests/live_integration" -q -p no:cacheprovider

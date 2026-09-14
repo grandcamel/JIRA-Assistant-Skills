@@ -17,8 +17,15 @@ sufficient on its own?
 ## What the model gets, and nothing else
 
 - The shipped plugin only: the plugin manifest plus `skills/jira/SKILL.md`,
-  installed via `--plugin-dir`.
-- The Bash tool only (`--allowedTools Bash`).
+  installed via an **absolute** `--plugin-dir` path.
+- The Bash tool only, via **`--tools Bash`** -- not `--allowedTools`, which
+  only pre-approves permission for tools that would otherwise still be
+  available (Read/Glob/Grep/WebFetch would stay reachable under
+  `--allowedTools` alone). `--tools` restricts the tool set itself.
+- **No project context from this repository.** Each trial runs with `cwd`
+  set to a fresh, empty temporary directory, so Claude Code does not load
+  this repository's own `CLAUDE.md`, its files, or any other ambient
+  project context -- only the plugin passed via `--plugin-dir` is present.
 - A `jira-as` binary on `PATH`, forced into its `simulation` transport via
   `JIRA_AS_TRANSPORT=simulation`.
 - **No Jira credentials in the environment at all** (`JIRA_SITE_URL`,
@@ -30,10 +37,17 @@ sufficient on its own?
 
 For each cold trial:
 
-1. Send the task's plain-English prompt to Claude Code and capture its
-   full tool-use transcript (`--output-format stream-json`).
-2. Extract the **last** `jira-as ...` command the model ran as a Bash
-   tool call.
+1. Send the task's plain-English prompt to Claude Code, from the fresh
+   empty temp directory described above, and capture its full tool-use
+   transcript (`--output-format stream-json --verbose`).
+2. Extract the **last** `jira-as ...` command the model ran, read from the
+   Bash tool_use block's `input.command` field -- never inferred from the
+   model's answer text. The command is captured from the `jira-as` token
+   up to the next command separator (`;`, `&`, `|`), redirect (`>`), or
+   newline. A command that uses a backslash line continuation is
+   **rejected as a failed trial** with that reason stated, rather than
+   silently truncated to its first line (a truncated command is not the
+   command the model actually ran).
 3. Re-run that exact command in the harness, under the same simulation
    transport, and check whether `jira-as` accepts it: exit code 0,
    including a risk-tagged call that only previews (preview-by-default is
@@ -95,9 +109,26 @@ each plugin release, per `docs/TESTING.md`.
   `PATH`.
 - `pytest` and `pyyaml`.
 
+### Explicit opt-in: `E2E_SUFFICIENCY=1`
+
+Because this arm launches the real `claude` binary and spends real
+tokens, it never runs silently. Without `E2E_SUFFICIENCY=1` set, every
+test in this directory is **skipped with a loud reason naming the
+variable** -- not a quiet pass, and not inferred from whether
+`ANTHROPIC_API_KEY` or OAuth credentials happen to be present (a macOS
+`claude auth login` keeps credentials in the Keychain, which would
+otherwise make the arm look "enabled" and silently skip with no visible
+signal). With the variable set, collection itself probes `claude
+--version`; if the binary is missing, the run **fails** at that probe
+rather than skipping, because an operator who set the opt-in variable
+asked for a real run.
+
 ### Quick start
 
 ```bash
+# Explicit opt-in is required -- this arm never runs silently
+export E2E_SUFFICIENCY=1
+
 # Run the full sufficiency arm (five cold trials per task)
 pytest tests/e2e/ -v
 

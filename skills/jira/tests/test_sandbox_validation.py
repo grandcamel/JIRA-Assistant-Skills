@@ -10,9 +10,6 @@ Usage:
     SANDBOX_PROFILE=read-only CLAUDE_ALLOWED_TOOLS="Read Glob Grep WebFetch WebSearch Bash(jira-as issue get:*) Bash(jira-as search:*)" \
         pytest test_sandbox_validation.py -v -k "readonly"
 
-    # Test via run_sandboxed.sh
-    ./run_sandboxed.sh --profile read-only --validate
-
     # Run all validation tests
     pytest test_sandbox_validation.py -v
 
