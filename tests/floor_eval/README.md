@@ -1,6 +1,6 @@
 # Knowledge Floor evaluation
 
-A host-triggered job for the Jira and Confluence skills inventories (JAS-53).
+A host-triggered job for the Jira and Confluence skills inventories (its tracking ticket).
 It asks every one of the **153 historical gotcha hypotheses** cold, five times
 on each floor model, then asks a stronger judge to score each group of five.
 Defaults are Sonnet 5, GPT-5.6 Terra and Opus 5 as judge: **1,530 trial calls

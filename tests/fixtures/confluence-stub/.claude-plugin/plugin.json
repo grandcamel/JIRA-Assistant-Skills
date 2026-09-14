@@ -1,0 +1,6 @@
+{
+  "name": "confluence-stub",
+  "version": "0.0.0",
+  "description": "Non-shipped test fixture: a minimal Confluence skill used only to verify inter-plugin routing.",
+  "license": "MIT"
+}

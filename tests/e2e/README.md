@@ -1,111 +1,117 @@
-# E2E Tests for Jira-Assistant-Skills
+# Help-Only Sufficiency Arm
 
-End-to-end tests that validate the plugin by interacting with the Claude Code CLI.
+The end-to-end harness for JIRA-Assistant-Skills is the **help-only
+sufficiency arm**: a task-level test of whether the Entry-Point Hint
+(`skills/jira/SKILL.md`) alone is enough for a model to complete
+representative jira-as tasks, per the atlassian-tooling-v2 spec's user
+story 32 ("a task-level sufficiency test where a model given only the
+Entry-Point Hint completes representative tasks, so that the help is
+proven enough").
 
-## Prerequisites
+This replaced the old plugin-installation / per-skill-discovery E2E suite
+when the thirteen domain skills and the hub were retired: there is
+nothing left to "discover" across skills, so the arm now asks a narrower
+question -- is `jira-as help` (as pointed to by the one shipped skill)
+sufficient on its own?
 
-### Authentication (Choose One)
+## What the model gets, and nothing else
 
-**Option 1: API Key**
+- The shipped plugin only: the plugin manifest plus `skills/jira/SKILL.md`,
+  installed via `--plugin-dir`.
+- The Bash tool only (`--allowedTools Bash`).
+- A `jira-as` binary on `PATH`, forced into its `simulation` transport via
+  `JIRA_AS_TRANSPORT=simulation`.
+- **No Jira credentials in the environment at all** (`JIRA_SITE_URL`,
+  `JIRA_EMAIL`, `JIRA_API_TOKEN`, and profile-specific token variables are
+  stripped before the subprocess is launched). Nothing the model runs can
+  reach a live Jira site.
+
+## How a trial is judged
+
+For each cold trial:
+
+1. Send the task's plain-English prompt to Claude Code and capture its
+   full tool-use transcript (`--output-format stream-json`).
+2. Extract the **last** `jira-as ...` command the model ran as a Bash
+   tool call.
+3. Re-run that exact command in the harness, under the same simulation
+   transport, and check whether `jira-as` accepts it: exit code 0,
+   including a risk-tagged call that only previews (preview-by-default is
+   an accept, not a failure).
+
+There is **no assertion on business content** -- the arm does not check
+that the created issue looks right or that the JQL returns the issue you
+meant. It only checks that the shape of the call the model produced is
+one jira-as accepts. Business-logic correctness is the CLI's own test
+suite's job, not this harness's.
+
+## The seven tasks
+
+`test_cases.yaml` holds seven representative tasks, one line of plain
+English each:
+
+1. Search issues with a JQL query.
+2. Read one issue.
+3. Create an issue in a project (a preview is enough).
+4. Add a comment to an issue.
+5. Transition an issue to a named status.
+6. Log two hours of work on an issue.
+7. Find and describe the operation that lists an issue's watchers.
+
+## Thresholds and provenance
+
+The atlassian-tooling-v2 spec named "set the sufficiency-test thresholds"
+as an implementation task without ticketing it. **This plugin's 5.0.0
+implementation rules the thresholds below, 2026-09-14:**
+
+- **Five cold trials per task** (five independent, fresh `claude`
+  invocations -- no session reuse).
+- **A task passes at four or more well-formed trials** out of five.
+- **The arm passes only when all seven tasks pass.**
+- **Model: `claude-sonnet-5`** (the only floor model this harness
+  exercises directly; a second floor model, if ever added, is a separate
+  host capability).
+
+These mirror the floor-eval's own four-of-five cold-trial convention
+(`tests/floor_eval/README.md`) rather than inventing a new one.
+
+## Running it
+
+This harness launches the `claude` binary directly and is **not run in
+CI** (see `.github/workflows/ci.yml`, which deselects
+`tests/e2e/test_plugin_e2e.py`). It is host-triggered, the same way the
+routing check (`skills/jira/tests/test_routing.py`) and the floor eval
+(`tests/floor_eval/`) are -- run on fleet-policy model changes and before
+each plugin release, per `docs/TESTING.md`.
+
+### Prerequisites
+
+- Claude Code CLI installed and authenticated:
+  ```bash
+  export ANTHROPIC_API_KEY="sk-ant-..."
+  # or: claude auth login
+  ```
+- `jira-as>=2,<3` installed and its `simulation` transport available on
+  `PATH`.
+- `pytest` and `pyyaml`.
+
+### Quick start
+
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
+# Run the full sufficiency arm (five cold trials per task)
+pytest tests/e2e/ -v
+
+# Override the model or per-trial timeout
+pytest tests/e2e/ -v --sufficiency-model claude-sonnet-5 --sufficiency-timeout 180
 ```
 
-**Option 2: OAuth**
-```bash
-claude auth login
-```
-
-## Quick Start
-
-```bash
-# Run all tests
-./scripts/run-e2e-tests.sh
-
-# Run locally (no Docker)
-./scripts/run-e2e-tests.sh --local
-
-# Verbose output
-./scripts/run-e2e-tests.sh --verbose
-
-# Debug shell
-./scripts/run-e2e-tests.sh --shell
-```
-
-## Test Structure
+## Test structure
 
 ```
 tests/e2e/
 ├── __init__.py
-├── conftest.py          # Pytest fixtures
-├── runner.py            # Test execution engine
-├── test_cases.yaml      # YAML test definitions
-└── test_plugin_e2e.py   # Pytest test classes
+├── conftest.py          # Simulation-env + runner fixtures
+├── runner.py            # SufficiencyRunner: run + replay + judge
+├── test_cases.yaml      # The seven representative tasks
+└── test_plugin_e2e.py   # One pytest test per task
 ```
-
-## Configuration
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ANTHROPIC_API_KEY` | - | API key |
-| `E2E_TEST_TIMEOUT` | 120 | Timeout per test (seconds) |
-| `E2E_TEST_MODEL` | claude-sonnet-4-20250514 | Model to use |
-| `E2E_VERBOSE` | false | Verbose output |
-
-## Output Formats
-
-```bash
-# JSON report
-python -m tests.e2e.run_tests --json results.json
-
-# JUnit XML (CI integration)
-python -m tests.e2e.run_tests --junit results.xml
-
-# HTML report
-python -m tests.e2e.run_tests --html report.html
-
-# All formats
-python -m tests.e2e.run_tests --all-formats
-```
-
-## Adding Tests
-
-### YAML Test Cases
-
-Edit `test_cases.yaml`:
-
-```yaml
-suites:
-  my_suite:
-    description: My tests
-    tests:
-      - id: my_test
-        name: Test something
-        prompt: "Do something"
-        expect:
-          output_contains:
-            - "expected"
-          no_errors: true
-```
-
-### Pytest Classes
-
-Edit `test_plugin_e2e.py`:
-
-```python
-class TestMyFeature:
-    def test_something(self, claude_runner, e2e_enabled):
-        if not e2e_enabled:
-            pytest.skip("E2E disabled")
-
-        result = claude_runner.send_prompt("My prompt")
-        assert "expected" in result["output"]
-```
-
-## Cost Estimates
-
-| Model | Per Test | 20 Tests |
-|-------|----------|----------|
-| Haiku | ~$0.001 | ~$0.02 |
-| Sonnet | ~$0.01 | ~$0.20 |
-| Opus | ~$0.05 | ~$1.00 |

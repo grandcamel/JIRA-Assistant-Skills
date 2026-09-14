@@ -1,119 +1,108 @@
-"""Pytest configuration and fixtures for E2E tests."""
+"""Pytest configuration and fixtures for the help-only sufficiency arm.
+
+The sufficiency arm answers spec L94's question: is the Entry-Point Hint
+alone (skills/jira/SKILL.md, shipped via the plugin manifest) enough for a
+model to complete representative jira-as tasks? The model under test gets
+nothing else: no other skill, no other tool besides Bash, and a `jira-as`
+on PATH forced into its `simulation` transport with no credentials in the
+environment, so nothing it runs can reach a live Jira site.
+"""
 
 import os
 from pathlib import Path
 
 import pytest
 
-from .runner import ClaudeCodeRunner, E2ETestRunner
+from .runner import SufficiencyRunner
+
+DEFAULT_MODEL = "claude-sonnet-5"
+
+# Credential variables that must never reach the sandboxed subprocess.
+CREDENTIAL_ENV_VARS = (
+    "JIRA_SITE_URL",
+    "JIRA_EMAIL",
+    "JIRA_API_TOKEN",
+    "JIRA_API_TOKEN_PRODUCTION",
+    "JIRA_API_TOKEN_DEVELOPMENT",
+)
 
 
 def pytest_addoption(parser):
     """Add custom command line options."""
     parser.addoption(
-        "--e2e-timeout",
+        "--sufficiency-timeout",
         action="store",
-        default=os.environ.get("E2E_TEST_TIMEOUT", "120"),
-        help="Timeout per test in seconds",
+        default=os.environ.get("SUFFICIENCY_TEST_TIMEOUT", "120"),
+        help="Timeout per trial in seconds",
     )
     parser.addoption(
-        "--e2e-model",
+        "--sufficiency-model",
         action="store",
-        default=os.environ.get("E2E_TEST_MODEL", "claude-sonnet-4-20250514"),
-        help="Claude model to use",
-    )
-    parser.addoption(
-        "--e2e-verbose",
-        action="store_true",
-        default=os.environ.get("E2E_VERBOSE", "").lower() == "true",
-        help="Enable verbose output",
+        default=os.environ.get("SUFFICIENCY_TEST_MODEL", DEFAULT_MODEL),
+        help="Claude model to use for the sufficiency arm",
     )
 
 
 @pytest.fixture(scope="session")
 def e2e_enabled():
-    """Check if E2E tests should run."""
+    """Check if the sufficiency arm should run (needs `claude` and `jira-as`)."""
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     claude_dir = Path.home() / ".claude"
-
-    if api_key:
-        return True
-    return bool(claude_dir.exists() and (claude_dir / "credentials.json").exists())
+    has_claude_auth = bool(api_key) or bool(
+        claude_dir.exists() and (claude_dir / "credentials.json").exists()
+    )
+    return has_claude_auth
 
 
 @pytest.fixture(scope="session")
-def project_root():
-    """Get the project root directory."""
+def repo_root():
+    """The shipped plugin's own directory: manifest + skills/jira/SKILL.md."""
     return Path(__file__).parent.parent.parent
 
 
 @pytest.fixture(scope="session")
-def test_cases_path(project_root):
-    """Get path to test cases YAML."""
-    return project_root / "tests" / "e2e" / "test_cases.yaml"
+def test_cases_path(repo_root):
+    """Path to the seven representative tasks."""
+    return repo_root / "tests" / "e2e" / "test_cases.yaml"
 
 
 @pytest.fixture(scope="session")
-def e2e_timeout(request):
-    """Get E2E test timeout."""
-    return int(request.config.getoption("--e2e-timeout"))
+def sufficiency_timeout(request):
+    return int(request.config.getoption("--sufficiency-timeout"))
 
 
 @pytest.fixture(scope="session")
-def e2e_model(request):
-    """Get E2E test model."""
-    return request.config.getoption("--e2e-model")
+def sufficiency_model(request):
+    return request.config.getoption("--sufficiency-model")
 
 
 @pytest.fixture(scope="session")
-def e2e_verbose(request):
-    """Get E2E verbosity setting."""
-    return request.config.getoption("--e2e-verbose")
+def simulation_env():
+    """
+    The environment the model's Claude Code process (and every jira-as
+    invocation re-run from its transcript) executes under: no Jira
+    credentials of any kind, and JIRA_AS_TRANSPORT forced to simulation so
+    jira-as never dials out to a live site regardless of what it's told.
+    """
+    env = {k: v for k, v in os.environ.items() if k not in CREDENTIAL_ENV_VARS}
+    env["JIRA_AS_TRANSPORT"] = "simulation"
+    return env
 
 
 @pytest.fixture(scope="session")
-def claude_runner(project_root, e2e_timeout, e2e_model, e2e_verbose, e2e_enabled):
-    """Create Claude Code runner."""
-    if not e2e_enabled:
-        pytest.skip("E2E tests disabled (no API key or OAuth credentials)")
-
-    return ClaudeCodeRunner(
-        working_dir=project_root,
-        timeout=e2e_timeout,
-        model=e2e_model,
-        verbose=e2e_verbose,
-    )
-
-
-@pytest.fixture(scope="session")
-def e2e_runner(
-    test_cases_path, project_root, e2e_timeout, e2e_model, e2e_verbose, e2e_enabled
+def sufficiency_runner(
+    repo_root, sufficiency_timeout, sufficiency_model, simulation_env, e2e_enabled
 ):
-    """Create E2E test runner."""
+    """
+    Build the runner that drives Claude Code with ONLY the shipped plugin
+    (skills/jira/SKILL.md) and the Bash tool installed.
+    """
     if not e2e_enabled:
-        pytest.skip("E2E tests disabled (no API key or OAuth credentials)")
+        pytest.skip("Sufficiency arm disabled (no API key or OAuth credentials)")
 
-    return E2ETestRunner(
-        test_cases_path=test_cases_path,
-        working_dir=project_root,
-        timeout=e2e_timeout,
-        model=e2e_model,
-        verbose=e2e_verbose,
+    return SufficiencyRunner(
+        plugin_dir=repo_root,
+        timeout=sufficiency_timeout,
+        model=sufficiency_model,
+        env=simulation_env,
     )
-
-
-@pytest.fixture(scope="session")
-def installed_plugin(claude_runner, e2e_enabled):
-    """Install the plugin once for all tests."""
-    if not e2e_enabled:
-        pytest.skip("E2E tests disabled")
-
-    # Use the plugin path from the project structure
-    result = claude_runner.install_plugin("plugins/jira-assistant-skills")
-    if (
-        not result["success"]
-        and "already installed" not in result.get("output", "").lower()
-    ):
-        pytest.fail(f"Failed to install plugin: {result.get('error', 'Unknown error')}")
-
-    return result

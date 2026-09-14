@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Sandbox validation tests for jira-assistant skill.
+Sandbox validation tests for the jira skill (skills/jira/).
 
 Verifies that sandboxed profiles correctly restrict tool access.
 Run these tests with specific sandbox profiles to validate restrictions.

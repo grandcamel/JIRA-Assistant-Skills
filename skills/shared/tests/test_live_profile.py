@@ -61,7 +61,7 @@ def _client(monkeypatch, responses=()):
     )
 
 
-@pytest.mark.parametrize("project", [None, "", "GC", "JAS", "sbx", " SBX"])
+@pytest.mark.parametrize("project", [None, "", "OTHER", "TEAM", "sbx", " SBX"])
 def test_profile_requires_sbx_before_credentials(project):
     with pytest.raises(ValueError, match="JIRA_DEFAULT_PROJECT must be SBX"):
         resolve_sbx_profile(_environment(JIRA_DEFAULT_PROJECT=project))
@@ -172,7 +172,7 @@ def test_cleanup_fails_for_survivor_or_malformed_search(monkeypatch):
         client.cleanup_created_issues()
 
 
-@pytest.mark.parametrize("response", [None, {}, {"key": "GC-1"}])
+@pytest.mark.parametrize("response", [None, {}, {"key": "OTHER-1"}])
 def test_malformed_creation_response_cannot_claim_success(monkeypatch, response):
     client, _, deleted = _client(
         monkeypatch, [response, {"issues": []}, {"issues": []}]
@@ -206,7 +206,7 @@ def test_unavailable_search_fails_without_response_details(monkeypatch):
 
 
 def test_search_never_authorizes_non_sbx_deletion(monkeypatch):
-    client, _, deleted = _client(monkeypatch, [{"issues": [{"key": "GC-1"}]}])
+    client, _, deleted = _client(monkeypatch, [{"issues": [{"key": "OTHER-1"}]}])
     with pytest.raises(RuntimeError, match="malformed issues"):
         client.cleanup_created_issues()
     assert deleted == []
