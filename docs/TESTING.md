@@ -150,18 +150,25 @@ prompt in `routing_golden.yaml` passes. Which skill loaded is observed
 ONLY from a `Skill` tool_use block in the trial's transcript, never
 guessed from the model's answer text.
 
-Each trial runs `--tools Bash,Skill` (`Skill` is included, and is the only
-tool besides `Bash`, because a plugin's `SKILL.md` reaches the model only
-through the built-in `Skill` tool -- without it, no skill could ever be
-observed loading), with `cwd` set to a fresh empty temporary directory
-(no project `CLAUDE.md` applies), and with the same allowlisted
-environment the help-only sufficiency arm uses
-(`tests/harness_env.py`'s `build_harness_env()`: only `PATH`, `HOME`, and
-`TERM`/`LANG` if present, plus `JIRA_AS_TRANSPORT=simulation` -- never
-real Jira credentials). See [tests/e2e/README.md](../tests/e2e/README.md)
-for the same confinement's fuller rationale and its one known limitation
-(the operator's global `~/.claude/CLAUDE.md`, if any, is still loaded via
-the preserved `HOME`).
+Each trial runs `--tools Bash,Skill` plus `--allowedTools "Bash,Skill"`
+(both are needed: a live probe found the Skill tool call itself DENIED
+under `--permission-mode dontAsk` unless also pre-approved) and
+`--strict-mcp-config --mcp-config tests/e2e/empty-mcp.json` (keeping the
+operator's own MCP servers, which a probe found still load and expose
+tools otherwise, out of the session). `Skill` is included, and is the
+only tool besides `Bash`, because a plugin's `SKILL.md` reaches the model
+only through the built-in `Skill` tool -- without it, no skill could
+ever be observed loading. Each trial also runs with `cwd` set to a fresh
+empty temporary directory (no project `CLAUDE.md` applies) and with the
+same allowlisted environment the help-only sufficiency arm uses
+(`tests/harness_env.py`'s `build_harness_env()`: only `PATH`, `HOME`,
+`USER`, `LOGNAME` (a probe found the CLI's Keychain login needs all
+four, not just `HOME`), and `TERM`/`LANG` if present, plus
+`JIRA_AS_TRANSPORT=simulation` -- never real Jira credentials). See
+[tests/e2e/README.md](../tests/e2e/README.md) for the same confinement's
+fuller rationale and its known limitations (user-level skills on the
+host remain visible to the model, and the operator's global
+`~/.claude/CLAUDE.md`, if any, is still loaded via the preserved `HOME`).
 
 ```bash
 cd skills/jira/tests

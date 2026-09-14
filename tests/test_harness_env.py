@@ -7,10 +7,12 @@ from tests.harness_env import build_harness_env
 
 
 def test_present_keys_are_copied_and_transport_is_forced(monkeypatch):
-    """PATH, HOME, TERM and LANG, when present, are copied verbatim, and
-    JIRA_AS_TRANSPORT is always forced to simulation."""
+    """PATH, HOME, USER, LOGNAME, TERM and LANG, when present, are copied
+    verbatim, and JIRA_AS_TRANSPORT is always forced to simulation."""
     monkeypatch.setenv("PATH", "/usr/bin:/bin")
     monkeypatch.setenv("HOME", "/home/operator")
+    monkeypatch.setenv("USER", "operator")
+    monkeypatch.setenv("LOGNAME", "operator")
     monkeypatch.setenv("TERM", "xterm-256color")
     monkeypatch.setenv("LANG", "en_US.UTF-8")
 
@@ -18,10 +20,12 @@ def test_present_keys_are_copied_and_transport_is_forced(monkeypatch):
 
     assert env["PATH"] == "/usr/bin:/bin"
     assert env["HOME"] == "/home/operator"
+    assert env["USER"] == "operator"
+    assert env["LOGNAME"] == "operator"
     assert env["TERM"] == "xterm-256color"
     assert env["LANG"] == "en_US.UTF-8"
     assert env["JIRA_AS_TRANSPORT"] == "simulation"
-    assert len(env) == 5, f"unexpected extra keys leaked through: {env}"
+    assert len(env) == 7, f"unexpected extra keys leaked through: {env}"
 
 
 def test_absent_optional_keys_are_omitted_and_credentials_never_pass_through(
@@ -35,6 +39,8 @@ def test_absent_optional_keys_are_omitted_and_credentials_never_pass_through(
     """
     monkeypatch.setenv("PATH", "/usr/bin")
     monkeypatch.setenv("HOME", "/home/operator")
+    monkeypatch.setenv("USER", "operator")
+    monkeypatch.setenv("LOGNAME", "operator")
     monkeypatch.delenv("TERM", raising=False)
     monkeypatch.delenv("LANG", raising=False)
 
@@ -53,6 +59,8 @@ def test_absent_optional_keys_are_omitted_and_credentials_never_pass_through(
     assert "LANG" not in env
     assert env["PATH"] == "/usr/bin"
     assert env["HOME"] == "/home/operator"
+    assert env["USER"] == "operator"
+    assert env["LOGNAME"] == "operator"
     assert env["JIRA_AS_TRANSPORT"] == "simulation"
 
     for leaked in (
@@ -66,4 +74,4 @@ def test_absent_optional_keys_are_omitted_and_credentials_never_pass_through(
     ):
         assert leaked not in env, f"{leaked} leaked into the harness environment"
 
-    assert len(env) == 3, f"unexpected extra keys leaked through: {env}"
+    assert len(env) == 5, f"unexpected extra keys leaked through: {env}"

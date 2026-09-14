@@ -23,18 +23,25 @@ being unobserved, never guessed at: for the four jira and four confluence
 prompts this correctly counts as a miss; for the two unrelated prompts
 "no skill observed" is the correct, expected outcome.
 
-Confinement (review fix): `--tools Bash,Skill` restricts the model to
-exactly those two tools -- `Skill` because a plugin's SKILL.md reaches
-the model only through the built-in `Skill` tool
-(https://code.claude.com/docs/en/tools-reference), so without it neither
-skill could ever be observed loading at all; `Bash` because the skill
-itself directs the model to run `jira-as`. Each trial also runs with
-`cwd` set to a fresh, empty temporary directory (no project CLAUDE.md or
-other file from this repository applies) and with an environment built by
-tests/harness_env.py's build_harness_env() -- the same allowlist the help-
-only sufficiency arm uses, copying only PATH, HOME, TERM and LANG (the
-last two if present) and forcing JIRA_AS_TRANSPORT=simulation, so a
-routing trial can never inherit the operator's real Jira credentials.
+Confinement, refined against authorized live-CLI probes: `--tools
+Bash,Skill` restricts the model to exactly those two tools -- `Skill`
+because a plugin's SKILL.md reaches the model only through the built-in
+`Skill` tool (https://code.claude.com/docs/en/tools-reference), so
+without it neither skill could ever be observed loading at all; `Bash`
+because the skill itself directs the model to run `jira-as`.
+`--allowedTools "Bash,Skill"` is passed alongside `--tools`: a probe
+found that under `--permission-mode dontAsk`, the Skill tool call is
+itself DENIED unless also pre-approved this way. `--strict-mcp-config
+--mcp-config <empty-mcp.json>` keeps the operator's own configured MCP
+servers (which a probe found still load and expose tools otherwise) out
+of a routing trial entirely. Each trial also runs with `cwd` set to a
+fresh, empty temporary directory (no project CLAUDE.md or other file
+from this repository applies) and with an environment built by
+tests/harness_env.py's build_harness_env() -- the same allowlist the
+help-only sufficiency arm uses, copying only PATH, HOME, USER, LOGNAME,
+TERM and LANG (the last two if present) and forcing
+JIRA_AS_TRANSPORT=simulation, so a routing trial can never inherit the
+operator's real Jira credentials.
 
 Usage:
     # Run the full routing check (five cold trials per prompt)
@@ -80,6 +87,11 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 from tests.harness_env import build_harness_env  # noqa: E402
 
+# Same empty MCP config the sufficiency arm uses, so the operator's own
+# configured MCP servers (found by a live probe to still load and expose
+# tools otherwise) never enter a routing trial either.
+EMPTY_MCP_CONFIG = (REPO_ROOT / "tests" / "e2e" / "empty-mcp.json").resolve()
+
 GOLDEN_FILE = TESTS_DIR / "routing_golden.yaml"
 
 DEFAULT_MODEL = "claude-sonnet-5"
@@ -120,6 +132,13 @@ def extract_loaded_skill(transcript_lines: list[str]) -> str | None:
     that names its product ("Jira"/"Confluence") makes the answer text an
     unreliable signal, since the model can echo the product name whether
     or not it actually loaded the corresponding skill.
+
+    A live probe showed the tool_use input is `{"skill":
+    "jira-assistant-skills:jira"}` -- the plugin-namespaced skill name
+    under the key `skill`, normalized here to the segment after the last
+    colon. Other field names once checked defensively (`name`,
+    `skill_name`, `command`) are not what the CLI actually sends and have
+    been dropped.
     """
     for line in transcript_lines:
         line = line.strip()
@@ -140,15 +159,9 @@ def extract_loaded_skill(transcript_lines: list[str]) -> str | None:
             if block.get("name") != "Skill":
                 continue
 
-            tool_input = block.get("input") or {}
-            skill_name = (
-                tool_input.get("name")
-                or tool_input.get("skill_name")
-                or tool_input.get("skill")
-                or tool_input.get("command")
-            )
-            if skill_name:
-                normalized = normalize_skill_name(str(skill_name))
+            skill_value = (block.get("input") or {}).get("skill")
+            if skill_value:
+                normalized = normalize_skill_name(str(skill_value).rsplit(":", 1)[-1])
                 if normalized:
                     return normalized
 
@@ -174,6 +187,11 @@ def run_claude_routing(input_text: str, timeout: int = 60) -> RoutingResult:
         "--verbose",
         "--tools",
         "Bash,Skill",
+        "--allowedTools",
+        "Bash,Skill",
+        "--strict-mcp-config",
+        "--mcp-config",
+        str(EMPTY_MCP_CONFIG),
         "--plugin-dir",
         str(REPO_ROOT),
         "--plugin-dir",

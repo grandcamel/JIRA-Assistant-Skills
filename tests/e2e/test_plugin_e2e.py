@@ -2,9 +2,18 @@
 Help-only sufficiency arm.
 
 Is the Entry-Point Hint (skills/jira/SKILL.md) alone enough for a model to
-complete representative jira-as tasks? The model gets nothing else -- no
-other skill, only the Bash tool, and a `jira-as` forced into simulation
-transport with no credentials, so nothing it runs can reach a live site.
+complete representative jira-as tasks? The model gets the shipped plugin,
+the Bash and Skill tools (Skill is required to load the hint at all), no
+MCP servers, and a `jira-as` forced into simulation transport with no
+credentials, so nothing it runs can reach a live site. Each task's prompt
+gets a fixed trailer (runner.PROMPT_TRAILER) telling the model to act now
+rather than ask a clarifying question. A trial passes when any jira-as
+invocation in its transcript matches the task's `accept` list (see
+test_cases.yaml and runner.command_matches_accept) and that invocation's
+replay classifies well-formed (runner.classify_replay) -- and fails
+outright if the model loaded any skill other than `jira` (see
+runner.extract_skill_invocations and README.md's known-limitation note
+about user-level skills on the host).
 
 Thresholds (see README.md for provenance and the ruling date): five cold
 trials per task; a task passes at four or more well-formed trials; the
@@ -35,16 +44,18 @@ class TestSufficiencyArm:
 
     @pytest.fixture(autouse=True)
     def _tasks(self, test_cases_path):
-        self.tasks = {t["id"]: t["prompt"] for t in _load_tasks(test_cases_path)}
+        self.tasks = {
+            t["id"]: (t["prompt"], t["accept"]) for t in _load_tasks(test_cases_path)
+        }
 
     def _run_task(self, sufficiency_runner, task_id):
-        prompt = self.tasks[task_id]
-        results = sufficiency_runner.run_task(task_id, prompt, TRIALS_PER_TASK)
+        prompt, accept = self.tasks[task_id]
+        results = sufficiency_runner.run_task(task_id, prompt, accept, TRIALS_PER_TASK)
         well_formed = sum(1 for r in results if r.well_formed)
         assert well_formed >= MIN_PASSING_TRIALS, (
             f"[{task_id}] expected >= {MIN_PASSING_TRIALS}/{TRIALS_PER_TASK} "
             f"well-formed trials, got {well_formed}/{TRIALS_PER_TASK}\n"
-            f"Prompt: {prompt}\n"
+            f"Prompt: {prompt}\nAccept: {accept}\n"
             f"Trials: {[(r.command, r.exit_code, r.transcript_error) for r in results]}"
         )
 

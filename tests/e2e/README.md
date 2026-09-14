@@ -18,17 +18,27 @@ sufficient on its own?
 
 - The shipped plugin only: the plugin manifest plus `skills/jira/SKILL.md`,
   installed via an **absolute** `--plugin-dir` path.
-- Exactly two tools, via **`--tools Bash,Skill`** -- not `--allowedTools`,
-  which only pre-approves permission for tools that would otherwise still
-  be available (Read/Glob/Grep/WebFetch would stay reachable under
-  `--allowedTools` alone; per the CLI reference, `--tools` "omit[s] a tool
-  to remove it from Claude's context" instead). `Skill` is included, and
-  is the only tool besides `Bash`, because a plugin's `SKILL.md` reaches
-  the model only through the built-in `Skill` tool -- with `--tools Bash`
-  alone the model could never load the Entry-Point Hint at all, and the
-  arm would measure "no hint," not "the hint alone." See
+- Exactly two tools, via **`--tools Bash,Skill`** -- not `--allowedTools`
+  alone, which only pre-approves permission for tools that would
+  otherwise still be available (Read/Glob/Grep/WebFetch would stay
+  reachable under `--allowedTools` alone; per the CLI reference, `--tools`
+  "omit[s] a tool to remove it from Claude's context" instead). `Skill` is
+  included, and is the only tool besides `Bash`, because a plugin's
+  `SKILL.md` reaches the model only through the built-in `Skill` tool --
+  with `--tools Bash` alone the model could never load the Entry-Point
+  Hint at all, and the arm would measure "no hint," not "the hint alone."
+  A live probe found `--tools` alone is not sufficient either: under
+  `--permission-mode dontAsk`, the Skill tool call was itself **denied**
+  ("Permission to use Skill has been denied because Claude Code is
+  running in don't ask mode"), so **`--allowedTools "Bash,Skill"`** is
+  passed too, pre-approving both tools so neither is denied. See
   [cli-reference](https://code.claude.com/docs/en/cli-reference) and
   [tools-reference](https://code.claude.com/docs/en/tools-reference).
+- **No MCP servers.** `--strict-mcp-config --mcp-config
+  tests/e2e/empty-mcp.json` (an absolute path to `{"mcpServers": {}}`)
+  keeps the operator's own configured MCP servers out of the session --
+  a live probe found they otherwise still load and expose tools even
+  with `--tools`/`--allowedTools` restricted to `Bash,Skill`.
 - **No project context from this repository.** Each trial runs with `cwd`
   set to a fresh, empty temporary directory, so Claude Code does not load
   this repository's own `CLAUDE.md`, its files, or any other ambient
@@ -37,64 +47,114 @@ sufficient on its own?
   `JIRA_AS_TRANSPORT=simulation`.
 - **An allowlisted subprocess environment, not a denylisted one.** Built by
   `tests/harness_env.py`'s `build_harness_env()` (shared with the routing
-  check): only `PATH`, `HOME`, and `TERM`/`LANG` (if present) are ever
-  copied from the operator's own environment, plus
-  `JIRA_AS_TRANSPORT=simulation`. `JIRA_SITE_URL`, `JIRA_EMAIL`,
-  `JIRA_API_TOKEN`, `JIRA_DEFAULT_PROJECT`, `ANTHROPIC_API_KEY`, and any
-  other variable starting with `JIRA_` or `ANTHROPIC_` never reach the
-  subprocess. Nothing the model runs can reach a live Jira site.
+  check): only `PATH`, `HOME`, `USER`, `LOGNAME` (a live probe found the
+  CLI's Keychain-backed login reports "Not logged in" without USER/
+  LOGNAME, not just HOME), and `TERM`/`LANG` (if present) are ever copied
+  from the operator's own environment, plus `JIRA_AS_TRANSPORT=simulation`.
+  `JIRA_SITE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_DEFAULT_PROJECT`,
+  `ANTHROPIC_API_KEY`, and any other variable starting with `JIRA_` or
+  `ANTHROPIC_` never reach the subprocess. Nothing the model runs can
+  reach a live Jira site.
 
-### Known limitation: the operator's global CLAUDE.md
+### Known limitation: user-level skills and the operator's global CLAUDE.md
 
-`HOME` is preserved (Claude Code's own OAuth authentication lives under
-`~/.claude/` and needs it). This means the operator's **global**
-`~/.claude/CLAUDE.md`, if they have one, is still loaded as context -- the
-empty-cwd confinement above only rules out a *project* `CLAUDE.md` from
-this repository or wherever the harness happens to run from. This is a
-known, unavoidable gap in what the sufficiency arm measures on a given
-host: a strict reading of "the Entry-Point Hint alone" would need no
-global CLAUDE.md either. Run the arm on a host with no global
-`~/.claude/CLAUDE.md` (or one you know to be free of Jira-specific
-guidance) if this matters for a given measurement.
+Two gaps a live probe confirmed are not closed by any flag:
+
+- **User-level skills.** A probe found roughly 120 skills installed at
+  the user level on the probing host, all still visible to the model
+  regardless of `--tools`/`--plugin-dir`/`--strict-mcp-config`. `--bare`
+  would remove them, but it requires an `ANTHROPIC_API_KEY` this harness
+  deliberately does not use (see Prerequisites below), and an empty
+  `CLAUDE_CONFIG_DIR` loses the OAuth login instead. The mitigation is
+  detection, not prevention: `runner.extract_skill_invocations` records
+  **every** `Skill` tool_use in a trial's transcript, and `run_trial`
+  **fails the trial outright if any loaded skill is not `jira`**. Loading
+  `jira` itself is recorded as evidence the hint worked, but is not
+  required for a trial to pass -- the model can complete a task by
+  running `jira-as` directly once it knows to, without re-invoking the
+  Skill tool on every turn.
+- **The operator's global CLAUDE.md.** `HOME` is preserved (needed for
+  the OAuth login above), so the operator's **global** `~/.claude/
+  CLAUDE.md`, if they have one, is still loaded as context -- the
+  empty-cwd confinement only rules out a *project* `CLAUDE.md`. Run the
+  arm on a host with no global `~/.claude/CLAUDE.md` (or one known to
+  carry no Jira-specific guidance) if this matters for a given
+  measurement.
 
 ## How a trial is judged
 
 For each cold trial:
 
-1. Send the task's plain-English prompt to Claude Code, from the fresh
-   empty temp directory described above, and capture its full tool-use
-   transcript (`--output-format stream-json --verbose`).
-2. Extract the **last** `jira-as ...` command the model ran, read from the
+1. Append a **fixed trailer** (`runner.PROMPT_TRAILER`) to the task's
+   prompt: "Do this now with the jira-as CLI in this shell. Do not ask
+   me questions. The CLI is in simulation mode: use project DEMO and
+   issue DEMO-1 where a key is needed; a not-found response is expected
+   and fine. When finished, reply with the exact command you ran." A
+   live probe found that without this, the model would ask a
+   clarifying question (e.g. "what JQL would you like?") instead of
+   acting on the first task, which the harness cannot meaningfully
+   score.
+2. Send the combined prompt to Claude Code, from the fresh empty temp
+   directory described above, and capture its full tool-use transcript
+   (`--output-format stream-json --verbose`).
+3. Extract **every** `jira-as ...` command the model ran, read from each
    Bash tool_use block's `input.command` field -- never inferred from the
-   model's answer text. The command is captured from the `jira-as` token
+   model's answer text. Each command is captured from the `jira-as` token
    up to the next command separator (`;`, `&`, `|`), redirect (`>`), or
    newline. A command that uses a backslash line continuation is
-   **rejected as a failed trial** with that reason stated, rather than
-   silently truncated to its first line (a truncated command is not the
-   command the model actually ran).
-3. Re-run that exact command in the harness, under the same simulation
-   transport, and check whether `jira-as` accepts it: exit code 0,
-   including a risk-tagged call that only previews (preview-by-default is
-   an accept, not a failure).
+   **rejected** with that reason stated, rather than silently truncated
+   to its first line (a truncated command is not the command the model
+   actually ran).
+4. Find the **first** extracted command that matches the task's `accept`
+   list in `test_cases.yaml` (`runner.command_matches_accept`) -- an
+   operationId used with `api call`/`api describe`, a contract-verb pair
+   like `"issue get"`, or `"describe:OPERATIONID"` for a task that asks
+   the model to describe rather than call an operation. Matching against
+   ANY invocation, not just the last command, closes a gaming path: a
+   trial that runs the right command and then a trailing `jira-as help`
+   must still pass.
+5. Fail the trial outright if the model loaded any **Skill** other than
+   `jira` (see the known-limitation note above) before reaching step 4.
+6. Re-run the matched command in the harness, under the same simulation
+   transport, and classify it well-formed or not with
+   `runner.classify_replay` (see below) -- **not simply "exit 0"**: the
+   simulation transport's store is empty, so a well-formed call to a real
+   operation legitimately exits nonzero.
+
+### Well-formedness against an empty store
+
+Live probes of the simulation transport with an empty store established:
+
+| Exit code | Condition | Well-formed? |
+|---|---|---|
+| `0` | any (preview, or a real call that returns an empty page) | Yes |
+| `5` | JSON stdout has `"status": 404` and no message starting with `"Unknown operation"` | Yes -- a real `api call`/`api describe` operation, just not found |
+| `1` | stderr contains `"(HTTP 404)"` | Yes -- the equivalent not-found shape for a contract-verb invocation |
+| `5` | a message starts with `"Unknown operation"` | No -- the operation name itself does not exist |
+| `2` | (usage error, e.g. a bad flag or malformed body source) | No |
+| anything else | | No |
 
 There is **no assertion on business content** -- the arm does not check
 that the created issue looks right or that the JQL returns the issue you
-meant. It only checks that the shape of the call the model produced is
-one jira-as accepts. Business-logic correctness is the CLI's own test
-suite's job, not this harness's.
+meant. It only checks that the shape of the call the model produced names
+a real jira-as operation. Business-logic correctness is the CLI's own
+test suite's job, not this harness's.
 
 ## The seven tasks
 
-`test_cases.yaml` holds seven representative tasks, one line of plain
-English each:
+`test_cases.yaml` holds seven representative, concrete tasks, each with
+an `accept` list of what counts as a matching invocation:
 
-1. Search issues with a JQL query.
-2. Read one issue.
-3. Create an issue in a project (a preview is enough).
-4. Add a comment to an issue.
-5. Transition an issue to a named status.
-6. Log two hours of work on an issue.
-7. Find and describe the operation that lists an issue's watchers.
+1. Search Jira for open issues in project DEMO ordered by creation date,
+   newest first.
+2. Read the details of the Jira issue DEMO-1.
+3. Create a Jira Task in project DEMO with the summary "Harness probe"
+   (a preview is enough).
+4. Add the comment "Harness probe comment" to the Jira issue DEMO-1.
+5. Transition the Jira issue DEMO-1 to the status "Done".
+6. Log two hours of work on the Jira issue DEMO-1.
+7. Find and describe the jira-as API operation that lists a Jira issue's
+   watchers.
 
 ## Thresholds and provenance
 
@@ -165,12 +225,17 @@ pytest tests/e2e/ -v --sufficiency-model claude-sonnet-5 --sufficiency-timeout 1
 
 ```
 tests/
-├── harness_env.py       # Shared allowlist env builder (also used by
-│                         # skills/jira/tests/test_routing.py)
+├── harness_env.py            # Shared allowlist env builder (also used
+│                              # by skills/jira/tests/test_routing.py)
+├── test_harness_env.py       # Offline unit tests for harness_env.py
+├── test_e2e_matching.py      # Offline unit tests for classify_replay
+│                              # and accept-list matching
 └── e2e/
     ├── __init__.py
     ├── conftest.py          # Gate + runner fixtures (uses harness_env)
+    ├── empty-mcp.json       # {"mcpServers": {}} -- passed with
+    │                         # --strict-mcp-config
     ├── runner.py            # SufficiencyRunner: run + replay + judge
-    ├── test_cases.yaml      # The seven representative tasks
+    ├── test_cases.yaml      # The seven tasks, each with an accept list
     └── test_plugin_e2e.py   # One pytest test per task
 ```

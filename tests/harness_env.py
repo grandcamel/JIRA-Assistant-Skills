@@ -16,8 +16,12 @@ import os
 # PATH is required to find the `claude` and `jira-as` binaries at all.
 # HOME is required for Claude Code's own authentication, whose OAuth
 # credentials live under ~/.claude/ -- without it the subprocess cannot
-# authenticate even though nothing Jira-related is at stake.
-_REQUIRED_PASSTHROUGH_VARS = ("PATH", "HOME")
+# authenticate even though nothing Jira-related is at stake. USER and
+# LOGNAME are required for that same authentication: a live probe found
+# that with only PATH/HOME/TERM/LANG set, the CLI reports "Not logged
+# in" -- its Keychain-backed login lookup needs USER/LOGNAME to identify
+# the account, not just HOME to locate the credentials file.
+_REQUIRED_PASSTHROUGH_VARS = ("PATH", "HOME", "USER", "LOGNAME")
 
 # Copied only when present; terminal/locale-sensitive output only, no
 # secrets.
@@ -32,9 +36,9 @@ def build_harness_env() -> dict[str, str]:
     invocation, and the same-transport replay of any jira-as command it
     produced.
 
-    Contains exactly: PATH and HOME (copied from the operator's own
-    environment), TERM and LANG (copied only if present), and
-    JIRA_AS_TRANSPORT=simulation. Never JIRA_SITE_URL, JIRA_EMAIL,
+    Contains exactly: PATH, HOME, USER and LOGNAME (copied from the
+    operator's own environment), TERM and LANG (copied only if present),
+    and JIRA_AS_TRANSPORT=simulation. Never JIRA_SITE_URL, JIRA_EMAIL,
     JIRA_API_TOKEN, JIRA_DEFAULT_PROJECT, ANTHROPIC_API_KEY, or any other
     variable whose name starts with JIRA_ or ANTHROPIC_ -- including ones
     this function does not yet know the name of, which is why the

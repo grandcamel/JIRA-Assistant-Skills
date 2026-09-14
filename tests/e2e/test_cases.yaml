@@ -1,11 +1,22 @@
 # Help-only sufficiency arm: seven representative jira-as tasks.
 #
 # The model gets nothing but skills/jira/SKILL.md (the Entry-Point Hint),
-# the Bash tool, and a `jira-as` on PATH running in `simulation` transport
-# with no credentials. Each task is one line of plain English -- there is
-# no expected output or business-content assertion here; see
-# tests/e2e/runner.py for how a trial is judged (the last jira-as command
-# the model ran must be accepted by the CLI when replayed).
+# the Bash and Skill tools, and a `jira-as` on PATH running in
+# `simulation` transport with no credentials. runner.py appends a fixed
+# trailer to each prompt below (see PROMPT_TRAILER) telling the model to
+# act now, not ask a question, and use project DEMO / issue DEMO-1 --
+# the simulation transport's empty store's not-found response to those
+# is expected and fine.
+#
+# `accept` lists what counts as a matching jira-as invocation for the
+# task (see runner.py's command_matches_accept): a bare operationId
+# matches `api call` or `api describe` of that operation; a "verb pair"
+# like "issue get" matches a contract-verb invocation starting with
+# those words; "describe:OPERATIONID" matches only `api describe
+# OPERATIONID`. A trial passes when ANY jira-as invocation in its
+# transcript matches the accept list AND its replay classifies
+# well-formed (see runner.py's classify_replay) -- not merely the last
+# command, which is gameable by a trailing `jira-as help`.
 metadata:
   name: jira-sufficiency-arm
   description: Help-only sufficiency arm for the jira skill
@@ -13,18 +24,45 @@ metadata:
 
 tasks:
   - id: search-jql
-    prompt: Search Jira for issues using a JQL query.
+    prompt: >-
+      Search Jira for open issues in project DEMO ordered by creation
+      date, newest first.
+    accept:
+      - searchAndReconsileIssuesUsingJql
+      - searchAndReconsileIssuesUsingJqlPost
+      - searchForIssuesUsingJql
+      - searchForIssuesUsingJqlPost
+      - "search query"
   - id: read-issue
-    prompt: Read the details of one Jira issue.
+    prompt: Read the details of the Jira issue DEMO-1.
+    accept:
+      - getIssue
+      - "issue get"
   - id: create-issue
     prompt: >-
-      Create an issue in a Jira project. A preview is enough -- you do not
-      need to confirm or send it.
+      Create a Jira Task in project DEMO with the summary 'Harness
+      probe'; a preview of the request is enough.
+    accept:
+      - createIssue
+      - "issue create"
   - id: add-comment
-    prompt: Add a comment to a Jira issue.
+    prompt: Add the comment 'Harness probe comment' to the Jira issue DEMO-1.
+    accept:
+      - addComment
+      - "collaborate comment add"
   - id: transition-issue
-    prompt: Transition a Jira issue to a named status.
+    prompt: Transition the Jira issue DEMO-1 to the status 'Done'.
+    accept:
+      - doTransition
+      - "lifecycle transition"
   - id: log-work
-    prompt: Log two hours of work on a Jira issue.
+    prompt: Log two hours of work on the Jira issue DEMO-1.
+    accept:
+      - addWorklog
+      - "time log"
   - id: find-watchers-operation
-    prompt: Find and describe the operation that lists a Jira issue's watchers.
+    prompt: >-
+      Find and describe the jira-as API operation that lists a Jira
+      issue's watchers.
+    accept:
+      - "describe:getIssueWatchers"
