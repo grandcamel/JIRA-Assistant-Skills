@@ -9,9 +9,9 @@ test suites in this repo are:
 | Suite | Location | Needs |
 |-------|----------|-------|
 | SBX profile unit tests | `skills/shared/tests/test_live_profile.py` | Offline fakes |
-| Routing tests | `skills/jira-assistant/tests/` | Claude CLI (live, billed) |
-| Live integration | `skills/shared/tests/live_integration/` | Host-approved dev wrapper and existing SBX project |
-| Plugin E2E | `tests/e2e/` | Claude CLI credentials |
+| Two-skill routing check | `skills/jira/tests/` | Claude CLI (live, host-run) |
+| Live integration | `skills/shared/tests/live_integration/` | Host-approved dev wrapper and the sandbox project key it requires |
+| Help-only sufficiency arm | `tests/e2e/` | Claude CLI credentials, `jira-as` in simulation transport |
 
 ## Running Tests
 
@@ -24,7 +24,7 @@ test suites in this repo are:
 ./scripts/run_tests.sh --verbose
 
 # Run tests for a specific skill only
-./scripts/run_tests.sh --skill jira-assistant
+./scripts/run_tests.sh --skill jira
 
 # Stop on first skill failure
 ./scripts/run_tests.sh --fail-fast
@@ -36,16 +36,16 @@ Use the single test runner for rapid iteration:
 
 ```bash
 # Run all tests in a file
-./scripts/run_single_test.sh jira-assistant test_sandbox_validation.py
+./scripts/run_single_test.sh jira test_sandbox_validation.py
 
 # Run tests matching a keyword
-./scripts/run_single_test.sh jira-assistant -k "sandbox"
+./scripts/run_single_test.sh jira -k "sandbox"
 
 # Re-run only failed tests from last run
-./scripts/run_single_test.sh jira-assistant --lf
+./scripts/run_single_test.sh jira --lf
 
 # Drop into debugger on failure
-./scripts/run_single_test.sh jira-assistant test_sandbox_validation.py --pdb
+./scripts/run_single_test.sh jira test_sandbox_validation.py --pdb
 ```
 
 ## Test Organization
@@ -92,14 +92,15 @@ library, where the CLI's unit tests live. For suites in this repo:
 
 ## Live Integration Testing
 
-In this organization, **all live Jira tests run only through the host-approved
-`jira-dev-host --suite` wrapper**, targeting the existing Sandbox Project
-`SBX`. The shared suite defaults to the SBX profile; no extra pytest flag is
+**All live Jira tests run only through the host-approved `jira-dev-host
+--suite` wrapper**, targeting the sandbox project key the live suite requires
+(`SBX`). The shared suite defaults to the SBX profile; no extra pytest flag is
 needed. An operator with host approval runs:
 
 ```bash
 lane=/absolute/path/to/JIRA-Assistant-Skills
-/Users/jasonkrueger/projects/grand-camel-platform/scripts/jira-dev-host "$lane" --suite \
+# Run from your grand-camel-platform checkout's scripts/jira-dev-host
+scripts/jira-dev-host "$lane" --suite \
   "$lane/.venv/bin/python" -m pytest \
   "$lane/skills/shared/tests/live_integration" -q -p no:cacheprovider
 ```
@@ -132,34 +133,23 @@ Offline profile and cleanup tests use fakes and need no Jira access:
 .venv/bin/python -m pytest skills/shared/tests/test_live_profile.py -q -p no:cacheprovider
 ```
 
-## Routing Tests
+## Two-Skill Routing Check
 
-Validate Claude routes prompts to correct skills:
+With one skill per plugin, there is no longer an intra-plugin
+disambiguation problem (thirteen domain skills choosing among themselves).
+`skills/jira/tests/test_routing.py` instead checks *inter-plugin*
+discrimination: given both this plugin and the non-shipped
+`tests/fixtures/confluence-stub/` fixture plugin, does Claude Code load
+the right skill (or neither, for unrelated prompts)? Five cold trials per
+prompt, a prompt passes at four or more, the check passes only when every
+prompt in `routing_golden.yaml` passes.
 
 ```bash
-cd skills/jira-assistant/tests
+cd skills/jira/tests
 
-# Run all routing tests
+# Run the routing check (five cold trials per prompt; host-run, not CI)
 pytest test_routing.py -v
-
-# Fast iteration with haiku model
-./fast_test.sh --fast --parallel 4
-
-# Test specific skill routing
-./fast_test.sh --skill agile --fast
-
-# Smoke test (5 key tests)
-./fast_test.sh --smoke --fast
 ```
-
-| Option | Description |
-|--------|-------------|
-| `--fast` | Use haiku model (faster, lower cost) |
-| `--skill NAME` | Test specific skill(s) |
-| `--id TC###` | Test specific test ID(s) |
-| `--smoke` | Run 5 representative tests |
-| `--parallel N` | Run N tests concurrently |
-| `--failed` | Re-run only previously failed tests |
 
 ## OpenTelemetry Observability
 
@@ -171,6 +161,7 @@ docker run -p 4318:4318 otel/opentelemetry-collector
 cd ~/docker-otel-lgtm && docker compose up -d
 
 # Run tests with OTel export
+cd skills/jira/tests
 pytest test_routing.py --otel --otlp-endpoint http://localhost:4318 -v
 ```
 

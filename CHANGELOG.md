@@ -1,5 +1,39 @@
 # Changelog
 
+## [5.0.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v4.3.0...v5.0.0) (2026-09-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* The `jira-assistant` hub skill and the thirteen domain skills
+  (`jira-admin`, `jira-agile`, `jira-bulk`, `jira-collaborate`, `jira-dev`,
+  `jira-fields`, `jira-issue`, `jira-jsm`, `jira-lifecycle`, `jira-ops`,
+  `jira-relationships`, `jira-search`, `jira-time`), their references and
+  docs, are removed.
+* The fourteen reviewer agents and their `skill-doc-coordinator`, and
+  `docs/reviews/findings`, are removed.
+* One `jira` skill now carries the Entry-Point Hint: run `jira-as help`
+  first; find operations with `jira-as api search`/`api describe`; the
+  CLI's own help is the source of truth.
+* Requires `jira-as>=2,<3`.
+* The end-to-end harness is now the help-only sufficiency arm
+  (`tests/e2e/`), and the routing test is now the two-skill routing check
+  (`skills/jira/tests/test_routing.py`); both are host-run, not CI.
+
+### Features
+
+* **jira:** one skill holding the Entry-Point Hint replaces the hub and
+  thirteen domain skills (JAS-55, JAS-31)
+
+### Tests
+
+* **jira:** rewrite the routing test as a two-skill (jira vs. a
+  non-shipped confluence-stub fixture) inter-plugin routing check
+  (JAS-55)
+* **e2e:** rewrite the end-to-end harness as the help-only sufficiency
+  arm: the model gets only the Entry-Point Hint, the Bash tool, and
+  `jira-as` in simulation transport with no credentials (JAS-55)
+
 ## [4.3.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v4.2.0...v4.3.0) (2026-08-18)
 
 

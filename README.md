@@ -11,12 +11,12 @@
 <sub>More context-efficient<br>than MCP servers</sub>
 </td>
 <td align="center">
-<h2>14</h2>
-<sub>Specialized skills<br>one conversation</sub>
+<h2>1</h2>
+<sub>Skill: the Entry-Point<br>Hint to jira-as help</sub>
 </td>
 <td align="center">
-<h2>245</h2>
-<sub>Production-ready<br>Python scripts</sub>
+<h2>950+</h2>
+<sub>CLI unit tests<br>in jira-as</sub>
 </td>
 <td align="center">
 <h2>0</h2>
@@ -26,17 +26,15 @@
 </table>
 
 <p align="center">
-  <a href="https://pypi.org/project/jira-as/"><img src="https://img.shields.io/badge/jira--as-1.1.3-3775A9?logo=pypi&logoColor=white" alt="jira-as 1.1.3 on PyPI"></a>
-  <img src="https://img.shields.io/badge/tests-1644%20passing-brightgreen?logo=pytest" alt="Tests">
+  <a href="https://pypi.org/project/jira-as/"><img src="https://img.shields.io/badge/jira--as-2.x-3775A9?logo=pypi&logoColor=white" alt="jira-as 2.x on PyPI"></a>
   <img src="https://img.shields.io/badge/python-3.10+-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
-  <img src="https://img.shields.io/badge/skills-14-FF6B6B" alt="Skills">
   <img src="https://img.shields.io/github/stars/grandcamel/jira-assistant-skills?style=social" alt="GitHub Stars">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
 <p align="center">
   <strong>Natural language JIRA automation for Claude Code</strong><br>
-  <sub>From sprint planning to incident response—14 skills, 245 scripts, zero JQL memorization.</sub>
+  <sub>One thin skill points Claude at <code>jira-as help</code> — zero JQL memorization, zero skill sprawl.</sub>
 </p>
 
 <div align="center">
@@ -64,7 +62,7 @@
 
 <p align="center">
   <a href="#quick-start"><strong>Get Started</strong></a> •
-  <a href="#skills-overview">Skills</a> •
+  <a href="#the-jira-skill">Skills</a> •
   <a href="#who-is-this-for">Use Cases</a> •
   <a href="#architecture">Architecture</a>
 </p>
@@ -128,7 +126,7 @@ cd jira-assistant-skills
 ### 2. Install Dependencies
 
 ```bash
-pip install "jira-as>=1.1.3"  # jira-as CLI + shared library from public PyPI
+pip install "jira-as>=2,<3"  # jira-as CLI from public PyPI
 ```
 
 ### 3. Get API Token
@@ -152,13 +150,19 @@ claude "Show me my open issues"
 claude "Create a bug: Login button not working"
 claude "What's blocking the release?"
 
-# Or use the CLI directly
+# Or use the CLI directly -- run this first, it's the source of truth
+jira-as help
+
 jira-as issue get PROJ-123
 jira-as search query "project = PROJ AND status = Open"
 jira-as time log PROJ-123 --time 2h
 ```
 
-**That's it.** Claude now has full JIRA access via natural language, and you can use the `jira-as` CLI directly from your terminal.
+**That's it.** The plugin ships one skill (`jira`) that is deliberately thin:
+it just points Claude at `jira-as help` and `jira-as api search`/`api
+describe` to find and learn operations, so the skill never drifts out of
+sync with what the CLI actually supports. You can also use the `jira-as`
+CLI directly from your terminal.
 
 <p align="center">
   <a href="docs/quick-start.md"><strong>Full Setup Guide →</strong></a>
@@ -257,24 +261,28 @@ Claude provides a formatted summary with everything she needs.
 
 ---
 
-## Skills Overview
+## The Jira Skill
 
-| Skill | Purpose | Example Command |
-|-------|---------|-----------------|
-| **jira-assistant** | Meta-skill router | Routes to the right skill automatically |
-| **jira-issue** | Issue CRUD | "Create a bug for login failure" |
-| **jira-lifecycle** | Workflow transitions | "Move PROJ-123 to In Progress" |
-| **jira-search** | JQL & filters | "Show my open issues" |
-| **jira-collaborate** | Comments & watchers | "Add comment to PROJ-123" |
-| **jira-agile** | Sprints & epics | "Create sprint for next week" |
-| **jira-relationships** | Issue linking | "What's blocking PROJ-123?" |
-| **jira-time** | Time tracking | "Log 2 hours on PROJ-123" |
-| **jira-jsm** | Service desk | "Show my support queue" |
-| **jira-bulk** | Bulk operations | "Close all resolved issues" |
-| **jira-dev** | Git integration | "Generate branch name for PROJ-123" |
-| **jira-fields** | Field discovery | "Show custom fields in PROJ" |
-| **jira-ops** | Cache & utilities | "Clear JIRA cache" |
-| **jira-admin** | Project admin | "List project permissions" |
+There is one skill: `jira` (`skills/jira/SKILL.md`). It carries the
+**Entry-Point Hint** -- a thin pointer, not a command reference -- and
+nothing else:
+
+1. Start every task with `jira-as help`: the surface map, groups, topics,
+   auth and sandbox modes.
+2. Find an operation with `jira-as api search WORDS`, read it with
+   `jira-as api describe OPERATION`, run it with `jira-as api call
+   OPERATION`.
+3. For a known group, `jira-as help GROUP`; for a gotcha (ADF, paging,
+   search, scope, risk, auth, migration, ...), `jira-as help TOPIC`.
+4. Discovery needs no credentials; calls need `JIRA_SITE_URL`,
+   `JIRA_EMAIL` and `JIRA_API_TOKEN`. Risk-tagged calls preview by
+   default; `--confirm` sends.
+
+Every JIRA capability -- issues, agile, search, time tracking, service
+management, bulk operations, and more -- lives in the `jira-as` CLI
+itself, not in a table here. That is deliberate: a command table in this
+README would drift out of sync with the CLI exactly the way the old
+thirteen-skill hub did. Run `jira-as help` to see what is actually there.
 
 <p align="center">
   <a href="docs/CLI_REFERENCE.md"><strong>Full CLI Reference →</strong></a>
@@ -439,30 +447,16 @@ Creates P1 with proper labels and assigns to on-call.
 ```mermaid
 flowchart TD
     U["👤 User Request"] --> CC["🤖 Claude Code"]
-    CC --> JA["📋 jira-assistant<br/>Meta-Router"]
-
-    JA -->|"Create bug"| JI["jira-issue"]
-    JA -->|"Move to Done"| JL["jira-lifecycle"]
-    JA -->|"Find issues"| JS["jira-search"]
-    JA -->|"Add comment"| JC["jira-collaborate"]
-    JA -->|"Link issues"| JR["jira-relationships"]
-    JA -->|"Sprint planning"| JAG["jira-agile"]
-    JA -->|"Log time"| JT["jira-time"]
-    JA -->|"Bulk update"| JB["jira-bulk"]
-    JA -->|"Service request"| JSM["jira-jsm"]
-
-    JI & JL & JS & JC & JR & JAG & JT & JB & JSM --> SH["🔧 Shared Library"]
-    SH --> API["🔌 JIRA REST API"]
+    CC --> JS["📋 jira skill<br/>Entry-Point Hint"]
+    JS -->|"jira-as help / api search / api describe"| CLI["🔧 jira-as CLI (2.x)"]
+    CLI --> API["🔌 JIRA REST API"]
     API --> JIRA[("☁️ JIRA Cloud")]
 ```
 
-### Technical Highlights
-
-- **Shared Library Pattern** — DRY architecture with common utilities
-- **4-Layer Error Handling** — Validation → API → Retry → User messages
-- **Layered Config** — Env vars, system keychain, and settings files
-- **ADF Support** — Native Atlassian Document Format handling
-- **Exponential Backoff** — Automatic retry on rate limits
+One thin skill points at the CLI; the CLI carries the actual JIRA
+capability, its own error handling, config layering, ADF support, and
+retry behavior. See the [jira-as](https://github.com/grandcamel/jira-as)
+repository for those internals -- they are no longer duplicated here.
 
 ---
 
@@ -470,15 +464,20 @@ flowchart TD
 
 ### Test Coverage
 
-| Category | Tests | Description |
-|----------|------:|-------------|
-| Core Skills | 850+ | Issue, search, lifecycle, collaborate, agile, relationships, time |
-| JSM Integration | 150+ | Service desks, SLAs, approvals, knowledge base |
-| Advanced Skills | 300+ | Bulk ops, dev workflows, fields, cache, admin |
-| Live Integration | 340+ | End-to-end tests against real JIRA instances |
-| **Total** | **1644** | **All passing** |
+This repository is documentation-first: the CLI's own unit tests (950+)
+live in the [jira-as](https://github.com/grandcamel/jira-as) library
+repository. What lives here is:
 
-> Tests run against live JIRA Cloud instances to ensure real-world reliability.
+| Suite | Location | Needs |
+|-------|----------|-------|
+| SBX profile unit tests | `skills/shared/tests/test_live_profile.py` | Offline fakes |
+| Routing check | `skills/jira/tests/test_routing.py` | Claude CLI (live, host-run) |
+| Live integration | `skills/shared/tests/live_integration/` | Host-approved dev wrapper |
+| Sufficiency arm | `tests/e2e/` | Claude CLI (live, host-run) |
+| Knowledge Floor eval | `tests/floor_eval/` | Host-run, before each release |
+
+See [Testing](docs/TESTING.md) for what runs in CI versus what is
+host-triggered and why.
 
 ### Security
 
@@ -514,35 +513,32 @@ One-click cloud environment with all dependencies pre-installed.
 
 ---
 
-## E2E Testing
+## E2E Testing: The Help-Only Sufficiency Arm
 
-### Run E2E Tests
-
-E2E tests validate the plugin with the Claude Code CLI:
+The end-to-end harness asks a narrower question now that there is one
+skill: is the Entry-Point Hint alone (`skills/jira/SKILL.md`) enough for a
+model to complete representative jira-as tasks? The model gets only the
+shipped plugin, the Bash tool, and `jira-as` in `simulation` transport
+with no credentials.
 
 ```bash
-# Requires ANTHROPIC_API_KEY
-./scripts/run-e2e-tests.sh           # Docker
-./scripts/run-e2e-tests.sh --local   # Local
+# Requires ANTHROPIC_API_KEY or `claude auth login`; host-run, not CI
+pytest tests/e2e/ -v
 ```
 
-See [tests/e2e/README.md](tests/e2e/README.md) for details.
+See [tests/e2e/README.md](tests/e2e/README.md) for the seven tasks, the
+isolation guarantees, and the pass thresholds.
 
-### Sandboxed Container Testing
+### Sandboxed Profile Testing
 
-Run tests with restricted tool access for safe demos and focused testing:
+`skills/jira/tests/test_sandbox_validation.py` verifies that sandboxed
+tool-restriction profiles correctly limit what Claude can do. Set
+`SANDBOX_PROFILE` and `CLAUDE_ALLOWED_TOOLS` and run it directly:
 
 ```bash
-cd skills/jira-assistant/tests
-
-# Safe demo mode (view/search only)
-./run_sandboxed.sh --profile read-only
-
-# JQL-focused testing
-./run_sandboxed.sh --profile search-only
-
-# Issue CRUD only
-./run_sandboxed.sh --profile issue-only
+SANDBOX_PROFILE=read-only \
+CLAUDE_ALLOWED_TOOLS="Read Glob Grep WebFetch WebSearch Bash(jira-as issue get:*) Bash(jira-as search:*)" \
+  pytest skills/jira/tests/test_sandbox_validation.py -v -k "readonly"
 ```
 
 | Profile | Use Case | What's Allowed |
@@ -564,7 +560,7 @@ git clone https://github.com/grandcamel/jira-assistant-skills.git
 cd jira-assistant-skills
 
 # Install dependencies and CLI
-pip install "jira-as>=1.1.3" pytest pytest-asyncio
+pip install "jira-as>=2,<3" pytest pytest-asyncio
 pip install -e .  # Install the plugin package in editable mode
 
 # Run tests (uses root pytest.ini configuration)

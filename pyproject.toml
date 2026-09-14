@@ -4,15 +4,15 @@
 
 [project]
 name = "jira-assistant-skills-plugin"
-version = "4.3.0"
-description = "Claude Code plugin for JIRA automation - provides skill documentation for the jira-as CLI"
+version = "5.0.0"
+description = "Claude Code plugin for JIRA automation - one jira skill holding the Entry-Point Hint for the jira-as CLI"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 
 # CLI is installed via the library
 dependencies = [
-    "jira-as>=1.1.3,<2.0",
+    "jira-as>=2,<3",
 ]
 
 [project.optional-dependencies]

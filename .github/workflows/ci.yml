@@ -150,7 +150,7 @@ jobs:
 
       - name: Run offline tests
         run: |
-          python -m pytest -q --deselect skills/jira-assistant/tests/test_routing.py --deselect skills/jira-assistant/tests/test_sandbox_validation.py --deselect tests/e2e/test_plugin_e2e.py
+          python -m pytest -q --deselect skills/jira/tests/test_routing.py --deselect skills/jira/tests/test_sandbox_validation.py --deselect tests/e2e/test_plugin_e2e.py
 
   # ==========================================================================
   # Pre-commit Hooks Validation

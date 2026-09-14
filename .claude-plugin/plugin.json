@@ -1,7 +1,7 @@
 {
   "name": "jira-assistant-skills",
-  "version": "4.3.0",
-  "description": "Complete JIRA automation suite with 14 specialized skills - issue management, agile workflows, time tracking, service management, bulk operations, and more",
+  "version": "5.0.0",
+  "description": "One Jira skill: the Entry-Point Hint for the jira-as CLI 2.x. Run jira-as help first.",
   "author": {
     "name": "grandcamel"
   },

@@ -12,7 +12,7 @@ Thank you for your interest in contributing to JIRA Assistant Skills! This docum
 - [Commit Guidelines](#commit-guidelines)
 - [Testing](#testing)
 - [Pull Request Process](#pull-request-process)
-- [Adding New Skills](#adding-new-skills)
+- [Extending JIRA Capability](#extending-jira-capability)
 - [Adding New Scripts](#adding-new-scripts)
 
 ## Code of Conduct
@@ -56,8 +56,8 @@ pip install pytest pytest-cov responses
 
 ### Live-Test Configuration
 
-In this organization, live Jira tests run only through the host-approved
-`jira-dev-host --suite` wrapper against the existing Sandbox Project `SBX`.
+Live Jira tests run only through the host-approved `jira-dev-host --suite`
+wrapper, against the sandbox project key the live suite requires (`SBX`).
 The default SBX profile reads credentials and `JIRA_DEFAULT_PROJECT=SBX` only
 from the wrapper environment; do not put live-test credentials in settings
 files or export them into worker sessions. The profile refuses missing
@@ -68,16 +68,19 @@ for the operator command and required cleanup output.
 ## Project Structure
 
 ```
+skills/
+├── jira/                 # The one skill: the Entry-Point Hint
+│   ├── SKILL.md
+│   └── tests/            # Routing check + sandbox validation
+└── shared/               # Shared engineering test infrastructure
+    └── tests/            # SBX live-profile + live_integration suite
+
+tests/
+├── e2e/                  # Help-only sufficiency arm
+├── fixtures/confluence-stub/  # Non-shipped fixture for the routing check
+└── floor_eval/           # Knowledge Floor eval
+
 .claude/
-├── skills/
-│   ├── shared/           # Shared library (all skills depend on this)
-│   │   ├── scripts/lib/  # Core modules (jira_client, config_manager, etc.)
-│   │   └── tests/        # Shared library tests
-│   ├── jira-issue/       # Issue CRUD skill
-│   ├── jira-lifecycle/   # Workflow transitions
-│   ├── jira-search/      # JQL and filters
-│   └── ...               # Other skills
-├── plugins/              # Claude Code plugins
 └── settings.json         # Default configuration
 ```
 
@@ -92,7 +95,7 @@ for the operator command and required cleanup output.
 
 3. Run tests to ensure nothing is broken:
    ```bash
-   pytest .claude/skills/*/tests/ -v
+   pytest skills/jira/tests/ -v
    ```
 
 4. Commit using conventional commits (see below)
@@ -128,13 +131,14 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/). All comm
 
 ### Scopes
 
-Use the skill name as scope: `jira-issue`, `jira-lifecycle`, `jira-search`, `jira-collaborate`, `jira-agile`, `jira-relationships`, `jira-time`, `jira-jsm`, `jira-bulk`, `jira-dev`, `jira-fields`, `jira-ops`, `shared`, `config`, `docs`
+Use `jira` for the skill itself, or the area touched: `shared`, `e2e`,
+`config`, `docs`.
 
 ### Examples
 
 ```bash
 # New feature
-feat(jira-issue): add support for creating subtasks
+feat(jira): document a new jira-as topic in the Entry-Point Hint
 
 # Bug fix
 fix(shared): correct retry backoff calculation
@@ -152,18 +156,18 @@ See [Before each plugin release](docs/TESTING.md#before-each-plugin-release) for
 ### Running Tests
 
 ```bash
-# Run all unit tests
-pytest .claude/skills/*/tests/ -v
+# Run the offline suite, exactly as CI does
+python -m pytest -q --deselect skills/jira/tests/test_routing.py \
+  --deselect skills/jira/tests/test_sandbox_validation.py \
+  --deselect tests/e2e/test_plugin_e2e.py
 
-# Run specific skill tests
-pytest .claude/skills/jira-issue/tests/ -v
-
-# Run with coverage
-pytest .claude/skills/*/tests/ --cov=.claude/skills -v
+# Run the jira skill's tests only
+pytest skills/jira/tests/ -v
 
 # Live integration: host-approved operator only (absolute paths required)
 lane=/absolute/path/to/JIRA-Assistant-Skills
-/Users/jasonkrueger/projects/grand-camel-platform/scripts/jira-dev-host "$lane" --suite \
+# Run from your grand-camel-platform checkout's scripts/jira-dev-host
+scripts/jira-dev-host "$lane" --suite \
   "$lane/.venv/bin/python" -m pytest \
   "$lane/skills/shared/tests/live_integration" -q -p no:cacheprovider
 ```
@@ -212,29 +216,16 @@ Brief description of changes
 Fixes #123
 ```
 
-## Adding New Skills
+## Extending JIRA Capability
 
-1. Create skill directory structure:
-   ```
-   .claude/skills/new-skill/
-   ├── SKILL.md              # Skill description for Claude
-   ├── scripts/              # Python scripts
-   └── tests/                # Unit tests
-   ```
-
-2. Create `SKILL.md` with required sections:
-   - YAML frontmatter with `name`, `description`, `when_to_use`
-   - "What this skill does" section
-   - "Available scripts" section
-   - "Examples" section
-
-3. Scripts must:
-   - Use shared library imports
-   - Support `--profile` argument
-   - Include argparse with help text
-   - Handle errors with `print_error()`
-
-4. Update `jira-assistant/SKILL.md` routing table
+There is one skill (`skills/jira/SKILL.md`) and it does not grow per
+feature. New JIRA capability belongs in the `jira-as` CLI itself,
+in the separate [jira-as](https://github.com/grandcamel/jira-as)
+repository -- not in a new skill directory or an expanded `SKILL.md` here.
+`jira-as help`, `jira-as api search`, and `jira-as api describe` already
+make new commands discoverable, so `skills/jira/SKILL.md` only needs to
+change if the Entry-Point Hint's own four moves stop being true (see
+`CLAUDE.md`'s "Extending JIRA Capability" section for the full rationale).
 
 ## Adding New Scripts
 

@@ -22,8 +22,9 @@ Settings are merged from multiple sources (highest priority first):
 
 ## SBX Live-Test Profile
 
-Live Jira tests in this organization run **only through the host-approved
-`jira-dev-host <lane> --suite ...` wrapper**, with the existing `SBX` project.
+Live Jira tests run **only through the host-approved
+`jira-dev-host <lane> --suite ...` wrapper**, with the sandbox project key
+the live suite requires (`SBX`).
 See [the exact live-suite command](TESTING.md#live-integration-testing).
 The shared live suite defaults to this profile without a command-line flag.
 

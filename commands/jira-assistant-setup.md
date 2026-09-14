@@ -22,7 +22,7 @@ pip show jira-as 2>/dev/null && echo "Library installed" || echo "Library missin
 
 If the library is missing, install it from public PyPI:
 ```bash
-pip install "jira-as>=1.1.3"
+pip install "jira-as>=2,<3"
 ```
 
 ## Step 2: Get API Token
@@ -123,8 +123,8 @@ If authentication fails:
 - **Connection error**: Check the URL is correct and reachable.
 
 If the CLI is not found:
-- Ensure the jira-as package is installed: `pip install "jira-as>=1.1.3"`
+- Ensure the jira-as package is installed: `pip install "jira-as>=2,<3"`
 - Verify the install and its location: `pip show jira-as` and `which jira-as` (the pip scripts directory must be on PATH)
 
 If import errors occur:
-- Ensure the library is installed: `pip install "jira-as>=1.1.3"`
+- Ensure the library is installed: `pip install "jira-as>=2,<3"`

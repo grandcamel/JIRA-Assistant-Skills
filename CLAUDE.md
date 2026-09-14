@@ -4,24 +4,17 @@ A modular, production-ready Claude Code skills framework for JIRA REST API autom
 
 ## Project Overview
 
-This project provides 14 specialized skills for interacting with JIRA via natural language:
-
-| Skill | Purpose |
-|-------|---------|
-| `jira-assistant` | Hub/router with progressive disclosure |
-| `jira-issue` | Core CRUD operations on issues |
-| `jira-lifecycle` | Workflow/transition management |
-| `jira-search` | JQL queries, saved filters, bulk operations |
-| `jira-collaborate` | Comments, attachments, watchers |
-| `jira-agile` | Epics, sprints, backlog, story points |
-| `jira-relationships` | Issue linking, dependencies, cloning |
-| `jira-time` | Time tracking, worklogs, estimates |
-| `jira-jsm` | Jira Service Management |
-| `jira-bulk` | Bulk operations with dry-run support |
-| `jira-dev` | Git branch names, commit parsing, PR descriptions |
-| `jira-fields` | Custom field management |
-| `jira-ops` | Cache management, request batching |
-| `jira-admin` | Project and permission administration |
+This project ships **one skill**, `jira` (`skills/jira/SKILL.md`), for
+interacting with JIRA via natural language. The skill is deliberately thin:
+it carries the **Entry-Point Hint** -- run `jira-as help` first, find
+operations with `jira-as api search`/`api describe`, read `jira-as help
+TOPIC` for gotchas -- and nothing else. All actual JIRA capability (issues,
+agile, search, collaboration, time tracking, service management, bulk
+operations, admin, and more) lives in the `jira-as` CLI itself, not in
+per-domain skill files. This replaced a thirteen-domain-skill hub model
+(`jira-assistant` routing to `jira-issue`, `jira-agile`, ... `jira-admin`)
+that duplicated CLI documentation in skill files and drifted out of sync
+with the CLI.
 
 ## Architecture
 
@@ -37,26 +30,18 @@ This project provides 14 specialized skills for interacting with JIRA via natura
 └── settings.local.json        # Personal credentials (gitignored)
 
 commands/                      # Slash commands (at project root)
-config/                        # Configuration examples
+config/                        # Example settings files
 skills/                        # Skills (autodiscovered at project root)
-    ├── jira-assistant/        # Hub router
-    ├── jira-issue/            # Issue CRUD
-    ├── jira-lifecycle/        # Workflow transitions
-    ├── jira-search/           # JQL queries
-    ├── jira-collaborate/      # Comments, attachments
-    ├── jira-agile/            # Sprints, boards
-    ├── jira-relationships/    # Issue links
-    ├── jira-time/             # Time tracking
-    ├── jira-jsm/              # Service Management
-    ├── jira-bulk/             # Bulk operations
-    ├── jira-dev/              # Developer integration
-    ├── jira-fields/           # Custom fields
-    ├── jira-ops/              # Operations
-    ├── jira-admin/            # Administration
-    └── shared/                # Shared config and tests
-        ├── config/
-        ├── docs/
-        └── tests/
+    ├── jira/                  # The one skill: the Entry-Point Hint
+    │   ├── SKILL.md
+    │   └── tests/             # Routing check + sandbox validation
+    └── shared/                # Shared engineering test infrastructure
+        └── tests/             # SBX live-profile + live_integration suite
+
+tests/
+├── e2e/                       # Help-only sufficiency arm
+├── fixtures/confluence-stub/  # Non-shipped fixture for the routing check
+└── floor_eval/                # Knowledge Floor eval
 
 jira-as/                       # PyPI library (source)
 ├── src/jira_as/
@@ -111,7 +96,7 @@ The project provides a unified CLI via the `jira-as` command:
 
 ```bash
 # Install from public PyPI
-pip install "jira-as>=1.1.3"
+pip install "jira-as>=2,<3"
 
 # Verify installation
 jira-as --version
@@ -682,62 +667,25 @@ success = wait_for_transition(client, "PROJ-123", "Done", timeout=30)
 success = wait_for_assignment(client, "PROJ-123", "abc123", timeout=10)
 ```
 
-## Adding New Skills
+## Extending JIRA Capability
 
-### Required Files
+There is one skill (`skills/jira/SKILL.md`) and it does not grow per
+feature. New JIRA capability is added to the `jira-as` CLI itself, not to
+a new or expanded skill file here:
 
-```
-skills/new-skill/
-├── SKILL.md              # Skill documentation
-├── docs/                 # Guides and documentation
-├── references/           # API docs (optional)
-├── assets/templates/     # JSON templates (optional)
-└── tests/
-    ├── conftest.py       # Skill-specific fixtures
-    └── test_*.py
-```
+1. Add the command module in `jira-as/src/jira_as/cli/commands/` (the
+   separate [jira-as](https://github.com/grandcamel/jira-as) repository).
+2. Register it in `cli/main.py`.
+3. Add tests in that repository's own test suite.
+4. Do **not** update `skills/jira/SKILL.md` to describe the new command --
+   `jira-as help`, `jira-as api search`, and `jira-as api describe` already
+   make it discoverable. The skill file only needs to change if the
+   Entry-Point Hint's own four moves (help first, search/describe, help
+   TOPIC, the CLI version range) stop being true.
 
-### SKILL.md Template
-
-```markdown
-# jira-new-skill
-
-Brief description.
-
-## When to Use This Skill
-
-Keywords and scenarios that trigger this skill.
-
-## What This Skill Does
-
-- Feature 1
-- Feature 2
-
-## Available Commands
-
-\`\`\`bash
-jira-as newskill command --option value
-\`\`\`
-
-## Examples
-
-Example usage scenarios.
-
-## Risk Level
-
-| Operation | Risk |
-|-----------|------|
-| Read operations | - |
-| Create operations | Warning |
-| Delete operations | Danger |
-```
-
-### Adding CLI Commands
-
-1. Add command module in `jira-as/src/jira_as/cli/commands/`
-2. Register in `cli/main.py`
-3. Add tests in `tests/commands/`
-4. Update SKILL.md documentation
+This is the point of the Entry-Point Hint: a thirteen-domain-skill hub
+previously restated CLI commands in skill files and drifted out of sync
+with the CLI every time a command changed.
 
 ## How Claude Code Skills Work
 
@@ -896,124 +844,32 @@ Solutions:
 
 - **Context manager required**: Always use `with get_jira_client() as client:` pattern
 - **Mock mode**: Set `JIRA_MOCK_MODE=true` for testing without API calls
-- **Skill routing**: The `jira-assistant` hub routes based on skill descriptions
+- **One skill**: There is no hub or router anymore; `jira` is the only skill, and it never restates CLI commands -- `jira-as help` is the source of truth
 - **ADF format**: JIRA Cloud uses Atlassian Document Format for rich text
 - **Field IDs vary**: Custom field IDs differ between instances
 - **Version sync**: Keep `pyproject.toml` and `__version__` in sync
 - **Test mocks**: Mock fixtures must include `__enter__` and `__exit__`
 - **Linear history**: Repository requires rebase merges, no merge commits
 
-## Routing Test Lessons Learned
+## Routing Check Notes
 
-### Fundamental Insight: LLMs Don't Ask Meta-Questions
-
-**Modern LLMs are trained to be helpful and make reasonable assumptions.** Tests expecting Claude to ask "which skill do you want?" will fail because Claude picks a sensible option and proceeds.
-
-**Example:** Input "show me the sprint" expects disambiguation, but Claude reasonably picks `jira-agile` and shows sprint details.
-
-**Recommendation:** Don't test for disambiguation. Instead, test that Claude routes to a *valid* skill from the options.
-
-### Clarification Detection Pitfalls
-
-The test harness detects "clarification" by looking for question marks and certain phrases. This is problematic because Claude asks questions for different reasons:
-
-| Type | Example | Should Pass? |
-|------|---------|--------------|
-| Disambiguation | "Which skill do you want?" | No (flaky) |
-| Parameter clarification | "Which file to attach?" | Yes (valid) |
-| Permission request | "Would you like me to run this?" | Yes (valid) |
-
-**Lesson:** Distinguish between disambiguation (routing uncertainty) and parameter clarification (skill chosen, needs input). Permission requests are NOT clarification.
-
-### Pattern Matching Pitfalls
-
-Inference patterns detect skills from response content when debug logs aren't available. Key issues:
-
-1. **Order matters**: Check specific skills before generic ones
-2. **Response contamination**: A response about `jira-issue` may mention "lifecycle" in passing
-3. **CLI patterns vary**: `jira-as issue` vs `jira issue` vs `jira-as issue get`
-
-**Best practices:**
-- Put highly specific patterns first (jira-dev, jira-fields, jira-ops)
-- Put generic patterns last (jira-issue, jira-search)
-- Use word boundaries in regex (`\b`)
-- Test patterns against actual response text
-
-### Test Configuration Best Practices
-
-The routing golden test file (`routing_golden.yaml`) supports these fields:
-
-```yaml
-- id: TC001
-  category: direct
-  input: "assign TES-789 to john@example.com"
-  expected_skill: jira-lifecycle
-  alternate_skills:           # Other valid skills
-    - jira-issue
-  certainty: medium           # high/medium/low
-  skip: true                  # Skip flaky tests
-  skip_reason: "Too vague - Claude reasonably picks a skill"
-```
-
-### Categories and Expected Behavior
-
-| Category | Expected | Reality |
-|----------|----------|---------|
-| `direct` | Route to specific skill | Generally works |
-| `disambiguation` | Ask clarifying question | **Fails often** - Claude picks a skill |
-| `negative` | Route to skill A, NOT skill B | Works but inference can be wrong |
-| `workflow` | Route to first skill in sequence | **Fails** - Claude may start anywhere |
-| `context` | Use conversation history | Requires multi-turn (skip these) |
-| `edge` | Handle edge cases | Mixed results |
-
-### Recommendations for New Tests
-
-1. **Avoid disambiguation tests** - They're fundamentally flawed
-2. **Use `alternate_skills`** for inputs with multiple valid interpretations
-3. **Use `skip: true`** for tests that fail due to LLM behavior, not bugs
-4. **Workflow tests should accept any skill** from the workflow list
-5. **Context tests should be skipped** until multi-turn support is added
-6. **Direct tests should be specific** - Include issue keys, project names, explicit action words
-
-### Test Stability Metrics
-
-Target pass rates by category:
-
-| Category | Target | Notes |
-|----------|--------|-------|
-| Direct | >90% | Most stable |
-| Negative | >85% | Depends on inference accuracy |
-| Workflow | >80% | Accept any workflow skill |
-| Edge | >75% | Inherently variable |
-| Disambiguation | N/A | Skip most of these |
-| Context | N/A | Skip until multi-turn |
-
-### Debugging Routing Issues
-
-1. **Check debug logs**: `~/.claude/debug/{session_id}.txt` shows skill loading
-2. **Check response text**: What CLI commands does Claude mention?
-3. **Check permission denials**: What was Claude trying to run?
-4. **Check inference patterns**: Does the response match expected patterns?
-
-### Common Failure Modes
-
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| Wrong skill detected | Inference pattern order | Reorder patterns |
-| "Asked clarification" false positive | Permission request detected as question | Exclude permission phrases |
-| Workflow test fails | First skill expectation | Accept any workflow skill |
-| Disambiguation never triggers | LLM makes decisions | Skip or convert to `alternate_skills` |
+The old "Routing Test Lessons Learned" section here documented pitfalls
+from disambiguating among thirteen domain skills inside one plugin
+(pattern-matching order, disambiguation-vs-clarification, per-skill
+pytest markers). That problem is retired along with the domain skills:
+with one skill per plugin, `skills/jira/tests/test_routing.py` only needs
+to check *inter-plugin* discrimination (jira vs. a sibling plugin's
+skill), described in `skills/jira/tests/routing_golden.yaml` and
+`tests/e2e/README.md`.
 
 ## Related Resources
 
 | Document | Content |
 |----------|---------|
 | `jira-as/CLAUDE.md` | Library implementation details |
-| `skills/shared/docs/DECISION_TREE.md` | Skill routing logic |
-| `skills/shared/docs/SAFEGUARDS.md` | Safety procedures |
-| `skills/shared/docs/QUICK_REFERENCE.md` | JQL cheat sheet |
 | `docs/ARCHITECTURE.md` | System architecture |
 | `docs/quick-start.md` | Getting started guide |
 | `docs/troubleshooting.md` | Detailed troubleshooting |
-| `skills/jira-assistant/tests/routing_golden.yaml` | Routing test definitions |
-| `skills/jira-assistant/tests/test_routing.py` | Routing test implementation |
+| `skills/jira/tests/routing_golden.yaml` | Two-skill routing check prompts |
+| `skills/jira/tests/test_routing.py` | Routing check implementation |
+| `tests/e2e/README.md` | Help-only sufficiency arm |
