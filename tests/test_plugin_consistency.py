@@ -1,5 +1,5 @@
 """
-Offline consistency checks for the shipped plugin (review fix, JAS-55).
+Offline consistency checks for the shipped plugin (review fix).
 
 No external dependencies beyond what CI already installs for the offline
 suite (pytest, pyyaml): no `jira-as` CLI, no Claude Code, no network. This

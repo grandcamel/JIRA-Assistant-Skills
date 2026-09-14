@@ -1,6 +1,6 @@
 """
 Offline unit tests for tests/harness_env.py's build_harness_env() (review
-fix, JAS-55). No subprocess is launched anywhere in this file.
+fix). No subprocess is launched anywhere in this file.
 """
 
 from tests.harness_env import build_harness_env
