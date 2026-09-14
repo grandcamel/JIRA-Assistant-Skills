@@ -92,6 +92,12 @@ from tests.harness_env import build_harness_env  # noqa: E402
 # tools otherwise) never enter a routing trial either.
 EMPTY_MCP_CONFIG = (REPO_ROOT / "tests" / "e2e" / "empty-mcp.json").resolve()
 
+# Same evidence-persistence helpers the sufficiency arm uses (see
+# tests/evidence.py): every trial's transcript and observed skill is
+# written to disk, so a scoring question never requires re-running the
+# live check.
+from tests.evidence import new_run_dir, write_json, write_transcript  # noqa: E402
+
 GOLDEN_FILE = TESTS_DIR / "routing_golden.yaml"
 
 DEFAULT_MODEL = "claude-sonnet-5"
@@ -99,6 +105,41 @@ TRIALS_PER_PROMPT = 5
 MIN_CORRECT_TRIALS = 4
 
 KNOWN_SKILLS = ("jira", "confluence")
+
+# One evidence directory per pytest session (this module is imported
+# once per run): every trial's transcript lands here, plus a running
+# summary of the observed skill per trial.
+_ROUTING_RUN_DIR = new_run_dir("jas55-routing")
+_ROUTING_TRIAL_COUNTERS: dict[str, int] = {}
+_ROUTING_SUMMARY: dict = {"run_dir": str(_ROUTING_RUN_DIR), "prompts": {}}
+
+
+def _next_routing_trial_number(test_id: str) -> int:
+    _ROUTING_TRIAL_COUNTERS[test_id] = _ROUTING_TRIAL_COUNTERS.get(test_id, 0) + 1
+    return _ROUTING_TRIAL_COUNTERS[test_id]
+
+
+def _persist_routing_trial(
+    test_id: str,
+    trial_number: int,
+    transcript_lines: list[str],
+    result: "RoutingResult",
+) -> None:
+    """Write this trial's transcript and record the observed skill in the
+    run-wide summary.json, so the evidence is on disk even if a later
+    trial or the process itself is interrupted."""
+    base_name = f"{test_id}-{trial_number}"
+    write_transcript(
+        _ROUTING_RUN_DIR / f"{base_name}.transcript.jsonl", transcript_lines
+    )
+    _ROUTING_SUMMARY["prompts"].setdefault(test_id, []).append(
+        {
+            "trial": trial_number,
+            "skill_loaded": result.skill_loaded,
+            "observation_error": result.observation_error,
+        }
+    )
+    write_json(_ROUTING_RUN_DIR / "summary.json", _ROUTING_SUMMARY)
 
 
 class RoutingResult(NamedTuple):
@@ -168,14 +209,18 @@ def extract_loaded_skill(transcript_lines: list[str]) -> str | None:
     return None
 
 
-def run_claude_routing(input_text: str, timeout: int = 60) -> RoutingResult:
+def run_claude_routing(
+    test_id: str, input_text: str, timeout: int = 60
+) -> RoutingResult:
     """
     Run Claude Code non-interactively with both plugin directories loaded,
     from a fresh empty temp directory and under the shared allowlist
     environment, and return which skill (if any) it was OBSERVED to load,
-    for this one cold trial.
+    for this one cold trial. Persists the trial's transcript and the
+    observed skill to _ROUTING_RUN_DIR (see tests/evidence.py).
     """
     model = get_test_model() or DEFAULT_MODEL
+    trial_number = _next_routing_trial_number(test_id)
 
     cmd = [
         "claude",
@@ -212,10 +257,12 @@ def run_claude_routing(input_text: str, timeout: int = 60) -> RoutingResult:
                 cwd=scratch_dir,
             )
     except subprocess.TimeoutExpired:
-        return RoutingResult(
+        timeout_result = RoutingResult(
             skill_loaded=None,
             observation_error=f"claude timed out after {timeout}s",
         )
+        _persist_routing_trial(test_id, trial_number, [], timeout_result)
+        return timeout_result
 
     transcript_lines = result.stdout.splitlines()
     skill_loaded = extract_loaded_skill(transcript_lines)
@@ -226,7 +273,11 @@ def run_claude_routing(input_text: str, timeout: int = 60) -> RoutingResult:
             "skill load not observed (no Skill tool_use block in transcript)"
         )
 
-    return RoutingResult(skill_loaded=skill_loaded, observation_error=observation_error)
+    routing_result = RoutingResult(
+        skill_loaded=skill_loaded, observation_error=observation_error
+    )
+    _persist_routing_trial(test_id, trial_number, transcript_lines, routing_result)
+    return routing_result
 
 
 # Load tests at module level for parametrization
@@ -252,15 +303,18 @@ def test_routing(test_case):
     correct = 0
     observed = []
     for _ in range(TRIALS_PER_PROMPT):
-        result = run_claude_routing(input_text)
+        result = run_claude_routing(test_id, input_text)
         observed.append(result.skill_loaded or f"<{result.observation_error}>")
         if result.skill_loaded == expected_skill:
             correct += 1
+
+    print(f"[{test_id}] evidence: {_ROUTING_RUN_DIR}")
 
     assert correct >= MIN_CORRECT_TRIALS, (
         f"[{test_id}] expected skill {expected_skill!r} in >= "
         f"{MIN_CORRECT_TRIALS}/{TRIALS_PER_PROMPT} cold trials, "
         f"got {correct}/{TRIALS_PER_PROMPT}\n"
+        f"Evidence directory: {_ROUTING_RUN_DIR}\n"
         f"Input: {input_text}\nObserved: {observed}"
     )
 

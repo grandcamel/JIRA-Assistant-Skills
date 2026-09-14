@@ -52,6 +52,14 @@ class TestSufficiencyArm:
         prompt, accept = self.tasks[task_id]
         results = sufficiency_runner.run_task(task_id, prompt, accept, TRIALS_PER_TASK)
         well_formed = sum(1 for r in results if r.well_formed)
+        evidence_dir = results[0].evidence_dir if results else ""
+
+        # Always visible (pytest shows captured stdout for a failing
+        # test regardless of -s; for a passing one it needs -s or -rP),
+        # and always in the failure message below: every trial's full
+        # transcript and command detail is on disk here, so a scoring
+        # question never requires re-running the live arm.
+        print(f"[{task_id}] evidence: {evidence_dir}")
 
         if well_formed < MIN_PASSING_TRIALS:
             trial_reports = []
@@ -73,6 +81,7 @@ class TestSufficiencyArm:
             pytest.fail(
                 f"[{task_id}] expected >= {MIN_PASSING_TRIALS}/{TRIALS_PER_TASK} "
                 f"well-formed trials, got {well_formed}/{TRIALS_PER_TASK}\n"
+                f"Evidence directory: {evidence_dir}\n"
                 f"Prompt: {prompt}\nAccept: {accept}\n" + "\n".join(trial_reports)
             )
 

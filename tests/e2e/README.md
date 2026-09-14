@@ -97,39 +97,51 @@ For each cold trial:
 2. Send the combined prompt to Claude Code, from the fresh empty temp
    directory described above, and capture its full tool-use transcript
    (`--output-format stream-json --verbose`).
-3. Extract **every** `jira-as ...` command the model ran, read from each
-   Bash tool_use block's `input.command` field -- never inferred from the
-   model's answer text. Each command is captured from the `jira-as` token
-   up to the next command separator (`;`, `&`, `|`) or newline. A command
-   that uses a backslash line continuation is **rejected** with that
-   reason stated, rather than silently truncated to its first line (a
-   truncated command is not the command the model actually ran). Any
-   shell redirection the model wrote (`2>&1`, `>&2`, `>file`, `>>file`,
-   `2>file`, `2>/dev/null`, `<file`, with or without a space before the
-   target) is stripped before replay -- a real run of the arm found the
-   model writing these, and the harness replays via `subprocess`, not a
-   shell, so a bare `>`/`<` token would otherwise become a literal,
-   rejected CLI argument.
-4. Find **every** extracted command that matches the task's `accept`
-   list in `test_cases.yaml` (`runner.command_matches_accept`): a bare
+3. Extract **every** Bash command the model ran, verbatim, read from
+   each Bash tool_use block's `input.command` field -- never inferred
+   from the model's answer text (see `runner.extract_bash_commands`). A
+   command that uses a backslash line continuation is **rejected** with
+   that reason stated: a newline-based splitter cannot reconstruct such
+   a command's true shape, so it is never matched or replayed under a
+   guess.
+4. Split each command into segments on newlines, `;`, `&&`, `||` and `|`
+   (a shell-aware, quote-safe tokenizer -- never a lone `&`, which is
+   not one of these separators and is only ever produced fused into
+   `>&`), and find every segment that -- after stripping any
+   redirection and a leading environment-assignment/`time` prefix -- is
+   a `jira-as` invocation matching the task's `accept` list in
+   `test_cases.yaml` (`runner.command_matches_accept`): a bare
    operationId matches ONLY `api call OPERATIONID` (an `api describe` of
    the same operation is a discovery step, not the action being
    performed, and does not count); `"describe:OPERATIONID"` matches
    ONLY `api describe OPERATIONID`; a contract-verb pair like
-   `"issue get"` matches a contract-verb invocation. Matching against
-   ANY invocation, not just the last command, closes a gaming path: a
-   trial that runs the right command and then a trailing `jira-as help`
-   must still be able to pass.
+   `"issue get"` matches a contract-verb invocation. A segment
+   containing `--help`/`-h` never matches, however it is otherwise
+   shaped. Matching against ANY invocation, not just the last command,
+   closes a gaming path: a trial that runs the right command and then a
+   trailing `jira-as help` must still be able to pass. Real runs of the
+   arm found the model's actual commands prefixed with
+   `JIRA_AS_TRANSPORT=simulation ` (invisible to a matcher that only
+   recognized `jira-as` at the very start of a command) and calling
+   `--help` on the correct operation (which must not count as doing the
+   task) -- the segment-and-strip approach handles both.
 5. Fail the trial outright if the model loaded any **Skill** other than
-   `jira` (see the known-limitation note above) before reaching step 4.
-6. Re-run **every** matching command (not just the first) in the harness,
-   under the same simulation transport, and classify each well-formed or
-   not with `runner.classify_replay` (see below) -- **not simply "exit
-   0"**: the simulation transport's store is empty, so a well-formed
-   call to a real operation legitimately exits nonzero. The trial passes
-   if ANY matching command's replay is well-formed; `TrialResult` records
-   every command the model ran and the replay outcome of every matching
-   one, naming whichever one passed.
+   `jira` (see the known-limitation note above) before reaching step 6.
+6. Re-run **every matching command's ORIGINAL, verbatim string** (not a
+   re-parsed or reassembled segment) through a **real shell**
+   (`bash -o pipefail -c`), from a fresh empty temp directory, under the
+   same simulation environment, and classify each well-formed or not
+   with `runner.classify_replay` (see below) -- **not simply "exit 0"**:
+   the simulation transport's store is empty, so a well-formed call to a
+   real operation legitimately exits nonzero. Manual reproductions
+   confirmed a full-shell replay is required, not optional: an
+   environment-variable prefix, a pipeline feeding a request body over
+   stdin (`echo '{...}' | jira-as ... --body -`), `| head -N`, and any
+   redirection all need real shell semantics that a direct, shell-free
+   argv exec cannot reproduce. The trial passes if ANY matching
+   command's replay is well-formed; `TrialResult` records every command
+   the model ran and the replay outcome of every matching one, naming
+   whichever one passed.
 
 ### Well-formedness against an empty store
 
@@ -138,17 +150,54 @@ Live probes of the simulation transport with an empty store established:
 | Exit code | Condition | Well-formed? |
 |---|---|---|
 | `0` | any (preview, or a real call that returns an empty page) | Yes |
-| `5` | JSON stdout has `"status": 404` and no message starting with `"Unknown operation"` | Yes -- a real `api call`/`api describe` operation, just not found |
-| `1` | stderr contains `"(HTTP 404)"` | Yes -- the equivalent not-found shape for a contract-verb invocation |
+| `5` | JSON output has `"status": 404` and no message starting with `"Unknown operation"` | Yes -- a real `api call`/`api describe` operation, just not found |
+| `1` | output contains `"(HTTP 404)"` | Yes -- the equivalent not-found shape for a contract-verb invocation |
 | `5` | a message starts with `"Unknown operation"` | No -- the operation name itself does not exist |
-| `2` | (usage error, e.g. a bad flag or malformed body source) | No |
+| `2` | (usage error, e.g. a bad flag, malformed body source, or an invalid flag combination) | No |
 | anything else | | No |
+
+`classify_replay` checks stdout and stderr **together** (concatenated):
+a live probe found that on `api call`, the not-found JSON payload for
+exit 5 is written to **stderr** with **empty stdout** (verified:
+`jira-as api call doTransition --issue-id-or-key DEMO-1 --field
+transition.name="Done" --confirm` prints nothing on stdout), so the two
+streams cannot be treated as mutually exclusive.
+
+One CLI quirk noted along the way, not a harness matter: `jira-as api
+--transport simulation call ...` is genuinely invalid on the pinned CLI
+(`--transport` accepts only `http` or `responder`; it does not accept
+`simulation` as a flag value, even though `JIRA_AS_TRANSPORT=simulation`
+as an environment variable is exactly how this harness forces the
+transport) -- exit 2, correctly classified as a real failure. A product
+follow-up, not something this harness works around.
 
 There is **no assertion on business content** -- the arm does not check
 that the created issue looks right or that the JQL returns the issue you
 meant. It only checks that the shape of the call the model produced names
 a real jira-as operation. Business-logic correctness is the CLI's own
 test suite's job, not this harness's.
+
+## Evidence
+
+Every run writes a directory `${TMPDIR:-/tmp}/jas55-sufficiency-<UTC
+timestamp>/` (one per pytest session). Per trial, it contains:
+
+- `<task>-<n>.transcript.jsonl` -- the raw `--output-format stream-json`
+  transcript, exactly as captured.
+- `<task>-<n>.commands.json` -- every Bash command the model ran that
+  trial, its segments, whether it matched the task's accept list, and
+  (for matching commands) the replay's exit code, stdout, stderr, and
+  classification.
+
+and the directory also holds a `summary.json`, updated after every
+trial, recording each trial's outcome across the whole session. The
+directory path is printed for every task, in `pytest`'s output and in
+the failure message when a task does not reach threshold, so a scoring
+question about a specific run never requires re-running the (expensive,
+non-deterministic) live arm to get an answer. The routing check
+(`skills/jira/tests/test_routing.py`) does the same, in a sibling
+`jas55-routing-<UTC timestamp>/` directory holding each trial's
+transcript and the observed skill.
 
 ## The seven tasks
 
@@ -237,9 +286,12 @@ pytest tests/e2e/ -v --sufficiency-model claude-sonnet-5 --sufficiency-timeout 1
 tests/
 ├── harness_env.py            # Shared allowlist env builder (also used
 │                              # by skills/jira/tests/test_routing.py)
+├── evidence.py                # Shared run-dir/transcript/summary writer
+│                              # (also used by test_routing.py)
 ├── test_harness_env.py       # Offline unit tests for harness_env.py
-├── test_e2e_matching.py      # Offline unit tests for classify_replay
-│                              # and accept-list matching
+├── test_e2e_matching.py      # Offline unit tests for classify_replay,
+│                              # segment splitting, and accept-list
+│                              # matching
 └── e2e/
     ├── __init__.py
     ├── conftest.py          # Gate + runner fixtures (uses harness_env)

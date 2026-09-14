@@ -1,24 +1,25 @@
 """
 Offline unit tests for tests/e2e/runner.py's pure functions: well-
-formedness classification (classify_replay), redirection stripping
-(strip_redirections), and accept-list matching (command_matches_accept,
-extract_jira_as_invocation, extract_all_jira_as_invocations,
+formedness classification (classify_replay), segment splitting/cleaning
+(split_into_segments, clean_segment and friends), and accept-list
+matching (command_matches_accept, extract_bash_commands,
 find_matching_commands). No subprocess and no `claude`/`jira-as` binary
 is launched anywhere in this file -- every sample below is a literal,
 hand-written stand-in for output an authorized live probe of the real
-CLI actually produced (including, for this round, a real run of the
-sufficiency arm itself).
+CLI actually produced (including, for this round, two real runs of the
+sufficiency arm and manual reproductions by the supervisor).
 """
 
 import json
 
 from tests.e2e.runner import (
     classify_replay,
+    clean_segment,
     command_matches_accept,
-    extract_all_jira_as_invocations,
-    extract_jira_as_invocation,
+    extract_bash_commands,
     find_matching_commands,
-    strip_redirections,
+    segment_matches_accept,
+    split_into_segments,
 )
 
 # ---------------------------------------------------------------------------
@@ -43,7 +44,7 @@ def test_exit_0_describe_is_well_formed():
     assert reason == ""
 
 
-def test_exit_5_not_found_is_well_formed():
+def test_exit_5_not_found_on_stdout_is_well_formed():
     """`api call getIssue --issueIdOrKey DEMO-1` exits 5 with a 404 JSON
     payload against the empty simulation store -- a well-formed call to a
     real operation, just not found."""
@@ -51,6 +52,18 @@ def test_exit_5_not_found_is_well_formed():
         {"status": 404, "messages": ["Issue not found"], "errorMessages": []}
     )
     ok, reason = classify_replay(5, stdout, "")
+    assert ok is True
+    assert reason == ""
+
+
+def test_exit_5_not_found_on_stderr_is_well_formed():
+    """A live probe found `api call`'s not-found JSON payload is actually
+    written to STDERR with exit 5, with EMPTY stdout (verified:
+    `jira-as api call doTransition --issue-id-or-key DEMO-1 --field
+    transition.name="Done" --confirm` prints nothing on stdout) -- this
+    must classify identically to the payload appearing on stdout."""
+    stderr = json.dumps({"status": 404, "messages": ["Issue not found"]})
+    ok, reason = classify_replay(5, "", stderr)
     assert ok is True
     assert reason == ""
 
@@ -64,12 +77,22 @@ def test_exit_1_http_404_is_well_formed():
     assert reason == ""
 
 
-def test_exit_5_unknown_operation_is_not_well_formed():
+def test_exit_5_unknown_operation_on_stdout_is_not_well_formed():
     """An unknown operation ALSO exits 5, but its message starts with
     "Unknown operation" -- this is the operation name being wrong, not a
     not-found result, so it must NOT be classified well-formed."""
     stdout = json.dumps({"status": 404, "messages": ["Unknown operation: bogusOp"]})
     ok, reason = classify_replay(5, stdout, "")
+    assert ok is False
+    assert "unknown operation" in reason.lower()
+
+
+def test_exit_5_unknown_operation_on_stderr_is_not_well_formed():
+    """The same "Unknown operation" check must fire when the payload is
+    on stderr instead of stdout, matching where `api call` actually
+    writes it."""
+    stderr = json.dumps({"status": 404, "messages": ["Unknown operation: bogusOp"]})
+    ok, reason = classify_replay(5, "", stderr)
     assert ok is False
     assert "unknown operation" in reason.lower()
 
@@ -81,6 +104,16 @@ def test_exit_2_usage_error_is_not_well_formed():
     ok, reason = classify_replay(2, "", stderr)
     assert ok is False
     assert "usage" in reason.lower()
+
+
+def test_exit_2_invalid_transport_flag_is_a_real_failure():
+    """`jira-as api --transport simulation call ...` is genuinely invalid
+    on the pinned CLI ('--transport' accepts only http or responder) --
+    exit 2, correctly classified as NOT well-formed. This is a real CLI
+    usage error, not a harness defect to work around."""
+    stderr = "Error: '--transport' accepts only http or responder"
+    ok, reason = classify_replay(2, "", stderr)
+    assert ok is False
 
 
 def test_exit_1_without_http_404_is_not_well_formed():
@@ -98,68 +131,82 @@ def test_other_exit_code_is_not_well_formed():
 
 
 # ---------------------------------------------------------------------------
-# strip_redirections: run 1 of the sufficiency arm found the model
-# writing shell redirections the no-shell subprocess replay must not see
-# as literal arguments.
+# split_into_segments / clean_segment: MATCHING uses a shell-aware
+# tokenizer, quote-safe splitting on newlines/;/&&/||/|, then strips
+# redirections and a leading env-assignment/`time` prefix. The actual
+# REPLAY always uses the original, verbatim command via a real shell
+# (bash -o pipefail -c) -- these functions are for MATCHING only.
 # ---------------------------------------------------------------------------
 
 
-def test_strip_redirections_exact_run1_example():
-    """The exact command from run 1's log: `2>&1` with no space, attached
-    to the same token as the operator."""
-    command = "jira-as api describe getIssue --examples 2>&1"
-    assert strip_redirections(command) == "jira-as api describe getIssue --examples"
+def test_split_into_segments_on_each_separator():
+    assert split_into_segments("jira-as help; echo done") == [
+        ["jira-as", "help"],
+        ["echo", "done"],
+    ]
+    assert split_into_segments("cmd1 && jira-as help") == [
+        ["cmd1"],
+        ["jira-as", "help"],
+    ]
+    assert split_into_segments("cmd1 || jira-as help") == [
+        ["cmd1"],
+        ["jira-as", "help"],
+    ]
+    assert split_into_segments("echo x | jira-as help") == [
+        ["echo", "x"],
+        ["jira-as", "help"],
+    ]
+    assert split_into_segments("jira-as help\njira-as api call getIssue") == [
+        ["jira-as", "help"],
+        ["jira-as", "api", "call", "getIssue"],
+    ]
 
 
-def test_strip_redirections_with_space_before_target():
-    """A redirection with a space between the operator and its target is
-    a separate token in shlex terms and must also be dropped."""
-    command = "jira-as time log --help 2> /dev/null"
-    assert strip_redirections(command) == "jira-as time log --help"
+def test_split_into_segments_never_splits_on_a_lone_ampersand_from_redirection():
+    """`2>&1` is one redirection token (fused `>&`), not a background
+    `&` that would otherwise start a new (empty) segment."""
+    assert split_into_segments("jira-as help 2>&1") == [
+        ["jira-as", "help", "2", ">&", "1"]
+    ]
 
 
-def test_strip_redirections_stderr_to_stdout():
-    assert strip_redirections("jira-as help >&2") == "jira-as help"
+def test_clean_segment_strips_redirections_run1_example():
+    """The exact command from run 1's log: `2>&1` with no space, tokenized
+    as a fd prefix "2", the fused operator ">&", and its target "1"."""
+    tokens = ["jira-as", "api", "describe", "getIssue", "--examples", "2", ">&", "1"]
+    assert clean_segment(tokens) == [
+        "jira-as",
+        "api",
+        "describe",
+        "getIssue",
+        "--examples",
+    ]
 
 
-def test_strip_redirections_bare_overwrite():
-    assert strip_redirections("jira-as help >out.txt") == "jira-as help"
-    assert strip_redirections("jira-as help > out.txt") == "jira-as help"
+def test_clean_segment_strips_redirection_with_space_before_target():
+    tokens = ["jira-as", "time", "log", "--help", "2", ">", "/dev/null"]
+    assert clean_segment(tokens) == ["jira-as", "time", "log", "--help"]
 
 
-def test_strip_redirections_append():
-    assert strip_redirections("jira-as help >>out.txt") == "jira-as help"
-    assert strip_redirections("jira-as help >> out.txt") == "jira-as help"
+def test_clean_segment_strips_leading_env_assignment():
+    tokens = ["JIRA_AS_TRANSPORT=simulation", "jira-as", "help"]
+    assert clean_segment(tokens) == ["jira-as", "help"]
 
 
-def test_strip_redirections_stderr_to_file():
-    assert strip_redirections("jira-as help 2>out.txt") == "jira-as help"
-    assert strip_redirections("jira-as help 2> out.txt") == "jira-as help"
-
-
-def test_strip_redirections_stderr_to_dev_null_attached():
-    assert strip_redirections("jira-as help 2>/dev/null") == "jira-as help"
-
-
-def test_strip_redirections_input_redirect():
-    assert strip_redirections("jira-as help <input.txt") == "jira-as help"
-    assert strip_redirections("jira-as help < input.txt") == "jira-as help"
-
-
-def test_strip_redirections_preserves_normal_arguments():
-    """A command with no redirection at all is returned unchanged
-    (modulo shlex round-tripping)."""
-    command = "jira-as api call getIssue --issueIdOrKey DEMO-1"
-    assert strip_redirections(command) == command
+def test_clean_segment_strips_leading_time_and_env():
+    tokens = ["time", "JIRA_AS_TRANSPORT=simulation", "jira-as", "help"]
+    assert clean_segment(tokens) == ["jira-as", "help"]
 
 
 # ---------------------------------------------------------------------------
-# command_matches_accept / extraction: accept-list matching for the
-# read-issue and find-watchers-operation tasks' exact accept lists.
+# command_matches_accept: accept-list matching for the read-issue and
+# find-watchers-operation tasks' exact accept lists, operating on the
+# RAW (possibly env-prefixed, piped, chained, or redirected) command.
 # ---------------------------------------------------------------------------
 
 READ_ISSUE_ACCEPT = ["getIssue", "issue get"]
 WATCHERS_ACCEPT = ["describe:getIssueWatchers"]
+TRANSITION_ACCEPT = ["doTransition", "lifecycle transition"]
 
 
 def test_api_call_matches_bare_operation_id():
@@ -169,6 +216,38 @@ def test_api_call_matches_bare_operation_id():
 
 def test_contract_verb_matches_verb_pair():
     command = "jira-as issue get DEMO-1"
+    assert command_matches_accept(command, READ_ISSUE_ACCEPT) is True
+
+
+def test_env_prefixed_command_matches():
+    """Run 2 of the arm found the model's real commands prefixed with
+    `JIRA_AS_TRANSPORT=simulation `, which the old start-anchored matcher
+    could not see past -- this is exactly why search-jql and add-comment
+    scored 0/5."""
+    command = (
+        "JIRA_AS_TRANSPORT=simulation jira-as api call "
+        "searchAndReconsileIssuesUsingJql --jql 'project = DEMO'"
+    )
+    assert command_matches_accept(command, ["searchAndReconsileIssuesUsingJql"]) is True
+
+
+def test_env_prefixed_command_with_quoted_field_value_matches():
+    """The exact shape of run 2's add-comment command: an env prefix
+    plus a `--field body="..."` argument whose value contains spaces."""
+    command = (
+        "JIRA_AS_TRANSPORT=simulation jira-as api call addComment "
+        "--issue-id-or-key DEMO-1 --project DEMO "
+        '--field body="Harness probe comment" --format json'
+    )
+    assert command_matches_accept(command, ["addComment"]) is True
+
+
+def test_redirection_does_not_break_matching():
+    """A trailing `2>&1` must not prevent the segment from being
+    recognized as a jira-as invocation for matching purposes (the actual
+    replay uses the original string verbatim via a real shell, so
+    stripping here is only about deciding whether this segment counts)."""
+    command = "jira-as api call getIssue --issueIdOrKey DEMO-1 2>&1"
     assert command_matches_accept(command, READ_ISSUE_ACCEPT) is True
 
 
@@ -212,21 +291,44 @@ def test_unrelated_operation_id_does_not_match():
     assert command_matches_accept(command, READ_ISSUE_ACCEPT) is False
 
 
-def test_messy_command_extracts_and_then_matches():
-    """`cd /tmp && jira-as api describe getIssueWatchers | head -20`: the
-    extraction regex isolates the jira-as portion (dropping the `cd`
-    prefix and the `| head -20` pipeline tail) before matching runs."""
+def test_help_never_matches():
+    """Run 2 found `jira-as api call getIssue --help` and `jira-as
+    lifecycle transition --help` counted as doing the task -- a segment
+    containing --help (or -h) must never match, regardless of the
+    operation/verb it otherwise names."""
+    assert command_matches_accept("jira-as help", READ_ISSUE_ACCEPT) is False
+    assert command_matches_accept("jira-as help", WATCHERS_ACCEPT) is False
+    assert (
+        command_matches_accept("jira-as api call getIssue --help", READ_ISSUE_ACCEPT)
+        is False
+    )
+    assert (
+        command_matches_accept("jira-as lifecycle transition --help", TRANSITION_ACCEPT)
+        is False
+    )
+    assert (
+        command_matches_accept("jira-as lifecycle transition -h", TRANSITION_ACCEPT)
+        is False
+    )
+
+
+def test_messy_piped_command_matches_via_its_jira_as_segment():
+    """`cd /tmp && jira-as api describe getIssueWatchers | head -20`:
+    segment splitting isolates the jira-as portion from the `cd` prefix
+    and the `| head -20` pipeline tail for matching purposes (the actual
+    replay runs the whole original string verbatim via a real shell)."""
     raw = "cd /tmp && jira-as api describe getIssueWatchers | head -20"
-    extracted, rejection = extract_jira_as_invocation(raw)
-    assert rejection is None
-    assert extracted == "jira-as api describe getIssueWatchers"
-    assert command_matches_accept(extracted, WATCHERS_ACCEPT) is True
+    assert command_matches_accept(raw, WATCHERS_ACCEPT) is True
 
 
-def test_help_command_does_not_match_any_accept_list():
-    command = "jira-as help"
-    assert command_matches_accept(command, READ_ISSUE_ACCEPT) is False
-    assert command_matches_accept(command, WATCHERS_ACCEPT) is False
+def test_stdin_fed_body_pipeline_yields_a_matching_segment():
+    """A stdin-fed body (`echo '{...}' | jira-as ... --body -`) is
+    well-formed only when the pipeline's left side runs -- which is
+    exactly why replay now uses the original command via a real shell.
+    Matching must still recognize the right-hand segment as the
+    invocation to check against the accept list."""
+    raw = "echo '{}' | jira-as api call doTransition --issue-id-or-key DEMO-1 --body -"
+    assert command_matches_accept(raw, TRANSITION_ACCEPT) is True
 
 
 def _bash_tool_use_event(command: str) -> str:
@@ -254,7 +356,7 @@ def test_a_trailing_help_command_cannot_game_a_real_match():
         _bash_tool_use_event("jira-as api call getIssue --issueIdOrKey DEMO-1"),
         _bash_tool_use_event("jira-as help"),
     ]
-    commands, rejections = extract_all_jira_as_invocations(transcript)
+    commands, rejections = extract_bash_commands(transcript)
     assert commands == [
         "jira-as api call getIssue --issueIdOrKey DEMO-1",
         "jira-as help",
@@ -269,7 +371,7 @@ def test_a_lone_trailing_help_command_never_matches_on_its_own():
     match -- the gaming path the "last command" scoring was vulnerable
     to."""
     transcript = [_bash_tool_use_event("jira-as help")]
-    commands, rejections = extract_all_jira_as_invocations(transcript)
+    commands, rejections = extract_bash_commands(transcript)
     assert commands == ["jira-as help"]
     assert find_matching_commands(commands, READ_ISSUE_ACCEPT) == []
 
@@ -284,9 +386,29 @@ def test_multiple_matching_commands_are_all_returned():
         _bash_tool_use_event("jira-as api call getIssue --issueIdOrKey DEMO-1"),
         _bash_tool_use_event("jira-as issue get DEMO-1"),
     ]
-    commands, _ = extract_all_jira_as_invocations(transcript)
+    commands, _ = extract_bash_commands(transcript)
     matching = find_matching_commands(commands, READ_ISSUE_ACCEPT)
     assert matching == [
         "jira-as api call getIssue --issueIdOrKey DEMO-1",
         "jira-as issue get DEMO-1",
     ]
+
+
+def test_backslash_line_continuation_is_rejected_not_matched():
+    """A command using a backslash line continuation is rejected with a
+    reason -- the newline-based segment splitter cannot reconstruct its
+    true shape, so it is never matched or replayed under a guess."""
+    raw = "jira-as api call getIssue \\\n  --issueIdOrKey DEMO-1"
+    commands, rejections = extract_bash_commands([_bash_tool_use_event(raw)])
+    assert commands == []
+    assert len(rejections) == 1
+    assert "line continuation" in rejections[0]
+
+
+def test_segment_matches_accept_directly():
+    """segment_matches_accept operates on one already-split segment's
+    tokens (as split_into_segments would produce), independent of the
+    raw-command-level command_matches_accept wrapper."""
+    tokens = ["jira-as", "api", "call", "getIssue", "--issueIdOrKey", "DEMO-1"]
+    assert segment_matches_accept(tokens, READ_ISSUE_ACCEPT) is True
+    assert segment_matches_accept(["echo", "hello"], READ_ISSUE_ACCEPT) is False
