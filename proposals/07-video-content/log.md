@@ -15,7 +15,7 @@ Implement proposal 07-video-content-strategy.md focusing on:
 ### Progress
 
 #### Step 1: Read Proposal
-- Read `/Users/jasonkrueger/IdeaProjects/Jira-Assistant-Skills/proposals/07-video-content-strategy.md`
+- Read `proposals/07-video-content-strategy.md`
 - Identified key requirements:
   - 30 second duration
   - Terminal recording using VHS

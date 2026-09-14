@@ -73,7 +73,7 @@ Created comprehensive audience-specific content following Option 9L (Tabbed READ
 
 ### Primary Asset
 - **File:** `AUDIENCE-SECTIONS.md`
-- **Location:** `/Users/jasonkrueger/IdeaProjects/Jira-Assistant-Skills/proposals/09-audience-content/AUDIENCE-SECTIONS.md`
+- **Location:** `proposals/09-audience-content/AUDIENCE-SECTIONS.md`
 
 ### Content Created for Each Audience
 

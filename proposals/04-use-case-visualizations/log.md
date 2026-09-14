@@ -10,7 +10,7 @@ Implementing proposal 04-use-case-visualizations.md with recommended options:
 ### Work Progress
 
 #### Phase 1: Analysis (Complete)
-- Read proposal document at `/Users/jasonkrueger/IdeaProjects/Jira-Assistant-Skills/proposals/04-use-case-visualizations.md`
+- Read proposal document at `proposals/04-use-case-visualizations.md`
 - Identified 14 visualization options across 6 categories
 - Confirmed recommended options for README: 4I and 4J
 

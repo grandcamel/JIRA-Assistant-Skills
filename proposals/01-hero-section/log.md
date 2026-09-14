@@ -3,7 +3,7 @@
 ## Date: 2025-12-27
 
 ## Proposal Reference
-- Source: `/Users/jasonkrueger/IdeaProjects/Jira-Assistant-Skills/proposals/01-hero-section-options.md`
+- Source: `proposals/01-hero-section-options.md`
 - Selected Option: **Option F (Stats-Driven)** combined with elements from Options B and D
 
 ## Implementation Decisions

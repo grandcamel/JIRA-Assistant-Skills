@@ -12,7 +12,7 @@ Implementing proposal 06-trust-signals.md with the recommended options:
 ### 2024-12-27: Initial Analysis
 
 **Reviewed proposal document at:**
-`/Users/jasonkrueger/IdeaProjects/Jira-Assistant-Skills/proposals/06-trust-signals.md`
+`proposals/06-trust-signals.md`
 
 **Current project metrics discovered:**
 - 14 skills (jira-issue, jira-lifecycle, jira-search, jira-collaborate, jira-agile, jira-relationships, jira-time, jira-jsm, jira-bulk, jira-dev, jira-fields, jira-ops, jira-admin, jira-assistant)

@@ -156,6 +156,24 @@ and 2 for invalid inputs. It does not rewrite sources or repair citations.
 Create the audit output's parent directory first, or omit `--output` for the
 terminal summary.
 
+## Inventory state after 5.0.0
+
+The inventory's citations point at the 4.x hub and domain-skill files (and
+their reference/doc trees) that the 5.0.0 one-skill migration removed: of
+the 85 files cited across the Jira and Confluence inventories, 84 are gone
+from where the citations point; the lone survivor is
+`skills/shared/references/troubleshooting.md`. Until the inventory is
+re-sourced to point at the `jira-as` CLI's own `help` topics instead of
+retired skill files -- a separate follow-up, not part of this change --
+running the citation audit (`audit_inventory.py`) against this checkout
+will report the large majority of citations as missing or out of range.
+That is expected, not a regression in the audit tooling: the source text
+those citations quoted was moved into the CLI's own documentation, not
+deleted from the world, just no longer duplicated in this repository. The
+job's thresholds, mechanics, and cold-trial process (five trials per
+model, four-of-five for floor, the full 153-fact requirement before
+treating a run as a cut list) are unchanged by any of this.
+
 ## Classification and review
 
 Floor means **every floor model scored at least four of five** against the
