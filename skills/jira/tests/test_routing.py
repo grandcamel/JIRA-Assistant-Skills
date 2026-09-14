@@ -23,6 +23,19 @@ being unobserved, never guessed at: for the four jira and four confluence
 prompts this correctly counts as a miss; for the two unrelated prompts
 "no skill observed" is the correct, expected outcome.
 
+Confinement (review fix): `--tools Bash,Skill` restricts the model to
+exactly those two tools -- `Skill` because a plugin's SKILL.md reaches
+the model only through the built-in `Skill` tool
+(https://code.claude.com/docs/en/tools-reference), so without it neither
+skill could ever be observed loading at all; `Bash` because the skill
+itself directs the model to run `jira-as`. Each trial also runs with
+`cwd` set to a fresh, empty temporary directory (no project CLAUDE.md or
+other file from this repository applies) and with an environment built by
+tests/harness_env.py's build_harness_env() -- the same allowlist the help-
+only sufficiency arm uses, copying only PATH, HOME, TERM and LANG (the
+last two if present) and forcing JIRA_AS_TRANSPORT=simulation, so a
+routing trial can never inherit the operator's real Jira credentials.
+
 Usage:
     # Run the full routing check (five cold trials per prompt)
     pytest test_routing.py -v
@@ -39,6 +52,7 @@ tests/e2e/README.md for the host-triggered process this check belongs to.
 import json
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import NamedTuple
 
@@ -59,6 +73,12 @@ from conftest import get_test_model  # noqa: E402
 # only to give the routing check a second skill to discriminate against.
 REPO_ROOT = TESTS_DIR.parents[2]
 CONFLUENCE_STUB_DIR = REPO_ROOT / "tests" / "fixtures" / "confluence-stub"
+
+# The shared, allowlist-based subprocess environment (tests/harness_env.py)
+# also used by the help-only sufficiency arm.
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+from tests.harness_env import build_harness_env  # noqa: E402
 
 GOLDEN_FILE = TESTS_DIR / "routing_golden.yaml"
 
@@ -137,9 +157,10 @@ def extract_loaded_skill(transcript_lines: list[str]) -> str | None:
 
 def run_claude_routing(input_text: str, timeout: int = 60) -> RoutingResult:
     """
-    Run Claude Code non-interactively with both plugin directories loaded
-    and return which skill (if any) it was OBSERVED to load, for this one
-    cold trial.
+    Run Claude Code non-interactively with both plugin directories loaded,
+    from a fresh empty temp directory and under the shared allowlist
+    environment, and return which skill (if any) it was OBSERVED to load,
+    for this one cold trial.
     """
     model = get_test_model() or DEFAULT_MODEL
 
@@ -151,6 +172,8 @@ def run_claude_routing(input_text: str, timeout: int = 60) -> RoutingResult:
         "--output-format",
         "stream-json",
         "--verbose",
+        "--tools",
+        "Bash,Skill",
         "--plugin-dir",
         str(REPO_ROOT),
         "--plugin-dir",
@@ -160,13 +183,16 @@ def run_claude_routing(input_text: str, timeout: int = 60) -> RoutingResult:
     ]
 
     try:
-        result = subprocess.run(
-            cmd,
-            input=input_text,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
+        with tempfile.TemporaryDirectory(prefix="jas55-routing-") as scratch_dir:
+            result = subprocess.run(
+                cmd,
+                input=input_text,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                env=build_harness_env(),
+                cwd=scratch_dir,
+            )
     except subprocess.TimeoutExpired:
         return RoutingResult(
             skill_loaded=None,

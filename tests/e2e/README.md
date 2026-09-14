@@ -18,20 +18,44 @@ sufficient on its own?
 
 - The shipped plugin only: the plugin manifest plus `skills/jira/SKILL.md`,
   installed via an **absolute** `--plugin-dir` path.
-- The Bash tool only, via **`--tools Bash`** -- not `--allowedTools`, which
-  only pre-approves permission for tools that would otherwise still be
-  available (Read/Glob/Grep/WebFetch would stay reachable under
-  `--allowedTools` alone). `--tools` restricts the tool set itself.
+- Exactly two tools, via **`--tools Bash,Skill`** -- not `--allowedTools`,
+  which only pre-approves permission for tools that would otherwise still
+  be available (Read/Glob/Grep/WebFetch would stay reachable under
+  `--allowedTools` alone; per the CLI reference, `--tools` "omit[s] a tool
+  to remove it from Claude's context" instead). `Skill` is included, and
+  is the only tool besides `Bash`, because a plugin's `SKILL.md` reaches
+  the model only through the built-in `Skill` tool -- with `--tools Bash`
+  alone the model could never load the Entry-Point Hint at all, and the
+  arm would measure "no hint," not "the hint alone." See
+  [cli-reference](https://code.claude.com/docs/en/cli-reference) and
+  [tools-reference](https://code.claude.com/docs/en/tools-reference).
 - **No project context from this repository.** Each trial runs with `cwd`
   set to a fresh, empty temporary directory, so Claude Code does not load
   this repository's own `CLAUDE.md`, its files, or any other ambient
   project context -- only the plugin passed via `--plugin-dir` is present.
 - A `jira-as` binary on `PATH`, forced into its `simulation` transport via
   `JIRA_AS_TRANSPORT=simulation`.
-- **No Jira credentials in the environment at all** (`JIRA_SITE_URL`,
-  `JIRA_EMAIL`, `JIRA_API_TOKEN`, and profile-specific token variables are
-  stripped before the subprocess is launched). Nothing the model runs can
-  reach a live Jira site.
+- **An allowlisted subprocess environment, not a denylisted one.** Built by
+  `tests/harness_env.py`'s `build_harness_env()` (shared with the routing
+  check): only `PATH`, `HOME`, and `TERM`/`LANG` (if present) are ever
+  copied from the operator's own environment, plus
+  `JIRA_AS_TRANSPORT=simulation`. `JIRA_SITE_URL`, `JIRA_EMAIL`,
+  `JIRA_API_TOKEN`, `JIRA_DEFAULT_PROJECT`, `ANTHROPIC_API_KEY`, and any
+  other variable starting with `JIRA_` or `ANTHROPIC_` never reach the
+  subprocess. Nothing the model runs can reach a live Jira site.
+
+### Known limitation: the operator's global CLAUDE.md
+
+`HOME` is preserved (Claude Code's own OAuth authentication lives under
+`~/.claude/` and needs it). This means the operator's **global**
+`~/.claude/CLAUDE.md`, if they have one, is still loaded as context -- the
+empty-cwd confinement above only rules out a *project* `CLAUDE.md` from
+this repository or wherever the harness happens to run from. This is a
+known, unavoidable gap in what the sufficiency arm measures on a given
+host: a strict reading of "the Entry-Point Hint alone" would need no
+global CLAUDE.md either. Run the arm on a host with no global
+`~/.claude/CLAUDE.md` (or one you know to be free of Jira-specific
+guidance) if this matters for a given measurement.
 
 ## How a trial is judged
 
@@ -100,11 +124,12 @@ each plugin release, per `docs/TESTING.md`.
 
 ### Prerequisites
 
-- Claude Code CLI installed and authenticated:
-  ```bash
-  export ANTHROPIC_API_KEY="sk-ant-..."
-  # or: claude auth login
-  ```
+- Claude Code CLI installed and authenticated with **`claude auth login`**
+  (OAuth credentials live under `~/.claude/`, reachable via the preserved
+  `HOME`). An `ANTHROPIC_API_KEY` exported in your shell will NOT reach
+  the trial subprocess -- the allowlisted environment described above
+  never copies it -- so OAuth login is the supported way to authenticate
+  for this arm.
 - `jira-as>=2,<3` installed and its `simulation` transport available on
   `PATH`.
 - `pytest` and `pyyaml`.
@@ -139,10 +164,13 @@ pytest tests/e2e/ -v --sufficiency-model claude-sonnet-5 --sufficiency-timeout 1
 ## Test structure
 
 ```
-tests/e2e/
-├── __init__.py
-├── conftest.py          # Simulation-env + runner fixtures
-├── runner.py            # SufficiencyRunner: run + replay + judge
-├── test_cases.yaml      # The seven representative tasks
-└── test_plugin_e2e.py   # One pytest test per task
+tests/
+├── harness_env.py       # Shared allowlist env builder (also used by
+│                         # skills/jira/tests/test_routing.py)
+└── e2e/
+    ├── __init__.py
+    ├── conftest.py          # Gate + runner fixtures (uses harness_env)
+    ├── runner.py            # SufficiencyRunner: run + replay + judge
+    ├── test_cases.yaml      # The seven representative tasks
+    └── test_plugin_e2e.py   # One pytest test per task
 ```

@@ -146,7 +146,22 @@ discrimination: given both this plugin and the non-shipped
 `tests/fixtures/confluence-stub/` fixture plugin, does Claude Code load
 the right skill (or neither, for unrelated prompts)? Five cold trials per
 prompt, a prompt passes at four or more, the check passes only when every
-prompt in `routing_golden.yaml` passes.
+prompt in `routing_golden.yaml` passes. Which skill loaded is observed
+ONLY from a `Skill` tool_use block in the trial's transcript, never
+guessed from the model's answer text.
+
+Each trial runs `--tools Bash,Skill` (`Skill` is included, and is the only
+tool besides `Bash`, because a plugin's `SKILL.md` reaches the model only
+through the built-in `Skill` tool -- without it, no skill could ever be
+observed loading), with `cwd` set to a fresh empty temporary directory
+(no project `CLAUDE.md` applies), and with the same allowlisted
+environment the help-only sufficiency arm uses
+(`tests/harness_env.py`'s `build_harness_env()`: only `PATH`, `HOME`, and
+`TERM`/`LANG` if present, plus `JIRA_AS_TRANSPORT=simulation` -- never
+real Jira credentials). See [tests/e2e/README.md](../tests/e2e/README.md)
+for the same confinement's fuller rationale and its one known limitation
+(the operator's global `~/.claude/CLAUDE.md`, if any, is still loaded via
+the preserved `HOME`).
 
 ```bash
 cd skills/jira/tests

@@ -3,10 +3,11 @@
 The sufficiency arm answers: is the Entry-Point Hint alone
 (skills/jira/SKILL.md, shipped via the plugin manifest) enough for a
 model to complete representative jira-as tasks? The model under test gets
-nothing else: no other skill, no other tool besides Bash, no project
-context from this repository, and a `jira-as` on PATH forced into its
-`simulation` transport with no credentials in the environment, so nothing
-it runs can reach a live Jira site.
+nothing else: no other skill, no tool besides Bash and Skill (Skill is
+required to load the plugin's SKILL.md at all -- see runner.py), no
+project context from this repository, and a `jira-as` on PATH forced into
+its `simulation` transport with no credentials in the environment, so
+nothing it runs can reach a live Jira site.
 
 This arm launches the real `claude` binary and spends real tokens, so it
 never runs silently: it requires the explicit E2E_SUFFICIENCY=1 opt-in
@@ -20,6 +21,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.harness_env import build_harness_env
+
 from .runner import SufficiencyRunner
 
 DEFAULT_MODEL = "claude-sonnet-5"
@@ -30,15 +33,6 @@ DEFAULT_MODEL = "claude-sonnet-5"
 # otherwise make the arm look "enabled" and skip silently through some
 # other path, with no visible signal in a test run.
 E2E_SUFFICIENCY_VAR = "E2E_SUFFICIENCY"
-
-# Credential variables that must never reach the sandboxed subprocess.
-CREDENTIAL_ENV_VARS = (
-    "JIRA_SITE_URL",
-    "JIRA_EMAIL",
-    "JIRA_API_TOKEN",
-    "JIRA_API_TOKEN_PRODUCTION",
-    "JIRA_API_TOKEN_DEVELOPMENT",
-)
 
 
 def pytest_addoption(parser):
@@ -138,13 +132,14 @@ def sufficiency_model(request):
 def simulation_env():
     """
     The environment the model's Claude Code process (and every jira-as
-    invocation re-run from its transcript) executes under: no Jira
-    credentials of any kind, and JIRA_AS_TRANSPORT forced to simulation so
-    jira-as never dials out to a live site regardless of what it's told.
+    invocation re-run from its transcript) executes under. Built by the
+    shared tests/harness_env.py allowlist (also used by the routing
+    check), not by denylisting a copy of the whole environment: only
+    PATH, HOME, TERM and LANG (the last two if present) are ever copied,
+    plus JIRA_AS_TRANSPORT forced to simulation so jira-as never dials out
+    to a live site regardless of what it's told.
     """
-    env = {k: v for k, v in os.environ.items() if k not in CREDENTIAL_ENV_VARS}
-    env["JIRA_AS_TRANSPORT"] = "simulation"
-    return env
+    return build_harness_env()
 
 
 @pytest.fixture(scope="session")
@@ -157,8 +152,9 @@ def sufficiency_runner(
 ):
     """
     Build the runner that drives Claude Code with ONLY the shipped plugin
-    (skills/jira/SKILL.md) and the Bash tool installed. Depending on
-    `_sufficiency_gate` guarantees the opt-in/probe runs first.
+    (skills/jira/SKILL.md) and the Bash and Skill tools installed.
+    Depending on `_sufficiency_gate` guarantees the opt-in/probe runs
+    first.
     """
     return SufficiencyRunner(
         plugin_dir=repo_root,

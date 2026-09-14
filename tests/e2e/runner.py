@@ -3,19 +3,31 @@
 Help-only sufficiency arm runner.
 
 Drives Claude Code non-interactively with ONLY the shipped plugin (the
-manifest plus skills/jira/SKILL.md, the Entry-Point Hint) and the Bash
-tool. A `jira-as` binary is on PATH, forced into its `simulation`
-transport, with no Jira credentials in the environment -- so nothing the
-model runs can reach a live site.
+manifest plus skills/jira/SKILL.md, the Entry-Point Hint), the Bash tool,
+and the Skill tool needed to load that hint in the first place. A
+`jira-as` binary is on PATH, forced into its `simulation` transport, with
+no Jira credentials in the environment -- so nothing the model runs can
+reach a live site.
 
-Confinement (review fix): `--tools Bash` restricts the available tool set
-(unlike `--allowedTools`, which only pre-approves permissions for tools
-that are otherwise still available -- Read/Glob/Grep/WebFetch would stay
-reachable under `--allowedTools` alone). Each trial also runs with `cwd`
-set to a fresh, empty temporary directory, so Claude Code does not load
-this repository's own CLAUDE.md or any other file as project context;
-the plugin is still loaded via an absolute `--plugin-dir` path, which
-does not depend on the process's working directory.
+Confinement (review fix): `--tools Bash,Skill` restricts the available
+tool set to exactly those two (per
+https://code.claude.com/docs/en/cli-reference's `--tools` entry: "Tools
+available to Claude in this session... Omit a tool to remove it from
+Claude's context"; this differs from `--allowedTools`, which only
+pre-approves permissions for tools that are otherwise still available --
+Read/Glob/Grep/WebFetch would stay reachable under `--allowedTools`
+alone). `Skill` is included, and is the ONLY other tool besides `Bash`,
+because a plugin's SKILL.md reaches the model through the built-in
+`Skill` tool (https://code.claude.com/docs/en/tools-reference): with
+`--tools Bash` alone, the model could never load the Entry-Point Hint at
+all, so the arm would measure "no hint" rather than "the hint alone."
+Each trial also runs with `cwd` set to a fresh, empty temporary
+directory, so Claude Code does not load this repository's own CLAUDE.md
+or any other file as project context; the plugin is still loaded via an
+absolute `--plugin-dir` path, which does not depend on the process's
+working directory. The subprocess environment is built by
+tests/harness_env.py's build_harness_env(), an allowlist shared with the
+routing check (skills/jira/tests/test_routing.py).
 
 For each task, this:
   1. Sends the plain-English prompt to Claude Code from an empty temp
@@ -144,9 +156,11 @@ class SufficiencyRunner:
 
     def _run_claude(self, prompt: str, cwd: str) -> tuple[list[str], str]:
         """
-        Send one prompt to Claude Code, restricted to the shipped plugin
-        and the Bash tool, running from `cwd` (a fresh empty directory,
-        never this repository). Returns (transcript_lines, stderr).
+        Send one prompt to Claude Code, restricted to the shipped plugin,
+        the Bash tool, and the Skill tool (required to load the plugin's
+        SKILL.md at all -- see the module docstring), running from `cwd`
+        (a fresh empty directory, never this repository). Returns
+        (transcript_lines, stderr).
         """
         cmd = [
             "claude",
@@ -157,7 +171,7 @@ class SufficiencyRunner:
             "--permission-mode",
             "dontAsk",
             "--tools",
-            "Bash",
+            "Bash,Skill",
             "--plugin-dir",
             str(self.plugin_dir),
             "--model",
