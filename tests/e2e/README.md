@@ -100,26 +100,36 @@ For each cold trial:
 3. Extract **every** `jira-as ...` command the model ran, read from each
    Bash tool_use block's `input.command` field -- never inferred from the
    model's answer text. Each command is captured from the `jira-as` token
-   up to the next command separator (`;`, `&`, `|`), redirect (`>`), or
-   newline. A command that uses a backslash line continuation is
-   **rejected** with that reason stated, rather than silently truncated
-   to its first line (a truncated command is not the command the model
-   actually ran).
-4. Find the **first** extracted command that matches the task's `accept`
-   list in `test_cases.yaml` (`runner.command_matches_accept`) -- an
-   operationId used with `api call`/`api describe`, a contract-verb pair
-   like `"issue get"`, or `"describe:OPERATIONID"` for a task that asks
-   the model to describe rather than call an operation. Matching against
+   up to the next command separator (`;`, `&`, `|`) or newline. A command
+   that uses a backslash line continuation is **rejected** with that
+   reason stated, rather than silently truncated to its first line (a
+   truncated command is not the command the model actually ran). Any
+   shell redirection the model wrote (`2>&1`, `>&2`, `>file`, `>>file`,
+   `2>file`, `2>/dev/null`, `<file`, with or without a space before the
+   target) is stripped before replay -- a real run of the arm found the
+   model writing these, and the harness replays via `subprocess`, not a
+   shell, so a bare `>`/`<` token would otherwise become a literal,
+   rejected CLI argument.
+4. Find **every** extracted command that matches the task's `accept`
+   list in `test_cases.yaml` (`runner.command_matches_accept`): a bare
+   operationId matches ONLY `api call OPERATIONID` (an `api describe` of
+   the same operation is a discovery step, not the action being
+   performed, and does not count); `"describe:OPERATIONID"` matches
+   ONLY `api describe OPERATIONID`; a contract-verb pair like
+   `"issue get"` matches a contract-verb invocation. Matching against
    ANY invocation, not just the last command, closes a gaming path: a
    trial that runs the right command and then a trailing `jira-as help`
-   must still pass.
+   must still be able to pass.
 5. Fail the trial outright if the model loaded any **Skill** other than
    `jira` (see the known-limitation note above) before reaching step 4.
-6. Re-run the matched command in the harness, under the same simulation
-   transport, and classify it well-formed or not with
-   `runner.classify_replay` (see below) -- **not simply "exit 0"**: the
-   simulation transport's store is empty, so a well-formed call to a real
-   operation legitimately exits nonzero.
+6. Re-run **every** matching command (not just the first) in the harness,
+   under the same simulation transport, and classify each well-formed or
+   not with `runner.classify_replay` (see below) -- **not simply "exit
+   0"**: the simulation transport's store is empty, so a well-formed
+   call to a real operation legitimately exits nonzero. The trial passes
+   if ANY matching command's replay is well-formed; `TrialResult` records
+   every command the model ran and the replay outcome of every matching
+   one, naming whichever one passed.
 
 ### Well-formedness against an empty store
 

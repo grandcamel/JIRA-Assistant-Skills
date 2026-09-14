@@ -57,16 +57,20 @@ For each task, this:
      (--output-format stream-json --verbose).
   3. Extracts EVERY `jira-as ...` command the model ran as a Bash tool
      call, from each tool_use block's `input.command` field -- never
-     from answer text -- and picks the FIRST one that matches the task's
-     `accept` list (see command_matches_accept). Scoring on any matching
-     invocation, not just the last command, closes a gaming path where a
-     trailing `jira-as help` would otherwise pass trivially.
-  4. Re-runs that matched command in the harness, under the same
-     simulation transport, and classifies it well-formed or not per
+     from answer text -- strips any shell redirection before replay (run
+     1 of the arm found the model writing `2>&1`/`> file` etc., which the
+     harness's no-shell subprocess replay must not see as literal
+     arguments), and finds every one that matches the task's `accept`
+     list (see command_matches_accept).
+  4. Re-runs EVERY matching command in the harness, under the same
+     simulation transport, and classifies each well-formed or not per
      classify_replay's live-probe-derived rules -- not simply "exit 0",
      since the simulation transport's empty store makes a well-formed
      call to a real operation exit 5 (contract verbs) or 1 (api
-     call/describe), not 0.
+     call/describe), not 0. The trial passes if ANY matching invocation
+     replays well-formed; scoring on any match, not just the first or
+     last command, closes a gaming path where a trailing `jira-as help`
+     would otherwise pass or fail a trial on its own.
 
 There is no assertion on business content: only whether the shape of the
 call the model produced is one jira-as accepts as a real, known
@@ -79,7 +83,7 @@ import shlex
 import subprocess
 import tempfile
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 # Fixed instruction appended to every task prompt. Without it, a live
@@ -104,8 +108,26 @@ EMPTY_MCP_CONFIG = (Path(__file__).parent / "empty-mcp.json").resolve()
 
 
 @dataclass
+class ReplayOutcome:
+    """Result of replaying ONE matching jira-as invocation."""
+
+    command: str
+    exit_code: int | None
+    ok: bool
+    reason: str = ""
+
+
+@dataclass
 class TrialResult:
-    """Result of one cold trial for one task."""
+    """
+    Result of one cold trial for one task.
+
+    `command` and `exit_code` name the ONE matching invocation that
+    passed (None if none did). `commands` holds every jira-as invocation
+    the model ran, matching or not, for visibility when a trial fails.
+    `replay_outcomes` holds the replay outcome of every invocation that
+    matched the task's accept list (a strict subset of `commands`).
+    """
 
     task_id: str
     command: str | None
@@ -113,14 +135,22 @@ class TrialResult:
     well_formed: bool
     duration: float
     transcript_error: str = ""
+    commands: list[str] = field(default_factory=list)
+    replay_outcomes: list[ReplayOutcome] = field(default_factory=list)
 
 
 # Captures a jira-as invocation from the `jira-as` token up to the next
-# command separator (`;`, `&`, `|`), redirect (`>`), or newline -- never
-# merely "mentioned" elsewhere in a larger command string. Anchored so it
-# only matches jira-as as its own command (start of string, after a
+# command separator (`;`, `&`, `|`) or newline -- never merely
+# "mentioned" elsewhere in a larger command string. Anchored so it only
+# matches jira-as as its own command (start of string, after a
 # separator, or after a `time` prefix), not a substring of another word.
-JIRA_AS_COMMAND_RE = re.compile(r"(?:^|[;&|]\s*|\btime\s+)(jira-as\b[^;&|>\n]*)")
+# Unlike earlier versions, this does NOT stop at `>`: run 1 of the arm
+# found the model writing commands like `jira-as api describe getIssue
+# --examples 2>&1`, and stopping at the bare `>` left a stray `2` as the
+# last captured token (`... --examples 2`), which then failed replay
+# with "Got unexpected extra argument (2)". Redirections are captured
+# here and removed by strip_redirections() before replay instead.
+JIRA_AS_COMMAND_RE = re.compile(r"(?:^|[;&|]\s*|\btime\s+)(jira-as\b[^;&|\n]*)")
 
 # A backslash immediately followed by a newline: a shell line continuation.
 # The extraction regex above stops at the first newline, so a continued
@@ -128,6 +158,52 @@ JIRA_AS_COMMAND_RE = re.compile(r"(?:^|[;&|]\s*|\btime\s+)(jira-as\b[^;&|>\n]*)"
 # is a different, shorter command than the one the model actually ran, so
 # it must be rejected rather than tested as if it were complete.
 LINE_CONTINUATION_RE = re.compile(r"\\\s*\r?\n")
+
+# A redirection operator, optionally with its target attached in the same
+# token (no separating space): `2>&1`, `>&2`, `>file`, `>>file`,
+# `2>file`, `2>/dev/null`, `<file`.
+_OUTPUT_REDIRECTION_RE = re.compile(r"^\d*>>?&?\S*$")
+_INPUT_REDIRECTION_RE = re.compile(r"^<\S*$")
+# The same operator with NO target attached -- its target is therefore a
+# separate following token (`2>` `/dev/null`, `>` `out.txt`) that must
+# also be dropped.
+_BARE_OUTPUT_REDIRECTION_RE = re.compile(r"^\d*>>?&?$")
+
+
+def strip_redirections(command: str) -> str:
+    """
+    Remove shell redirection operators and their targets from an
+    already-extracted `jira-as ...` command, so replaying it via
+    subprocess (no shell involved) never sees a literal `>`/`<` token or
+    its target file/fd as a stray CLI argument. Handles `2>&1`, `>&2`,
+    `>file`, `>>file`, `2>file`, `2>/dev/null`, `<file`, with or without
+    a space between the operator and its target.
+    """
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        return command
+
+    kept: list[str] = []
+    skip_next = False
+    for token in tokens:
+        if skip_next:
+            skip_next = False
+            continue
+
+        if _BARE_OUTPUT_REDIRECTION_RE.match(token) or token == "<":
+            # Operator with no attached target: the target is the next,
+            # separate token, so drop that too.
+            skip_next = True
+            continue
+
+        if _OUTPUT_REDIRECTION_RE.match(token) or _INPUT_REDIRECTION_RE.match(token):
+            # Target is attached to this same token.
+            continue
+
+        kept.append(token)
+
+    return shlex.join(kept)
 
 
 def extract_jira_as_invocation(raw_command: str) -> tuple[str | None, str | None]:
@@ -199,9 +275,13 @@ def command_matches_accept(command: str, accept: list[str]) -> bool:
     task's accept list. Three entry shapes:
       - `"describe:OPERATIONID"` -- matches ONLY `jira-as api describe
         OPERATIONID` (used when the task asks the model to find and
-        describe an operation, not call it).
-      - A bare operationId (no colon, no space) -- matches `jira-as api
-        call OPERATIONID` or `jira-as api describe OPERATIONID`.
+        describe an operation, not call it). A bare `api call
+        OPERATIONID` of the same operation does NOT match.
+      - A bare operationId (no colon, no space) -- matches ONLY
+        `jira-as api call OPERATIONID`. An `api describe` of the same
+        operation does NOT match: run 1 of the arm showed the model
+        running `api describe X` as a discovery step for an action task,
+        which must not be scored as the action having been performed.
       - A "verb pair" containing a space (e.g. `"issue get"`) -- matches
         a contract-verb invocation whose first tokens after `jira-as` are
         exactly those words, e.g. `jira-as issue get DEMO-1`.
@@ -232,7 +312,7 @@ def command_matches_accept(command: str, accept: list[str]) -> bool:
             if (
                 len(rest) >= 3
                 and rest[0] == "api"
-                and rest[1] in ("call", "describe")
+                and rest[1] == "call"
                 and rest[2] == entry
             ):
                 return True
@@ -240,13 +320,10 @@ def command_matches_accept(command: str, accept: list[str]) -> bool:
     return False
 
 
-def find_matching_command(commands: list[str], accept: list[str]) -> str | None:
-    """Return the FIRST command (in transcript order) that matches the
-    task's accept list, or None if none do."""
-    for command in commands:
-        if command_matches_accept(command, accept):
-            return command
-    return None
+def find_matching_commands(commands: list[str], accept: list[str]) -> list[str]:
+    """Return every command (in transcript order) that matches the
+    task's accept list."""
+    return [c for c in commands if command_matches_accept(c, accept)]
 
 
 def extract_skill_invocations(transcript_lines: list[str]) -> list[str]:
@@ -395,8 +472,9 @@ class SufficiencyRunner:
     def run_trial(self, task_id: str, prompt: str, accept: list[str]) -> TrialResult:
         """Run one cold trial: one fresh `claude` invocation from an empty
         temp directory (prompt plus the fixed trailer), then a
-        same-transport re-run of the first jira-as command that matches
-        the task's accept list."""
+        same-transport re-run of EVERY jira-as command that matches the
+        task's accept list. The trial passes if any of those replays is
+        well-formed."""
         start = time.time()
         full_prompt = f"{prompt}\n\n{PROMPT_TRAILER}"
 
@@ -434,8 +512,8 @@ class SufficiencyRunner:
                 )
 
             commands, rejections = extract_all_jira_as_invocations(transcript_lines)
-            matched_command = find_matching_command(commands, accept)
-            if not matched_command:
+            matching_commands = find_matching_commands(commands, accept)
+            if not matching_commands:
                 if not commands and not rejections:
                     reason = "model never ran a jira-as command"
                 else:
@@ -452,27 +530,47 @@ class SufficiencyRunner:
                     well_formed=False,
                     duration=time.time() - start,
                     transcript_error=f"{reason}; stderr={stderr[:500]}",
+                    commands=commands,
                 )
 
-        exit_code, replay_stdout, replay_stderr = self._replay_command(matched_command)
-        ok, reason = classify_replay(exit_code, replay_stdout, replay_stderr)
+        replay_outcomes: list[ReplayOutcome] = []
+        passing: ReplayOutcome | None = None
+        for candidate in matching_commands:
+            exit_code, replay_stdout, replay_stderr = self._replay_command(candidate)
+            ok, reason = classify_replay(exit_code, replay_stdout, replay_stderr)
+            outcome = ReplayOutcome(
+                command=candidate, exit_code=exit_code, ok=ok, reason=reason
+            )
+            replay_outcomes.append(outcome)
+            if ok and passing is None:
+                passing = outcome
 
         return TrialResult(
             task_id=task_id,
-            command=matched_command,
-            exit_code=exit_code,
-            well_formed=ok,
+            command=passing.command if passing else None,
+            exit_code=passing.exit_code if passing else None,
+            well_formed=passing is not None,
             duration=time.time() - start,
-            transcript_error="" if ok else reason,
+            transcript_error=(
+                ""
+                if passing
+                else "no matching invocation replayed well-formed: "
+                + "; ".join(f"{o.command!r} -> {o.reason}" for o in replay_outcomes)
+            ),
+            commands=commands,
+            replay_outcomes=replay_outcomes,
         )
 
     def _replay_command(self, command: str) -> tuple[int, str, str]:
         """Re-run the extracted jira-as command under the same simulation
-        transport, in the harness (not inside the model's own turn).
-        Returns (exit_code, stdout, stderr) for classify_replay."""
+        transport, in the harness (not inside the model's own turn),
+        after stripping any shell redirection the model wrote (the
+        subprocess replay has no shell to interpret it). Returns
+        (exit_code, stdout, stderr) for classify_replay."""
+        stripped = strip_redirections(command)
         try:
             result = subprocess.run(
-                shlex.split(command),
+                shlex.split(stripped),
                 capture_output=True,
                 text=True,
                 timeout=self.timeout,

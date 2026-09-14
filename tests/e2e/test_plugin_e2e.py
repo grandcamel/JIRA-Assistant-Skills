@@ -52,12 +52,29 @@ class TestSufficiencyArm:
         prompt, accept = self.tasks[task_id]
         results = sufficiency_runner.run_task(task_id, prompt, accept, TRIALS_PER_TASK)
         well_formed = sum(1 for r in results if r.well_formed)
-        assert well_formed >= MIN_PASSING_TRIALS, (
-            f"[{task_id}] expected >= {MIN_PASSING_TRIALS}/{TRIALS_PER_TASK} "
-            f"well-formed trials, got {well_formed}/{TRIALS_PER_TASK}\n"
-            f"Prompt: {prompt}\nAccept: {accept}\n"
-            f"Trials: {[(r.command, r.exit_code, r.transcript_error) for r in results]}"
-        )
+
+        if well_formed < MIN_PASSING_TRIALS:
+            trial_reports = []
+            for i, r in enumerate(results, 1):
+                if r.replay_outcomes:
+                    outcomes = "; ".join(
+                        f"{o.command!r} -> exit {o.exit_code}, "
+                        + ("ok" if o.ok else f"FAIL ({o.reason})")
+                        for o in r.replay_outcomes
+                    )
+                else:
+                    outcomes = "(no matching invocation replayed)"
+                trial_reports.append(
+                    f"  trial {i}: well_formed={r.well_formed} passed={r.command!r}\n"
+                    f"    all commands run: {r.commands}\n"
+                    f"    matching-command replays: {outcomes}\n"
+                    f"    transcript_error: {r.transcript_error}"
+                )
+            pytest.fail(
+                f"[{task_id}] expected >= {MIN_PASSING_TRIALS}/{TRIALS_PER_TASK} "
+                f"well-formed trials, got {well_formed}/{TRIALS_PER_TASK}\n"
+                f"Prompt: {prompt}\nAccept: {accept}\n" + "\n".join(trial_reports)
+            )
 
     def test_search_jql(self, sufficiency_runner):
         self._run_task(sufficiency_runner, "search-jql")

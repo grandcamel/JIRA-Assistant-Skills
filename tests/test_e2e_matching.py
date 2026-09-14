@@ -1,11 +1,13 @@
 """
 Offline unit tests for tests/e2e/runner.py's pure functions: well-
-formedness classification (classify_replay) and accept-list matching
-(command_matches_accept, extract_jira_as_invocation,
-extract_all_jira_as_invocations, find_matching_command). No subprocess
-and no `claude`/`jira-as` binary is launched anywhere in this file --
-every sample below is a literal, hand-written stand-in for output an
-authorized live probe of the real CLI actually produced.
+formedness classification (classify_replay), redirection stripping
+(strip_redirections), and accept-list matching (command_matches_accept,
+extract_jira_as_invocation, extract_all_jira_as_invocations,
+find_matching_commands). No subprocess and no `claude`/`jira-as` binary
+is launched anywhere in this file -- every sample below is a literal,
+hand-written stand-in for output an authorized live probe of the real
+CLI actually produced (including, for this round, a real run of the
+sufficiency arm itself).
 """
 
 import json
@@ -15,7 +17,8 @@ from tests.e2e.runner import (
     command_matches_accept,
     extract_all_jira_as_invocations,
     extract_jira_as_invocation,
-    find_matching_command,
+    find_matching_commands,
+    strip_redirections,
 )
 
 # ---------------------------------------------------------------------------
@@ -95,6 +98,62 @@ def test_other_exit_code_is_not_well_formed():
 
 
 # ---------------------------------------------------------------------------
+# strip_redirections: run 1 of the sufficiency arm found the model
+# writing shell redirections the no-shell subprocess replay must not see
+# as literal arguments.
+# ---------------------------------------------------------------------------
+
+
+def test_strip_redirections_exact_run1_example():
+    """The exact command from run 1's log: `2>&1` with no space, attached
+    to the same token as the operator."""
+    command = "jira-as api describe getIssue --examples 2>&1"
+    assert strip_redirections(command) == "jira-as api describe getIssue --examples"
+
+
+def test_strip_redirections_with_space_before_target():
+    """A redirection with a space between the operator and its target is
+    a separate token in shlex terms and must also be dropped."""
+    command = "jira-as time log --help 2> /dev/null"
+    assert strip_redirections(command) == "jira-as time log --help"
+
+
+def test_strip_redirections_stderr_to_stdout():
+    assert strip_redirections("jira-as help >&2") == "jira-as help"
+
+
+def test_strip_redirections_bare_overwrite():
+    assert strip_redirections("jira-as help >out.txt") == "jira-as help"
+    assert strip_redirections("jira-as help > out.txt") == "jira-as help"
+
+
+def test_strip_redirections_append():
+    assert strip_redirections("jira-as help >>out.txt") == "jira-as help"
+    assert strip_redirections("jira-as help >> out.txt") == "jira-as help"
+
+
+def test_strip_redirections_stderr_to_file():
+    assert strip_redirections("jira-as help 2>out.txt") == "jira-as help"
+    assert strip_redirections("jira-as help 2> out.txt") == "jira-as help"
+
+
+def test_strip_redirections_stderr_to_dev_null_attached():
+    assert strip_redirections("jira-as help 2>/dev/null") == "jira-as help"
+
+
+def test_strip_redirections_input_redirect():
+    assert strip_redirections("jira-as help <input.txt") == "jira-as help"
+    assert strip_redirections("jira-as help < input.txt") == "jira-as help"
+
+
+def test_strip_redirections_preserves_normal_arguments():
+    """A command with no redirection at all is returned unchanged
+    (modulo shlex round-tripping)."""
+    command = "jira-as api call getIssue --issueIdOrKey DEMO-1"
+    assert strip_redirections(command) == command
+
+
+# ---------------------------------------------------------------------------
 # command_matches_accept / extraction: accept-list matching for the
 # read-issue and find-watchers-operation tasks' exact accept lists.
 # ---------------------------------------------------------------------------
@@ -111,6 +170,14 @@ def test_api_call_matches_bare_operation_id():
 def test_contract_verb_matches_verb_pair():
     command = "jira-as issue get DEMO-1"
     assert command_matches_accept(command, READ_ISSUE_ACCEPT) is True
+
+
+def test_bare_operation_id_does_not_match_api_describe():
+    """Run 1 found the model running `api describe X` as a discovery
+    step for an action task; that must NOT count as the action having
+    been performed -- a bare operationId entry matches ONLY `api call`."""
+    command = "jira-as api describe getIssue"
+    assert command_matches_accept(command, READ_ISSUE_ACCEPT) is False
 
 
 def test_describe_prefixed_entry_requires_describe_verb():
@@ -156,10 +223,10 @@ def _bash_tool_use_event(command: str) -> str:
 
 
 def test_a_trailing_help_command_cannot_game_a_real_match():
-    """The scoring fix this round closes: a trial that runs a matching
-    command FIRST and a trailing `jira-as help` LAST must still find and
-    replay the matching command, not fall through to "no match" because
-    only the last command used to be considered."""
+    """A trial that runs a matching command FIRST and a trailing `jira-as
+    help` LAST must still find and be able to replay the matching
+    command, not fall through to "no match" because only the last
+    command used to be considered."""
     transcript = [
         _bash_tool_use_event("jira-as api call getIssue --issueIdOrKey DEMO-1"),
         _bash_tool_use_event("jira-as help"),
@@ -170,15 +237,33 @@ def test_a_trailing_help_command_cannot_game_a_real_match():
         "jira-as help",
     ]
     assert rejections == []
-    matched = find_matching_command(commands, READ_ISSUE_ACCEPT)
-    assert matched == "jira-as api call getIssue --issueIdOrKey DEMO-1"
+    matching = find_matching_commands(commands, READ_ISSUE_ACCEPT)
+    assert matching == ["jira-as api call getIssue --issueIdOrKey DEMO-1"]
 
 
 def test_a_lone_trailing_help_command_never_matches_on_its_own():
-    """The inverse: if the ONLY jira-as invocation is `jira-as help`,
-    there is no match -- the gaming path the old "last command" scoring
-    was vulnerable to."""
+    """If the ONLY jira-as invocation is `jira-as help`, there is no
+    match -- the gaming path the "last command" scoring was vulnerable
+    to."""
     transcript = [_bash_tool_use_event("jira-as help")]
     commands, rejections = extract_all_jira_as_invocations(transcript)
     assert commands == ["jira-as help"]
-    assert find_matching_command(commands, READ_ISSUE_ACCEPT) is None
+    assert find_matching_commands(commands, READ_ISSUE_ACCEPT) == []
+
+
+def test_multiple_matching_commands_are_all_returned():
+    """A discovery step (api describe, which does NOT match a bare
+    operationId entry) followed by two genuinely matching invocations
+    yields both matches, in transcript order -- run_trial replays each
+    and the trial passes if any one is well-formed."""
+    transcript = [
+        _bash_tool_use_event("jira-as api describe getIssueWatchers"),
+        _bash_tool_use_event("jira-as api call getIssue --issueIdOrKey DEMO-1"),
+        _bash_tool_use_event("jira-as issue get DEMO-1"),
+    ]
+    commands, _ = extract_all_jira_as_invocations(transcript)
+    matching = find_matching_commands(commands, READ_ISSUE_ACCEPT)
+    assert matching == [
+        "jira-as api call getIssue --issueIdOrKey DEMO-1",
+        "jira-as issue get DEMO-1",
+    ]
