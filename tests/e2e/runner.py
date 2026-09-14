@@ -269,6 +269,19 @@ def extract_all_jira_as_invocations(
     return commands, rejections
 
 
+def _normalize_operation_id(operation_id: str) -> str:
+    """
+    Normalize an operationId for comparison: lowercase, with `-` and `_`
+    removed. The supervisor verified on the pinned CLI that
+    `jira-as api call get-issue --issue-id-or-key DEMO-1` resolves to the
+    same operation (`getIssue`) as `api call getIssue --issueIdOrKey
+    DEMO-1` -- kebab-case is an accepted alias for the camelCase
+    operationId, not a different operation -- so accept-list matching
+    must not be case- or separator-sensitive.
+    """
+    return operation_id.lower().replace("-", "").replace("_", "")
+
+
 def command_matches_accept(command: str, accept: list[str]) -> bool:
     """
     Check whether one already-extracted `jira-as ...` command matches a
@@ -285,6 +298,10 @@ def command_matches_accept(command: str, accept: list[str]) -> bool:
       - A "verb pair" containing a space (e.g. `"issue get"`) -- matches
         a contract-verb invocation whose first tokens after `jira-as` are
         exactly those words, e.g. `jira-as issue get DEMO-1`.
+
+    OperationId comparisons (both the bare and `describe:` shapes) are
+    normalized per _normalize_operation_id, so `get-issue`, `getIssue`
+    and `get_issue` are all treated as the same operation.
     """
     try:
         tokens = shlex.split(command)
@@ -301,7 +318,8 @@ def command_matches_accept(command: str, accept: list[str]) -> bool:
                 len(rest) >= 3
                 and rest[0] == "api"
                 and rest[1] == "describe"
-                and rest[2] == operation_id
+                and _normalize_operation_id(rest[2])
+                == _normalize_operation_id(operation_id)
             ):
                 return True
         elif " " in entry:
@@ -313,7 +331,7 @@ def command_matches_accept(command: str, accept: list[str]) -> bool:
                 len(rest) >= 3
                 and rest[0] == "api"
                 and rest[1] == "call"
-                and rest[2] == entry
+                and _normalize_operation_id(rest[2]) == _normalize_operation_id(entry)
             ):
                 return True
 

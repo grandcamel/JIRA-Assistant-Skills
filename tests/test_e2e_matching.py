@@ -189,6 +189,29 @@ def test_describe_prefixed_entry_requires_describe_verb():
     assert command_matches_accept(describe_command, WATCHERS_ACCEPT) is True
 
 
+def test_kebab_case_operation_id_matches_camel_case_accept_entry():
+    """The pinned CLI resolves `get-issue` to the same operation as
+    `getIssue` (verified on the real CLI: both exit 5 not-found for
+    DEMO-1, naming "operation": "getIssue") -- kebab-case is an accepted
+    alias, not a different operation, so accept-list matching must
+    normalize both sides (lowercase, `-`/`_` removed)."""
+    command = "jira-as api call get-issue --issue-id-or-key DEMO-1"
+    assert command_matches_accept(command, READ_ISSUE_ACCEPT) is True
+
+
+def test_kebab_case_operation_id_matches_describe_entry():
+    command = "jira-as api describe get-issue-watchers"
+    assert command_matches_accept(command, WATCHERS_ACCEPT) is True
+
+
+def test_unrelated_operation_id_does_not_match():
+    """A different operation entirely (search-query) must not match an
+    accept list scoped to a different operation (getIssue), kebab-case
+    normalization notwithstanding."""
+    command = "jira-as api call search-query --jql 'project = DEMO'"
+    assert command_matches_accept(command, READ_ISSUE_ACCEPT) is False
+
+
 def test_messy_command_extracts_and_then_matches():
     """`cd /tmp && jira-as api describe getIssueWatchers | head -20`: the
     extraction regex isolates the jira-as portion (dropping the `cd`
