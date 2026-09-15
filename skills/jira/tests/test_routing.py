@@ -43,6 +43,27 @@ TERM and LANG (the last two if present) and forcing
 JIRA_AS_TRANSPORT=simulation, so a routing trial can never inherit the
 operator's real Jira credentials.
 
+This is a routing check, not a task run: the only thing being measured
+is which skill (if any) loads on the model's first turn, so a trial ends
+there. `claude` is launched with `subprocess.Popen` (see
+tests/stream_observe.run_and_observe) and its stdout is read one
+stream-json line at a time; the instant a `Skill` tool_use block appears,
+the process is terminated (SIGTERM, then SIGKILL after a grace period)
+and the trial returns -- it never waits for the model to go on and
+actually perform the task. Run 1 of this check (9 of 10 prompts passed;
+jira-01 scored 2/5) found the previous, blocking `subprocess.run` design
+actively harmful: three of jira-01's five trials hit the then-60s timeout
+while the model was still executing a real search after the skill had
+already loaded, and `subprocess.run`'s `TimeoutExpired` handling discards
+the entire captured stdout -- including the Skill tool_use block seen
+seconds into the run -- turning an observed pass into a scored miss
+purely because the observation method kept reading long after it had its
+answer. The transcript is persisted line by line as it is read, not only
+at the end, so a trial that never observes a Skill tool_use (a timeout,
+or a slow process) still leaves a complete, inspectable partial
+transcript on disk instead of losing it. The per-trial timeout is 120s,
+matching the sufficiency arm's (tests/e2e/runner.py).
+
 Usage:
     # Run the full routing check (five cold trials per prompt)
     pytest test_routing.py -v
@@ -57,7 +78,6 @@ tests/e2e/README.md for the host-triggered process this check belongs to.
 """
 
 import json
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -98,11 +118,21 @@ EMPTY_MCP_CONFIG = (REPO_ROOT / "tests" / "e2e" / "empty-mcp.json").resolve()
 # live check.
 from tests.evidence import new_run_dir, write_json, write_transcript  # noqa: E402
 
+# The generic Popen-based incremental reader (see its module docstring):
+# stops a trial the moment a Skill tool_use block is observed instead of
+# blocking until the model finishes an entire task or the timeout fires.
+from tests.stream_observe import run_and_observe  # noqa: E402
+
 GOLDEN_FILE = TESTS_DIR / "routing_golden.yaml"
 
 DEFAULT_MODEL = "claude-sonnet-5"
 TRIALS_PER_PROMPT = 5
 MIN_CORRECT_TRIALS = 4
+# Matches the sufficiency arm's per-trial timeout (tests/e2e/runner.py).
+# Run 1 of this check found the previous 60s ceiling actively harmful
+# (see the module docstring): raised now that a trial ends the instant
+# a Skill tool_use is observed instead of only at process completion.
+ROUTING_TIMEOUT_SECONDS = 120
 
 KNOWN_SKILLS = ("jira", "confluence")
 
@@ -119,19 +149,26 @@ def _next_routing_trial_number(test_id: str) -> int:
     return _ROUTING_TRIAL_COUNTERS[test_id]
 
 
+def _routing_transcript_path(test_id: str, trial_number: int) -> Path:
+    return _ROUTING_RUN_DIR / f"{test_id}-{trial_number}.transcript.jsonl"
+
+
 def _persist_routing_trial(
     test_id: str,
     trial_number: int,
-    transcript_lines: list[str],
     result: "RoutingResult",
 ) -> None:
-    """Write this trial's transcript and record the observed skill in the
-    run-wide summary.json, so the evidence is on disk even if a later
-    trial or the process itself is interrupted."""
-    base_name = f"{test_id}-{trial_number}"
-    write_transcript(
-        _ROUTING_RUN_DIR / f"{base_name}.transcript.jsonl", transcript_lines
-    )
+    """Record this trial's outcome in the run-wide summary.json.
+
+    The transcript itself is no longer written here: run_claude_routing
+    writes it line by line, as each line is read from the subprocess, so
+    that a trial which times out or hangs still leaves a complete,
+    inspectable partial transcript on disk instead of losing it (the
+    previous subprocess.run-based implementation discarded the whole
+    transcript on a timeout -- see the module docstring). By the time
+    this function runs, the transcript file already holds everything
+    that trial captured.
+    """
     _ROUTING_SUMMARY["prompts"].setdefault(test_id, []).append(
         {
             "trial": trial_number,
@@ -162,11 +199,11 @@ def normalize_skill_name(skill: str) -> str | None:
     return skill if skill in KNOWN_SKILLS else None
 
 
-def extract_loaded_skill(transcript_lines: list[str]) -> str | None:
+def extract_skill_from_transcript_line(line: str) -> str | None:
     """
-    Parse a `--output-format stream-json --verbose` transcript (one JSON
-    object per line) and return the skill named by the FIRST `Skill`
-    tool_use block, or None if the model never invoked the Skill tool.
+    Parse ONE line of a `--output-format stream-json --verbose`
+    transcript and return the normalized skill name if this line is an
+    assistant message carrying a `Skill` tool_use block, else None.
 
     This is the ONLY source of truth for which skill loaded. There is no
     fallback that infers a skill from the model's answer text: a prompt
@@ -180,47 +217,85 @@ def extract_loaded_skill(transcript_lines: list[str]) -> str | None:
     colon. Other field names once checked defensively (`name`,
     `skill_name`, `command`) are not what the CLI actually sends and have
     been dropped.
+
+    Used both as the `detect_line` callback `run_claude_routing` feeds to
+    `tests.stream_observe.run_and_observe` for incremental, one-line-at-a-
+    time reading, and by `extract_loaded_skill` below for a full,
+    already-captured transcript -- so the two can never disagree about
+    what counts as an observed skill load.
     """
-    for line in transcript_lines:
-        line = line.strip()
-        if not line:
+    line = line.strip()
+    if not line:
+        return None
+    try:
+        event = json.loads(line)
+    except json.JSONDecodeError:
+        return None
+
+    if event.get("type") != "assistant":
+        return None
+
+    message = event.get("message", {})
+    for block in message.get("content", []) or []:
+        if not isinstance(block, dict) or block.get("type") != "tool_use":
             continue
-        try:
-            event = json.loads(line)
-        except json.JSONDecodeError:
+        if block.get("name") != "Skill":
             continue
 
-        if event.get("type") != "assistant":
-            continue
-
-        message = event.get("message", {})
-        for block in message.get("content", []) or []:
-            if not isinstance(block, dict) or block.get("type") != "tool_use":
-                continue
-            if block.get("name") != "Skill":
-                continue
-
-            skill_value = (block.get("input") or {}).get("skill")
-            if skill_value:
-                normalized = normalize_skill_name(str(skill_value).rsplit(":", 1)[-1])
-                if normalized:
-                    return normalized
+        skill_value = (block.get("input") or {}).get("skill")
+        if skill_value:
+            normalized = normalize_skill_name(str(skill_value).rsplit(":", 1)[-1])
+            if normalized:
+                return normalized
 
     return None
 
 
+def extract_loaded_skill(transcript_lines: list[str]) -> str | None:
+    """
+    Scan a full transcript (one JSON object per line) and return the
+    skill named by the FIRST `Skill` tool_use block, or None if the
+    model never invoked the Skill tool. See
+    `extract_skill_from_transcript_line` for the per-line matching rule
+    this delegates to.
+    """
+    for line in transcript_lines:
+        skill = extract_skill_from_transcript_line(line)
+        if skill:
+            return skill
+    return None
+
+
 def run_claude_routing(
-    test_id: str, input_text: str, timeout: int = 60
+    test_id: str, input_text: str, timeout: int = ROUTING_TIMEOUT_SECONDS
 ) -> RoutingResult:
     """
     Run Claude Code non-interactively with both plugin directories loaded,
     from a fresh empty temp directory and under the shared allowlist
     environment, and return which skill (if any) it was OBSERVED to load,
-    for this one cold trial. Persists the trial's transcript and the
-    observed skill to _ROUTING_RUN_DIR (see tests/evidence.py).
+    for this one cold trial.
+
+    Launched via `tests.stream_observe.run_and_observe`, not
+    `subprocess.run`: stdout is read one stream-json line at a time, and
+    the instant a line carries a `Skill` tool_use block
+    (`extract_skill_from_transcript_line`), the process is terminated and
+    this function returns -- it never waits for the model to go on and
+    actually perform the task the skill would have driven. See the
+    module docstring for why (run 1's jira-01 misses on the previous,
+    blocking design).
+
+    Every line is written to `_ROUTING_RUN_DIR`'s transcript file for
+    this trial as it is read (the `on_line` callback below), so a trial
+    that never observes a Skill tool_use -- a timeout, or a slow process
+    -- still leaves a complete, inspectable partial transcript on disk.
+    A timeout is only recorded as an error when nothing was observed
+    before it fired; a process that simply finishes on its own without
+    ever invoking Skill (the correct, expected outcome for the two
+    "neither" prompts) is not.
     """
     model = get_test_model() or DEFAULT_MODEL
     trial_number = _next_routing_trial_number(test_id)
+    transcript_path = _routing_transcript_path(test_id, trial_number)
 
     cmd = [
         "claude",
@@ -245,30 +320,36 @@ def run_claude_routing(
         model,
     ]
 
-    try:
-        with tempfile.TemporaryDirectory(prefix="jas55-routing-") as scratch_dir:
-            result = subprocess.run(
-                cmd,
-                input=input_text,
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                env=build_harness_env(),
-                cwd=scratch_dir,
-            )
-    except subprocess.TimeoutExpired:
-        timeout_result = RoutingResult(
-            skill_loaded=None,
-            observation_error=f"claude timed out after {timeout}s",
+    lines_so_far: list[str] = []
+
+    def _on_line(line: str) -> None:
+        # Rewritten on every line, not just at the end, so the transcript
+        # on disk never lags more than one line behind what has actually
+        # been read from the subprocess.
+        lines_so_far.append(line)
+        write_transcript(transcript_path, lines_so_far)
+
+    with tempfile.TemporaryDirectory(prefix="jas55-routing-") as scratch_dir:
+        observation = run_and_observe(
+            cmd,
+            input_text,
+            detect_line=extract_skill_from_transcript_line,
+            on_line=_on_line,
+            timeout=timeout,
+            env=build_harness_env(),
+            cwd=scratch_dir,
         )
-        _persist_routing_trial(test_id, trial_number, [], timeout_result)
-        return timeout_result
 
-    transcript_lines = result.stdout.splitlines()
-    skill_loaded = extract_loaded_skill(transcript_lines)
+    # observation.result is typed generically (run_and_observe knows
+    # nothing about skills), but this call's own detect_line
+    # (extract_skill_from_transcript_line) only ever returns str | None.
+    skill_loaded = observation.result if isinstance(observation.result, str) else None
 
-    observation_error = ""
-    if skill_loaded is None:
+    if skill_loaded:
+        observation_error = ""
+    elif observation.timed_out:
+        observation_error = f"claude timed out after {timeout}s"
+    else:
         observation_error = (
             "skill load not observed (no Skill tool_use block in transcript)"
         )
@@ -276,7 +357,7 @@ def run_claude_routing(
     routing_result = RoutingResult(
         skill_loaded=skill_loaded, observation_error=observation_error
     )
-    _persist_routing_trial(test_id, trial_number, transcript_lines, routing_result)
+    _persist_routing_trial(test_id, trial_number, routing_result)
     return routing_result
 
 

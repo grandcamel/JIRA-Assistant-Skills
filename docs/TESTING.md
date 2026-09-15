@@ -170,6 +170,24 @@ fuller rationale and its known limitations (user-level skills on the
 host remain visible to the model, and the operator's global
 `~/.claude/CLAUDE.md`, if any, is still loaded via the preserved `HOME`).
 
+This is a routing check, not a task run: the only thing being measured is
+which skill (if any) loads on the model's first turn, so a trial ends
+there rather than waiting for the model to go on and perform the task.
+`claude` is launched with `subprocess.Popen` (see `tests/stream_observe.py`)
+and its stdout is read one stream-json line at a time; the instant a
+`Skill` tool_use block appears, the process is terminated (`SIGTERM`,
+then `SIGKILL` after a grace period) and the trial returns. The per-trial
+timeout is 120s, matching the sufficiency arm. Every line read is
+persisted to that trial's transcript file as it arrives, not only at the
+end, so a trial that never observes a Skill tool_use (a timeout, or a
+slow process) still leaves a complete, inspectable partial transcript on
+disk. Run 1 of this check -- before this early-stop design -- scored 9 of
+10 prompts, with `jira-01` at 2 of 5: three of its five trials hit the
+then-60s timeout while the model was still executing a real search after
+the skill had already loaded, and the blocking `subprocess.run`-based
+implementation discarded the entire captured transcript on that timeout,
+turning an observed pass into a scored miss.
+
 ```bash
 cd skills/jira/tests
 
