@@ -1,5 +1,5 @@
 """
-Shared evidence-persistence helpers for JAS-55's two live harnesses: the
+Shared evidence-persistence helpers for the two live harnesses: the
 help-only sufficiency arm (tests/e2e/) and the two-skill routing check
 (skills/jira/tests/test_routing.py).
 

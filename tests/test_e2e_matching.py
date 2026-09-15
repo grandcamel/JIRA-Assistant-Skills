@@ -356,12 +356,11 @@ def test_a_trailing_help_command_cannot_game_a_real_match():
         _bash_tool_use_event("jira-as api call getIssue --issueIdOrKey DEMO-1"),
         _bash_tool_use_event("jira-as help"),
     ]
-    commands, rejections = extract_bash_commands(transcript)
+    commands = extract_bash_commands(transcript)
     assert commands == [
         "jira-as api call getIssue --issueIdOrKey DEMO-1",
         "jira-as help",
     ]
-    assert rejections == []
     matching = find_matching_commands(commands, READ_ISSUE_ACCEPT)
     assert matching == ["jira-as api call getIssue --issueIdOrKey DEMO-1"]
 
@@ -371,7 +370,7 @@ def test_a_lone_trailing_help_command_never_matches_on_its_own():
     match -- the gaming path the "last command" scoring was vulnerable
     to."""
     transcript = [_bash_tool_use_event("jira-as help")]
-    commands, rejections = extract_bash_commands(transcript)
+    commands = extract_bash_commands(transcript)
     assert commands == ["jira-as help"]
     assert find_matching_commands(commands, READ_ISSUE_ACCEPT) == []
 
@@ -386,7 +385,7 @@ def test_multiple_matching_commands_are_all_returned():
         _bash_tool_use_event("jira-as api call getIssue --issueIdOrKey DEMO-1"),
         _bash_tool_use_event("jira-as issue get DEMO-1"),
     ]
-    commands, _ = extract_bash_commands(transcript)
+    commands = extract_bash_commands(transcript)
     matching = find_matching_commands(commands, READ_ISSUE_ACCEPT)
     assert matching == [
         "jira-as api call getIssue --issueIdOrKey DEMO-1",
@@ -394,15 +393,33 @@ def test_multiple_matching_commands_are_all_returned():
     ]
 
 
-def test_backslash_line_continuation_is_rejected_not_matched():
-    """A command using a backslash line continuation is rejected with a
-    reason -- the newline-based segment splitter cannot reconstruct its
-    true shape, so it is never matched or replayed under a guess."""
-    raw = "jira-as api call getIssue \\\n  --issueIdOrKey DEMO-1"
-    commands, rejections = extract_bash_commands([_bash_tool_use_event(raw)])
-    assert commands == []
-    assert len(rejections) == 1
-    assert "line continuation" in rejections[0]
+def test_line_continued_command_is_joined_and_then_matched():
+    """Run 3 found the harness rejecting a continued createIssue command
+    that the model actually completed correctly: that rejection made
+    sense only when replay ran a re-parsed segment. Now that replay runs
+    the model's original command through a real shell (where a
+    continuation is ordinary syntax), MATCHING must join the continued
+    lines back into one before splitting into segments, not reject."""
+    raw = (
+        "jira-as api call createIssue \\\n"
+        "  --project DEMO \\\n"
+        '  --field summary="Harness probe"'
+    )
+    commands = extract_bash_commands([_bash_tool_use_event(raw)])
+    assert commands == [raw]
+    assert command_matches_accept(raw, ["createIssue"]) is True
+
+
+def test_dangling_backslash_does_not_crash_and_is_not_matched():
+    """A command ending in a dangling backslash (no following newline --
+    not a real continuation) must not raise, and simply does not match:
+    the tokenizer's ValueError on an unterminated escape is caught and
+    falls back to a naive split, which cannot produce a clean match."""
+    raw = "jira-as api call createIssue --field summary=Test \\"
+    commands = extract_bash_commands([_bash_tool_use_event(raw)])
+    assert commands == [raw]
+    # Must not raise; the exact result only needs to be a bool.
+    assert command_matches_accept(raw, ["createIssue"]) is False
 
 
 def test_segment_matches_accept_directly():

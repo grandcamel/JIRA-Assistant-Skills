@@ -56,20 +56,22 @@ For each task, this:
      directory and captures its full tool-use transcript
      (--output-format stream-json --verbose).
   3. Extracts EVERY Bash command the model ran, verbatim (see
-     extract_bash_commands) -- a command with a backslash line
-     continuation is rejected with a reason, since the newline-based
-     segment splitter used for MATCHING (not replay) cannot handle one
-     correctly. For each command, splits it into segments on newlines,
-     `;`, `&&`, `||` and `|` (never a lone `&`, which is not one of
-     these separators and is only ever seen fused into `>&`), and checks
-     whether any segment -- after stripping redirections and a leading
-     environment-assignment/`time` prefix -- is a `jira-as` invocation
-     matching the task's `accept` list (see command_matches_accept).
-     Run 2 of the arm found the model's real commands prefixed with
-     `JIRA_AS_TRANSPORT=simulation ` (hiding the whole invocation from a
-     matcher that only recognized `jira-as` at the very start of a
-     segment) and calling `--help` on the right operation (which must
-     not count as doing the task) -- both are handled here.
+     extract_bash_commands). For MATCHING purposes only, any backslash
+     line continuation is first joined into a single logical line (a
+     continuation is ordinary shell syntax once replay runs the whole
+     command through a real shell -- there is no reason left to reject
+     one, only to see past it), then each command is split into segments
+     on newlines, `;`, `&&`, `||` and `|` (never a lone `&`, which is not
+     one of these separators and is only ever seen fused into `>&`), and
+     checked for whether any segment -- after stripping redirections and
+     a leading environment-assignment/`time` prefix -- is a `jira-as`
+     invocation matching the task's `accept` list (see
+     command_matches_accept). Run 2 of the arm found the model's real
+     commands prefixed with `JIRA_AS_TRANSPORT=simulation ` (hiding the
+     whole invocation from a matcher that only recognized `jira-as` at
+     the very start of a segment) and calling `--help` on the right
+     operation (which must not count as doing the task) -- both are
+     handled here.
   4. Re-runs EVERY matching command's ORIGINAL, verbatim string -- not a
      re-parsed or re-assembled segment -- through a real shell
      (`bash -o pipefail -c`), from a fresh empty temp directory, under
@@ -146,8 +148,12 @@ class TrialResult:
     the model ran, matching or not, for visibility when a trial fails.
     `replay_outcomes` holds the replay outcome of every command that
     matched the task's accept list (a strict subset of `commands`).
-    `evidence_dir` names where the full transcript and per-command detail
-    for this run were written (see tests/evidence.py).
+    `skills_loaded` holds every Skill tool_use name observed, namespaced
+    as the CLI reports it (e.g. `jira-assistant-skills:jira`) -- evidence
+    of whether/how the model reached for the Entry-Point Hint, not a
+    pass/fail signal on its own (see extract_skill_invocations). `evidence_dir`
+    names where the full transcript and per-command detail for this run
+    were written (see tests/evidence.py).
     """
 
     task_id: str
@@ -158,14 +164,21 @@ class TrialResult:
     transcript_error: str = ""
     commands: list[str] = field(default_factory=list)
     replay_outcomes: list[ReplayOutcome] = field(default_factory=list)
+    skills_loaded: list[str] = field(default_factory=list)
     evidence_dir: str = ""
 
 
 # A backslash immediately followed by a newline: a shell line continuation.
-# The newline-based segment splitter below cannot correctly reconstruct a
-# continued command's true shape, so one is rejected outright rather than
-# matched or replayed under a guess.
-LINE_CONTINUATION_RE = re.compile(r"\\\s*\r?\n")
+# For MATCHING purposes only, this is joined into a single line before
+# segment splitting (a real shell -- what actually replays the command --
+# treats it as ordinary syntax, so run 3 found the earlier "reject a
+# continued command outright" behavior was wrong: it was rejecting
+# well-formed commands, not protecting against a truncated one). A
+# genuinely dangling backslash (no following newline at all) is simply
+# left as a literal token for the tokenizer below to deal with -- it
+# never raises, and such a token essentially never satisfies an accept
+# list's structural checks.
+_LINE_CONTINUATION_JOIN_RE = re.compile(r"\\\s*\r?\n")
 
 # Command separators that start a new segment for MATCHING purposes. A
 # lone `&` (background execution) is deliberately excluded: it is not
@@ -203,14 +216,28 @@ def _tokenize_shell_like(line: str) -> list[str]:
         return line.split()
 
 
+def join_line_continuations(raw_command: str) -> str:
+    """
+    Join backslash-newline shell line continuations into a single line,
+    for MATCHING purposes only. Replay always uses the ORIGINAL,
+    unmodified command via a real shell, where a continuation is
+    ordinary, correctly-interpreted syntax; this function exists only so
+    the matcher's newline-based segment splitter can see a continued
+    command as the one logical line it actually is.
+    """
+    return _LINE_CONTINUATION_JOIN_RE.sub(" ", raw_command)
+
+
 def split_into_segments(raw_command: str) -> list[list[str]]:
     """
     Split a raw Bash command into segments (lists of tokens), on
-    newlines, `;`, `&&`, `||` and `|`. Each segment is one candidate
-    "simple command" to check for a jira-as invocation.
+    newlines, `;`, `&&`, `||` and `|`, after first joining any backslash
+    line continuation (see join_line_continuations) so a continued
+    command is not misread as two separate, broken lines. Each segment
+    is one candidate "simple command" to check for a jira-as invocation.
     """
     segments: list[list[str]] = []
-    for line in raw_command.split("\n"):
+    for line in join_line_continuations(raw_command).split("\n"):
         if not line.strip():
             continue
         tokens = _tokenize_shell_like(line)
@@ -332,12 +359,17 @@ def segment_matches_accept(tokens: list[str], accept: list[str]) -> bool:
     redirections and a leading env/time prefix). A segment whose cleaned
     tokens include `--help` or `-h` never matches: run 2 of the arm found
     `jira-as api call getIssue --help` and `jira-as lifecycle transition
-    --help` counted as doing the task, when they are only discovery.
+    --help` counted as doing the task, when they are only discovery. A
+    bare `\\` token also never matches: it only appears when the
+    tokenizer's quote-aware pass failed (an unterminated escape, e.g. a
+    dangling backslash with no following newline to continue) and fell
+    back to a naive whitespace split -- a signal the command may be
+    truncated or malformed, not something to guess a match for.
     """
     cleaned = clean_segment(tokens)
     if not cleaned or cleaned[0] != "jira-as":
         return False
-    if "--help" in cleaned or "-h" in cleaned:
+    if "--help" in cleaned or "-h" in cleaned or "\\" in cleaned:
         return False
     return _rest_matches_accept(cleaned[1:], accept)
 
@@ -377,20 +409,18 @@ def find_matching_commands(commands: list[str], accept: list[str]) -> list[str]:
     return [c for c in commands if command_matches_accept(c, accept)]
 
 
-def extract_bash_commands(
-    transcript_lines: list[str],
-) -> tuple[list[str], list[str]]:
+def extract_bash_commands(transcript_lines: list[str]) -> list[str]:
     """
     Parse a `--output-format stream-json --verbose` transcript (one JSON
-    object per line) and return `(raw_commands, rejections)`: the exact,
-    verbatim `input.command` string of every Bash tool_use block, in
-    transcript order -- this is what gets matched (via
-    command_matches_accept) and, if matching, replayed in full via a
-    real shell -- and the reasons any commands were rejected outright
-    (a backslash line continuation).
+    object per line) and return the exact, verbatim `input.command`
+    string of every Bash tool_use block, in transcript order -- this is
+    what gets matched (via command_matches_accept) and, if matching,
+    replayed in full via a real shell. Nothing is rejected here: a
+    command with a backslash line continuation is ordinary shell syntax
+    once replay runs it through a real shell (see join_line_continuations
+    for how MATCHING sees past one).
     """
     raw_commands: list[str] = []
-    rejections: list[str] = []
 
     for line in transcript_lines:
         line = line.strip()
@@ -415,25 +445,21 @@ def extract_bash_commands(
             if not raw_command.strip():
                 continue
 
-            if LINE_CONTINUATION_RE.search(raw_command):
-                rejections.append(
-                    "a Bash command uses a backslash line continuation; "
-                    f"rejected rather than guessed at: {raw_command!r}"
-                )
-                continue
-
             raw_commands.append(raw_command)
 
-    return raw_commands, rejections
+    return raw_commands
 
 
 def extract_skill_invocations(transcript_lines: list[str]) -> list[str]:
     """
     Return every skill invoked via the Skill tool, in transcript order,
-    normalized to the segment after the last colon. A live probe showed
-    the tool_use input is `{"skill": "jira-assistant-skills:jira"}` --
-    the plugin-namespaced skill name under the key `skill`, not `name`,
-    `skill_name`, or `command`.
+    namespaced exactly as the CLI reports it (e.g.
+    `jira-assistant-skills:jira`) -- this is what gets persisted as
+    evidence (TrialResult.skills_loaded). A live probe showed the
+    tool_use input is `{"skill": "jira-assistant-skills:jira"}` -- the
+    plugin-namespaced skill name under the key `skill`, not `name`,
+    `skill_name`, or `command`. Callers checking WHICH skill loaded
+    should compare the segment after the last colon (see run_trial).
     """
     skills: list[str] = []
 
@@ -458,7 +484,7 @@ def extract_skill_invocations(transcript_lines: list[str]) -> list[str]:
 
             skill_value = (block.get("input") or {}).get("skill")
             if skill_value:
-                skills.append(str(skill_value).rsplit(":", 1)[-1])
+                skills.append(str(skill_value))
 
     return skills
 
@@ -624,7 +650,7 @@ class SufficiencyRunner:
                 return result
 
         loaded_skills = extract_skill_invocations(transcript_lines)
-        non_jira = [s for s in loaded_skills if s != "jira"]
+        non_jira = [s for s in loaded_skills if s.rsplit(":", 1)[-1] != "jira"]
         if non_jira:
             result = TrialResult(
                 task_id=task_id,
@@ -633,12 +659,13 @@ class SufficiencyRunner:
                 well_formed=False,
                 duration=time.time() - start,
                 transcript_error=f"loaded skill(s) other than jira: {non_jira}",
+                skills_loaded=loaded_skills,
                 evidence_dir=str(self.run_dir),
             )
             self._persist_trial(task_id, trial_number, transcript_lines, [], result)
             return result
 
-        raw_commands, rejections = extract_bash_commands(transcript_lines)
+        raw_commands = extract_bash_commands(transcript_lines)
 
         commands_record: list[dict] = []
         replay_outcomes: list[ReplayOutcome] = []
@@ -671,14 +698,12 @@ class SufficiencyRunner:
                     passing = outcome
             commands_record.append(entry)
 
-        if not raw_commands and not rejections:
+        if not raw_commands:
             transcript_error = "model never ran a Bash command"
         elif not replay_outcomes:
             transcript_error = (
                 "no jira-as invocation matched the task's accept list "
-                f"(ran: {raw_commands}"
-                + (f"; rejected: {rejections}" if rejections else "")
-                + ")"
+                f"(ran: {raw_commands})"
             )
         elif passing is None:
             transcript_error = (
@@ -697,6 +722,7 @@ class SufficiencyRunner:
             transcript_error=transcript_error,
             commands=raw_commands,
             replay_outcomes=replay_outcomes,
+            skills_loaded=loaded_skills,
             evidence_dir=str(self.run_dir),
         )
         self._persist_trial(
@@ -755,6 +781,7 @@ class SufficiencyRunner:
                 "task_id": task_id,
                 "trial": trial_number,
                 "commands": commands_record,
+                "skills_loaded": result.skills_loaded,
                 "passing_command": result.command,
                 "well_formed": result.well_formed,
                 "transcript_error": result.transcript_error,
@@ -766,6 +793,7 @@ class SufficiencyRunner:
                 "well_formed": result.well_formed,
                 "command": result.command,
                 "exit_code": result.exit_code,
+                "skills_loaded": result.skills_loaded,
                 "transcript_error": result.transcript_error,
             }
         )

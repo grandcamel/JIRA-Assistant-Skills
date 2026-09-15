@@ -99,28 +99,35 @@ For each cold trial:
    (`--output-format stream-json --verbose`).
 3. Extract **every** Bash command the model ran, verbatim, read from
    each Bash tool_use block's `input.command` field -- never inferred
-   from the model's answer text (see `runner.extract_bash_commands`). A
-   command that uses a backslash line continuation is **rejected** with
-   that reason stated: a newline-based splitter cannot reconstruct such
-   a command's true shape, so it is never matched or replayed under a
-   guess.
-4. Split each command into segments on newlines, `;`, `&&`, `||` and `|`
-   (a shell-aware, quote-safe tokenizer -- never a lone `&`, which is
-   not one of these separators and is only ever produced fused into
-   `>&`), and find every segment that -- after stripping any
-   redirection and a leading environment-assignment/`time` prefix -- is
-   a `jira-as` invocation matching the task's `accept` list in
-   `test_cases.yaml` (`runner.command_matches_accept`): a bare
-   operationId matches ONLY `api call OPERATIONID` (an `api describe` of
-   the same operation is a discovery step, not the action being
-   performed, and does not count); `"describe:OPERATIONID"` matches
-   ONLY `api describe OPERATIONID`; a contract-verb pair like
-   `"issue get"` matches a contract-verb invocation. A segment
-   containing `--help`/`-h` never matches, however it is otherwise
-   shaped. Matching against ANY invocation, not just the last command,
-   closes a gaming path: a trial that runs the right command and then a
-   trailing `jira-as help` must still be able to pass. Real runs of the
-   arm found the model's actual commands prefixed with
+   from the model's answer text (see `runner.extract_bash_commands`).
+   Nothing is rejected here: a backslash line continuation is ordinary
+   shell syntax once step 6 replays the whole command through a real
+   shell. (Run 3 found the earlier "reject a continued command outright"
+   behavior was actually wrong -- it rejected a `createIssue` command
+   the model completed correctly, the only miss in the first passing
+   run; see "Acceptance runs" below.)
+4. For MATCHING only, join any backslash-newline continuation in a
+   command back into one logical line (`runner.join_line_continuations`)
+   -- replay always uses the original, unjoined string -- then split
+   each command into segments on newlines, `;`, `&&`, `||` and `|` (a
+   shell-aware, quote-safe tokenizer -- never a lone `&`, which is not
+   one of these separators and is only ever produced fused into `>&`),
+   and find every segment that -- after stripping any redirection and a
+   leading environment-assignment/`time` prefix -- is a `jira-as`
+   invocation matching the task's `accept` list in `test_cases.yaml`
+   (`runner.command_matches_accept`): a bare operationId matches ONLY
+   `api call OPERATIONID` (an `api describe` of the same operation is a
+   discovery step, not the action being performed, and does not count);
+   `"describe:OPERATIONID"` matches ONLY `api describe OPERATIONID`; a
+   contract-verb pair like `"issue get"` matches a contract-verb
+   invocation. A segment containing `--help`/`-h`, or a bare `\` token
+   (left over when the tokenizer fell back to a naive split on a
+   genuinely dangling backslash -- one with no following newline to
+   continue), never matches, however it is otherwise shaped. Matching
+   against ANY invocation, not just the last command, closes a gaming
+   path: a trial that runs the right command and then a trailing
+   `jira-as help` must still be able to pass. Real runs of the arm found
+   the model's actual commands prefixed with
    `JIRA_AS_TRANSPORT=simulation ` (invisible to a matcher that only
    recognized `jira-as` at the very start of a command) and calling
    `--help` on the correct operation (which must not count as doing the
@@ -187,17 +194,34 @@ timestamp>/` (one per pytest session). Per trial, it contains:
 - `<task>-<n>.commands.json` -- every Bash command the model ran that
   trial, its segments, whether it matched the task's accept list, and
   (for matching commands) the replay's exit code, stdout, stderr, and
-  classification.
+  classification; plus `skills_loaded`, every Skill tool_use name
+  observed that trial, namespaced as the CLI reports it (e.g.
+  `jira-assistant-skills:jira`).
 
 and the directory also holds a `summary.json`, updated after every
-trial, recording each trial's outcome across the whole session. The
-directory path is printed for every task, in `pytest`'s output and in
-the failure message when a task does not reach threshold, so a scoring
-question about a specific run never requires re-running the (expensive,
-non-deterministic) live arm to get an answer. The routing check
-(`skills/jira/tests/test_routing.py`) does the same, in a sibling
-`jas55-routing-<UTC timestamp>/` directory holding each trial's
+trial, recording each trial's outcome (including `skills_loaded`) across
+the whole session. The directory path is printed for every task, in
+`pytest`'s output and in the failure message when a task does not reach
+threshold, so a scoring question about a specific run never requires
+re-running the (expensive, non-deterministic) live arm to get an answer.
+The routing check (`skills/jira/tests/test_routing.py`) does the same, in
+a sibling `jas55-routing-<UTC timestamp>/` directory holding each trial's
 transcript and the observed skill.
+
+## Acceptance runs
+
+The first passing run: **2026-09-14T23:58Z to 2026-09-15T00:12Z UTC**, on
+`claude-sonnet-5` against `jira-as` 2.0.0 with `as-engine` 0.1.1 --
+**7 of 7 tasks, 34 of 35 trials well-formed**. The one miss
+(create-issue, one trial) was a continuation-line rejection this commit
+fixed (see step 3 above); replayed under the fix, it is well-formed.
+Two earlier runs the same day failed on harness defects, not on the
+Entry-Point Hint itself: run 1 failed on redirection capture and
+first-match-only scoring; run 2 failed on env-prefixed commands not
+being recognized and not-found payloads landing on stderr instead of
+stdout. Each run's full evidence lives in a
+`jas55-sufficiency-<UTC timestamp>/` directory (see "Evidence" above);
+the acceptance run's is timestamped `20260914T235823Z`.
 
 ## The seven tasks
 
