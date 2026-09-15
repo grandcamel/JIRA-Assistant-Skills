@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.0.1](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v5.0.0...v5.0.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **ci:** type-check and security scan after the 5.0 rewrite ([f78f194](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/f78f19496d4c7432f5aa92236e3750ed96ccdbf4))
+
 ## [5.0.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v4.3.0...v5.0.0) (2026-09-14)
 
 
