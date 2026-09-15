@@ -28,8 +28,13 @@ import pytest
 # Mark all tests in this module as 'live' - they require the Claude CLI
 pytestmark = pytest.mark.live
 
-# Import shared fixtures from conftest (after sys.path modification)
-from conftest import get_test_model  # noqa: E402
+# Import shared fixtures from conftest (after sys.path modification).
+# mypy resolves this bare "conftest" against a different same-named
+# conftest.py elsewhere in the tree (there is no __init__.py here to
+# give this directory's module an unambiguous dotted name); at runtime
+# pytest's own path handling makes this resolve to the sibling
+# conftest.py in this directory, which does define get_test_model.
+from conftest import get_test_model  # type: ignore[attr-defined]  # noqa: E402
 
 
 def get_current_profile() -> str:

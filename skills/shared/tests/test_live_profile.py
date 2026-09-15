@@ -20,7 +20,7 @@ def _environment(**updates):
         "JIRA_DEFAULT_PROJECT": "SBX",
         "JIRA_SITE_URL": "https://example.invalid",
         "JIRA_EMAIL": "tester@example.invalid",
-        "JIRA_API_TOKEN": "secret",  # nosec B105
+        "JIRA_API_TOKEN": "secret",  # nosec B105 -- fake value for an offline contract test, not a real credential
     }
     values.update(updates)
     return values

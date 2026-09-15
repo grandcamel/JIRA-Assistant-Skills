@@ -26,7 +26,11 @@ def new_run_dir(prefix: str) -> Path:
     pytest session (call this at import time or from a session-scoped
     fixture/singleton, not per trial).
     """
-    base = Path(os.environ.get("TMPDIR") or "/tmp")
+    # The literal "/tmp" fallback is only ever a directory for this
+    # module's own evidence files (transcripts, replay output, summaries
+    # from the harnesses' own test runs); nothing sensitive is written
+    # there, and TMPDIR (used first) is Python's own standard override.
+    base = Path(os.environ.get("TMPDIR") or "/tmp")  # nosec B108
     timestamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
     run_dir = base / f"{prefix}-{timestamp}"
     run_dir.mkdir(parents=True, exist_ok=True)

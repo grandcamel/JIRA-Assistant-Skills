@@ -93,8 +93,13 @@ TESTS_DIR = Path(__file__).parent
 if str(TESTS_DIR) not in sys.path:
     sys.path.insert(0, str(TESTS_DIR))
 
-# Import model config from conftest (after sys.path modification)
-from conftest import get_test_model  # noqa: E402
+# Import model config from conftest (after sys.path modification).
+# mypy resolves this bare "conftest" against a different same-named
+# conftest.py elsewhere in the tree (there is no __init__.py here to
+# give this directory's module an unambiguous dotted name); at runtime
+# the sys.path.insert above makes this resolve to the sibling
+# conftest.py in this directory, which does define get_test_model.
+from conftest import get_test_model  # type: ignore[attr-defined]  # noqa: E402
 
 # The plugin under test (this repo) and the non-shipped fixture plugin used
 # only to give the routing check a second skill to discriminate against.
