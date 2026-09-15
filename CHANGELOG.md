@@ -1,5 +1,30 @@
 # Changelog
 
+## [5.0.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v4.3.0...v5.0.0) (2026-09-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* the hub, thirteen domain skills and fourteen reviewer agents are removed; requires jira-as>=2,<3
+
+### Features
+
+* add the jira skill; rewrite routing and e2e as JAS-55's two harnesses ([6f237a5](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/6f237a59584758afae1d73526af3a04c5938c002))
+* one jira skill with the Entry-Point Hint (JAS-55) ([571bf79](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/571bf79f0eb811cb3790584a2655fc51102a7a41))
+
+
+### Bug Fixes
+
+* accept continuation lines now that replay runs the full command; record skill loads in evidence; note the first passing run ([9b0ab9f](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/9b0ab9f042ae1d85740652f67fad051690f0df2c))
+* **agents:** stop shipping doc-review agents with the plugin ([203d3aa](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/203d3aa19cd168ff2e80a1f48613d8abb4d1c9c4))
+* harness confinement and observation, install pins, manifest metadata (review fixes) ([0668049](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/066804992d2deadb4544c770af46c001f5d23327))
+* harness flags, auth passthrough, per-task expectations and well-formedness from live probes ([83ac000](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/83ac00007ceaf0e066c63b961bae52994a642c9d))
+* let the model invoke the skill; confine the routing trials like the sufficiency arm ([4bc587d](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/4bc587d5fa4f3c71c54315572842b973d4f54ee1))
+* match kebab-case operation aliases the CLI accepts ([208b1fb](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/208b1fbf76146eb6d42764e48d6a5decc5e0a429))
+* replay the model's full command, recognize env-prefixed invocations, classify stderr payloads, persist transcripts (run 2 findings) ([05c088c](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/05c088c78724362780bdfd070a8b9e5126f06c95))
+* routing check observes the skill load incrementally and stops the trial once seen ([82370fd](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/82370fd582cb11998646c288309b36e93b297c5b))
+* strip shell redirections, match call invocations only, score any matching command (run 1 findings) ([b25e876](https://github.com/grandcamel/JIRA-Assistant-Skills/commit/b25e876693fbb0a317977169c9dd0fcd3ac30197))
+
 ## [5.0.0](https://github.com/grandcamel/JIRA-Assistant-Skills/compare/v4.3.0...v5.0.0) (2026-09-14)
 
 
